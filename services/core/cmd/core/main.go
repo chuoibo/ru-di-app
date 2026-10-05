@@ -39,6 +39,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -578,7 +579,16 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			logger.Error("refusing to start chat v2", "error", err.Error())
 			return 1
 		}
-		lane := chatv2http.New(chatv2http.Options{Store: chatv2.NewStore(pool), BatchSessions: true,
+		laneStore := chatv2.NewStore(pool)
+		if root := getenv(storage.MediaRootEnv); root != "" {
+			sealed, err := storage.NewAt(filepath.Join(root, "chat-v2"))
+			if err != nil {
+				logger.Error("refusing to start chat v2", "error", "media root unusable")
+				return 1
+			}
+			laneStore.WithMedia(sealed)
+		}
+		lane := chatv2http.New(chatv2http.Options{Store: laneStore, BatchSessions: true,
 			Authenticate: chatv2http.Sessions(pool), Experimental: true, Context: chatCtx})
 		go lane.Listen(chatCtx, pool)
 		bus := chatbus.Postgres()

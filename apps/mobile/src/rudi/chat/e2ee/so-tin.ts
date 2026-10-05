@@ -24,13 +24,13 @@ export type SoTin = { order: string[]; byId: Record<string, TinV2> };
 export const SO_TRONG: SoTin = { order: [], byId: {} };
 
 function them(so: SoTin, tin: TinV2): SoTin {
-  if (so.byId[tin.id] !== undefined) return so;
+  if (Object.hasOwn(so.byId, tin.id)) return so;
   return { order: [...so.order, tin.id], byId: { ...so.byId, [tin.id]: tin } };
 }
 
 function sua(so: SoTin, id: string, f: (t: TinV2) => TinV2 | null): SoTin {
+  if (!Object.hasOwn(so.byId, id)) return so;
   const cu = so.byId[id];
-  if (cu === undefined) return so;
   const moi = f(cu);
   return moi === null ? so : { ...so, byId: { ...so.byId, [id]: moi } };
 }
@@ -41,7 +41,7 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
   const tac = nhan.actor_id;
   const moi = (patch: Partial<TinV2>): TinV2 => ({
     id: nhan.logical_send_id, authorId: tac, sequence, body: null, replyTo: null, edited: false, deleted: false,
-    reactions: {}, media: null, sticker: null, ...patch,
+    reactions: Object.create(null) as Record<string, string[]>, media: null, sticker: null, ...patch,
   });
   switch (op.type) {
     case "text":
@@ -57,14 +57,18 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
     case "edit":
       return sua(so, op.message_id, (t) => (t.authorId !== tac || t.deleted || t.media?.type === "voice" ? null : { ...t, body: op.body, edited: true }));
     case "delete":
-      return sua(so, op.message_id, (t) => (t.authorId !== tac ? null : { ...t, body: null, media: null, sticker: null, deleted: true, reactions: {} }));
+      return sua(so, op.message_id, (t) => (t.authorId !== tac ? null : { ...t, body: null, media: null, sticker: null, deleted: true, reactions: Object.create(null) as Record<string, string[]> }));
     case "reaction":
       return sua(so, op.message_id, (t) => {
         if (t.deleted) return null;
-        const ai = t.reactions[op.emoji] ?? [];
+        // The emoji is the sender's string: a null-prototype record and own
+        // reads only, so "__proto__" or "constructor" is just an emoji
+        // (security review 05/10).
+        const ai = Object.hasOwn(t.reactions, op.emoji) ? t.reactions[op.emoji] : [];
         const lai = ai.includes(tac) ? ai.filter((x) => x !== tac) : [...ai, tac];
-        const reactions = { ...t.reactions, [op.emoji]: lai };
+        const reactions: Record<string, string[]> = Object.assign(Object.create(null), t.reactions);
         if (lai.length === 0) delete reactions[op.emoji];
+        else reactions[op.emoji] = lai;
         return { ...t, reactions };
       });
     case "vote":

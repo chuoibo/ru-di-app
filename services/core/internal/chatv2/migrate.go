@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -15,12 +16,15 @@ var schemaSQL string
 //go:embed schema_v2.sql
 var schemaV2SQL string
 
+//go:embed schema_v3.sql
+var schemaV3SQL string
+
 // migrations are applied in order, each once, each pinned by its digest.
-var migrations = []string{schemaSQL, schemaV2SQL}
+var migrations = []string{schemaSQL, schemaV2SQL, schemaV3SQL}
 
 // SchemaSQL is the embedded migrations, for the gates that read what their
 // triggers write (aigate).
-func SchemaSQL() string { return schemaSQL + "\n" + schemaV2SQL }
+func SchemaSQL() string { return strings.Join(migrations, "\n") }
 
 // SchemaFiles is each embedded version as its file reads.
 func SchemaFiles() []string { return append([]string(nil), migrations...) }

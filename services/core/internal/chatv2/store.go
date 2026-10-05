@@ -16,6 +16,7 @@ import (
 type Store struct {
 	pool   *pgxpool.Pool
 	writes *writeAdmission
+	media  MediaStore
 }
 
 func NewStore(pool *pgxpool.Pool) *Store {

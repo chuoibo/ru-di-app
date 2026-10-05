@@ -129,7 +129,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), h.options.OperationTimeout)
+	budget := h.options.OperationTimeout
+	if strings.Contains(r.URL.Path, "/media/") {
+		// A sealed file up to 25 MiB takes longer than a message.
+		budget = mediaTimeout
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), budget)
 	defer cancel()
 	h.mux.ServeHTTP(w, r.WithContext(ctx))
 }

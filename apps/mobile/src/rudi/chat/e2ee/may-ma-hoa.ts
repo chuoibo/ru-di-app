@@ -41,6 +41,14 @@ function code(error: unknown): string {
 
 export type TinNhan = { sequence: number; received: Extract<Received, { kind: "application" }> };
 
+/**
+ * A device that joined a room after this phone first saw the room
+ * (ADR-0057 §1.3): the server vouches for who a device belongs to, so every
+ * newcomer is said out loud in the room -- a ghost device cannot slip in
+ * unseen (security review 05/10).
+ */
+export type ThietBiMoi = { room: string; card: Card };
+
 export class MayMaHoa {
   private device: string | null = null;
 
@@ -52,8 +60,25 @@ export class MayMaHoa {
       kho: KhoPort;
       uuid: () => string;
       label: string;
+      /** Told of every device that joins a room this phone already knew. */
+      onThietBiMoi?: (moi: ThietBiMoi) => void;
     },
   ) {}
+
+  /**
+   * Remembers the devices of a room and reports any it had not seen. The
+   * first sighting of a room only records it: there is no "before" to compare.
+   */
+  private async ghiNhanRoster(room: string, roster: Card[]): Promise<void> {
+    const khoa = this.khoa(`devices.${room}`);
+    const cu = await this.d.kho.doc(khoa);
+    const daBiet = new Set<string>(cu === null ? [] : (JSON.parse(cu) as string[]));
+    for (const c of roster) {
+      if (cu !== null && !daBiet.has(c.device_id) && c.device_id !== this.device) this.d.onThietBiMoi?.({ room, card: c });
+      daBiet.add(c.device_id);
+    }
+    await this.d.kho.ghi(khoa, JSON.stringify([...daBiet]));
+  }
 
   private khoa(ten: string): string {
     return `rudi.chat-v2.${ten}.${this.d.actorId}`;
@@ -108,6 +133,7 @@ export class MayMaHoa {
     const vao: string[] = [];
     for (const w of await this.d.api.welcomes(this.d.actorId, this.may())) {
       await this.call("join_group", { conversation_id: w.conversation_id, welcome: w.welcome, roster: w.roster });
+      await this.ghiNhanRoster(w.conversation_id, w.roster);
       await this.d.kho.ghi(this.khoa(`cursor.${w.conversation_id}`), String(w.sequence));
       await this.d.api.ackWelcome(this.d.actorId, this.may(), w.id);
       vao.push(w.conversation_id);
@@ -133,6 +159,7 @@ export class MayMaHoa {
       r = await this.d.api.bootstrap(this.d.actorId, room, device);
       await this.d.crypto.createGroup(room);
       await this.d.kho.ghi(this.khoa(`cursor.${room}`), "0");
+      await this.ghiNhanRoster(room, r.members);
     }
     if (!r.members.some((c) => c.device_id === device)) return false; // waiting for a Welcome
     for (let lan = 0; lan < 3 && !r.ready; lan++) {
@@ -166,7 +193,8 @@ export class MayMaHoa {
   /** Posts a staged commit; on a lost epoch race it is abandoned and the winner read. */
   private async ghiCommit(room: string, bundle: CommitBundle, added: string[], removed: string[]): Promise<void> {
     try {
-      await this.d.api.commit(this.d.actorId, room, bundle, added, removed);
+      const r = await this.d.api.commit(this.d.actorId, room, bundle, added, removed);
+      if (r.event.commit !== undefined) await this.ghiNhanRoster(room, r.event.commit.roster);
     } catch (error) {
       if (code(error) === "chat_v2_stale_epoch") {
         await this.call("abandon_commit", { conversation_id: room });
@@ -205,6 +233,7 @@ export class MayMaHoa {
     } else if (e.commit !== undefined && e.commit.envelope.device_id !== device) {
       const r = JSON.parse(await this.d.crypto.receive(JSON.stringify(e.commit.envelope), JSON.stringify(e.commit.roster))) as Received;
       if (r.kind === "removed") await this.call("forget", { conversation_id: room });
+      else await this.ghiNhanRoster(room, e.commit.roster);
     }
   }
 

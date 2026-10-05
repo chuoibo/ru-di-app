@@ -137,7 +137,9 @@ test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai ch
   const room = randomUUID();
   const [an, binh, chi] = [randomUUID(), randomUUID(), randomUUID()];
   lane.persons.set(room, new Set([an, binh]));
-  const may = (actor, name) => new MayMaHoa({ actorId: actor, crypto: crypto(d, name), api, kho: kho(), uuid: randomUUID, label: name });
+  const moi = { an: [], binh: [], chi: [] };
+  const may = (actor, name) => new MayMaHoa({ actorId: actor, crypto: crypto(d, name), api, kho: kho(), uuid: randomUUID, label: name,
+    onThietBiMoi: (m) => moi[name].push(m.card.actor_id) });
   const [mA, mB, mC] = [may(an, "an"), may(binh, "binh"), may(chi, "chi")];
   for (const m of [mA, mB, mC]) await m.moThietBi();
 
@@ -156,6 +158,10 @@ test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai ch
   lane.rooms.get(room).ready = lane.sameSet(room);
   await mB.gui(room, { type: "text", body: "Có Chi đi cùng" });
   assert.deepEqual(await mC.nhanWelcome(), [room]);
+  // Every device that already knew the room is told Chi's device joined
+  // (security review 05/10: no unseen ghost devices); Chi had no "before".
+  await mA.dongBo(room, () => undefined);
+  assert.deepEqual([moi.an, moi.binh, moi.chi], [[binh, chi], [chi], []]);
   let soC = SO_TRONG;
   await mC.dongBo(room, (t) => { soC = apDung(soC, t.received, t.sequence); });
   assert.deepEqual(danhSach(soC).map((t) => t.body), ["Có Chi đi cùng"], "Chi reads what was sent after the commit that added her, not before");

@@ -2,8 +2,11 @@ package chatv2http
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/chatv2"
@@ -22,7 +25,11 @@ type LifecycleStore interface {
 	Commit(context.Context, string, []byte, chatv2.CommitRequest) (chatv2.CommitResult, error)
 	Welcomes(context.Context, string, []byte, string) ([]chatv2.WelcomeView, error)
 	AckWelcome(context.Context, string, []byte, string, string) error
+	PutMedia(context.Context, string, []byte, string, string, string, []byte) ([]byte, error)
+	GetMedia(context.Context, string, []byte, string, string, string) ([]byte, error)
 }
+
+const mediaTimeout = 60 * time.Second
 
 // Matches reserves the lane's prefix on the core front door.
 func Matches(path string) bool { return strings.HasPrefix(path, "/v2/chat/") || path == "/v2/chat" }
@@ -49,6 +56,8 @@ func lifecycleRouteIDs() []string {
 		"POST /v2/chat/{conversation}/bootstrap",
 		"POST /v2/chat/{conversation}/key-packages/claim",
 		"POST /v2/chat/{conversation}/commits",
+		"PUT /v2/chat/{conversation}/media/{media}",
+		"GET /v2/chat/{conversation}/media/{media}",
 	}
 }
 
@@ -63,6 +72,48 @@ func (h *Handler) lifecycleRoutes() {
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/bootstrap", h.bootstrap)
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/key-packages/claim", h.claim)
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/commits", h.commit)
+	h.mux.HandleFunc("PUT /v2/chat/{conversation}/media/{media}", h.putMedia)
+	h.mux.HandleFunc("GET /v2/chat/{conversation}/media/{media}", h.getMedia)
+}
+
+// putMedia stores one sealed file: the raw ciphertext is the body.
+func (h *Handler) putMedia(w http.ResponseWriter, r *http.Request) {
+	store, actor, digest, ok := h.lifecycle(w, r)
+	if !ok {
+		return
+	}
+	if strings.Split(r.Header.Get("Content-Type"), ";")[0] != "application/octet-stream" {
+		problem(w, http.StatusUnsupportedMediaType, "octet_stream_required")
+		return
+	}
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, chatv2.MaxMedia+64))
+	if err != nil {
+		problem(w, http.StatusRequestEntityTooLarge, "chat_v2_media_too_large")
+		return
+	}
+	sum, err := store.PutMedia(r.Context(), actor, digest, r.URL.Query().Get("device_id"), r.PathValue("conversation"), r.PathValue("media"), data)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	write(w, http.StatusOK, map[string]any{"media_id": r.PathValue("media"), "size": len(data), "sha256": sum})
+}
+
+// getMedia answers a sealed file's bytes to a member device.
+func (h *Handler) getMedia(w http.ResponseWriter, r *http.Request) {
+	store, actor, digest, ok := h.lifecycle(w, r)
+	if !ok {
+		return
+	}
+	data, err := store.GetMedia(r.Context(), actor, digest, r.URL.Query().Get("device_id"), r.PathValue("conversation"), r.PathValue("media"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data)
 }
 
 // lifecycle resolves the store and the bearer: the actor through the
