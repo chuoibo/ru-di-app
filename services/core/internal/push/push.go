@@ -74,9 +74,31 @@ func (s Store) Register(ctx context.Context, sessionDigest []byte, r Registratio
 	if err != nil {
 		return "", err
 	}
+	// The token: free, ours, or held by an installation that was revoked (an
+	// app reinstalled after signing out), which gives it up. A live other
+	// installation keeps it (it never changes owner between two installs).
 	var owner string
-	err = tx.QueryRow(ctx, `SELECT installation_id::text FROM push_devices WHERE expo_push_token=$1 FOR UPDATE`, r.Token).Scan(&owner)
-	if err == nil && owner != r.InstallationID {
+	var ownerRevoked bool
+	err = tx.QueryRow(ctx, `SELECT installation_id::text, revoked_at IS NOT NULL FROM push_devices WHERE expo_push_token=$1 FOR UPDATE`, r.Token).Scan(&owner, &ownerRevoked)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+	case err != nil:
+		return "", err
+	case owner == r.InstallationID:
+	case ownerRevoked:
+		if _, err := tx.Exec(ctx, `DELETE FROM push_devices WHERE installation_id=$1`, owner); err != nil {
+			return "", err
+		}
+	default:
+		return "", ErrConflict
+	}
+	// The installation: new, ours, or revoked (another person signed out of
+	// this phone). A live installation of another person is never taken over
+	// (security review 05/10).
+	var holder string
+	var holderRevoked bool
+	err = tx.QueryRow(ctx, `SELECT person_id::text, revoked_at IS NOT NULL FROM push_devices WHERE installation_id=$1 FOR UPDATE`, r.InstallationID).Scan(&holder, &holderRevoked)
+	if err == nil && holder != person && !holderRevoked {
 		return "", ErrConflict
 	}
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
@@ -159,7 +181,9 @@ func (s Store) Enqueue(ctx context.Context, limit int) (int, error) {
 		tag, err := tx.Exec(ctx, `INSERT INTO push_outbox(id,person_id,conversation_id,sequence)
 			SELECT gen_random_uuid(), m.person_id, $1, $2 FROM memberships m
 			 WHERE m.context_id=$1 AND m.state='active' AND m.left_at IS NULL AND m.person_id<>$3
-			   AND EXISTS (SELECT 1 FROM push_devices d WHERE d.person_id=m.person_id AND d.revoked_at IS NULL)
+			   AND EXISTS (SELECT 1 FROM push_devices d JOIN account_sessions s ON s.id=d.session_id
+			                AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
+			               WHERE d.person_id=m.person_id AND d.revoked_at IS NULL)
 			ON CONFLICT (person_id, conversation_id) WHERE sent_at IS NULL DO UPDATE SET sequence=greatest(push_outbox.sequence, EXCLUDED.sequence)`,
 			e.room, e.seq, e.actor)
 		if err != nil {
@@ -243,9 +267,11 @@ func (e ExpoSender) Send(ctx context.Context, messages []Message) error {
 	return nil
 }
 
-// SendPending hands up to limit pending wakes to the sender, one message per
-// live device, and marks them sent in the same transaction; a failed hand-off
-// leaves them pending with one more attempt (five, then dropped).
+// SendPending hands up to limit pending wakes to the sender, one hand-off per
+// wake (a token the push service refuses fails its own wake, never a whole
+// batch: security review 05/10), each to every live device of the person
+// whose sign-in session still stands. A failed hand-off leaves its wake
+// pending with one more attempt (five, then dropped).
 func (s Store) SendPending(ctx context.Context, sender Sender, limit int) (int, error) {
 	tx, err := s.Pool.Begin(ctx)
 	if err != nil {
@@ -253,16 +279,16 @@ func (s Store) SendPending(ctx context.Context, sender Sender, limit int) (int, 
 	}
 	defer tx.Rollback(ctx)
 	rows, err := tx.Query(ctx, `SELECT o.id::text, o.conversation_id::text, o.sequence, d.expo_push_token
-		  FROM push_outbox o JOIN push_devices d ON d.person_id=o.person_id AND d.revoked_at IS NULL
-		 WHERE o.sent_at IS NULL AND o.attempts < 5 AND o.id IN (
-		   SELECT id FROM push_outbox WHERE sent_at IS NULL AND attempts < 5 ORDER BY created_at LIMIT $1 FOR UPDATE SKIP LOCKED)
-		 ORDER BY o.created_at, d.id`, limit)
+		  FROM push_outbox o
+		  JOIN push_devices d ON d.person_id=o.person_id AND d.revoked_at IS NULL
+		  JOIN account_sessions s ON s.id=d.session_id AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
+		 WHERE o.id IN (SELECT id FROM push_outbox WHERE sent_at IS NULL AND attempts < 5 ORDER BY created_at LIMIT $1 FOR UPDATE SKIP LOCKED)
+		 ORDER BY o.created_at, o.id, d.id`, limit)
 	if err != nil {
 		return 0, err
 	}
-	var ids []string
-	seen := map[string]bool{}
-	var messages []Message
+	var order []string
+	byWake := map[string][]Message{}
 	for rows.Next() {
 		var id, room, token string
 		var seq int64
@@ -270,33 +296,39 @@ func (s Store) SendPending(ctx context.Context, sender Sender, limit int) (int, 
 			rows.Close()
 			return 0, err
 		}
-		if !seen[id] {
-			seen[id] = true
-			ids = append(ids, id)
+		if _, seen := byWake[id]; !seen {
+			order = append(order, id)
 		}
-		messages = append(messages, Message{To: token, Title: "Rủ Đi", Body: WakeText, Priority: "high", Sound: "default",
+		byWake[id] = append(byWake[id], Message{To: token, Title: "Rủ Đi", Body: WakeText, Priority: "high", Sound: "default",
 			Data: map[string]string{"t": "chat", "c": room, "s": fmt.Sprint(seq)}})
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
 		return 0, err
 	}
-	if len(messages) == 0 {
-		return 0, tx.Commit(ctx)
-	}
-	if err := sender.Send(ctx, messages); err != nil {
-		if _, uerr := tx.Exec(ctx, `UPDATE push_outbox SET attempts=attempts+1 WHERE id = ANY($1::uuid[])`, ids); uerr != nil {
-			return 0, uerr
+	sent := 0
+	var failures []error
+	for _, id := range order {
+		if err := sender.Send(ctx, byWake[id]); err != nil {
+			failures = append(failures, err)
+			if _, err := tx.Exec(ctx, `UPDATE push_outbox SET attempts=attempts+1 WHERE id=$1`, id); err != nil {
+				return 0, err
+			}
+			continue
 		}
-		return 0, errors.Join(err, tx.Commit(ctx))
+		if _, err := tx.Exec(ctx, `UPDATE push_outbox SET sent_at=clock_timestamp() WHERE id=$1`, id); err != nil {
+			return 0, err
+		}
+		sent += len(byWake[id])
 	}
-	if _, err := tx.Exec(ctx, `UPDATE push_outbox SET sent_at=clock_timestamp() WHERE id = ANY($1::uuid[])`, ids); err != nil {
-		return 0, err
-	}
+	// Wakes with no live device are spent; old sent rows and given-up ones go.
 	if _, err := tx.Exec(ctx, `DELETE FROM push_outbox WHERE sent_at < clock_timestamp()-interval '1 day' OR attempts >= 5`); err != nil {
 		return 0, err
 	}
-	return len(messages), tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return sent, errors.Join(failures...)
 }
 
 // Run enqueues and sends every interval until ctx ends.

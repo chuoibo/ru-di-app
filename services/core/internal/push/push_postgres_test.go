@@ -199,3 +199,78 @@ func TestTheExpoSenderPostsOnlyTheWake(t *testing.T) {
 		t.Fatalf("posted: %+v", got)
 	}
 }
+
+// Security review 05/10: a live installation of another person is never taken
+// over; a revoked one (signed out on this phone) is; a reinstalled app gets
+// its token back from its revoked installation.
+func TestAnInstallationIsNeverTakenFromItsLivePerson(t *testing.T) {
+	w := setup(t)
+	ctx := context.Background()
+	inst := id(t, w.store)
+	if _, err := w.store.Register(ctx, w.binhToken, Registration{InstallationID: inst, Platform: "android", Token: token("h")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.store.Register(ctx, w.anToken, Registration{InstallationID: inst, Platform: "android", Token: token("i")}); err != ErrConflict {
+		t.Fatalf("An took Bình's live installation: %v", err)
+	}
+	if err := w.store.Unregister(ctx, w.binhToken, inst); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.store.Register(ctx, w.anToken, Registration{InstallationID: inst, Platform: "android", Token: token("i")}); err != nil {
+		t.Fatalf("An signing in on the phone Bình signed out of: %v", err)
+	}
+	if err := w.store.Unregister(ctx, w.anToken, inst); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.store.Register(ctx, w.anToken, Registration{InstallationID: id(t, w.store), Platform: "android", Token: token("i")}); err != nil {
+		t.Fatalf("a reinstall gets its token back from the revoked installation: %v", err)
+	}
+}
+
+// Security review 05/10: one wake whose hand-off fails does not fail the
+// others, and an expired session's device is not woken.
+func TestOneBadHandOffFailsOnlyItsWakeAndExpiredSessionsSleep(t *testing.T) {
+	w := setup(t)
+	ctx := context.Background()
+	exec := func(sql string, args ...any) {
+		if _, err := w.store.Pool.Exec(ctx, sql, args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := w.store.Register(ctx, w.binhToken, Registration{InstallationID: id(t, w.store), Platform: "android", Token: token("j")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.store.Register(ctx, w.anToken, Registration{InstallationID: id(t, w.store), Platform: "ios", Token: token("k")}); err != nil {
+		t.Fatal(err)
+	}
+	exec(`INSERT INTO push_outbox(id,person_id,conversation_id,sequence) VALUES(gen_random_uuid(),$1,$3,1),(gen_random_uuid(),$2,$3,1)`, w.an, w.binh, w.room)
+	r := &picky{refuse: token("k")}
+	if _, err := w.store.SendPending(ctx, r, 100); err == nil {
+		t.Fatal("the refused hand-off was not reported")
+	}
+	if len(r.sent) != 1 || r.sent[0].To != token("j") {
+		t.Fatalf("Bình's wake went despite An's refusal: %+v", r.sent)
+	}
+	exec(`DELETE FROM push_outbox WHERE conversation_id=$1`, w.room)
+	exec(`UPDATE account_sessions SET created_at=now()-interval '2 hours', expires_at=now()-interval '1 minute' WHERE token_digest=$1`, w.binhToken)
+	exec(`INSERT INTO push_outbox(id,person_id,conversation_id,sequence) VALUES(gen_random_uuid(),$1,$2,2)`, w.binh, w.room)
+	quiet := &recorder{}
+	if _, err := w.store.SendPending(ctx, quiet, 100); err != nil || len(quiet.sent) != 0 {
+		t.Fatalf("an expired session's device was woken: %+v %v", quiet.sent, err)
+	}
+}
+
+type picky struct {
+	refuse string
+	sent   []Message
+}
+
+func (p *picky) Send(_ context.Context, m []Message) error {
+	for _, x := range m {
+		if x.To == p.refuse {
+			return io.ErrUnexpectedEOF
+		}
+	}
+	p.sent = append(p.sent, m...)
+	return nil
+}
