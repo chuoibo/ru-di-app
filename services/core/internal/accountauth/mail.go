@@ -15,6 +15,11 @@ import (
 )
 
 type mailPayload struct{ Email, Code, Purpose string }
+
+// errMaybeSent is a failure after the whole message reached the server: it
+// may have been accepted, so the day's allowance it took is kept.
+var errMaybeSent = errors.New("smtp_delivery_failed")
+
 type Sender interface {
 	Send(context.Context, mailPayload) error
 }
@@ -88,7 +93,8 @@ func (s smtpSender) Send(ctx context.Context, p mailPayload) error {
 		return fmt.Errorf("smtp_write_failed")
 	}
 	if err = data.Close(); err != nil {
-		return fmt.Errorf("smtp_delivery_failed")
+		// The message went out whole; whether the server kept it is unknown.
+		return errMaybeSent
 	}
 	_ = c.Quit()
 	return nil
@@ -141,16 +147,18 @@ func (h *Handler) deliverOne(ctx context.Context) {
 	var mail mailPayload
 	err = h.cfg.Vault.open("mail:"+id, payload, &mail)
 	if err == nil {
-		err = h.mailOpen(ctx, "")
+		err = h.reserveMail(ctx, mail.Purpose)
 	}
 	if err == nil {
 		err = h.cfg.Sender.Send(ctx, mail)
+		if err != nil && !errors.Is(err, errMaybeSent) {
+			// Refused before the message left: give the allowance back.
+			if undoErr := h.cfg.Limits.Undo(ctx, h.rateKey("smtp-day", mailDay())); undoErr != nil {
+				h.mailWarning("quota", attempts)
+			}
+		}
 	}
 	if err == nil {
-		// Only accepted mail counts against the provider's day, not retries.
-		if _, spendErr := h.cfg.Limits.Allow(ctx, h.rateKey("smtp-day", mailDay()), h.mailPerDay(), 26*time.Hour); spendErr != nil {
-			h.mailWarning("quota", attempts)
-		}
 		_, updateErr := h.pool.Exec(ctx, `UPDATE account_mail_outbox SET done_at=clock_timestamp(),payload_cipher='\x',lease_until=NULL WHERE id=$1 AND lease_id=$2`, id, lease)
 		if updateErr != nil {
 			h.mailWarning("acknowledgement", attempts)
@@ -190,6 +198,32 @@ func (h *Handler) mailOpen(ctx context.Context, kind string) error {
 		limit -= limit / 5
 	}
 	if sent >= limit {
+		return problem(503, "mail_unavailable")
+	}
+	return nil
+}
+
+// reserveMail takes one message from the provider's day before it is sent
+// (audit 2026-10-05, CURRENT-AUTH-MAIL-01). Counting and spending used to be
+// separate steps on either side of Send, so replicas draining the queue
+// together could all see room and all send; Allow counts and checks in one
+// step. A registration may use four fifths of the day, at send time too, so
+// queued sign-ups cannot take the recovery codes' share.
+func (h *Handler) reserveMail(ctx context.Context, purpose string) error {
+	if h.cfg.Limits == nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	key := h.rateKey("smtp-day", mailDay())
+	limit := h.mailPerDay()
+	if purpose == "register" {
+		limit -= limit / 5
+	}
+	allowed, err := h.cfg.Limits.Allow(ctx, key, limit, 26*time.Hour)
+	if err != nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	if !allowed {
+		_ = h.cfg.Limits.Undo(ctx, key)
 		return problem(503, "mail_unavailable")
 	}
 	return nil

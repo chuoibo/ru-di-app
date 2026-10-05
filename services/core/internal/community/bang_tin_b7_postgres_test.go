@@ -174,3 +174,44 @@ func TestPostgresCommunityErasureForgetsWhoMentioned(t *testing.T) {
 		t.Fatalf("the recipient lost the notification: %d %v", kept, err)
 	}
 }
+
+// A mention from someone either side has blocked is not shown at all, the
+// rule that already hides their comment and its image (audit 2026-10-05,
+// PER-PRIVACY-01): before, the notification still carried their name and the
+// first 120 characters of the hidden comment.
+func TestPostgresCommunityBlockedMentionIsNotNotified(t *testing.T) {
+	f := setup(t)
+	// A mention needs a friendship; blocking turns that same edge into a block.
+	edge := uuid()
+	f.exec(t, `INSERT INTO friend_requests(id,requester_id,addressee_id,state,decided_at) VALUES($1,$2,$3,'accepted',clock_timestamp())`, edge, f.people[2], f.people[1])
+	w := f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Tổng hợp: ai đi cà phê sáng mai", Audience: "public"})
+	requireStatus(t, w, 201)
+	var p Post
+	_ = json.Unmarshal(w.Body.Bytes(), &p)
+	f.approve(t, p)
+	w = f.call("POST", "/v2/community/posts/"+p.ID+"/comments", 2, CommentInput{LogicalID: uuid(), Body: "Tổng hợp: rủ bạn này đi cùng", Mentions: []string{f.people[1]}})
+	requireStatus(t, w, 201)
+	var c struct {
+		ID string `json:"id"`
+	}
+	_ = json.Unmarshal(w.Body.Bytes(), &c)
+	requireStatus(t, f.call("POST", "/v2/community/comments/"+c.ID+"/review", 3, map[string]any{"approve": true, "reason": "Bình luận tổng hợp hợp chủ đề"}), 200)
+	mentioned := func() bool {
+		w := f.call("GET", "/v2/community/notifications", 1, nil)
+		requireStatus(t, w, 200)
+		return strings.Contains(w.Body.String(), "rủ bạn này")
+	}
+	if !mentioned() {
+		t.Fatal("the mention was never notified")
+	}
+	for _, direction := range [][2]int{{1, 2}, {2, 1}} {
+		f.exec(t, `UPDATE friend_requests SET requester_id=$2,addressee_id=$3,state='blocked' WHERE id=$1`, edge, f.people[direction[0]], f.people[direction[1]])
+		if mentioned() {
+			t.Fatalf("a mention survived a block %d→%d", direction[0], direction[1])
+		}
+		f.exec(t, `UPDATE friend_requests SET state='accepted' WHERE id=$1`, edge)
+		if !mentioned() {
+			t.Fatalf("the mention did not come back after unblocking %d→%d", direction[0], direction[1])
+		}
+	}
+}

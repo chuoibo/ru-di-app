@@ -347,7 +347,12 @@ func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 	// display name, whether it came from a comment, and up to 120 characters
 	// of that comment or of the post as published. A row from before the
 	// actor was recorded answers null and the app says «Bạn được nhắc…».
-	rows, err := tx.Query(r.Context(), `SELECT n.id,n.post_id,n.kind,n.created_at,x.display_name,n.comment_id IS NOT NULL,left(COALESCE(cm.body,p.body),120) FROM community_notifications n JOIN posts p ON p.id=n.post_id JOIN people a ON a.id=p.author_id LEFT JOIN community_posts c ON c.post_id=p.id LEFT JOIN people x ON x.id=n.actor_id AND x.deleted_at IS NULL LEFT JOIN post_comments cm ON cm.id=n.comment_id WHERE n.person_id=$1 AND a.deleted_at IS NULL AND c.deleted_at IS NULL AND (`+readableSQL+`) ORDER BY n.created_at DESC LIMIT 50`, person)
+	//
+	// A mention from someone either side has blocked is not shown at all, the
+	// same rule that hides their comment and its image (audit 2026-10-05,
+	// PER-PRIVACY-01; owner decision: hide the whole row). A comment that is
+	// gone shows no words rather than the post's, which it never said.
+	rows, err := tx.Query(r.Context(), `SELECT n.id,n.post_id,n.kind,n.created_at,x.display_name,n.comment_id IS NOT NULL,CASE WHEN n.comment_id IS NULL THEN left(p.body,120) ELSE left(cm.body,120) END FROM community_notifications n JOIN posts p ON p.id=n.post_id JOIN people a ON a.id=p.author_id LEFT JOIN community_posts c ON c.post_id=p.id LEFT JOIN people x ON x.id=n.actor_id AND x.deleted_at IS NULL LEFT JOIN post_comments cm ON cm.id=n.comment_id WHERE n.person_id=$1 AND a.deleted_at IS NULL AND c.deleted_at IS NULL AND (`+readableSQL+`) AND NOT EXISTS(SELECT 1 FROM friend_requests f WHERE f.state='blocked' AND ((f.requester_id=$1 AND f.addressee_id IN (n.actor_id,cm.author_id)) OR (f.addressee_id=$1 AND f.requester_id IN (n.actor_id,cm.author_id)))) ORDER BY n.created_at DESC LIMIT 50`, person)
 	if err != nil {
 		fail(w, err)
 		return

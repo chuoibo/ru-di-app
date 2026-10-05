@@ -922,3 +922,58 @@ func TestSidecarNgoaiGiaoDich(t *testing.T) {
 		t.Fatal("the pass did not finish the deletion")
 	}
 }
+
+// Consent is written only for a person and a session that are still there
+// inside the transaction that writes it (audit 2026-10-05, PER-NEPNHO-01):
+// before, authentication released its locks first, and an account erased in
+// between got its nep_cai_dat row written back.
+func TestBatTheoPhienKhongGhiChoNguoiDaXoaHayPhienDaHet(t *testing.T) {
+	b := moiBo(t)
+	ctx := context.Background()
+	phien := func(p string, revoked bool) []byte {
+		digest := make([]byte, 32)
+		if _, err := rand.Read(digest); err != nil {
+			t.Fatal(err)
+		}
+		_, err := b.pool.Exec(ctx, `INSERT INTO account_sessions(id,person_id,token_digest,issued_via,created_at,expires_at,revoked_at)
+			VALUES(gen_random_uuid(),$1,$2,'genesis',now(),now()+interval '1 hour',CASE WHEN $3 THEN now() END)`, p, digest, revoked)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			_, _ = b.pool.Exec(context.Background(), `DELETE FROM account_sessions WHERE token_digest=$1`, digest)
+		})
+		return digest
+	}
+	coHang := func(p string) bool {
+		var n int
+		if err := b.pool.QueryRow(ctx, `SELECT count(*) FROM nep_cai_dat WHERE person_id=$1`, p).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n > 0
+	}
+
+	song := moiNguoi(t, b.pool)
+	if err := b.kho.BatTheoPhien(ctx, phien(song, false), song, CongBoBan); err != nil || !coHang(song) {
+		t.Fatalf("a live person with a live session: %v", err)
+	}
+
+	thuHoi := moiNguoi(t, b.pool)
+	if err := b.kho.BatTheoPhien(ctx, phien(thuHoi, true), thuHoi, CongBoBan); !errors.Is(err, ErrPhienHet) || coHang(thuHoi) {
+		t.Fatalf("a revoked session wrote consent: %v", err)
+	}
+
+	// Inserted already erased: the erasure trigger fires on UPDATE only, so no
+	// deletion job is queued for other packages' tests to pick up.
+	daXoa := uuidMoi()
+	if _, err := b.pool.Exec(ctx, `INSERT INTO people(id, display_name, deleted_at) VALUES($1, 'Người đã xoá (dữ liệu mẫu)', now())`, daXoa); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = b.pool.Exec(context.Background(), `DELETE FROM people WHERE id=$1`, daXoa) })
+	if err := b.kho.BatTheoPhien(ctx, phien(daXoa, false), daXoa, CongBoBan); !errors.Is(err, ErrPhienHet) || coHang(daXoa) {
+		t.Fatalf("an erased person got consent back: %v", err)
+	}
+	if err := b.kho.Bat(ctx, daXoa, CongBoBan); !errors.Is(err, ErrPhienHet) || coHang(daXoa) {
+		t.Fatalf("Bat without a session wrote consent for an erased person: %v", err)
+	}
+}

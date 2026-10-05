@@ -164,9 +164,14 @@ func (h *Handler) datCaiDat(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	if *in.Nho {
-		if err := h.kho.Bat(ctx, person, *in.CongBoBan); err != nil {
+		token, _ := auth.BearerToken(r.Header)
+		if err := h.kho.BatTheoPhien(ctx, auth.TokenDigest(token), person, *in.CongBoBan); err != nil {
 			if errors.Is(err, ErrCongBoCu) {
 				refuse(w, 409, "nep_cong_bo_cu")
+				return
+			}
+			if errors.Is(err, ErrPhienHet) {
+				refuse(w, 401, "authentication_required")
 				return
 			}
 			refuse(w, 503, "nep_memory_unavailable")

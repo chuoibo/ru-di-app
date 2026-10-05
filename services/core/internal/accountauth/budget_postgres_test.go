@@ -375,3 +375,62 @@ func TestPostgresRegistrationsLeaveMailForRecovery(t *testing.T) {
 	s, out = call(t, h, "/auth/password/reset/request", "POST", "", map[string]string{"email": "synthetic_reserve@example.test"})
 	requireCode(t, s, 202, out)
 }
+
+// The provider's day is spent before a message goes out, in one step, and a
+// registration may not use the recovery share at send time either (audit
+// 2026-10-05, CURRENT-AUTH-MAIL-01). A message refused before it left gives
+// its share back; one that may have been accepted keeps it.
+func TestPostgresMailAllowanceIsReservedBeforeSending(t *testing.T) {
+	h := authWorld(t)
+	limits := newMemLimiter()
+	h.cfg.Limits = limits
+	h.cfg.MailPerDay = 5
+	sender := &recordingSender{}
+	h.cfg.Sender = sender
+	key := h.rateKey("smtp-day", mailDay())
+	signup(t, h, "synthetic_quota")
+	// Three registrations queue their mail while the day is empty.
+	for _, name := range []string{"quota_a", "quota_b", "quota_c"} {
+		// repo-guard: allow=email reason=synthetic-reserved-test-domain
+		s, out := call(t, h, "/auth/register", "POST", "", map[string]string{"username": name, "email": name + "@example.test", "password": "synthetic quota credential"})
+		requireCode(t, s, 202, out)
+	}
+	// Then the day fills to three of five before they drain.
+	limits.n[key] = 3
+	before := sender.calls
+	var wg sync.WaitGroup
+	for range 3 {
+		wg.Add(1)
+		go func() { defer wg.Done(); h.deliverOne(context.Background()) }()
+	}
+	wg.Wait()
+	if got := sender.calls - before; got != 1 || limits.n[key] != 4 {
+		t.Fatalf("registrations sent %d (day at %d); only one fits under four fifths", got, limits.n[key])
+	}
+	// A recovery code still goes out on the last fifth.
+	// repo-guard: allow=email reason=synthetic-reserved-test-domain
+	s, out := call(t, h, "/auth/password/reset/request", "POST", "", map[string]string{"email": "synthetic_quota@example.test"})
+	requireCode(t, s, 202, out)
+	if _, err := h.pool.Exec(context.Background(), `UPDATE account_mail_outbox SET next_attempt_at=clock_timestamp() WHERE done_at IS NULL`); err != nil {
+		t.Fatal(err)
+	}
+	for range 4 {
+		h.deliverOne(context.Background())
+	}
+	if limits.n[key] != 5 {
+		t.Fatalf("the recovery code did not take the last share: day at %d", limits.n[key])
+	}
+	// A refusal before the message left gives the share back.
+	limits.n[key] = 0
+	sender.fail = true
+	// repo-guard: allow=email reason=synthetic-reserved-test-domain
+	s, out = call(t, h, "/auth/register", "POST", "", map[string]string{"username": "quota_d", "email": "quota_d@example.test", "password": "synthetic quota credential"})
+	requireCode(t, s, 202, out)
+	if _, err := h.pool.Exec(context.Background(), `UPDATE account_mail_outbox SET next_attempt_at=clock_timestamp() WHERE done_at IS NULL`); err != nil {
+		t.Fatal(err)
+	}
+	h.deliverOne(context.Background())
+	if limits.n[key] != 0 {
+		t.Fatalf("a refused message kept its share: day at %d", limits.n[key])
+	}
+}

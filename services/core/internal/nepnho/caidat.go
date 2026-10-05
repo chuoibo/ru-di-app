@@ -45,8 +45,24 @@ func (k *Kho) DocCaiDat(ctx context.Context, nguoi string) (CaiDat, error) {
 	return c, err
 }
 
+// ErrPhienHet is a consent write whose person was erased, or whose session
+// ended, after the request was authenticated: nothing is written.
+var ErrPhienHet = errors.New("nepnho: the person or the session is gone")
+
 // Bat turns memory on with the disclosure version the person agreed to.
 func (k *Kho) Bat(ctx context.Context, nguoi string, ban int) error {
+	return k.bat(ctx, nguoi, ban, nil)
+}
+
+// BatTheoPhien is Bat for a request: the person and the bearer's session are
+// read again, locked, inside the transaction that writes the consent (audit
+// 2026-10-05, PER-NEPNHO-01). Before, authentication released its locks first,
+// and an account erased in between got its consent row written back.
+func (k *Kho) BatTheoPhien(ctx context.Context, digest []byte, nguoi string, ban int) error {
+	return k.bat(ctx, nguoi, ban, digest)
+}
+
+func (k *Kho) bat(ctx context.Context, nguoi string, ban int, digest []byte) error {
 	if err := kiemNguoi(nguoi); err != nil {
 		return err
 	}
@@ -60,6 +76,21 @@ func (k *Kho) Bat(ctx context.Context, nguoi string, ban int) error {
 	defer tx.Rollback(ctx)
 	if err := khoa(ctx, tx, nguoi); err != nil {
 		return err
+	}
+	// Person first, then session: the order erasure and authentication lock
+	// in. FOR SHARE waits for an erasure holding the person FOR UPDATE and
+	// then sees its deleted_at.
+	var live bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE)`, nguoi).Scan(&live); err != nil {
+		return err
+	}
+	if live && digest != nil {
+		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE)`, digest, nguoi).Scan(&live); err != nil {
+			return err
+		}
+	}
+	if !live {
+		return ErrPhienHet
 	}
 	now := k.now()
 	if _, err := tx.Exec(ctx, `INSERT INTO nep_cai_dat(person_id, nho, cong_bo_ban, cong_bo_at, cap_nhat_at) VALUES($1,true,$2,$3,$3)
