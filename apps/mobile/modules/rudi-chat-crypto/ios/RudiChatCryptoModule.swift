@@ -6,6 +6,14 @@ import Security
 /// one device identity at a time, every call on one serial queue, and every
 /// change sealed and persisted before its answer reaches JS.
 public class RudiChatCryptoModule: Module {
+  /// The lifecycle methods JS may reach through `call`. Never "seal": a
+  /// wrapping key JS chose would hand JS the whole MLS state (security review
+  /// 05/10). Sealing happens here alone, under the Keychain-held key.
+  private static let jsMethods: Set<String> = [
+    "generation", "enrollment", "conversations", "key_package", "join_group", "epoch", "roster",
+    "stage_add", "stage_remove", "stage_rekey", "pending_commit", "acknowledge_commit",
+    "acknowledge_sent", "abandon_commit", "forget", "seal_media", "open_media",
+  ]
   private let queue = DispatchQueue(label: "rudi.chat.crypto")
   private var handle: OpaquePointer?
   private var vault: Vault?
@@ -107,7 +115,10 @@ public class RudiChatCryptoModule: Module {
     }
 
     AsyncFunction("call") { (method: String, args: String) -> String in
-      try self.mutating { try self.call(method, args) }
+      guard Self.jsMethods.contains(method) else {
+        throw CryptoError(code: "ERR_CHAT_CRYPTO_METHOD", description: "method_not_allowed")
+      }
+      return try self.mutating { try self.call(method, args) }
     }
 
     AsyncFunction("erase") { () in

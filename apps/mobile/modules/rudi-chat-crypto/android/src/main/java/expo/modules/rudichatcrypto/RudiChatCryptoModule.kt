@@ -13,6 +13,18 @@ import org.json.JSONObject
  * the network that the device could lose by crashing.
  */
 class RudiChatCryptoModule : Module() {
+  /**
+   * The lifecycle methods JS may reach through `call`. Never "seal": sealing
+   * takes the wrapping key as an argument, and a key JS chose would hand JS
+   * the whole MLS state (security review 05/10: key exfiltration). Sealing
+   * happens here alone, under the Keystore-held key.
+   */
+  private val jsMethods = setOf(
+    "generation", "enrollment", "conversations", "key_package", "join_group", "epoch", "roster",
+    "stage_add", "stage_remove", "stage_rekey", "pending_commit", "acknowledge_commit",
+    "acknowledge_sent", "abandon_commit", "forget", "seal_media", "open_media"
+  )
+
   private val worker = Executors.newSingleThreadExecutor()
   private var handle = 0L
   private var vault: Vault? = null
@@ -95,6 +107,7 @@ class RudiChatCryptoModule : Module() {
     }
 
     AsyncFunction("call") { method: String, args: String ->
+      if (method !in jsMethods) throw CodedException("ERR_CHAT_CRYPTO_METHOD", "method_not_allowed", null)
       mutating { text(Native.call(live(), method.toByteArray(), args.toByteArray())) }
     }
 
