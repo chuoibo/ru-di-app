@@ -142,3 +142,11 @@ Corpus 422 sinh: route bị hoãn trong wave `w4` với lý do `'function-after'
 - `created_at` của phiên bản, `confirmed_at` và `audit_events.occurred_at` cùng một giá trị `now` Python; `expenses.created_at` là `now()` của Postgres ở lần đề xuất.
 - Tiền vượt int64 trong `expected_allocations` hoặc `proposal` bị allocator/so sánh từ chối trước khi ghi (`AMOUNT_TOO_LARGE` hoặc `proposal_changed`); không phủ riêng ở route này.
 - 409 in-flight và 409 `expense_not_found` từ repository không phủ.
+
+## 2026-10-05 — khoản chi đã vào đợt thu không được confirm lại (ADR-0056 §2.1, audit RS-03)
+
+Go (`routes/expenses.go`) và Python (`service.confirm_expense`) cùng trả 409 `expense_in_batch` khi một phân bổ của
+bất kỳ phiên bản nào của khoản chi là nguồn của nghĩa vụ trong đợt thu chưa huỷ; kiểm sau quyền và sau ràng buộc kèo,
+trước domain. Repository mới `expense_in_live_batch` / `ExpenseInLiveBatch`: câu lệnh là đúng câu SQLAlchemy sinh ra,
+oracle tiền thêm ca cho mọi khoản chi của world. Parity thêm `owner_batches_everything` + `mate_reconfirms_batched_dinner`.
+Sửa khoản chi sau khi đã thu đi qua điều chỉnh (ADR-0056 §2.2).

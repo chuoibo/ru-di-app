@@ -118,3 +118,14 @@ Corpus 422 sinh tự động: hoãn, bộ sinh từ chối với `'function-afte
 - Khoản chỉ người trả chia hoặc tổng 0 không bao giờ có nguồn: nhóm có một khoản như vậy sẽ không bao giờ trả `no_unbatched_allocations` cho danh sách vắng nữa (luôn `no_obligations`).
 - Sửa (xác nhận lại) một khoản đã vào đợt tạo phiên bản mới không có nguồn, và phiên bản đó lại vào được đợt mới: cùng khoản chi có thể bị thu hai lần. Đọc từ `repository.py:6182-6246`, chưa có kịch bản.
 - Các 409 mang mã miền viết hoa (`LedgerError`, `CollectionError`) và 500 `unexpected_batch_state` không tới được qua HTTP.
+
+## ADR-0056 (2026-10-05): khoá hàng `expenses` trước khi đọc phiên bản
+
+- `load_batch_inputs` (Python) và `LoadBatchInputs` (Go) khi có danh sách phiên bản giờ chạy trước
+  `SELECT expenses.id FROM expenses WHERE expenses.context_id = $1::UUID ORDER BY expenses.id FOR UPDATE`:
+  một lần xác nhận lại cùng khoản chi (giữ hàng `expenses` qua `get_expense`) và một lần đóng băng không còn đi
+  qua nhau (rà soát bảo mật: TOCTOU giữa confirm và freeze). Lối đọc số dư (danh sách vắng `None`) không khoá.
+- Bằng chứng: `services/core/internal/repo/batch_freeze_lock_postgres_test.go` (đóng băng phải chờ confirm,
+  `lock_timeout` 300 ms → 55P03; lối đọc số dư không chờ), oracle tiền 0 lệch câu lệnh.
+- Mục «sửa một khoản đã vào đợt ... thu hai lần» ở trên đã đóng: `POST /expenses/{id}/confirm` trả 409
+  `expense_in_batch` (xem evidence của route đó); sửa sau khi phát đi qua điều chỉnh của ADR-0056.

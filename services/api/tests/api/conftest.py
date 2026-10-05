@@ -1843,6 +1843,13 @@ class FakeRepository(SeedCatalogueReads):
     def get_expense(self, expense_id):
         return self.expenses.get(expense_id)
 
+    def expense_in_live_batch(self, expense_id):
+        # The fake never cancels a batch.
+        return any(
+            self.version_to_expense.get(version_id) == expense_id
+            for version_id in self.batched_versions
+        )
+
     def save_expense_confirmation(
         self,
         *,

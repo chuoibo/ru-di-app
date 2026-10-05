@@ -131,6 +131,16 @@ func confirmExpense() Route {
 		if err := requireOutingInContext(ctx, store, identity.ContextID, proposal.outingID); err != nil {
 			return endpoint.Reply{}, err
 		}
+		// ADR-0056 §2.1: an expense already collected on is corrected only by
+		// an amendment every affected party accepts; a new version here would
+		// be collected a second time.
+		inBatch, err := store.ExpenseInLiveBatch(ctx, identity.ID)
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		if inBatch {
+			return endpoint.Reply{}, endpoint.Refuse(409, "expense_in_batch", "This expense is already in a collection; propose an amendment instead")
+		}
 		plan, refused, err := moneysteps.ConfirmExpense(moneysteps.ExpenseConfirmation{
 			ActorID:               call.Actor.ID,
 			ActorRoles:            call.Actor.Roles,

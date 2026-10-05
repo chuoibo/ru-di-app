@@ -143,6 +143,19 @@ func (r Repository) CreateExpense(ctx context.Context, contextID string, outingI
 	return ExpenseIdentity{ID: id, ContextID: contextID, OutingID: outingID}, nil
 }
 
+// ExpenseInLiveBatch is expense_in_live_batch: whether any allocation of any
+// version of the expense is a source of an obligation in a batch that was not
+// cancelled (ADR-0056 §2.1). The statement is SQLAlchemy's for the same select.
+func (r Repository) ExpenseInLiveBatch(ctx context.Context, expenseID string) (bool, error) {
+	var in bool
+	err := r.Q.QueryRow(ctx,
+		`SELECT EXISTS (SELECT *
+		   FROM expense_versions, confirmed_allocations, collection_obligation_sources, collection_obligations, collection_batch_versions, collection_batches
+		  WHERE expense_versions.expense_id = $1::UUID AND confirmed_allocations.expense_version_id = expense_versions.id AND collection_obligation_sources.confirmed_allocation_id = confirmed_allocations.id AND collection_obligations.id = collection_obligation_sources.obligation_id AND collection_batch_versions.id = collection_obligations.batch_version_id AND collection_batches.id = collection_batch_versions.batch_id AND collection_batches.status != $2) AS anon_1`,
+		expenseID, "cancelled").Scan(&in)
+	return in, err
+}
+
 // GetExpense is get_expense: the expense row by id, SELECT ... FOR UPDATE,
 // nil when there is none.
 func (r Repository) GetExpense(ctx context.Context, expenseID string) (*ExpenseIdentity, error) {

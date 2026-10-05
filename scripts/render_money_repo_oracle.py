@@ -206,6 +206,9 @@ base.CALLS.update(
         "get_expense": lambda repository, args: repository.get_expense(
             _uuid(args["expense_id"])
         ),
+        "expense_in_live_batch": lambda repository, args: (
+            repository.expense_in_live_batch(_uuid(args["expense_id"]))
+        ),
         "save_expense_confirmation": _save_expense_confirmation,
         "flow.create_expense_confirm": _create_expense_confirm_flow,
         # --- bills ---------------------------------------------------------------

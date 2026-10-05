@@ -5909,6 +5909,15 @@ class ApiService:
                 "The expense already belongs to another trip",
             )
         self._require_outing_in_context(identity.context_id, named)
+        # ADR-0056 §2.1: an expense already collected on is corrected only by
+        # an amendment every affected party accepts; a new version here would
+        # be collected a second time.
+        if self.repository.expense_in_live_batch(expense_id):
+            raise ApiProblem(
+                409,
+                "expense_in_batch",
+                "This expense is already in a collection; propose an amendment instead",
+            )
         # `#235` gated `participants` here and stopped there, but two more of
         # this body's ids name people, and one of them is the only id in the
         # request that receives money. `paid_by_id` becomes the allocator's

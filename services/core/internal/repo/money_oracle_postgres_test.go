@@ -391,6 +391,9 @@ func moneyGoCall(repo Repository, method string, a map[string]any) (any, error) 
 	case "get_expense":
 		e, err := repo.GetExpense(bg, s("expense_id"))
 		return nilOr(e, tExpenseIdentity), err
+	case "expense_in_live_batch":
+		in, err := repo.ExpenseInLiveBatch(bg, s("expense_id"))
+		return tBool(in), err
 	case "save_expense_confirmation":
 		c, err := repo.SaveExpenseConfirmation(bg, argConfirmation(a, s("expense_id")))
 		return tConfirmation(c), err
@@ -655,6 +658,10 @@ func moneyOracleCases() ([]socialCase, oracleSpec) {
 	add("get_expense: with versions, without, another group's, missing", "", base,
 		expense(w.e1), expense(w.e4), expense(w.e3), expense(w.missingExpense))
 	add("get_expense: under a Vietnam session TimeZone", "", vietnam, expense(w.e2))
+	// ADR-0056 §2.1: whether a correction must go through an amendment.
+	inBatch := func(id string) oracleCall { return read("expense_in_live_batch", args("expense_id", id)) }
+	add("expense_in_live_batch: every expense of the world, and a missing one", "", base,
+		inBatch(w.e1), inBatch(w.e2), inBatch(w.e3), inBatch(w.e4), inBatch(w.missingExpense))
 
 	expenseDumps := []string{versionsDump, itemsDump, itemSharesDump, surchargesDump, discountsDump, allocationsDump, auditDump}
 	proposal := func(context string, items, surcharges, discounts []any) map[string]any {
@@ -1114,7 +1121,7 @@ func moneyOracleCases() ([]socialCase, oracleSpec) {
 // moneyMethods is every method this port covers; the corpus must reach each
 // with at least one normal return.
 var moneyMethods = []string{
-	"create_expense", "get_expense", "save_expense_confirmation", "flow.create_expense_confirm", "create_bill", "get_bill",
+	"create_expense", "get_expense", "expense_in_live_batch", "save_expense_confirmation", "flow.create_expense_confirm", "create_bill", "get_bill",
 	"confirm_bill_assignments", "claim_bill_items", "save_frozen_batch", "load_batch_for_publish",
 	"save_published_batch", "flow.publish", "list_batch_obligations", "list_context_batches", "get_receipt_target",
 	"save_receipt_confirmation", "flow.confirm_receipt", "person_finance_summary",

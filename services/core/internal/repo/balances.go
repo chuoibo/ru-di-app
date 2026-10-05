@@ -94,6 +94,24 @@ type confirmedVersion struct {
 // refused above, distinct, in UUID byte order (the canonical lowercase text
 // order). Ids travel in canonical form, so the set difference is exact.
 func (r Repository) LoadBatchInputs(ctx context.Context, contextID string, expenseVersionIDs []string) (BatchInputs, error) {
+	// The batch-creation path first locks the group's expense rows, the row a
+	// confirmation locks (GetExpense): a new version and a freeze of the old
+	// one can no longer pass each other, so a version written meanwhile is
+	// either read below as the latest or refused as expense_in_batch
+	// (ADR-0056 §2.1). The balances read (nil ids) takes no such lock.
+	if expenseVersionIDs != nil {
+		rows, err := r.Q.Query(ctx,
+			`SELECT expenses.id
+			   FROM expenses
+			  WHERE expenses.context_id = $1::UUID ORDER BY expenses.id FOR UPDATE`, contextID)
+		if err != nil {
+			return BatchInputs{}, err
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return BatchInputs{}, err
+		}
+	}
 	sql := `SELECT ` + expenseVersionColumns + `
 	          FROM expense_versions
 	          JOIN expenses ON expenses.id = expense_versions.expense_id

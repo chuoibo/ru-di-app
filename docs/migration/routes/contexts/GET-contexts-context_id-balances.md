@@ -93,3 +93,11 @@ Thứ tự (đo trên stack tham chiếu):
 - Nghĩa vụ ngược chiều giữa hai người không được bù trừ ở mức cặp (`merge_obligations`), chỉ ròng ở mức người; kịch bản có cặp owner↔mate hai chiều qua bữa tối và taxi.
 - **Tổng nhận vượt int64**: bản Go phải cộng tổng đã nhận của một cặp (và `total - receipts`) bằng số không tràn (vd. `numeric` từ SQL rồi `big.Int`, hoặc so sánh trước khi cộng), và cho ra đúng số dư Python; `int64` sẽ tràn ở `owner_after_int64_receipts`. Số dư trả ra vẫn nhỏ vì cặp bị bỏ khi `remaining <= 0`.
 - Hai lần nhận `2**63 - 1` trên **cùng một** nghĩa vụ không có trong kịch bản: Python trả 201 cả hai, nhưng sau đó view `collection_obligation_progress` không đọc được và làn DB dừng `INFRA`. Chưa có test Python nào cho tổng vượt int64.
+
+## ADR-0056 (2026-10-05)
+
+- `load_batch_inputs` đổi ở nhánh có danh sách phiên bản (khoá hàng `expenses` cho lần đóng băng, xem
+  `docs/migration/routes/batches/POST-batches.md`). Route này gọi với danh sách vắng: không khoá, câu lệnh và byte
+  không đổi — `batch_freeze_lock_postgres_test.go` kiểm lối đọc số dư không chờ khoá; parity w4 balances vẫn 0 lệch.
+- Điều chỉnh đã áp dụng (ADR-0056) không đổi cách tính: số dư vẫn từ phiên bản mới nhất của mỗi khoản chi, receipt
+  vẫn cộng theo cặp (sender, recipient) qua mọi nghĩa vụ, nên receipt trên nghĩa vụ đã bị thay vẫn được tính một lần.

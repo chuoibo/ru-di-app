@@ -21,6 +21,7 @@ from sqlalchemy import (
     cast,
     delete,
     desc,
+    exists,
     func,
     or_,
     select,
@@ -2089,6 +2090,8 @@ class ApiRepository(Protocol):
     ) -> ExpenseIdentity: ...
 
     def get_expense(self, expense_id: uuid.UUID) -> ExpenseIdentity | None: ...
+
+    def expense_in_live_batch(self, expense_id: uuid.UUID) -> bool: ...
 
     def create_bill(
         self,
@@ -6174,6 +6177,28 @@ class SqlAlchemyApiRepository:
         ).all()
         return ids[0] if len(ids) == 1 else None
 
+    def expense_in_live_batch(self, expense_id: uuid.UUID) -> bool:
+        """Whether any allocation of any version of this expense is a source of
+        an obligation in a batch that was not cancelled (ADR-0056 §2.1)."""
+        return bool(
+            self.session.scalar(
+                select(
+                    exists().where(
+                        ExpenseVersion.expense_id == expense_id,
+                        ConfirmedAllocation.expense_version_id == ExpenseVersion.id,
+                        CollectionObligationSource.confirmed_allocation_id
+                        == ConfirmedAllocation.id,
+                        CollectionObligation.id
+                        == CollectionObligationSource.obligation_id,
+                        CollectionBatchVersion.id
+                        == CollectionObligation.batch_version_id,
+                        CollectionBatch.id == CollectionBatchVersion.batch_id,
+                        CollectionBatch.status != "cancelled",
+                    )
+                )
+            )
+        )
+
     def get_expense(self, expense_id: uuid.UUID) -> ExpenseIdentity | None:
         expense = self.session.scalar(
             select(Expense).where(Expense.id == expense_id).with_for_update()
@@ -6325,7 +6350,20 @@ class SqlAlchemyApiRepository:
         ``None`` is the read model used by group balances and therefore includes
         expenses already placed in a collection batch. A concrete tuple is the
         batch-creation path and excludes any allocation already used as a source.
+
+        The batch-creation path first locks the group's expense rows, the row a
+        confirmation locks (get_expense): a new version and a freeze of the old
+        one can no longer pass each other, so a version written meanwhile is
+        either read here as the latest or refused as expense_in_batch
+        (ADR-0056 §2.1).
         """
+        if expense_version_ids is not None:
+            self.session.execute(
+                select(Expense.id)
+                .where(Expense.context_id == context_id)
+                .order_by(Expense.id)
+                .with_for_update()
+            )
         latest = (
             select(
                 ExpenseVersion.expense_id.label("expense_id"),
