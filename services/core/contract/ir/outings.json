@@ -2844,7 +2844,10 @@
        "schema": {
         "type": "int",
         "strict": true,
-        "ge": 0
+        "ge": 0,
+        "le": {
+         "$int": "1_000_000_000_000"
+        }
        },
        "annotation": "int",
        "required": true,
@@ -2856,6 +2859,12 @@
         {
          "kind": "Ge",
          "ge": 0
+        },
+        {
+         "kind": "Le",
+         "le": {
+          "$int": "1_000_000_000_000"
+         }
         }
        ]
       }

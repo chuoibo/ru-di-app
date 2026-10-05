@@ -2580,8 +2580,9 @@ class FakeRepository(SeedCatalogueReads):
             raise RepositoryConflict("couple_slot_taken")
         self.active_couple_members[person_id] = cycle_id
 
-    def clear_couple_member(self, person_id):
-        self.active_couple_members.pop(person_id, None)
+    def clear_couple_member(self, person_id, cycle_id):
+        if self.active_couple_members.get(person_id) == cycle_id:
+            self.active_couple_members.pop(person_id, None)
 
     def couple_cycle_for(self, person_id):
         return self.active_couple_members.get(person_id)

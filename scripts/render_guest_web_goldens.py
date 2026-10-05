@@ -1242,6 +1242,34 @@ def steps_edges() -> list[dict]:
         )
     )
     cases.append(case(r, "no_reason", {**base, "reason": None}))
+    # Asking how a number was reached is recorded once per obligation (audit
+    # 2026-10-05, RS-05): asked already, nothing is written; asked about the
+    # other obligation, it is; a block missing the flag is the KeyError.
+    evidence = {**base, "kind": "evidence_request", "reason": None}
+    asked = [obligation(1, evidence_requested=True), obligation(2)]
+    cases.append(case(r, "evidence/first", {**evidence, "envelope": envelope(2)}))
+    cases.append(
+        case(r, "evidence/again", {**evidence, "envelope": envelope(obligations=asked)})
+    )
+    cases.append(
+        case(
+            r,
+            "evidence/other_obligation",
+            {**evidence, "obligation_id": O2, "envelope": envelope(obligations=asked)},
+        )
+    )
+    cases.append(
+        case(
+            r,
+            "evidence/flag_missing",
+            {
+                **evidence,
+                "envelope": envelope(
+                    obligations=[without(obligation(1), "evidence_requested")]
+                ),
+            },
+        )
+    )
     cases.append(case(r, "no_record", {**base, "envelope": None}))
     cases.append(
         case(r, "revoked", {**base, "envelope": envelope(link_state="revoked")})

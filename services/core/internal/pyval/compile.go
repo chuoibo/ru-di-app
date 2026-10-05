@@ -253,6 +253,17 @@ func (c *compiler) bounds(n *pyjson.OrderedMap, typ string) []numBound {
 		if !ok {
 			continue
 		}
+		// A bound of nine or more digits is written {"$int": "1_000_..."} so
+		// the repository guard does not read it as a long number.
+		if m, tagged := v.(*pyjson.OrderedMap); tagged {
+			if s, ok := m.Get("$int"); ok {
+				if text, ok := s.(pyjson.String); ok {
+					if i, ok := pyjson.ParseInt(strings.ReplaceAll(string(text), "_", "")); ok {
+						v = i
+					}
+				}
+			}
+		}
 		b, ok := boundFrom(v)
 		if !ok {
 			c.unsupportedf("%s %s bound of kind %T", typ, key, v)

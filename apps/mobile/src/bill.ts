@@ -104,6 +104,12 @@ export function nguyenDong(value: number, field: string): number {
   if (!Number.isInteger(value)) {
     throw new RangeError(`${field} phải là số nguyên đồng, nhận được ${value}`);
   }
+  // Past 2^53 a JSON number has already lost đồng by the time it arrives here
+  // (audit 2026-10-05, PER-FE-MONEY-01): refuse it rather than show a figure
+  // nobody's ledger holds. The server keeps the exact integer.
+  if (!Number.isSafeInteger(value)) {
+    throw new RangeError(`${field} vượt quá số đồng hiển thị chính xác được, nhận được ${value}`);
+  }
   return value;
 }
 

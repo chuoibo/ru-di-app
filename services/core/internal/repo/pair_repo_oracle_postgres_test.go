@@ -202,7 +202,7 @@ func pairRepoGoCall(repo Repository, method string, a map[string]any) (any, erro
 	case "set_couple_member":
 		return nil, repo.SetCoupleMember(bg, s("person_id"), s("cycle_id"), now())
 	case "clear_couple_member":
-		return nil, repo.ClearCoupleMember(bg, s("person_id"))
+		return nil, repo.ClearCoupleMember(bg, s("person_id"), s("cycle_id"))
 	case "set_pair_constraint":
 		c, err := repo.SetPairConstraint(bg, PairConstraintInput{CycleID: s("cycle_id"), OwnerID: s("owner_id"),
 			Kind: s("kind"), Content: s("content"), Now: now()})
@@ -555,8 +555,13 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 	add("set_couple_member: a person with no people row", "IntegrityError", base,
 		step("set_couple_member", "person_id", w.missingPerson, "cycle_id", w.cyAB, "now", now))
 	add("clear_couple_member: a couple row, then again, then nobody's", "", base,
-		step("clear_couple_member", "person_id", w.chi), step("clear_couple_member", "person_id", w.chi),
-		step("clear_couple_member", "person_id", w.an))
+		step("clear_couple_member", "person_id", w.chi, "cycle_id", w.cyCD), step("clear_couple_member", "person_id", w.chi, "cycle_id", w.cyCD),
+		step("clear_couple_member", "person_id", w.an, "cycle_id", w.cyAB))
+	// A notebook clears only the slot its own cycle holds: chi's slot names
+	// cyCD, so clearing it for cyAB leaves it, and only cyCD removes it
+	// (audit 2026-10-05, RS-01).
+	add("clear_couple_member: another cycle's slot stays", "", base,
+		step("clear_couple_member", "person_id", w.chi, "cycle_id", w.cyAB), step("clear_couple_member", "person_id", w.chi, "cycle_id", w.cyCD))
 	constraint := func(cycle, owner, kind, text, at string) oracleCall {
 		return step("set_pair_constraint", "cycle_id", cycle, "owner_id", owner, "kind", kind, "content", text, "now", at)
 	}

@@ -6389,6 +6389,22 @@ class ApiService:
                     404, "unknown_obligation", "No such obligation on this link"
                 )
 
+        # Asking how a number was reached is free, but asking again changes
+        # nothing: one evidence request per obligation is recorded (audit
+        # 2026-10-05, RS-05: every repeat used to add an audit event the
+        # envelope then read back on each page view).
+        if kind == "evidence_request" and obligation_id is not None:
+            asked = next(
+                (
+                    item
+                    for item in envelope["obligations"]
+                    if item["obligation_id"] == str(obligation_id)
+                ),
+                None,
+            )
+            if asked is not None and asked["evidence_requested"]:
+                return
+
         # Indexed, not .get() with a default. The defaults scattered through
         # this codebase said 2 while the repository enforced 3, so the page
         # promised a quota the server did not honour.
@@ -7278,7 +7294,7 @@ class ApiService:
             # ends it for both, and leaving the other row would keep somebody
             # who is no longer in a couple from ever forming one.
             for person_id in self._participants(notebook, members):
-                self.repository.clear_couple_member(person_id)
+                self.repository.clear_couple_member(person_id, notebook.cycle_id)
         if purpose == "doc_chat":
             self._drop_unsent_nep_drafts(context_id, now=now)
 
@@ -7379,7 +7395,7 @@ class ApiService:
         self.repository.close_open_pair_papers(context_id, now=now)
         if notebook.cycle_id is not None:
             for person_id in self._participants(notebook, members):
-                self.repository.clear_couple_member(person_id)
+                self.repository.clear_couple_member(person_id, notebook.cycle_id)
             self.repository.close_pair_cycle(notebook.cycle_id, now=now)
 
     def list_pair_papers(

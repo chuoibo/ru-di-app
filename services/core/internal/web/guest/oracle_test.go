@@ -333,6 +333,9 @@ var stepReplays = map[string]replayFn{
 		if err != nil {
 			return nil, err
 		}
+		if refusal == AlreadyRecorded {
+			return map[string]any{"calls": calls, "problem": nil}, nil
+		}
 		if refusal == nil {
 			calls = append(calls, []any{"save_guest_objection", kind, args["obligation_id"], args["reason"]})
 		}
@@ -491,6 +494,9 @@ func replayRoute(args map[string]any) (any, error) {
 			kind, reason, location = "evidence_request", nil, EvidenceRequestedURL(token, raw)
 		}
 		refusal, err := RecordObjection(token, kind, &canonical, reason, load)
+		if refusal == AlreadyRecorded {
+			return done(nil, shape(SeeOther(location)))
+		}
 		if refusal != nil || err != nil {
 			return errOr(done, refusal, err)
 		}

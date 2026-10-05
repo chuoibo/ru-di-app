@@ -413,7 +413,7 @@ func (p *pairRoute) revokeConsent() error {
 	}
 	if purpose == "bat_doi" {
 		for _, person := range participantsOf(notebook, members) {
-			if err := p.repo.ClearCoupleMember(bg, person); err != nil {
+			if err := p.repo.ClearCoupleMember(bg, person, *notebook.CycleID); err != nil {
 				return err
 			}
 		}
@@ -531,7 +531,7 @@ func (p *pairRoute) closeNotebook() error {
 		return nil
 	}
 	for _, person := range participantsOf(notebook, members) {
-		if err := p.repo.ClearCoupleMember(bg, person); err != nil {
+		if err := p.repo.ClearCoupleMember(bg, person, *notebook.CycleID); err != nil {
 			return err
 		}
 	}

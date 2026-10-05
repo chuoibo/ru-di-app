@@ -106,3 +106,9 @@ Corpus 422 sinh tự động: hoãn, `carries ['pattern']`.
 - Ba lần thắc mắc số tiền của một nghĩa vụ chặn "Tôi không phải X" bằng 429, với detail nói về "this obligation" dù "không phải tôi" không gắn nghĩa vụ nào.
 - POST trả 200 HTML thay vì 303: tải lại trang trong trình duyệt gửi lại POST và nhận JSON 409 `LINK_NOT_ACTIVE`.
 - Mỗi request nạp phong bì hai lần (`not_me_view`, rồi `record_objection`), và `save_guest_objection` đọc lại link lần ba không khoá (`repository.py:7050-7054`), im lặng bỏ qua nếu không thấy.
+
+## 2026-10-05 — `record_objection` đổi cho `evidence_request` (audit RS-05)
+
+Route này đi qua cùng `record_objection`. Thay đổi chỉ chạm nhánh `kind == "evidence_request"` (không ghi
+event lần hai cho cùng nghĩa vụ); `wrong_amount` và `not_me` giữ nguyên, Go `RecordObjection` đổi cùng
+commit, golden `python_steps.json` khớp. Chi tiết ở `POST-g-token-xin-cach-tinh.md`.

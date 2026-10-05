@@ -444,11 +444,13 @@ func (r Repository) SetCoupleMember(ctx context.Context, personID, cycleID strin
 	return err
 }
 
-// ClearCoupleMember is clear_couple_member: the person's couple row, whatever
-// cycle it names, and its DELETE when there is one.
-func (r Repository) ClearCoupleMember(ctx context.Context, personID string) error {
+// ClearCoupleMember is clear_couple_member: the person's couple row when it
+// names this cycle, and its DELETE. By then the person may be in a couple with
+// someone else, and that slot is not this notebook's to clear (audit
+// 2026-10-05, RS-01).
+func (r Repository) ClearCoupleMember(ctx context.Context, personID, cycleID string) error {
 	existing, err := r.coupleCycle(ctx, personID)
-	if err != nil || existing == nil {
+	if err != nil || existing == nil || *existing != cycleID {
 		return err
 	}
 	return r.deleteRow(ctx, "active_couple_members", []column{{"person_id", "::UUID", personID}})

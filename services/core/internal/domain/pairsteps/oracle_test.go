@@ -913,8 +913,8 @@ func (s *fakeStore) SetCoupleMember(personID, cycleID string, now time.Time) err
 	return s.conflict("set_couple_member")
 }
 
-func (s *fakeStore) ClearCoupleMember(personID string) error {
-	s.rec("clear_couple_member", s.h.name(personID))
+func (s *fakeStore) ClearCoupleMember(personID, cycleID string) error {
+	s.rec("clear_couple_member", s.h.name(personID), s.h.name(cycleID))
 	return nil
 }
 

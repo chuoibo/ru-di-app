@@ -2,6 +2,7 @@
 package suggestion
 
 import (
+	"math"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -55,6 +56,12 @@ func SummariseHistory(trips []Trip, categories []string) (History, error) {
 		}
 		if trip.Headcount < 1 {
 			return History{}, refuse("suggestion_history_headcount_not_integer")
+		}
+		// Each trip fits int64; their sum need not. An exact total or none:
+		// a wrapped sum came back negative (audit 2026-10-05,
+		// PER-AI-MONEY-02).
+		if trip.SplitTotalVND > math.MaxInt64-total || trip.Headcount > math.MaxInt64-people {
+			return History{}, refuse("suggestion_history_total_overflow")
 		}
 		total += trip.SplitTotalVND
 		people += trip.Headcount

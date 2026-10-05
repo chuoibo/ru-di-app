@@ -450,3 +450,23 @@ steps:
     request:
       method: DELETE
       path: '/contexts/{{ctx}}/outings'
+  # Audit 2026-10-05: a budget is bounded at 10^12 đồng like any ledger amount;
+  # the body is refused before the permission is asked, at the cap it passes on.
+  - id: owner_budget_past_cap
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        content-type: 'application/json'
+      # repo-guard: allow=long-number reason=synthetic-money-cap-boundary
+      body_raw: '{"title":"Chuyến vượt trần (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":1000000000001}'
+  - id: owner_budget_at_cap
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        content-type: 'application/json'
+      # repo-guard: allow=long-number reason=synthetic-money-cap-boundary
+      body_raw: '{"title":"Chuyến đúng trần (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":1000000000000}'

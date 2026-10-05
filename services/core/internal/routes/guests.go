@@ -83,7 +83,11 @@ func (g guestLink) envelope() (map[string]any, bool, error) {
 // envelope only once kind and reason pass, then save_guest_objection at a
 // _now() of its own.
 func (g guestLink) recordObjection(kind string, obligationID, reason *string) error {
-	if err := guestStep(guestweb.RecordObjection(g.token, kind, obligationID, reason, g.envelope)); err != nil {
+	refusal, err := guestweb.RecordObjection(g.token, kind, obligationID, reason, g.envelope)
+	if err == nil && refusal == guestweb.AlreadyRecorded {
+		return nil
+	}
+	if err := guestStep(refusal, err); err != nil {
 		return err
 	}
 	store, err := groupStore(g.ctx, g.call)

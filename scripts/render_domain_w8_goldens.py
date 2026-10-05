@@ -1595,8 +1595,8 @@ class Stub:
         self.rec("set_couple_member", person_id, cycle_id, now)
         self.maybe_conflict("set_couple_member")
 
-    def clear_couple_member(self, person_id):
-        self.rec("clear_couple_member", person_id)
+    def clear_couple_member(self, person_id, cycle_id):
+        self.rec("clear_couple_member", person_id, cycle_id)
 
     def set_pair_constraint(self, *, cycle_id, owner_id, kind, content, now):
         self.rec("set_pair_constraint", cycle_id, owner_id, kind, content, now)

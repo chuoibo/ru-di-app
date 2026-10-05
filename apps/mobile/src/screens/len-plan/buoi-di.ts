@@ -243,9 +243,18 @@ export function nhanNganSach(vnd: number): string {
   return `~ ${formatVnd(vnd)}đ/người, số tham chiếu`;
 }
 
-/** Integer đồng. The product of two integers in this range stays exact. */
+/**
+ * Integer đồng. Exact while the product is a safe integer: the server bounds
+ * a budget at 10^12 đồng and a headcount at 1000, so it always is; a product
+ * past 2^53 would already be off by đồng, so it is refused rather than shown
+ * (audit 2026-10-05, PER-FE-MONEY-01).
+ */
 export function tongDuKien(budget: number, headcount: number): number {
-  return budget * headcount;
+  const total = budget * headcount;
+  if (!Number.isSafeInteger(total)) {
+    throw new RangeError(`Tổng dự kiến vượt quá số đồng hiển thị chính xác được`);
+  }
+  return total;
 }
 
 /* ----------------------------------------------------------- F46 check-in */

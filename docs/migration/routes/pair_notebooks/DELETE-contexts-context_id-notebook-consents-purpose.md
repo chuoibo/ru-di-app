@@ -139,3 +139,11 @@ Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở l
 Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
 
 - `DELETE /contexts/{context_id}/notebook/consents/{purpose}`: chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+
+## 2026-10-05 — chỉ xoá slot cặp đôi của đúng chu kỳ này (audit RS-01)
+
+`clear_couple_member(person_id, cycle_id)` ở cả Python (`repository.py`, `service.py`) lẫn Go
+(`repo/pair_notebooks.go`, `domain/pairsteps`): slot chỉ bị xoá khi nó trỏ đúng chu kỳ của sổ. Trước đó,
+thu hồi `bat_doi` (hoặc đóng sổ) ở sổ A–B cũ sau khi B đã bật đôi với C xoá luôn slot B–C. Golden
+`python_pair_steps*.json` render lại bằng `scripts/render_domain_w8_goldens.py` (5 bản ghi lời gọi có
+thêm `cycle_id`); oracle repo thêm ca «another cycle's slot stays». Byte trên dây không đổi.

@@ -261,12 +261,12 @@ func (s PairStore) SetCoupleMember(personID, cycleID string, now time.Time) erro
 }
 
 // ClearCoupleMember is clear_couple_member.
-func (s PairStore) ClearCoupleMember(personID string) error {
+func (s PairStore) ClearCoupleMember(personID, cycleID string) error {
 	r, err := s.repository()
 	if err != nil {
 		return err
 	}
-	return storeError(r.ClearCoupleMember(s.Ctx, personID))
+	return storeError(r.ClearCoupleMember(s.Ctx, personID, cycleID))
 }
 
 // SetPairConstraint is set_pair_constraint.

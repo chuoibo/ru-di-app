@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"mobile/services/core/internal/domain/allocator"
 	"net/http"
 	"strings"
 	"time"
@@ -167,7 +168,10 @@ func validateDraftHead(title string, starts, ends *string, headcount, budget *in
 	if headcount != nil && (*headcount <= 0 || *headcount > maxDraftHeadroom) {
 		return invalid("draft_headcount_invalid")
 	}
-	if budget != nil && *budget < 0 {
+	// The same ceiling as any amount the ledger takes (allocator.MaxAmountVND):
+	// a draft budget past it could not be promoted, and past 2^53 the app
+	// cannot even show it exactly (audit 2026-10-05, DB-12).
+	if budget != nil && (*budget < 0 || *budget > int64(allocator.MaxAmountVND)) {
 		return invalid("draft_budget_invalid")
 	}
 	return nil

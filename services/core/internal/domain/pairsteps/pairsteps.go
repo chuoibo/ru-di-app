@@ -290,7 +290,7 @@ type Store interface {
 	CompleteConsentProposal(proposalID string, now time.Time) error
 	RevokeConsents(cycleID, purpose, personID string, now time.Time) error
 	SetCoupleMember(personID, cycleID string, now time.Time) error
-	ClearCoupleMember(personID string) error
+	ClearCoupleMember(personID, cycleID string) error
 	SetPairConstraint(draft ConstraintDraft) (Constraint, error)
 	DeletePairConstraint(cycleID, ownerID, kind string) error
 

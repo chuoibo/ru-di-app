@@ -113,3 +113,9 @@ Corpus 422 sinh tự động: hoãn, `carries ['pattern']`; bộ sinh cũng từ
 - `reason=` rỗng là `unknown_reason` chứ không phải `missing`.
 - Luôn 303 kể cả khi client xin JSON; từ chối luôn là JSON kể cả với trình duyệt.
 - `Idempotency-Key` vô tác dụng: 303 không được lưu, nên thử lại ghi thêm event và tiêu hạn mức.
+
+## 2026-10-05 — `record_objection` đổi cho `evidence_request` (audit RS-05)
+
+Route này đi qua cùng `record_objection`. Thay đổi chỉ chạm nhánh `kind == "evidence_request"` (không ghi
+event lần hai cho cùng nghĩa vụ); `wrong_amount` và `not_me` giữ nguyên, Go `RecordObjection` đổi cùng
+commit, golden `python_steps.json` khớp. Chi tiết ở `POST-g-token-xin-cach-tinh.md`.

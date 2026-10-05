@@ -99,6 +99,10 @@ func WrongAmountView(token string, envelope map[string]any, found bool, obligati
 	return objectionPage(token, found, func() (map[string]any, error) { return BuildWrongAmountView(envelope, obligationID) })
 }
 
+// AlreadyRecorded is RecordObjection's answer when the objection is already
+// on record and nothing is to be written: the route answers as if it wrote.
+var AlreadyRecorded = &Refusal{}
+
 // RecordObjection is ApiService.record_objection up to save_guest_objection:
 // a nil refusal and nil error mean the route writes the objection. load is
 // get_guest_envelope, called only once kind and reason pass, as Python reads
@@ -140,6 +144,28 @@ func RecordObjection(token, kind string, obligationID, reason *string, load func
 		}
 		if block == nil {
 			return &Refusal{Status: 404, Code: "unknown_obligation", Detail: "No such obligation on this link"}, nil
+		}
+	}
+	// Asking how a number was reached is free, but asking again changes
+	// nothing: one evidence request per obligation is recorded (audit
+	// 2026-10-05, RS-05: every repeat used to add an audit event the envelope
+	// then read back on each page view).
+	if kind == "evidence_request" && obligationID != nil {
+		block, err := firstObligation(envelope, target)
+		if err != nil {
+			return nil, err
+		}
+		if block != nil {
+			asked, err := item(block, "evidence_requested")
+			if err != nil {
+				return nil, err
+			}
+			if yes, err := truthy(asked); err != nil || yes {
+				if err != nil {
+					return nil, err
+				}
+				return AlreadyRecorded, nil
+			}
 		}
 	}
 	if QuotaConsumingObjections[kind] {

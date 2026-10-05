@@ -58,3 +58,9 @@ test("tongDuKien: số người nhân ngân sách mỗi người, số nguyên �
   assert.equal(tongDuKien(2_500_000, 8), 20_000_000);
   assert.ok(Number.isInteger(tongDuKien(333_333, 3)));
 });
+
+test("tongDuKien: tích vượt 2^53 bị từ chối thay vì lệch đồng (audit 2026-10-05)", () => {
+  // Trần máy chủ: ngân sách ≤ 10^12, số người ≤ 1000 → luôn an toàn.
+  assert.equal(tongDuKien(1_000_000_000_000, 1000), 1_000_000_000_000_000);
+  assert.throws(() => tongDuKien(Number.MAX_SAFE_INTEGER, 3), RangeError);
+});

@@ -100,3 +100,11 @@ Corpus sinh: route này **hoãn** (`OutingCreateRequest` có `model_validator(mo
 
 - Không có cửa `_require_group_kind`: mở được chuyến đi trong một cuộc trò chuyện hai người, và lời mời trên chuyến đó sau này lại bị 409 `not_a_group` — hai route nói hai điều khác nhau về cùng một chuyến.
 - 403 trả nguyên tên predicate (`is_group_member`) làm `detail`. Đó là chuỗi nội bộ của bảng quyền, không phải câu cho người đọc.
+
+## 2026-10-05 — trần ngân sách 10^12 đồng (audit PER-FE-MONEY-01)
+
+`OutingCreateRequest.budget_per_person_vnd` đổi từ `NonNegativeMoneyVnd` sang `BudgetVnd`
+(`ge=0, le=MAX_AMOUNT_VND`), cùng trần mọi khoản ledger nhận. Với `headcount ≤ 1000`, tích ngân sách
+dự kiến luôn là số nguyên an toàn của JS. IR `contract/ir/outings.json` chỉ thêm đúng cận `le` này
+(cả `schema` lẫn `constraints`); `pyval` học đọc cận dạng `{"$int": …}`. Parity thêm hai bước
+`owner_budget_past_cap` (422) và `owner_budget_at_cap` (đi tiếp tới quyền, 403).

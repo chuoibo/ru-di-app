@@ -88,3 +88,11 @@ Corpus 422 sinh tự động: hoãn, `carries ['pattern']`; bộ sinh cũng từ
 - Redirect lặp lại giá trị thô trong khi event lưu dạng chuẩn. Mọi cách viết không chuẩn mà `uuid.UUID` nhận (chữ hoa, không gạch, `{…}`, `urn:uuid:`) dẫn tới một trang 409 `UNKNOWN_OBLIGATION`.
 - `obligation_id` không phải UUID là 500 thay vì 422.
 - Không khử trùng: bấm lại hoặc tải lại ghi thêm event, và `Idempotency-Key` không chặn được vì 303 không được lưu.
+
+## 2026-10-05 — một yêu cầu cách tính cho mỗi nghĩa vụ (audit RS-05)
+
+`record_objection` (Python `service.py`) và `RecordObjection` (Go `web/guest/steps.go`): với
+`evidence_request` mà envelope đã có `evidence_requested` cho nghĩa vụ đó thì không ghi audit event nào,
+vẫn trả 303 như cũ. Trước đó mỗi lần POST lại thêm một event mà mọi lần mở trang đọc lại toàn bộ.
+Golden `python_steps.json` thêm 4 ca `record_objection/evidence/*` (hỏi lần đầu, hỏi lại, nghĩa vụ khác,
+thiếu cờ = KeyError); Go khớp cả 4.

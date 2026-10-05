@@ -392,7 +392,9 @@ base.CALLS.update(
             _uuid(args["person_id"]), _uuid(args["cycle_id"]), now=_instant(args["now"])
         ),
         "clear_couple_member": lambda repository, args: (
-            repository.clear_couple_member(_uuid(args["person_id"]))
+            repository.clear_couple_member(
+                _uuid(args["person_id"]), _uuid(args["cycle_id"])
+            )
         ),
         # --- shared constraints ---------------------------------------------------
         "set_pair_constraint": lambda repository, args: (

@@ -484,7 +484,7 @@ func RevokeConsent(s Store, actor Actor, contextID, purpose string, now time.Tim
 	}
 	if purpose == "bat_doi" {
 		for _, person := range Participants(notebook, members) {
-			if err := s.ClearCoupleMember(person); err != nil {
+			if err := s.ClearCoupleMember(person, *notebook.CycleID); err != nil {
 				return err
 			}
 		}
@@ -634,7 +634,7 @@ func CloseNotebook(s Store, actor Actor, contextID, revision string, now time.Ti
 		return nil
 	}
 	for _, person := range Participants(notebook, members) {
-		if err := s.ClearCoupleMember(person); err != nil {
+		if err := s.ClearCoupleMember(person, *notebook.CycleID); err != nil {
 			return err
 		}
 	}

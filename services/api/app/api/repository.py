@@ -1737,7 +1737,9 @@ class ApiRepository(Protocol):
         self, person_id: uuid.UUID, cycle_id: uuid.UUID, *, now: datetime
     ) -> None: ...
 
-    def clear_couple_member(self, person_id: uuid.UUID) -> None: ...
+    def clear_couple_member(
+        self, person_id: uuid.UUID, cycle_id: uuid.UUID
+    ) -> None: ...
 
     def couple_cycle_for(self, person_id: uuid.UUID) -> uuid.UUID | None: ...
 
@@ -8058,9 +8060,12 @@ class SqlAlchemyApiRepository:
         )
         self.session.flush()
 
-    def clear_couple_member(self, person_id: uuid.UUID) -> None:
+    def clear_couple_member(self, person_id: uuid.UUID, cycle_id: uuid.UUID) -> None:
+        # Only the slot this cycle holds: by now the person may be in a couple
+        # with someone else, and that slot is not this notebook's to clear
+        # (audit 2026-10-05, RS-01).
         row = self.session.get(ActiveCoupleMember, person_id)
-        if row is not None:
+        if row is not None and row.cycle_id == cycle_id:
             self.session.delete(row)
             self.session.flush()
 

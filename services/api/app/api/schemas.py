@@ -21,11 +21,16 @@ from pydantic import (
     model_validator,
 )
 
+from app.domain.contract import MAX_AMOUNT_VND
 from app.domain.stickers import is_sticker
 
 MoneyVnd = Annotated[int, Field(strict=True)]
 PositiveMoneyVnd = Annotated[int, Field(strict=True, gt=0)]
 NonNegativeMoneyVnd = Annotated[int, Field(strict=True, ge=0)]
+#: A budget a person types: bounded like any amount the ledger takes
+#: (contract.MAX_AMOUNT_VND), so budget x headcount (<= 1000) stays a safe
+#: integer for the app (audit 2026-10-05, PER-FE-MONEY-01).
+BudgetVnd = Annotated[int, Field(strict=True, ge=0, le=MAX_AMOUNT_VND)]
 RelativePhotoUrl = Annotated[
     StrictStr,
     Field(
@@ -465,7 +470,7 @@ class OutingCreateRequest(ApiModel):
     starts_on: date
     ends_on: date
     headcount: Annotated[int, Field(strict=True, gt=0, le=1000)]
-    budget_per_person_vnd: NonNegativeMoneyVnd
+    budget_per_person_vnd: BudgetVnd
 
     @field_validator("title")
     @classmethod
