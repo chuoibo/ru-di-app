@@ -51,6 +51,8 @@ var CotNguoiGo = []CotNguoi{
 	{"chat_plan_promotions", "created_by_id", Chua, "chatassist: who promoted a plan card; no text of the person"},
 	{"chat_shared_drafts", "created_by", Chua, "chatassist: who started a shared sheet"},
 	{"chat_v2_devices", "person_id", Chua, "chatv2 (ADR-0057): public device keys of the person, kept because the room logs reference them; account deletion revokes every device (trigger chat_v2_account_deleted), which erases their key packages and pending Welcomes and clears ready of their rooms; no private key is ever stored"},
+	{"push_devices", "person_id", Xoa, "push (ADR-0057 §7): installations and their Expo tokens; deleted by the trigger push_account_deleted"},
+	{"push_outbox", "person_id", Xoa, "push: pending wakes, no content; deleted by the trigger push_account_deleted"},
 	{"chat_v2_events", "actor_id", Chua, "chatv2 (lab): who caused a room event; ids only, no plaintext"},
 	// internal/community (ADR-0040): its trigger community_erase (schema.sql)
 	// deletes these rows, or nulls the audit actor, when people.deleted_at is

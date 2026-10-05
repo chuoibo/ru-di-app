@@ -25,6 +25,7 @@ import (
 	"mobile/services/core/internal/diary"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/nepnho"
+	"mobile/services/core/internal/push"
 	"mobile/services/core/internal/rag/nap"
 	"mobile/services/core/internal/socialv2"
 )
@@ -126,7 +127,7 @@ func triggerWrites(sqls []string, table string) map[string][]string {
 }
 
 func schemaSQL() []string {
-	out := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(), aimetrics.SchemaSQL(), nepnho.SchemaSQL())
+	out := append(append(chatassist.SchemaFiles(), chatv2.SchemaFiles()...), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), push.SchemaSQL(), aimetrics.SchemaSQL(), nepnho.SchemaSQL())
 	out = append(out, accountauth.SchemaFiles()...)
 	out = append(out, nap.SchemaFiles()...)
 	out = append(out, community.SchemaFiles()...)

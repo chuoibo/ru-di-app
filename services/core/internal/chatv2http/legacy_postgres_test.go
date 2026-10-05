@@ -13,12 +13,12 @@ import (
 	"mobile/services/core/ownership"
 )
 
-// ADR-0057 §8.2 on a real PostgreSQL: a member's legacy write to a room on the
-// v2 lane is refused; reading the legacy history, a room without the lane, a
-// stranger and an anonymous caller all reach the route unchanged.
+// ADR-0057 §8.2 on a real PostgreSQL: every legacy write to a room on the v2
+// lane is refused, whoever asks; reading the legacy history and a room without
+// the lane reach the route unchanged.
 func TestLegacyWritesFailClosedOnAV2Room(t *testing.T) {
 	f := liveSetup(t)
-	g := LegacyGuard{Store: chatv2.NewStore(f.pool), Authenticate: Sessions(f.pool), Resolve: resolveForTest}
+	g := LegacyGuard{Store: chatv2.NewStore(f.pool), Resolve: resolveForTest}
 	plain := newID()
 	liveExec(t, f.pool, `INSERT INTO contexts(id,display_name,created_by_id)VALUES($1,'Phòng chưa mã hoá',$2)`, plain, f.people[0].id)
 	liveExec(t, f.pool, `INSERT INTO memberships(id,context_id,person_id,state,role,origin)VALUES($1,$2,$3,'active','member','named')`, newID(), plain, f.people[0].id)
@@ -40,6 +40,13 @@ func TestLegacyWritesFailClosedOnAV2Room(t *testing.T) {
 	room := "/contexts/" + f.conversation
 	upper := "/contexts/" + strings.ToUpper(f.conversation)
 	bare := "/contexts/" + strings.ReplaceAll(f.conversation, "-", "")
+	// Whoever asks: a member, a stranger, nobody (security review 05/10: the
+	// route may read its caller from a dev X-Actor-ID the guard never sees).
+	for _, token := range []string{"", strangerToken} {
+		if answered, code, _ := guard("POST", room+"/messages", token); !answered || code != http.StatusConflict {
+			t.Fatalf("a legacy write by %q reached the route: %d", token, code)
+		}
+	}
 	for _, tc := range []struct{ method, path string }{
 		{"POST", room + "/messages"},
 		// Spelled as the route itself still accepts it (security review 05/10).
@@ -60,8 +67,6 @@ func TestLegacyWritesFailClosedOnAV2Room(t *testing.T) {
 	for _, tc := range []struct{ method, path, token string }{
 		{"GET", room + "/messages", member},
 		{"POST", "/contexts/" + plain + "/messages", member},
-		{"POST", room + "/messages", ""},
-		{"POST", room + "/messages", strangerToken},
 		{"POST", room + "/memories/" + newID() + "/reactions", member},
 	} {
 		if answered, code, _ := guard(tc.method, tc.path, tc.token); answered {

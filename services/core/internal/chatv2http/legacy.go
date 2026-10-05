@@ -14,9 +14,9 @@ import (
 // off: turning the lane off is a rollback of new v2 sends, never a return to
 // plaintext in an encrypted room.
 
-// LegacyStore answers whether a room is on the v2 lane, for one member.
+// LegacyStore answers whether a room is on the v2 lane.
 type LegacyStore interface {
-	OnV2Lane(ctx context.Context, actor, conversation string) (member, onLane bool, err error)
+	OnV2Lane(ctx context.Context, conversation string) (bool, error)
 }
 
 // Resolve is the front door's own routing decision for a request: the
@@ -38,17 +38,17 @@ var legacyWrites = map[string]bool{
 
 // LegacyGuard refuses legacy chat writes to v2 rooms.
 type LegacyGuard struct {
-	Store        LegacyStore
-	Authenticate Authenticate
-	Resolve      Resolve
+	Store   LegacyStore
+	Resolve Resolve
 }
 
-// Guard answers a legacy chat write on a v2 room: 409 conversation_is_e2ee
-// for an authenticated member, never a plaintext write. It answers nothing
-// (false) for anything else -- another route, a room id the route itself will
-// refuse, a caller it cannot authenticate, a non-member -- and the route
-// answers as it always has. When it cannot tell, it refuses with 503: fail
-// closed, not open.
+// Guard answers every legacy chat write on a v2 room 409
+// conversation_is_e2ee, whoever asks: the guard does not authenticate, so no
+// difference between how it and the route read a caller (a bearer here, a dev
+// X-Actor-ID there) can open the plaintext path (security review 05/10). The
+// cost, accepted: anyone holding a room's id learns its lane is v2. It
+// answers nothing (false) for another route or a room id the route itself
+// will refuse. When it cannot tell, it refuses with 503: fail closed.
 func (g LegacyGuard) Guard(w http.ResponseWriter, r *http.Request) bool {
 	if g.Resolve == nil {
 		return false
@@ -61,20 +61,16 @@ func (g LegacyGuard) Guard(w http.ResponseWriter, r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	if g.Store == nil || g.Authenticate == nil {
+	if g.Store == nil {
 		problem(w, http.StatusServiceUnavailable, "chat_v2_unavailable")
 		return true
 	}
-	actor, err := g.Authenticate(r.Context(), r.Header)
-	if err != nil {
-		return false
-	}
-	member, onLane, err := g.Store.OnV2Lane(r.Context(), actor, room)
+	onLane, err := g.Store.OnV2Lane(r.Context(), room)
 	if err != nil {
 		problem(w, http.StatusServiceUnavailable, "chat_v2_unavailable")
 		return true
 	}
-	if member && onLane {
+	if onLane {
 		problem(w, http.StatusConflict, "conversation_is_e2ee")
 		return true
 	}

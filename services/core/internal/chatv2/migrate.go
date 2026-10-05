@@ -22,6 +22,17 @@ var migrations = []string{schemaSQL, schemaV2SQL}
 // triggers write (aigate).
 func SchemaSQL() string { return schemaSQL + "\n" + schemaV2SQL }
 
+// SchemaFiles is each embedded version as its file reads.
+func SchemaFiles() []string { return append([]string(nil), migrations...) }
+
+// Installed is whether any chat v2 table exists: false only when this
+// database never ran the chat v2 migration.
+func Installed(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
+	var present bool
+	err := pool.QueryRow(ctx, `SELECT to_regclass('chat_v2_conversations') IS NOT NULL`).Scan(&present)
+	return present, err
+}
+
 // Migrate adds the isolated chat-v2 tables after the legacy schema migration.
 // Call explicitly from a deployment migration command, never a request handler.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

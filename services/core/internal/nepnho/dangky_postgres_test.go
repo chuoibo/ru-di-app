@@ -24,6 +24,7 @@ import (
 	"mobile/services/core/internal/diary"
 	"mobile/services/core/internal/dieuchinh"
 	"mobile/services/core/internal/jobs"
+	"mobile/services/core/internal/push"
 	"mobile/services/core/internal/rag"
 )
 
@@ -31,7 +32,7 @@ import (
 // migrate-chat`, `migrate-rag`, `migrate-diaries` and `migrate-community`
 // run).
 func sqlGo() []string {
-	sqls := append(chatassist.SchemaFiles(), accountauth.SchemaSQL(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(),
+	sqls := append(append(chatassist.SchemaFiles(), chatv2.SchemaFiles()...), accountauth.SchemaSQL(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), push.SchemaSQL(),
 		metrics.SchemaSQL(), metrics.SchemaV2SQL(), metrics.SchemaV3SQL(), metrics.SchemaV4SQL(), SchemaSQL())
 	sqls = append(sqls, avatarfeed.SchemaFiles()...)
 	sqls = append(sqls, diary.SchemaFiles()...)
