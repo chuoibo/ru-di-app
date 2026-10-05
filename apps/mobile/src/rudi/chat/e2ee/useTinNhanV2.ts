@@ -26,7 +26,7 @@ import type { LoaiPhanUng, PhanUngTomTat, Tin, TinDaGui } from "../tin-song";
 import { PHAN_UNG } from "../tin-song";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { apiV2 } from "./api-v2";
-import type { MediaRef, Operation } from "./kieu";
+import type { Card, MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type Cho, type SoPhong } from "./so-phong";
 import { danhSach, moiTruoc, type TinV2 } from "./so-tin";
@@ -61,6 +61,17 @@ const ngheDoiPhong = new Set<(room: string) => void>();
 
 export function coMaHoa(): boolean {
   return ChatCryptoModule !== null;
+}
+
+/**
+ * This phone's own card, read from its keys on the device -- never from the
+ * server, whose word is exactly what the key mark exists to check. Null when
+ * this phone never enrolled a device for the person (nothing is enrolled here).
+ */
+export async function theCuaMay(personId: string): Promise<Card | null> {
+  if (ChatCryptoModule === null || (await thietBiCuaMay(personId)) === null) return null;
+  await mayCua(personId);
+  return JSON.parse(await ChatCryptoModule.identity()) as Card;
 }
 
 /** This phone's chat v2 device for a person, if it ever enrolled one (never enrols). */

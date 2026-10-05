@@ -33,3 +33,9 @@ export function dauKhoa(card: Card): string {
     .join("");
   return (hex.match(/.{1,4}/g) ?? []).join(" ");
 }
+
+/** Whether two cards carry the same keys for the same device. */
+export function cungKhoa(a: Card, b: Card): boolean {
+  const bang = (x: number[], y: number[]) => x.length === y.length && x.every((v, i) => v === y[i]);
+  return a.actor_id === b.actor_id && a.device_id === b.device_id && bang(a.mls_signature_key, b.mls_signature_key) && bang(a.transport_signature_key, b.transport_signature_key);
+}

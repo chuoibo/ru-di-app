@@ -4,7 +4,11 @@
  *
  * The server vouches for whose device is whose, so this list is where a person
  * catches a device they do not know -- and the key mark is what two phones
- * compare out of band. A device taken out here leaves every room at the next
+ * compare out of band. This phone's own mark is computed from the keys on
+ * this phone, never from the server's list: comparing two copies of the
+ * server's word would prove nothing (security review 05/10). Where the
+ * server holds other keys for this phone, the screen says so. A device taken
+ * out here leaves every room at the next
  * commit and reads nothing sent after. This phone's own row has no button:
  * taking it out is signing out, which belongs to «Tài khoản».
  */
@@ -13,8 +17,9 @@ import { useCallback, useState } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
-import { dauKhoa, docThietBi, goThietBi, type ThietBiWire } from "../../chat/e2ee/thiet-bi";
-import { coMaHoa, thietBiCuaMay } from "../../chat/e2ee/useTinNhanV2";
+import type { Card } from "../../chat/e2ee/kieu";
+import { cungKhoa, dauKhoa, docThietBi, goThietBi, type ThietBiWire } from "../../chat/e2ee/thiet-bi";
+import { coMaHoa, theCuaMay } from "../../chat/e2ee/useTinNhanV2";
 import { ngayVN } from "../../ngay-viet";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
@@ -26,7 +31,7 @@ import { Stamp } from "../../ui/Stamp";
 
 type Trang =
   | { pha: "dang-doc" }
-  | { pha: "xong"; ds: ThietBiWire[]; toiDa: number; mayNay: string | null }
+  | { pha: "xong"; ds: ThietBiWire[]; toiDa: number; mayNay: Card | null }
   | { pha: "hong"; loi: string };
 
 export function ThietBiMaHoaScreen() {
@@ -39,7 +44,7 @@ export function ThietBiMaHoaScreen() {
   const nap = useCallback(async () => {
     if (personId === "") return;
     try {
-      const [r, mayNay] = await Promise.all([docThietBi(personId), thietBiCuaMay(personId)]);
+      const [r, mayNay] = await Promise.all([docThietBi(personId), theCuaMay(personId)]);
       setTrang({ pha: "xong", ds: r.devices.filter((d) => d.revoked_at === null), toiDa: r.max_devices, mayNay });
     } catch (error) {
       setTrang({ pha: "hong", loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
@@ -99,17 +104,26 @@ export function ThietBiMaHoaScreen() {
         <>
           <NhomHang>
             {[...trang.ds]
-              .sort((a, b) => Number(b.card.device_id === trang.mayNay) - Number(a.card.device_id === trang.mayNay))
+              .sort((a, b) => Number(b.card.device_id === trang.mayNay?.device_id) - Number(a.card.device_id === trang.mayNay?.device_id))
               .map((d) => {
-                const mayNay = d.card.device_id === trang.mayNay;
+                const mayNay = trang.mayNay !== null && d.card.device_id === trang.mayNay.device_id;
+                // This phone: the mark from its own keys; a server card that
+                // disagrees is the attack the mark is there to catch.
+                const lech = mayNay && trang.mayNay !== null && !cungKhoa(d.card, trang.mayNay);
+                const dau = mayNay && trang.mayNay !== null ? dauKhoa(trang.mayNay) : dauKhoa(d.card);
                 return (
                   <View key={d.card.device_id} style={styles.hang}>
                     <View style={styles.hangChu}>
                       <Text style={[typography.label, { color: colors.ink }]}>{d.label}</Text>
                       <Text style={[typography.caption, { color: colors.inkFaint }]}>Thêm ngày {ngayVN(d.created_at)}</Text>
                       <Text selectable style={[typography.caption, styles.dau, { color: colors.inkSoft }]}>
-                        Dấu khoá {dauKhoa(d.card)}
+                        Dấu khoá {dau}
                       </Text>
+                      {lech ? (
+                        <Text style={[typography.caption, { color: colors.warn }]}>
+                          Máy chủ đang giữ một khoá khác cho máy này. Đừng nhắn tin mã hoá trên máy này cho tới khi hỏi rõ.
+                        </Text>
+                      ) : null}
                     </View>
                     {mayNay ? (
                       <Stamp label="MÁY NÀY" tilt={-3} tone="accent" variant="ink" />

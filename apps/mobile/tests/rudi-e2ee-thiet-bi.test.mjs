@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { dauKhoa } from "../dist-test/rudi/chat/e2ee/thiet-bi.js";
+import { cungKhoa, dauKhoa } from "../dist-test/rudi/chat/e2ee/thiet-bi.js";
 
 const card = (t, m) => ({ actor_id: "a", device_id: "d", transport_signature_key: t, mls_signature_key: m });
 const bytes = (start) => Array.from({ length: 32 }, (_, i) => (start + i) & 0xff);
@@ -21,4 +21,12 @@ test("đổi một byte của khoá nào cũng đổi dấu khoá", () => {
   const m = bytes(2); m[0] ^= 1;
   assert.notEqual(dauKhoa(card(t, bytes(2))), goc);
   assert.notEqual(dauKhoa(card(bytes(1), m)), goc);
+});
+
+test("thẻ của máy này so với thẻ máy chủ giữ: cùng khoá mới là một", () => {
+  const that = card(bytes(1), bytes(2));
+  assert.equal(cungKhoa(that, card(bytes(1), bytes(2))), true);
+  // The server swapped this phone's transport key for its own.
+  assert.equal(cungKhoa(that, card(bytes(9), bytes(2))), false);
+  assert.equal(cungKhoa(that, { ...card(bytes(1), bytes(2)), device_id: "khac" }), false);
 });
