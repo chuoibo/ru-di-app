@@ -53,7 +53,7 @@ import { nguonAnh } from "../../ky-niem/ky-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
 import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
-import { hopLanV2, useLanChat, useTinNhanV2 } from "../../chat/e2ee/useTinNhanV2";
+import { hopLanV2, khoaLan, useLanChat, useTinNhanV2 } from "../../chat/e2ee/useTinNhanV2";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
 import { chuHangLoiGoi, laCapDoi, laTraLoiDangCho, lenhSanSang, loiGoiCuaPhong, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
@@ -172,9 +172,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // ADR-0057: a room on the chat v2 lane is read and written through MLS on
   // this device; the legacy hook stands still for it, and vice versa.
   const lan = useLanChat(contextId, personId);
+  // Neither lane acts until the room's lane is established (fail closed).
   const v2 = useTinNhanV2(contextId, personId, lan.lan !== "v2");
-  const cu = useTinNhan(contextId, personId, lan.lan === "v2");
-  const chat = useMemo(() => (lan.lan === "v2" ? hopLanV2(cu, v2) : cu), [lan.lan, cu, v2]);
+  const cu = useTinNhan(contextId, personId, lan.lan !== "legacy");
+  const chat = useMemo(
+    () => (lan.lan === "v2" ? hopLanV2(cu, v2) : lan.lan === "legacy" ? cu : khoaLan(cu, lan.lan === "dang-xet")),
+    [lan, cu, v2],
+  );
   // The room's answers as other members watch them: `ai` frames on the
   // feed's own socket (slice 12).
   const phongAi = useRoomAi(contextId);
@@ -934,12 +938,15 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         {nhanRieng && phien !== null && !khongNhanTin && !gonDau ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
-          {lan.lan === "v2" ? (
-            <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text>
-          ) : (
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>
-          )}
+          {lan.lan === "v2" ? <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text> : null}
+          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text> : null}
+          {lan.lan === "dang-xet" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm tra mã hoá</Text> : null}
           {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
+          {lan.lan === "khong-ro" ? (
+            <Pressable accessibilityRole="button" onPress={lan.thuLai} hitSlop={12}>
+              <Text style={[typography.caption, { color: colors.warn }]}>· Chưa kiểm tra được mã hoá — Thử lại</Text>
+            </Pressable>
+          ) : null}
           {lan.lan === "legacy" && lan.lyDo !== null ? <Text numberOfLines={1} style={[typography.caption, styles.flexShrink, { color: colors.inkSoft }]}>· {lan.lyDo}</Text> : null}
           {changes.connection === "recovering" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>· Đang nối lại</Text> : null}
         </View>

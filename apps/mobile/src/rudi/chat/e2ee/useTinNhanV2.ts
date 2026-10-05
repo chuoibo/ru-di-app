@@ -45,17 +45,25 @@ const kho = {
 /** One engine per signed-in person on this phone. */
 const mayTheoNguoi = new Map<string, Promise<MayMaHoa>>();
 
+/**
+ * Everyone listening for new devices, whichever room or screen opened the
+ * engine first: a notice is never bound to the first caller's closure
+ * (security review 05/10: notices for later rooms were dropped).
+ */
+const ngheThietBiMoi = new Set<(m: ThietBiMoi) => void>();
+
 export function coMaHoa(): boolean {
   return ChatCryptoModule !== null;
 }
 
-export async function mayCua(personId: string, onThietBiMoi?: (m: ThietBiMoi) => void): Promise<MayMaHoa> {
+export async function mayCua(personId: string): Promise<MayMaHoa> {
   const native = ChatCryptoModule;
   if (native === null) throw new ApiError(0, "chat_v2_native_missing", "Bản ứng dụng này chưa có mã hoá đầu cuối. Cập nhật ứng dụng để nhắn trong phòng này.");
   let co = mayTheoNguoi.get(personId);
   if (co === undefined) {
     co = (async () => {
-      const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android", onThietBiMoi });
+      const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android",
+        onThietBiMoi: (m) => { for (const nghe of ngheThietBiMoi) nghe(m); } });
       await may.moThietBi();
       return may;
     })();
@@ -112,9 +120,7 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
   const nap = useCallback(async () => {
     const lan = theHe.current;
     try {
-      const may = await mayCua(personId, (m) => {
-        if (m.room === contextId) setTrang((cu) => ({ ...cu, thietBiMoi: [...cu.thietBiMoi, m] }));
-      });
+      const may = await mayCua(personId);
       await may.nhanWelcome();
       const sanSang = await may.chuanBi(contextId);
       let moi = soRef.current;
@@ -130,6 +136,17 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
       setTrang((cu) => ({ ...cu, dangNap: false, loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) }));
     }
   }, [contextId, personId]);
+
+  useEffect(() => {
+    if (tat) return undefined;
+    const nghe = (m: ThietBiMoi) => {
+      if (m.room === contextId) setTrang((cu) => ({ ...cu, thietBiMoi: [...cu.thietBiMoi, m] }));
+    };
+    ngheThietBiMoi.add(nghe);
+    return () => {
+      ngheThietBiMoi.delete(nghe);
+    };
+  }, [contextId, tat]);
 
   useEffect(() => {
     theHe.current += 1;
@@ -216,6 +233,8 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
 
 export type Lan =
   | { lan: "dang-xet" }
+  /** The lane could not be established: nothing is read or sent until it is. */
+  | { lan: "khong-ro"; thuLai: () => void }
   | { lan: "v2" }
   /** Legacy plaintext, with why the room is not encrypted yet (null: the lane is off here). */
   | { lan: "legacy"; lyDo: string | null };
@@ -229,6 +248,7 @@ export type Lan =
  */
 export function useLanChat(contextId: string, personId: string): Lan {
   const [lan, setLan] = useState<Lan>({ lan: "dang-xet" });
+  const [lanThu, setLanThu] = useState(0);
   useEffect(() => {
     let song = true;
     setLan({ lan: "dang-xet" });
@@ -254,14 +274,19 @@ export function useLanChat(contextId: string, personId: string): Lan {
         }
         await may.chuanBi(contextId);
         if (song) setLan({ lan: "v2" });
-      } catch {
-        if (song) setLan({ lan: "legacy", lyDo: null });
+      } catch (error) {
+        if (!song) return;
+        // Legacy only when that is known: the server's lane is off (404).
+        // Anything else is not knowing, and not knowing never opens the
+        // plaintext path (security review 05/10: fail closed).
+        if (error instanceof ApiError && error.status === 404) setLan({ lan: "legacy", lyDo: null });
+        else setLan({ lan: "khong-ro", thuLai: () => setLanThu((n) => n + 1) });
       }
     })();
     return () => {
       song = false;
     };
-  }, [contextId, personId]);
+  }, [contextId, personId, lanThu]);
   return lan;
 }
 
@@ -292,6 +317,38 @@ export function hopLanV2<L extends { gui: unknown }>(cu: L, v2: ReturnType<typeo
     boQua: () => undefined,
     xoaTin: (id: string) => v2.xoaTin(id),
     doiPhanUng: (id: string, kind: LoaiPhanUng) => v2.doiPhanUng(id, kind),
+    danhDauHienThi: () => undefined,
+    nhanAnhChup: () => undefined,
+  } as L;
+}
+
+/**
+ * The chat screen's `chat` object while the lane is not yet known: nothing
+ * shown, nothing sent -- neither lane may act before the room's lane is
+ * established (security review 05/10).
+ */
+export function khoaLan<L extends { gui: unknown }>(cu: L, dangXet: boolean): L {
+  const tuChoi = async (): Promise<never> => {
+    throw new ApiError(0, "chat_lane_unknown", dangXet ? "Đang kiểm tra mã hoá của phòng. Thử lại sau giây lát." : "Chưa xác định được phòng có mã hoá hay không. Bấm thử lại.");
+  };
+  return {
+    ...cu,
+    tin: [],
+    dangNap: dangXet,
+    dangNapCu: false,
+    hetTinCu: true,
+    loi: dangXet ? null : "Chưa xác định được phòng có mã hoá đầu cuối hay không.",
+    loiCu: null,
+    loiLoai: dangXet ? null : "tam",
+    hangCho: [],
+    napCuHon: async () => undefined,
+    gui: tuChoi,
+    guiAnhMoi: tuChoi,
+    guiSticker: tuChoi,
+    thuLaiMot: tuChoi,
+    boQua: () => undefined,
+    xoaTin: tuChoi,
+    doiPhanUng: tuChoi,
     danhDauHienThi: () => undefined,
     nhanAnhChup: () => undefined,
   } as L;
