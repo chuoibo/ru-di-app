@@ -275,13 +275,21 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       />
     );
   } else if (!so.lapSo) {
-    // The notebook before both have agreed: a book with their two names on
-    // it, shut, and Nếp folding a sheet small beside it (ADR-0037 D1).
+    // The notebook stays shut before both agree (ADR-0037 D1). The two real
+    // names have a full reading line instead of squeezing into its tiny label.
     than = (
       <View style={styles.canh} testID="giay-chua-lap-so">
         <View style={styles.hangCanh}>
-          <SoBia rong={128} ten={[tenToi, so.tenNguoiKia || "Người ấy"]} />
+          <SoBia
+            rong={128}
+            ten={[]}
+            nhan={<View style={[styles.nhanSo, { backgroundColor: colors.card }]}><Text style={[typography.label, { color: colors.ink }]}>Hai mình</Text></View>}
+          />
           <NepTrongTrang pose="gap-lai" size={112} />
+        </View>
+        <View style={styles.tenHaiBan}>
+          <Text style={[typography.title, styles.tenBan, { color: colors.ink }]}>{tenToi}</Text>
+          <Text style={[typography.body, styles.tenBan, { color: colors.inkSoft }]}>và {so.tenNguoiKia || "Người ấy"}</Text>
         </View>
         {/* Any pair keeps a notebook, «Hội bạn» or «Một đôi» (ADR-0053): the
             line does not assume a couple, and says the kind is chosen later. */}
@@ -619,6 +627,9 @@ const styles = StyleSheet.create({
   dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   than: { paddingTop: 8 },
   canh: { gap: 16 },
+  nhanSo: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", borderRadius: 2 },
+  tenHaiBan: { gap: 4, alignItems: "center" },
+  tenBan: { maxWidth: "100%", textAlign: "center" },
   hangCanh: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 12 },
   giuaNgang: { alignSelf: "center" },
   toTrong: { flex: 1, maxWidth: 240, transform: [{ rotate: "-2deg" }] },

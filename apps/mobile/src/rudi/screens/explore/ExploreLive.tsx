@@ -56,7 +56,7 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
+import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { Canh } from "../../ui/art/Canh";
@@ -318,7 +318,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query.trim() === "" ? (
-        <View style={styles.buuThiep}><AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={150} /><Text style={[typography.caption, { color: colors.inkFaint }]}>Minh hoạ hành trình</Text></View>
+        <View style={styles.buuThiep}>
+          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={150} />
+          <View pointerEvents="none" style={[styles.nhanMinhHoa, { backgroundColor: colors.card }]}>
+            <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ hành trình</Text>
+          </View>
+        </View>
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -396,19 +401,21 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             </View>
           ) : null}
           {loiLuu !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiLuu}</Text> : null}
-          <SectionHeader
-            action={dangLoc || query !== "" ? "Xóa lọc" : undefined}
-            onAction={dangLoc || query !== "" ? boTim : undefined}
-            // The city comes from the answer, not from a string typed here:
-            // this line used to say «Đà Lạt» over a list of anywhere. Not
-            // the mockup's near-you-and-to-taste heading: the catalogue comes in
-            // the server's order (ORDER BY places.id), not by distance or
-            // taste, so the heading claims neither; the count moves under it.
-            title={dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
-          />
-          {!dangLoc ? (
-            <Text style={[typography.caption, styles.soNoi, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
-          ) : null}
+          <View style={styles.dauKetQua}>
+            <View style={styles.tenKetQua}>
+              {/* The destination and count come from the response; neither
+                  the heading nor the artwork implies a distance ranking. */}
+              <Text style={[typography.h2, styles.tenKhu, { color: colors.ink }]}>
+                {dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
+              </Text>
+              {dangLoc || query !== "" ? (
+                <Pressable accessibilityRole="button" onPress={boTim} style={({ pressed }) => [styles.xoaLoc, pressed && styles.bam]}>
+                  <Text style={[typography.label, { color: colors.accent }]}>Xóa lọc</Text>
+                </Pressable>
+              ) : (
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
+              )}
+            </View>
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
               button, because it is the one state the person can fix. */}
           {/* Whose taste a list follows is nothing to say over a city with no places. */}
@@ -433,6 +440,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
               ) : null}
             </View>
           )}
+          </View>
           {thanhPhoRong ? (
             <EmptyState
               action={{ label: "Đổi điểm đến", onPress: () => router.push("/destinations") }}
@@ -515,12 +523,15 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
 }
 
 const styles = StyleSheet.create({
-  // Close under its heading, as one block (the column's gap is 18).
-  soNoi: { marginTop: -14 },
+  dauKetQua: { gap: 4 },
+  tenKetQua: { flexDirection: "row", alignItems: "center", gap: 12 },
+  tenKhu: { flex: 1, minWidth: 0 },
+  xoaLoc: { minWidth: 48, minHeight: 48, justifyContent: "center" },
   flex: { flex: 1 },
   // Above the city stage, whose sky rises under this line (SanThanhPho).
   dau: { gap: 6, zIndex: 1 },
-  buuThiep: { alignItems: "center", marginTop: -12, gap: 2 },
+  buuThiep: { alignItems: "center", alignSelf: "center", marginTop: -12, overflow: "hidden", borderRadius: 8 },
+  nhanMinhHoa: { position: "absolute", left: 10, bottom: 8, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },
@@ -528,9 +539,9 @@ const styles = StyleSheet.create({
   cuonLoai: { marginLeft: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   theAi: { gap: 4, padding: 14, borderRadius: 14 },
-  guRow: { marginTop: -8, gap: 2 },
+  guRow: { gap: 2 },
   // Only while it is a button does the sentence need a 48dp target.
-  guNut: { minHeight: 48, justifyContent: "center", marginTop: -14 },
+  guNut: { minHeight: 48, justifyContent: "center" },
   bam: { opacity: 0.7 },
   ketQua: { gap: 20 },
 });

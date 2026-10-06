@@ -326,18 +326,6 @@ function ThanChiTiet({
         </Pressable>
         <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} variant="outline" />
       </View>
-      {/* From a place to an invitation in one step: the sheet of the two of
-          them opens with this place as the main stop (QA 23/09: a place page
-          had no way to become an evening for a couple). */}
-      {doi.map((d) => (
-        // One notebook: its invitation is the stamp. Several: three coral
-        // stamps shouted over each other on the live capture, so they are lines.
-        doi.length === 1 ? (
-          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
-        ) : (
-          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
-        )
-      ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
       {/* Each fact said once (Luật Nói Một Lần): the price is in the facts at
           the head and the open/closed state is its badge there, so this block
@@ -361,6 +349,18 @@ function ThanChiTiet({
           ) : null}
         </View>
       ) : null}
+      {/* From a place to an invitation in one step: the sheet of the two of
+          them opens with this place as the main stop (QA 23/09: a place page
+          had no way to become an evening for a couple). */}
+      {doi.map((d) => (
+        // One notebook: its invitation is the stamp. Several: three coral
+        // stamps shouted over each other on the live capture, so they are lines.
+        doi.length === 1 ? (
+          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
+        ) : (
+          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="ghost" />
+        )
+      ))}
       {place.traits.length > 0 ? (
         <Inline gap={8} wrap>
           {place.traits.map((t) => (

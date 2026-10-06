@@ -60,7 +60,7 @@ export function EmptyState({
       style={[full ? styles.full : styles.inline, { gap: space.sm, paddingVertical: full ? space.xl : space.md }, style]}
     >
       {illustration ? <View style={{ marginBottom: space.xs }}>{illustration}</View> : null}
-      <Text style={[typography.h2, { color: colors.ink, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
+      <Text style={[full ? typography.h1 : typography.h2, { color: colors.ink, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
         {title}
       </Text>
       {body ? (
@@ -69,20 +69,18 @@ export function EmptyState({
         </Text>
       ) : null}
       {action || secondary ? (
-        <View style={[styles.actions, { gap: space.sm, marginTop: space.xs, alignSelf: full ? "center" : "flex-start" }]}>
-          {/* Sized to the label on every platform: `full` is `width: 100%`,
-              which the web resolves against this shrink-wrapped row and Yoga
-              against the column, so on Android the one action ran edge to
-              edge where the web shows a compact pill (03/10). Still 48 tall. */}
+        <View style={[styles.actions, full && styles.fullActions, { gap: space.sm, marginTop: full ? space.md : space.xs, alignSelf: full ? "center" : "flex-start" }]}>
+          {/* A full-page silence has one full-width way forward, as in the
+              mockup. Inline list recovery stays sized to its own label. */}
           {action ? (
             <RudiButton
-              full={false}
+              full={full}
               label={action.label}
               onPress={action.onPress}
               loading={action.loading}
               tone={kind === "failure" ? "accent" : tone}
               variant={kind === "failure" ? "outline" : "solid"}
-              compact
+              compact={!full}
             />
           ) : null}
           {secondary ? (
@@ -98,4 +96,5 @@ const styles = StyleSheet.create({
   full: { alignItems: "center", justifyContent: "center", flexGrow: 1 },
   inline: { alignItems: "flex-start" },
   actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center" },
+  fullActions: { width: "100%", maxWidth: 360 },
 });

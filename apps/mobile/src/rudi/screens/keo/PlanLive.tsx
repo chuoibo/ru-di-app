@@ -16,6 +16,7 @@ import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
 import { nhanKhoangNgay, type BuoiDi } from "../../../screens/len-plan/buoi-di";
@@ -249,7 +250,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
         <EmptyState
           action={{ label: "Tạo kèo", onPress: () => router.push("/outings/new") }}
           body="Bắt đầu bằng một lời rủ: hôm nào, mấy người, dành bao nhiêu. Những nơi muốn ghé mình thêm dần."
-          illustration={<AssetIllustration name="spot-map" width={180} height={140} resolution="small" />}
+          illustration={<PaperObject name="folded-map" width={180} />}
           kind="first-use"
           title="Chưa có kèo nào"
         />

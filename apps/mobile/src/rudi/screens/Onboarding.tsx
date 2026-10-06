@@ -18,7 +18,8 @@ import {
 import { NGAN_SACH, SO_THICH, doiMuc } from "../../screens/vao-cua/so-thich";
 import { useRudiSession } from "../session";
 import { bongGiay, typography, useRudiTheme } from "../theme";
-import { Heading, RudiScreen, TopBar } from "../ui";
+import { RudiScreen, TopBar } from "../ui";
+import { Grain } from "../ui/Grain";
 import { ONhapMuc } from "../ui/ONhapMuc";
 import { StampButton } from "../ui/StampButton";
 import { GuGlyph } from "../ui/art/Gu";
@@ -36,7 +37,7 @@ const TOI_THIEU = 3;
  * The first cut wrapped eight tiles in a card and gave each an icon box, a
  * full progress bar for a single step, and a button called «Tạo không gian
  * của tôi» -- a registration form wearing the journal's colours (2026-09-06
- * review §8.3). Here the choices sit directly on the page in two airy columns,
+ * review §8.3). Here the choices sit directly on the page in short paper rows,
  * the count says out loud why the button is still waiting («Đã chọn 2/3»),
  * and the button names the thing it does: save, or simply continue when there
  * is no account to save into. The words and their ids are the server's
@@ -63,11 +64,9 @@ export function PersonalizationScreen() {
   // (not from the URL, which anyone can edit).
   const quaLoiMoi = laVaoQuaLoiMoi(useRudiSession().phien);
   const { colors, dark } = useRudiTheme();
-  const { fontScale } = useWindowDimensions();
-  const motCot = Math.round(fontScale * 100) >= 130;
-  // At a large font scale two columns leave a label the width of one word,
-  // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
-  // board, 2026-09-08). The grid falls back to one column instead.
+  const { width, fontScale } = useWindowDimensions();
+  const haiCot = width < 360 || Math.round(fontScale * 100) >= 130;
+  const nganSachMotCot = Math.round(fontScale * 100) >= 130;
   const session = useRudiSession();
   const personId = session.phien?.person_id ?? null;
   // Ask for a name here, once, while the account still carries the server's
@@ -205,7 +204,10 @@ export function PersonalizationScreen() {
           value={ten}
         />
       ) : null}
-      <Heading title="Điều gì khiến bạn muốn ra ngoài?" subtitle="Chọn vài điều mình thích. Gu đổi theo ngày, bạn luôn sửa lại được." />
+      <View style={styles.heading}>
+        <Text style={[typography.h1, { color: colors.ink }]}>Điều gì khiến bạn muốn ra ngoài?</Text>
+        <Text style={[typography.body, styles.headingBody, { color: colors.inkSoft }]}>Chọn vài điều mình thích. Gu đổi theo ngày, bạn luôn sửa lại được.</Text>
+      </View>
       <View style={styles.block}>
         {/* A sheet of stickers (ADR-0037 D1, plan S6/S7): each taste is its
             drawing on a paper sticker; choosing one presses it onto the page --
@@ -222,19 +224,19 @@ export function PersonalizationScreen() {
                 onPress={() => doiMucChon(m.id)}
                 style={({ pressed }) => [
                   styles.sticker,
-                  motCot && styles.motCot,
+                  haiCot && styles.haiCot,
                   {
-                    backgroundColor: selected ? colors.accentSoft : colors.card,
+                    backgroundColor: selected ? colors.accentSoft : colors.paper,
                     borderColor: selected ? colors.accent : colors.lineStrong,
                     borderWidth: selected ? 2 : 1,
-                    borderStyle: selected ? "solid" : "dashed",
                     transform: [{ rotate: selected ? `${NGHIENG_DAN[i % NGHIENG_DAN.length]}deg` : "0deg" }],
                   },
-                  selected && bongGiay(1, dark),
+                  bongGiay(1, dark),
                   pressed && styles.pressed,
                 ]}
               >
-                <GuGlyph id={m.id} size={52} tone={selected ? "accent" : "ink"} />
+                <Grain material="giayTrang" opacity={0.32} style={styles.stickerGrain} />
+                <GuGlyph id={m.id} size={42} tone={selected ? "accent" : "ink"} />
                 <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
                 <Ionicons color={selected ? colors.accent : colors.lineStrong} name={selected ? "checkmark-circle" : "ellipse-outline"} size={18} style={styles.dauChon} />
               </Pressable>
@@ -261,7 +263,7 @@ export function PersonalizationScreen() {
                 {...toggleState("radio", chon, () => doiKhoang(k.id))}
                 key={k.id}
                 onPress={() => doiKhoang(k.id)}
-                style={({ pressed }) => [styles.phongBi, motCot && styles.motCot, { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.phongBi, nganSachMotCot && styles.motCot, { backgroundColor: chon ? colors.accentSoft : colors.paper, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }, pressed && styles.pressed]}
               >
                 <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
                 <View style={[styles.dayPhongBi, { height: 2 + i * 3, backgroundColor: colors.lineStrong }]} />
@@ -281,6 +283,7 @@ export function PersonalizationScreen() {
         lyDo={duDieuKien ? undefined : `Chọn thêm ${TOI_THIEU - muc.length} mục nữa.`}
         onPress={() => void xong()}
         size="vua"
+        style={styles.save}
         tilt={-1}
       />
       <Text style={[typography.note, styles.privacyText, { color: colors.inkFaint }]}>
@@ -292,20 +295,25 @@ export function PersonalizationScreen() {
 
 const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
-  personalization: { maxWidth: 640 },
+  personalization: { maxWidth: 640, gap: 12 },
   boQua: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
-  block: { gap: 12 },
-  blockNganSach: { gap: 8, marginTop: 10 },
-  bangSticker: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  // Three a row on a phone, more on a wider sheet; never narrower than the drawing.
-  sticker: { flexGrow: 1, flexBasis: "47%", maxWidth: "50%", minHeight: 116, alignItems: "center", justifyContent: "center", gap: 6, padding: 10, borderRadius: 10 },
+  heading: { gap: 6 },
+  headingBody: { fontSize: 15, lineHeight: 22 },
+  block: { gap: 8 },
+  blockNganSach: { gap: 6, marginTop: 2 },
+  bangSticker: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 },
+  // Three short chips; narrow windows and large text keep two readable columns.
+  sticker: { flexBasis: "31%", maxWidth: "31%", minHeight: 86, minWidth: 48, alignItems: "center", justifyContent: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 8, borderRadius: 6 },
+  haiCot: { flexBasis: "48%", maxWidth: "48%" },
+  stickerGrain: { borderRadius: 5 },
   motCot: { flexBasis: "100%", maxWidth: "100%" },
-  dauChon: { position: "absolute", top: 6, right: 6 },
+  dauChon: { position: "absolute", top: 4, right: 4 },
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // Four envelopes since ADR-0038 §2.5: two to a row, never a lone fourth.
-  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 60, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 8, paddingTop: 14, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },
+  save: { alignSelf: "stretch" },
 });

@@ -14,20 +14,19 @@ import {
 } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 
 import { AssetIllustration } from "../asset-pack/react-native/AssetIllustration";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { giuState } from "../../ui/a11y";
-import { displayFace, lopPhu, mauSang, typography, useRudiTheme } from "../theme";
+import { displayFace, lopPhu, typography, useRudiTheme } from "../theme";
 import { CoverButton } from "../ui/CoverButton";
 import { Grain } from "../ui/Grain";
-import { RouteLine } from "../ui/RouteLine";
 import { PressScale } from "../ui/PressScale";
 import { StampButton } from "../ui/StampButton";
 import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { useMotion } from "../ui/useMotion";
-import { Washi } from "../ui/Washi";
-import { Wordmark } from "../ui/Wordmark";
+import { Logo } from "../ui";
 
 /** The indigo journal cover keeps four accessible chapters and one opening action.
  * Local scenery is illustration; the chapter copy carries the product promise.
@@ -55,7 +54,7 @@ export const WELCOME_PAGES = [
 export function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight, fontScale } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight, fontScale } = useWindowDimensions();
   const layout = useAdaptiveLayout();
   const motion = useMotion();
   const { brand, colors, dark } = useRudiTheme();
@@ -63,10 +62,7 @@ export function WelcomeScreen() {
   const [page, setPage] = useState(0);
   const pageNow = useRef(0);
   const [pageWidth, setPageWidth] = useState(0);
-  const [routeBox, setRouteBox] = useState({ w: 0, h: 0 });
-  const [taglineHeight, setTaglineHeight] = useState(19);
-  // The route is drawn once, on the first frame the cover is up: a plan being
-  // pencilled in, not a loop. Under Reduce Motion it is simply there.
+  // The cover art arrives once. Under Reduce Motion it is simply there.
   const routeIn = useSharedValue(0);
   useEffect(() => {
     routeIn.value = withTiming(1, motion.timing("shared", "decelerate"));
@@ -119,7 +115,12 @@ export function WelcomeScreen() {
   // Android exposes the system's 1.3 setting as a float close to 1.3.
   const short = layout.heightClass === "short" || windowHeight - insets.top - insets.bottom < 660 || Math.round(fontScale * 100) >= 130;
   const compact = layout.sizeClass === "compact";
-  const markHeight = short ? 48 : compact ? 72 : 88;
+  const narrow = windowWidth < 360;
+  const contentWidth = Math.min(windowWidth - 48, 640);
+  const textWidth = short ? contentWidth : Math.round(contentWidth * 0.6);
+  const artWidth = Math.round(contentWidth * 0.5);
+  const heroHeight = short ? 160 : Math.max(370, Math.min(520, windowHeight - insets.top - insets.bottom - 296));
+  const artHeight = heroHeight + 72;
 
   return (
     <View role="main" style={[styles.root, { backgroundColor: colors.ground }]} testID="welcome-screen">
@@ -127,41 +128,28 @@ export function WelcomeScreen() {
       <Grain material={dark ? "vaiBia" : "giayTrang"} opacity={dark ? 0.3 : 0.45} />
       <View style={[styles.flex, { backgroundColor: colors.cover }]}>
         <Grain material="vaiBia" opacity={0.3} />
-        {/* A scroll view with a growing content box: at font scale 1.0 the route
-            absorbs the slack and nothing moves; at 2.0 the words and the seal
-            keep their size and the cover scrolls. */}
+        {/* The cover grows for its words. Larger type keeps readable chapters
+            and controls in the scroll flow while the artwork gives way. */}
         <ScrollView
           bounces={false}
           contentContainerStyle={[styles.cover, { paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 16) + 6 }]}
           showsVerticalScrollIndicator={false}
           style={styles.flex}
         >
-          <View style={styles.top}>
-            <View />
+          <View style={styles.identity}>
+            <Logo compact ink={colors.coverInk} />
           </View>
-
-          <View style={[styles.mark, short && styles.markShort]}>
-            <Wordmark height={markHeight} color={colors.coverInk} />
-            <Washi tone="accent" tilt={-2} height={Math.max(34, taglineHeight + 16)} style={styles.tape}>
-              {/* Static dark ink: the tape is coral in both schemes, and the scheme's light ink on coral would read 2.4:1. */}
-              <Text onLayout={(e) => setTaglineHeight(Math.ceil(e.nativeEvent.layout.height))} style={[styles.tagline, { color: mauSang.ink }]}>Từ lời rủ đến trang kỷ niệm</Text>
-            </Washi>
-          </View>
-
-          <Animated.View
-            onLayout={(e) => setRouteBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-            style={[styles.route, short && styles.routeShort, routeStyle]}
-            pointerEvents="none"
-          >
-            {routeBox.w > 0 ? (
-              <View style={styles.coverScene}>
-                <AssetIllustration name={page === 3 ? "scene-coast" : page === 1 ? "scene-cafe" : "scene-street"} width={Math.min(routeBox.w, 480)} height={Math.max(60, Math.min(short ? 88 : 190, routeBox.h - (short ? 0 : 112)))} />
-                {!short ? <RouteLine width={Math.min(routeBox.w, 400)} height={104} color={colors.coverInk} opacity={0.6} stops={WELCOME_PAGES.length} activeStop={page} activeColor={brand.coral} activeInk={mauSang.ink} accessibilityLabel={`Chặng ${page + 1} trên ${WELCOME_PAGES.length}`} /> : null}
-              </View>
+          <View style={[styles.hero, { minHeight: heroHeight }]}>
+            {!short ? (
+              <Animated.View pointerEvents="none" style={[styles.coverArt, { width: artWidth, height: artHeight }, routeStyle]}>
+                <AssetIllustration name={page === 3 ? "scene-coast" : page === 1 ? "scene-cafe" : "scene-street"} width={artWidth} height={artHeight} fit="cover" />
+                <Svg width={72} height={artHeight} style={styles.pageTurn} accessible={false}>
+                  <Path d={`M0 0 C8 ${artHeight * 0.32} 64 ${artHeight * 0.66} 8 ${artHeight} L0 ${artHeight} Z`} fill={colors.cover} />
+                  <Path d={`M9 0 C17 ${artHeight * 0.32} 73 ${artHeight * 0.66} 17 ${artHeight} L8 ${artHeight} C64 ${artHeight * 0.66} 8 ${artHeight * 0.32} 0 0 Z`} fill={colors.paper} />
+                </Svg>
+              </Animated.View>
             ) : null}
-          </Animated.View>
-
-          <View style={[styles.bottom, !compact && styles.bottomWide]}>
+            <View style={[styles.chapter, { width: textWidth }, narrow && styles.chapterNarrow, short && styles.chapterShort]}>
             <ScrollView
               ref={pager}
               testID="welcome-pager"
@@ -187,11 +175,15 @@ export function WelcomeScreen() {
             >
               {WELCOME_PAGES.map((item, index) => (
                 <View key={item.title} aria-hidden={index !== page} accessibilityElementsHidden={index !== page} importantForAccessibility={index === page ? "auto" : "no-hide-descendants"} style={[styles.page, { width: pageWidth || undefined }, Platform.OS === "web" && ({ scrollSnapAlign: "start", scrollSnapStop: "always" } as ViewStyle)]}>
-                  <Text style={[styles.pageTitle, { color: colors.coverInk }]}>{item.title}</Text>
+                  <Text style={[styles.pageTitle, narrow && styles.titleNarrow, { color: colors.coverInk }]}>{item.title}</Text>
                   <Text style={[typography.body, styles.pageBody, { color: colors.coverInkSoft }]}>{item.body}</Text>
                 </View>
               ))}
             </ScrollView>
+              {!short && !narrow ? <AssetIllustration name="spot-memory" width={Math.min(textWidth, 175)} height={116} resolution="small" style={styles.memory} /> : null}
+            </View>
+          </View>
+          <View style={[styles.bottom, !compact && styles.bottomWide]}>
             {/* The pager's own indicator: the current page is a short coral bar, the
                 same coral as the route's active stop, so the two say one thing. */}
             <View style={styles.dots} role="group" accessibilityLabel="Chọn trang giới thiệu">
@@ -209,7 +201,7 @@ export function WelcomeScreen() {
             </View>
             <Text accessibilityLiveRegion="polite" aria-live="polite" style={[typography.caption, styles.progress, { color: colors.coverInkSoft }]}>Trang {page + 1} trên {WELCOME_PAGES.length}</Text>
             <View style={styles.actions}>
-              <StampButton label="Rủ Đi thôi!" onPress={openCover} testID="welcome-cta" tilt={-3} />
+              <StampButton label="Rủ Đi thôi!" onPress={openCover} testID="welcome-cta" tilt={0} style={styles.openButton} />
               <CoverButton
                 icon="chevron-forward"
                 label={page < WELCOME_PAGES.length - 1 ? "Tìm hiểu thêm" : "Xem lại từ đầu"}
@@ -234,27 +226,27 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   flex: { flex: 1 },
-  cover: { flexGrow: 1, paddingHorizontal: 20 },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 28 },
-  mark: { alignItems: "center", gap: 10, marginTop: 8 },
-  markShort: { gap: 10, marginTop: 8 },
-  // Never wider than a page: on a tablet the S-curve across 1600px read as a wire.
-  // `minHeight: 0` lets it give way first when the words need the room.
-  route: { flex: 1, minHeight: 120, marginVertical: 8, marginHorizontal: 12, alignSelf: "center", width: "100%", maxWidth: 560 },
-  routeShort: { flex: 0, height: 88, minHeight: 88 },
-  coverScene: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
-  tape: { alignSelf: "center", paddingHorizontal: 16, maxWidth: "100%" },
-  tagline: { fontFamily: displayFace.bold, fontSize: 15, lineHeight: 19, letterSpacing: -0.1, textAlign: "center" },
-  bottom: { gap: 8, marginHorizontal: -20 },
-  bottomWide: { alignSelf: "center", width: "100%", maxWidth: 640, marginHorizontal: 0 },
-  page: { paddingHorizontal: 20 },
-  pageTitle: { fontFamily: displayFace.extraBold, fontSize: 28, lineHeight: 33, letterSpacing: -0.7, minHeight: 68 },
-  pageBody: { marginTop: 6, minHeight: 60, maxWidth: 520 },
+  cover: { flexGrow: 1, paddingHorizontal: 24, width: "100%", maxWidth: 688, alignSelf: "center" },
+  identity: { alignItems: "flex-start", paddingTop: 12, zIndex: 1 },
+  hero: { position: "relative", flexGrow: 1 },
+  coverArt: { position: "absolute", top: -72, right: -24, overflow: "hidden" },
+  pageTurn: { position: "absolute", left: 0, top: 0 },
+  chapter: { paddingTop: 56 },
+  chapterNarrow: { paddingTop: 40 },
+  chapterShort: { paddingTop: 24, paddingBottom: 20 },
+  memory: { marginTop: 28, transform: [{ rotate: "-5deg" }] },
+  bottom: { gap: 4, paddingTop: 8, zIndex: 1 },
+  bottomWide: { alignSelf: "center", width: "100%", maxWidth: 640 },
+  page: { paddingRight: 8 },
+  pageTitle: { fontFamily: displayFace.extraBold, fontSize: 34, lineHeight: 40, letterSpacing: -0.7 },
+  titleNarrow: { fontSize: 30, lineHeight: 36 },
+  pageBody: { marginTop: 14, maxWidth: 360 },
   dots: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   dotTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
-  progress: { textAlign: "center", marginTop: -12 },
+  progress: { textAlign: "center", marginTop: -10, marginBottom: 12 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   dotActive: { width: 22, borderRadius: 3 },
-  actions: { paddingHorizontal: 20, gap: 10 },
+  actions: { gap: 8 },
+  openButton: { alignSelf: "stretch", width: "100%" },
   dauVanCay: { textAlign: "center", paddingTop: 4 },
 });

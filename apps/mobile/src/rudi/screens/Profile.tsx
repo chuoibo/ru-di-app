@@ -14,6 +14,8 @@ import { DiaryWall } from "../diary/Wall";
  * separate sums from ledger lines, and draw no chart for decoration.
  */
 import { DongTien } from "../ui/DongTien";
+import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
+import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -35,7 +37,6 @@ import { useLuiLop } from "../ui/useLuiLop";
 import { useTenCho } from "../to-giay/useTenCho";
 import { ErrorState } from "../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
-import { TrangSo } from "../ui/TrangSo";
 import { ChuThichLe } from "../ui/ChuThichLe";
 import { useNepNguCanh } from "../nep/NepProvider";
 
@@ -302,13 +303,18 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
   return (
     <RudiScreen material="quiet" tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
-      {/* The one answer first, as the first line of a ledger: what this
-          person's share of everything has come to, written on the ledger page. */}
-      <TrangSo ke={false} testID="trang-so-tai-chinh">
-        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`} tone="split" vnd={du.spend_vnd} />
+      {/* The receipt's total is the reading anchor in the approved mockup.
+          Every amount remains a separate figure returned by the ledger. */}
+      <HoaDonGiay rangTren testID="trang-so-tai-chinh">
+        <View style={styles.dauHoaDon}>
+          <Text style={[typography.label, { color: colors.ink }]}>Phần chi của bạn</Text>
+          <Money size="display" tone="split" vnd={du.spend_vnd} adjustsFontSizeToFit style={styles.tongHoaDon} />
+          <Text style={[typography.caption, styles.moTaHoaDon, { color: colors.inkSoft }]}>{`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`}</Text>
+        </View>
+        <VachCat />
         <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}đ`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
         <DongTien cuoi nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
-      </TrangSo>
+      </HoaDonGiay>
       {/* Every figure is said once, on the page above; under it only where
           they come from and the way to the group's settlement. A section
           heading here promised rows the finance read does not carry («Chi theo
@@ -350,6 +356,9 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
 }
 
 const styles = StyleSheet.create({
+  dauHoaDon: { alignItems: "center", gap: 6, paddingVertical: 12 },
+  tongHoaDon: { maxWidth: "100%", fontSize: 36, lineHeight: 44 },
+  moTaHoaDon: { textAlign: "center" },
   mocTien: { flexDirection: "row", gap: 12, minHeight: 64 },
   cotMoc: { width: 14, alignItems: "center", paddingTop: 6 },
   chamMoc: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },

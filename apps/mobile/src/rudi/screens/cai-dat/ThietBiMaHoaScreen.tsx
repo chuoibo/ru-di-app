@@ -25,6 +25,7 @@ import { ngayVN } from "../../ngay-viet";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
@@ -74,6 +75,7 @@ export function ThietBiMaHoaScreen() {
   };
 
   if (!phienDaDoc) return null;
+  if (phien === null) return <CuaDangNhap tiep="/settings/thiet-bi" />;
 
   return (
     <RudiScreen material="quiet" cot="form" testID="thiet-bi-ma-hoa-screen">

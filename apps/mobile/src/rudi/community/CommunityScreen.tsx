@@ -403,7 +403,18 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         {/* Asked where it changes something: only «Dành cho bạn» learns from
             what one reads, and only once there is something to read; over an
             empty feed it was a second coral ask beside the scene's. */}
-        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
+        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? (
+          <View style={[styles.consent, { borderColor: colors.line }]}>
+            <View style={styles.consentCopy}>
+              <Text style={[typography.title, { color: colors.ink }]}>Một góc hợp với bạn</Text>
+              <Text style={[typography.body, styles.consentBody, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text>
+            </View>
+            <View style={styles.consentActions}>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
+              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, styles.laterLabel, { color: colors.ink }]}>Để sau</Text></Pressable>
+            </View>
+          </View>
+        ) : null}
         {/* Said where the list is, with the way on; a failed reload keeps the cards already shown. */}
         <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bang-tin" />
       </View>}
@@ -448,9 +459,13 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 32 },
   // 16 like the posts and Khám phá's header above, so one gutter runs down the screen.
   intro: { padding: 16, gap: 16 },
-  consent: { padding: 20, gap: 12, borderRadius: 16 },
-  row: { flexDirection: "row", gap: 12 },
-  later: { minHeight: 48, paddingHorizontal: 16, justifyContent: "center" },
+  consent: { paddingVertical: 8, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
+  consentCopy: { gap: 3 },
+  consentBody: { fontSize: 15, lineHeight: 22 },
+  consentActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
+  consentAction: { maxWidth: "100%", flexShrink: 1 },
+  later: { minWidth: 48, minHeight: 48, maxWidth: "100%", paddingHorizontal: 14, justifyContent: "center" },
+  laterLabel: { flexShrink: 1 },
   xacNhan: { gap: 8 },
   // On the gutter the search field and the tabs start on; the tab row's
   // rule already sets it apart, so no space over it.

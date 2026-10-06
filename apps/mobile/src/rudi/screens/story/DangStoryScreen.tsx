@@ -135,8 +135,26 @@ function DangStory() {
   const conLai = TRAN_CHU_THICH - chuThich.length;
 
   return (
-    <RudiScreen material="quiet" cot="doc" testID="dang-story-screen">
-      <TopBar title="Đăng story" />
+    <RudiScreen
+      material="quiet"
+      cot="doc"
+      avoidKeyboard
+      bottomInset={16}
+      footerInset={12}
+      header={<TopBar title="Đăng story" />}
+      footer={(
+        <StampButton
+          disabled={!guiDuoc}
+          label="Đăng story"
+          loading={dangGui}
+          lyDo={anh === null && anhDaTai === null ? "Chọn một tấm ảnh trước đã." : chuThich.length > TRAN_CHU_THICH ? `Chú thích dài quá ${TRAN_CHU_THICH} chữ.` : undefined}
+          onPress={() => void gui()}
+          size="vua"
+          tilt={-1}
+        />
+      )}
+      testID="dang-story-screen"
+    >
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
       {conNhapCu && (anh !== null || anhDaTai !== null || chuThich.trim() !== "") ? (
         <View style={styles.nhapCu} testID="dang-story-nhap-cu">
@@ -185,15 +203,6 @@ function DangStory() {
       </View>
       {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <StampButton
-        disabled={!guiDuoc}
-        label="Đăng story"
-        loading={dangGui}
-        lyDo={anh === null && anhDaTai === null ? "Chọn một tấm ảnh trước đã." : chuThich.length > TRAN_CHU_THICH ? `Chú thích dài quá ${TRAN_CHU_THICH} chữ.` : undefined}
-        onPress={() => void gui()}
-        size="vua"
-        tilt={-1}
-      />
     </RudiScreen>
   );
 }

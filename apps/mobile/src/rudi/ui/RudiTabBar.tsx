@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
@@ -13,6 +12,7 @@ import { TABLIST, tabState } from "../../ui/a11y";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { ConDauTao } from "./ConDauTao";
+import { RudiIcon, type IconName } from "./RudiIcon";
 import { dichCuaCot, oCuaCot, xepThanh } from "./thanh-tab";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 import { useMotion } from "./useMotion";
@@ -21,7 +21,7 @@ import { Wordmark } from "./Wordmark";
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 /** Icon per column, filled when current. */
-const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]> = {
+const ICONS: Record<string, [IconName, IconName]> = {
   explore: ["compass-outline", "compass"],
   plan: ["map-outline", "map"],
   messages: ["chatbubbles-outline", "chatbubbles"],
@@ -120,7 +120,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         onPress={onPress}
         style={layout.rail ? styles.railItem : styles.item}
       >
-        <Ionicons color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
+        <RudiIcon color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
         {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
             tab (review 08/09 F04); the bar grows with the text (`tabBarHeight`). */}
         <Text numberOfLines={2} style={[typography.caption, styles.label, { color: focused ? colors.accent : colors.inkFaint }]}>

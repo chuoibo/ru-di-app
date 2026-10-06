@@ -1,11 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { Children, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,7 +13,8 @@ import { luiVe as luiVeAnToan } from "./lui-ve";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
 import { Grain } from "./ui/Grain";
-import { AssetIcon, type AssetIconName } from "./asset-pack/react-native/AssetIcon";
+import type { AssetIconName } from "./asset-pack/react-native/AssetIcon";
+import { RudiIcon, type IconName } from "./ui/RudiIcon";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
@@ -26,20 +26,7 @@ import { useChamLaiTab } from "./ui/cham-lai-tab";
 import { useMotion } from "./ui/useMotion";
 import { TABLIST, giuState, tabState, toggleState } from "../ui/a11y";
 
-export type IconName = ComponentProps<typeof Ionicons>["name"];
-
-const paperUtilityIcons: Partial<Record<IconName, AssetIconName>> = {
-  "arrow-back": "arrow-left",
-  "chevron-back": "chevron-left",
-  "chevron-forward": "chevron-right",
-  "chevron-down": "chevron-down",
-  close: "close",
-  "close-outline": "close",
-  "ellipsis-horizontal": "more",
-  "settings-outline": "settings",
-  "search-outline": "search",
-  "add-outline": "add",
-};
+export type { IconName } from "./ui/RudiIcon";
 
 type ScreenProps = {
   children: ReactNode;
@@ -665,7 +652,7 @@ export function RudiButton({
   const body = (
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
-      {!loading && icon ? <Ionicons color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
+      {!loading && icon ? <RudiIcon color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
       <Text style={[typography.label, styles.buttonLabel, { color: foreground }]}>
         {label}
       </Text>
@@ -707,7 +694,7 @@ export function RudiButton({
     <View style={[styles.nutCoLyDo, full ? styles.nutCoLyDoFull : null]}>
       {nut}
       <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
-        <Ionicons color={chuTat} name="information-circle-outline" size={16} />
+        <RudiIcon color={chuTat} name="information-circle-outline" size={16} />
         <Text style={[typography.caption, styles.lyDoChu, { color: chuTat }]}>{lyDo}</Text>
       </View>
     </View>
@@ -752,7 +739,6 @@ export function IconButton({
   // box empty) is not a full coral disc. It is the same outline every button
   // takes when it cannot be used yet: dashed edge, soft ink glyph.
   const tatSolid = solid && disabled && !loading;
-  const paperIcon = assetIcon ?? paperUtilityIcons[icon];
   const background = tatSolid
     ? colors.card
     : solid
@@ -789,7 +775,7 @@ export function IconButton({
         tron && styles.iconButtonTron,
       ]}
     >
-      {loading ? <ActivityIndicator color={glyph} size="small" /> : paperIcon ? <AssetIcon color={glyph} name={paperIcon} size={24} /> : <Ionicons color={glyph} name={icon} size={22} />}
+      {loading ? <ActivityIndicator color={glyph} size="small" /> : <RudiIcon assetIcon={assetIcon} assetSize={24} color={glyph} name={icon} size={22} />}
     </PressScale>
   );
 }
@@ -798,7 +784,7 @@ export function IconButton({
  * The kit's text field. The box, the input and the placeholder live in
  * `ui/Field.tsx`, which imports nothing native so a node test can render it
  * (audit native 09/09, F44); this wrapper only turns an icon NAME into the
- * `Ionicons` element that file cannot import.
+ * decorative glyph element that file cannot import.
  *
  * A `const`, not a `function` declaration, on purpose: the non-text contrast
  * gate (`services/api/tests/web/test_contrast_floor.py`) reads the kit as text
@@ -809,7 +795,7 @@ export function IconButton({
  */
 export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) => {
   const { colors } = useRudiTheme();
-  return <FieldCore {...props} leading={icon ? <Ionicons color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
+  return <FieldCore {...props} leading={icon ? <RudiIcon color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
 };
 
 export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & { oRef?: FieldCoreProps["oRef"] }) {
@@ -925,7 +911,7 @@ export function Chip({
           },
         ]}
       >
-        {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={14} /> : null)}
+        {leading ?? (icon ? <RudiIcon color={foreground} name={icon} size={14} /> : null)}
         <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
           {label}
         </Text>
@@ -950,8 +936,8 @@ export function Chip({
       ]}
     >
       {/* Selected is said twice: fill and a check, so it does not rest on color alone. */}
-      {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={16} /> : null)}
-      {icon === undefined && leading === undefined && selected ? <Ionicons color={foreground} name="checkmark" size={16} /> : null}
+      {leading ?? (icon ? <RudiIcon color={foreground} name={icon} size={16} /> : null)}
+      {icon === undefined && leading === undefined && selected ? <RudiIcon color={foreground} name="checkmark" size={16} /> : null}
       <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
         {label}
       </Text>
@@ -1024,7 +1010,7 @@ export function Stat({
     <View style={styles.stat}>
       {icon ? (
         <View style={[styles.statIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
-          <Ionicons color={toneColor(colors, tone)} name={icon} size={19} />
+          <RudiIcon color={toneColor(colors, tone)} name={icon} size={19} />
         </View>
       ) : null}
       {/* Never shrunk to fit: a figure that does not fit wraps to its own line (report §7.1). */}
@@ -1043,7 +1029,7 @@ export function AiNote({ children }: { children: ReactNode }) {
   const { colors } = useRudiTheme();
   return (
     <View style={[styles.aiNote, { borderColor: colors.ai }]}>
-      <Ionicons color={colors.ai} name="sparkles" size={17} style={styles.aiIcon} />
+      <RudiIcon color={colors.ai} name="sparkles" size={17} style={styles.aiIcon} />
       <View style={styles.flex}>
         <Text style={[typography.label, styles.aiText, { color: colors.ink }]}>{children}</Text>
         <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI gợi ý</Text>
@@ -1135,13 +1121,13 @@ export function ListRow({
       style={styles.listRow}
     >
       <View style={[styles.listIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
-        <Ionicons color={toneColor(colors, tone)} name={icon} size={20} />
+        <RudiIcon color={toneColor(colors, tone)} name={icon} size={20} />
       </View>
       <View style={styles.listText}>
         <Text style={[typography.label, { color: colors.ink }]}>{title}</Text>
         {subtitle ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{subtitle}</Text> : null}
       </View>
-      {trailing ?? (onPress && chevron ? <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
+      {trailing ?? (onPress && chevron ? <RudiIcon color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
     </PressScale>
   );
 }

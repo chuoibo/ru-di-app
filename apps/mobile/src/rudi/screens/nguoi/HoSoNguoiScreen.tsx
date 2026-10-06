@@ -17,7 +17,7 @@ import { Canh } from "../../ui/art/Canh";
 import { luiVeVe } from "../../lui-ve";
 import { laTuChoiVinhVien } from "../../../cau-loi-theo-ma";
 import { useCallback, useRef, useState } from "react";
-import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { Image } from "expo-image";
 
@@ -41,7 +41,6 @@ import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { mucNguoi } from "../../nguoi/muc-nguoi";
-import { Ionicons } from "@expo/vector-icons";
 import { docDoiTuong, docTrangTuong, ghepTrangTuong, lamMoiDauTuong, type BaiTuong } from "../../tuong/social-v2";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -50,6 +49,7 @@ import { BadgeArt } from "../../ui/BadgeArt";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
+import { RudiIcon } from "../../ui/RudiIcon";
 
 type TrangHoSo =
   | { pha: "dang-doc" }
@@ -80,6 +80,8 @@ const DAU_AN_KE_CHUYEN: Record<string, string> = {
 export function HoSoNguoiScreen() {
   const router = useRouter();
   const { colors, dark } = useRudiTheme();
+  const { width, fontScale } = useWindowDimensions();
+  const [contentWidth, setContentWidth] = useState(Math.min(width - 32, 248));
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const params = useLocalSearchParams<{ id?: string }>();
   // Written as a statement, not `x ? x : ""`: the id-default scanner reads that
@@ -298,6 +300,24 @@ export function HoSoNguoiScreen() {
 
   if (!phienDaDoc) return null;
 
+  const largeText = fontScale >= 1.3;
+  const coverWidth = Math.min(contentWidth, 248);
+  const coverHeight = coverWidth * 4 / 3;
+  const identityOnCover = hoSo.pha === "xong" && !largeText && coverWidth >= 220 && hoSo.hoSo.display_name.length <= 28;
+  const identity = hoSo.pha === "xong" ? (
+    <View style={identityOnCover ? styles.nhanTen : [styles.dau, largeText && styles.dauLonChu]}>
+      <View style={[styles.anhHoChieu, { borderColor: colors.lineStrong }]}>
+        <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} ring size={identityOnCover ? 44 : 64} />
+      </View>
+      <View style={identityOnCover ? styles.tenTrenBia : [styles.dauChu, largeText && styles.dauChuLon]}>
+        {identityOnCover ? null : <Text style={[typography.caption, { color: colors.inkSoft }]}>Họ tên</Text>}
+        <Text style={[typography.h1, identityOnCover && styles.tenBia, { color: mucNguoi(personId, dark) }]}>
+          {hoSo.hoSo.display_name}
+        </Text>
+      </View>
+    </View>
+  ) : null;
+
   return (
     <RudiScreen material="quiet" overlay={khayHanhDong} testID="ho-so-nguoi-screen">
       <TopBar title="Hồ sơ" />
@@ -327,32 +347,36 @@ export function HoSoNguoiScreen() {
           <Text style={[typography.h2, { color: colors.ink }]}>
             {hoSo.hoSo.relation === "self" ? "Những ngày mình đã đi" : `Những ngày của ${hoSo.hoSo.display_name}`}
           </Text>
-            {/* A passport, the same one «Cá nhân» shows its owner (plan S5):
-                the cloth band, then the data page -- photo, the name in this
-                person's own ink (D6), the city, the date they joined. */}
-            <View style={[styles.hoChieu, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="ho-so-nguoi-ho-chieu">
-              <View style={[styles.bia, { backgroundColor: colors.cover }]}>
-                <Text style={[typography.stamp, { color: colors.coverInk }]}>Hộ chiếu Rủ Đi</Text>
-                <Ionicons color={colors.coverInkSoft} name="compass-outline" size={18} />
+            {/* The cover stays in its portrait ratio, matching one's own
+                passport. Long names and larger type flow on the data page;
+                relation controls and earned badges remain live content. */}
+            <View
+              onLayout={({ nativeEvent: { layout } }) => { if (layout.width > 0) setContentWidth(layout.width); }}
+              style={styles.hoChieu}
+              testID="ho-so-nguoi-ho-chieu"
+            >
+              <View style={[styles.bia, { width: coverWidth }]}>
+                <AssetIllustration height={coverHeight} name="decor-cover" width={coverWidth} style={StyleSheet.absoluteFill} />
+                <View style={[styles.noiDungBia, { minHeight: coverHeight, paddingHorizontal: coverWidth * 0.14, paddingTop: coverHeight * 0.12 }]}>
+                  <View pointerEvents="none" style={styles.tuaBia}>
+                    <Text style={[typography.stamp, styles.chuBia, { color: colors.coverInk }]}>Hộ chiếu Rủ Đi</Text>
+                    <RudiIcon color={colors.coverInkSoft} name="compass-outline" size={28} />
+                  </View>
+                  {identityOnCover ? (
+                    <View style={[styles.giayTen, { width: coverWidth * 0.64, marginTop: coverHeight * 0.12, backgroundColor: colors.card }, bongGiay(1, dark)]}>
+                      {identity}
+                    </View>
+                  ) : null}
+                </View>
               </View>
               <View style={styles.trang}>
-                <View style={styles.dau}>
-                  <View style={[styles.anhHoChieu, { borderColor: colors.lineStrong }]}>
-                    <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} ring size={64} />
+                {identityOnCover ? null : identity}
+                {hoSo.hoSo.city ? (
+                  <View style={styles.thanhPho}>
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>Thành phố</Text>
+                    <Text style={[typography.label, { color: colors.ink }]}>{hoSo.hoSo.city}</Text>
                   </View>
-                  <View style={styles.dauChu}>
-                    <Text style={[typography.caption, { color: colors.inkSoft }]}>Họ tên</Text>
-                    <Text style={[typography.h1, { color: mucNguoi(personId, dark) }]}>
-                      {hoSo.hoSo.display_name}
-                    </Text>
-                    {hoSo.hoSo.city ? (
-                      <>
-                        <Text style={[typography.caption, { color: colors.inkSoft }]}>Thành phố</Text>
-                        <Text style={[typography.label, { color: colors.ink }]}>{hoSo.hoSo.city}</Text>
-                      </>
-                    ) : null}
-                  </View>
-                </View>
+                ) : null}
                 {hoSo.hoSo.bio ? (
                   <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.hoSo.bio}</Text>
                 ) : (
@@ -553,14 +577,24 @@ export function HoSoNguoiScreen() {
 
 const styles = StyleSheet.create({
   hoSo: { gap: 10, marginBottom: 12 },
-  hoChieu: { borderWidth: 1, borderRadius: 8, overflow: "hidden" },
-  bia: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 8 },
-  trang: { gap: 10, padding: 14 },
+  hoChieu: { width: "100%", gap: 16 },
+  bia: { alignSelf: "center" },
+  noiDungBia: { alignItems: "flex-start" },
+  tuaBia: { width: "100%", alignItems: "center", gap: 8 },
+  chuBia: { fontSize: 14, lineHeight: 19, letterSpacing: 1.1, textAlign: "center" },
+  giayTen: { borderRadius: 2, padding: 12, transform: [{ rotate: "-2deg" }] },
+  nhanTen: { alignItems: "flex-start", gap: 6 },
+  tenTrenBia: { alignSelf: "stretch", gap: 4 },
+  tenBia: { fontSize: 18, lineHeight: 22, letterSpacing: -0.3 },
+  trang: { gap: 10, paddingHorizontal: 4 },
+  thanhPho: { gap: 4 },
   anhHoChieu: { borderWidth: 1, padding: 4, borderRadius: 4 },
   hangDau: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" },
   flex: { flex: 1 },
   dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauLonChu: { flexDirection: "column", alignItems: "flex-start" },
   dauChu: { flex: 1, minWidth: 160, gap: 4 },
+  dauChuLon: { flex: 0, minWidth: 0, alignSelf: "stretch" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   dongChay: { gap: 16, paddingBottom: 24 },
   bai: { gap: 12, padding: 16, borderWidth: 1, borderRadius: 18, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },

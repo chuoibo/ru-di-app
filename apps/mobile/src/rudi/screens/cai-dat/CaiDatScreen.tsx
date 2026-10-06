@@ -23,7 +23,8 @@ import { docHoSoToi, type HoSoToi } from "../../../phien";
 import { NHAN_GIAO_DIEN } from "../../giao-dien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, Segmented, TopBar } from "../../ui";
+import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { RudiIcon } from "../../ui/RudiIcon";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { congTac } from "../../ui/cong-tac";
@@ -103,36 +104,34 @@ export function CaiDatScreen() {
 
   return (
     <RudiScreen material="quiet" cot="form" testID="cai-dat-screen">
-      <TopBar title="Cài đặt" />
+      <TopBar />
+      <Text style={[typography.h1, { color: colors.ink }]}>Cài đặt</Text>
       {loading && !hoSo ? <SkeletonLines lines={3}/> : null}
       {loi !== null && hoSo === null ? <CauTaiCho cau={loi} hanhDong={{ label: "Thử lại", onPress: () => { setLoi(null); void nap(); } }} /> : null}
+      <View style={styles.nhomGiaoDien}>
+        <SectionHeader title="Giao diện" />
+        <View accessibilityRole="radiogroup" style={[styles.luaChonGiaoDien, { borderColor: colors.line }]}>
+          {NHAN_GIAO_DIEN.map((muc, index) => <Pressable
+            key={muc.ma}
+            {...toggleState("radio", cheDo === muc.ma, () => datCheDo(muc.ma))}
+            accessibilityLabel={muc.nhan}
+            onPress={() => datCheDo(muc.ma)}
+            style={({ pressed }) => [styles.hangGiaoDien, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }, pressed && { backgroundColor: colors.ground }]}
+          >
+            <RudiIcon name={muc.ma === "sang" ? "sunny-outline" : muc.ma === "toi" ? "moon-outline" : "desktop-outline"} size={22} color={colors.ink} />
+            <Text style={[typography.body, styles.hangChu, { color: colors.ink }]}>{muc.nhan}</Text>
+            <View pointerEvents="none" style={[styles.dauChon, { borderColor: cheDo === muc.ma ? colors.split : colors.lineStrong, backgroundColor: cheDo === muc.ma ? colors.split : "transparent" }]}>
+              {cheDo === muc.ma ? <View style={[styles.chamChon, { backgroundColor: colors.card }]} /> : null}
+            </View>
+          </Pressable>)}
+        </View>
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>Lựa chọn này chỉ ở trên máy này, không gửi đi đâu.</Text>
+      </View>
       {/* Rows on paper, one hairline under each: the same surface system as
           Cá nhân and the ledger next door. Eight floating white cards here read
           as a second UI kit (re-audit 10/09, R5), and a card around `Segmented`
           was a card inside a card. */}
-      <SectionHeader title="Hồ sơ" />
       <NhomHang>
-        <View style={styles.khoi}>
-          <Inline gap={12}>
-            {/* A 404 before the first upload is ordinary; the frame draws
-                initials for it rather than an empty ring (board 2026-09-07). */}
-            <AvatarNguoi name={tenToi} personId={phien?.person_id} size={64} />
-            <View style={styles.hangChu}>
-              <Text style={[typography.label, { color: colors.ink }]}>{tenToi}</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                Ảnh này hiện với những người chung nhóm với bạn.
-              </Text>
-            </View>
-          </Inline>
-          <RudiButton
-            label="Đổi ảnh đại diện"
-            loading={dangDoiAnh}
-            onPress={() => void doiAnhDaiDien()}
-            variant="outline"
-          />
-          <CauTaiCho cau={loiAnh} co="nho" />
-          {pendingPhoto && !dangDoiAnh ? <><RudiButton label="Thử lại ảnh đã chọn" variant="outline" onPress={() => void doiAnhDaiDien(pendingPhoto)}/><RudiButton label="Bỏ ảnh đang chờ" variant="ghost" onPress={() => { void boAnh(pendingPhoto); setPendingPhoto(null); setLoiAnh(null); }}/></> : null}
-        </View>
         <ListRow
           icon="person-outline"
           onPress={() => router.push("/personalization" as never)}
@@ -183,17 +182,30 @@ export function CaiDatScreen() {
           title="Người đã chặn"
         />
       </NhomHang>
-      <SectionHeader title="Giao diện" />
-      <View style={styles.khoi}>
-        <Segmented
-          items={NHAN_GIAO_DIEN.map((muc) => muc.nhan)}
-          onSelect={(chi_so) => datCheDo(NHAN_GIAO_DIEN[chi_so].ma)}
-          selected={NHAN_GIAO_DIEN.findIndex((muc) => muc.ma === cheDo)}
-        />
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Lựa chọn này chỉ ở trên máy này, không gửi đi đâu.
-        </Text>
-      </View>
+      <SectionHeader title="Hồ sơ" />
+      <NhomHang>
+        <View style={styles.khoi}>
+          <Inline gap={12}>
+            {/* A 404 before the first upload is ordinary; the frame draws
+                initials for it rather than an empty ring (board 2026-09-07). */}
+            <AvatarNguoi name={tenToi} personId={phien?.person_id} size={64} />
+            <View style={styles.hangChu}>
+              <Text style={[typography.label, { color: colors.ink }]}>{tenToi}</Text>
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                Ảnh này hiện với những người chung nhóm với bạn.
+              </Text>
+            </View>
+          </Inline>
+          <RudiButton
+            label="Đổi ảnh đại diện"
+            loading={dangDoiAnh}
+            onPress={() => void doiAnhDaiDien()}
+            variant="outline"
+          />
+          <CauTaiCho cau={loiAnh} co="nho" />
+          {pendingPhoto && !dangDoiAnh ? <><RudiButton label="Thử lại ảnh đã chọn" variant="outline" onPress={() => void doiAnhDaiDien(pendingPhoto)}/><RudiButton label="Bỏ ảnh đang chờ" variant="ghost" onPress={() => { void boAnh(pendingPhoto); setPendingPhoto(null); setLoiAnh(null); }}/></> : null}
+        </View>
+      </NhomHang>
       <SectionHeader title="Về Rủ Đi" />
       <NhomHang>
         <ListRow
@@ -221,6 +233,11 @@ export function CaiDatScreen() {
 }
 
 const styles = StyleSheet.create({
+  nhomGiaoDien: { gap: 8 },
+  luaChonGiaoDien: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 6 },
+  hangGiaoDien: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 52, paddingHorizontal: 12, paddingVertical: 10 },
+  dauChon: { width: 20, height: 20, borderWidth: 1.4, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  chamChon: { width: 6, height: 6, borderRadius: 3 },
   khoi: { gap: 12, paddingVertical: 6 },
   hang: { flexDirection: "row", alignItems: "center", gap: 12 },
   loiHang: { paddingBottom: 6 },

@@ -111,10 +111,14 @@ export function PlaceArtwork({ loai, width, height = 180 }: { loai?: string; wid
   const { colors } = useRudiTheme();
   const [measured, setMeasured] = useState(width ?? 280);
   const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
-  return <View onLayout={(e) => setMeasured(e.nativeEvent.layout.width)} style={{ width: width ?? "100%", height, alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: colors.paper, overflow: "hidden" }}>
-    <AssetIllustration name={scene} width={Math.min(width ?? measured, 520)} height={Math.max(36, height - 24)} />
-    <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ</Text>
-  </View>;
+  return (
+    <View onLayout={(e) => setMeasured(e.nativeEvent.layout.width)} style={{ width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}>
+      <AssetIllustration name={scene} width={width ?? measured} height={height} />
+      <View pointerEvents="none" style={{ position: "absolute", left: width !== undefined && width < 100 ? 6 : 10, bottom: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card }}>
+        <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ</Text>
+      </View>
+    </View>
+  );
 }
 
 /**
@@ -168,7 +172,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
         {dd.anh === null ? (
           // No honest picture: the sketch of the KIND of place («ký hoạ trong
           // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-          <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 180 : 220} />
+          <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
         ) : (
           <MediaSlot
             alt={dd.name}

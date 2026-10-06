@@ -12,6 +12,8 @@ import { nhanTrangThaiDuyet } from "./bang-tin";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { EmptyState } from "../ui/EmptyState";
 import { Canh } from "../ui/art/Canh";
+import { PaperObject } from "../asset-pack/react-native/PaperObject";
+import { AssetIcon } from "../asset-pack/react-native/AssetIcon";
 import { HoiTaiHang } from "../ui/HoiTaiHang";
 import { SkeletonGroup, SkeletonRow } from "../ui/Skeleton";
 
@@ -62,7 +64,7 @@ export function Review() {
   };
   return <RudiScreen material="quiet" onRefresh={forbidden ? undefined : load} testID="community-review">
     <TopBar title="Xem xét nội dung" />
-    {forbidden ? <EmptyState kind="permission" illustration={<Canh id="bo-loc-che-het" width={112} nep={false} />} title="Bạn chưa có quyền xem xét nội dung" body="Trang này dành cho người vận hành được cấp quyền. Bạn vẫn có thể đọc và chia sẻ trong cộng đồng." action={{ label: "Quay lại", onPress: () => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/community" as never); } }} /> : <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} />}
+    {forbidden ? <EmptyState kind="permission" illustration={<View><PaperObject name="document" width={128} /><View pointerEvents="none" style={{ position: "absolute", right: 0, bottom: 0, width: 48, height: 48, borderRadius: 24, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}><AssetIcon name="lock" size={24} color={colors.accentInk} /></View></View>} title="Bạn chưa có quyền xem xét nội dung" body="Trang này dành cho người vận hành được cấp quyền. Bạn vẫn có thể đọc và chia sẻ trong cộng đồng." action={{ label: "Quay lại", onPress: () => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/community" as never); } }} /> : <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} />}
     {!loaded && !error ? <SkeletonGroup><SkeletonRow /><SkeletonRow /></SkeletonGroup> : null}
     {loaded && !items.length && !error ? <EmptyState kind="first-use" illustration={<Canh id="chua-co-bai" width={112} nep={false} />} title="Hàng đợi đã được xem hết" body="Nội dung cần quyết định sẽ xuất hiện ở đây." /> : null}
     {!forbidden ? items.map((item) => <View key={item.id} style={{ paddingVertical: 24, gap: 16, borderBottomWidth: 1, borderColor: colors.line }}>

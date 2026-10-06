@@ -80,7 +80,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
   };
 
   return (
-    <RudiScreen header={<TopBar back title="Rủ một người" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
+    <RudiScreen material="quiet" header={<TopBar back title="Rủ một người" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
       <View style={{ gap: 10, paddingTop: 8 }}>
         <Heading size="h2" subtitle="Chọn người bạn muốn cùng mở sổ lời hẹn. Hai bạn cùng đồng ý trước khi gửi lời hẹn." title="Rủ ai?" />
         {trang.pha === "dang-doc" ? (

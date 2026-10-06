@@ -21,6 +21,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View, type TextInput 
 import { Ionicons } from "@expo/vector-icons";
 
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { RudiIcon } from "../../ui/RudiIcon";
 import { usePaperPalette } from "../../asset-pack/react-native/usePaperPalette";
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -245,7 +246,10 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
       testID="create-outing-screen"
     >
       <TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />
-      <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><PaperObject name="ticket" width={72} palette={palette} /></View>
+      <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><View>
+        <PaperObject name="ticket" width={72} palette={{ ...palette, shade: colors.lineStrong }} />
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", paddingLeft: 16 }]}><RudiIcon color={colors.inkSoft} name="calendar-outline" size={20} /></View>
+      </View></View>
       {/* The invitation said out loud, with its blanks: what, when, how many,
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>

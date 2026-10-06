@@ -20,7 +20,10 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
   const [coverHeight, setCoverHeight] = useState(240);
   const coverWidth = Math.max(1, Math.min(width, 420));
   return <View style={styles.book} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-    {kind === "moment" ? <View style={styles.moment}>
+    {paged && !compact && document.pages.length > 0 ? <View style={styles.readingTitle}>
+      <Text style={[typography.h2, { color: colors.ink }]}>{document.title}</Text>
+      {document.subtitle ? <Text style={[typography.note, { color: colors.inkSoft }]}>{document.subtitle}</Text> : null}
+    </View> : kind === "moment" ? <View style={styles.moment}>
       <Washi height={18} tilt={-2} style={styles.tape} />
       {document.cover_id ? <KhungAnh tilt={-1}><BookPhoto accessibilityLabel={`Ảnh khoảnh khắc ${document.title}`} source={photo(document.cover_id)} contentFit="cover" cachePolicy="none" style={styles.momentPhoto} /></KhungAnh> : null}
       <Text style={[typography.h2, { color: colors.ink }]}>{document.title}</Text>
@@ -55,6 +58,7 @@ function BookPhoto(props: React.ComponentProps<typeof Image>) {
   return <Image {...props} onError={() => setFailed(true)}/>;
 }
 const styles = StyleSheet.create({
+  readingTitle: { gap: 8 },
   navigation: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 },
   book: { gap: 28, width: "100%", maxWidth: 560, alignSelf: "center" }, cover: { alignSelf: "center" }, coverLabel: { padding: 8, gap: 8 }, coverPhoto: { width: "100%", aspectRatio: 4 / 3 },
   compactPhoto: { aspectRatio: 16 / 9 },

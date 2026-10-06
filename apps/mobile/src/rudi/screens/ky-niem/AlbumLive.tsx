@@ -52,6 +52,9 @@ import { ErrorState } from "../../ui/ErrorState";
 import { PhotoViewer, type ViewerPhoto } from "../../ui/PhotoViewer";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { PressScale } from "../../ui/PressScale";
+import { RudiIcon } from "../../ui/RudiIcon";
 
 function loiRaChu(error: unknown): string {
   if (error instanceof AlbumError) return error.message;
@@ -149,17 +152,41 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "xong"
         ? trang.albums.map((a) => (
-            <ListRow
-              icon={a.in_progress ? "walk-outline" : "albums-outline"}
+            <PressScale
+              accessibilityLabel={`Mở album ${a.title}`}
+              accessibilityRole="button"
               key={a.outing_id}
               onPress={() => router.push(`/trips/${a.outing_id}/album?ctx=${contextId}` as never)}
-              subtitle={`${cauKhoang(a, ngayChuyen[a.outing_id])} · ${cauThongKeAlbum(a)}`}
-              title={a.title}
-            />
+              pressedScale={0.985}
+              style={[styles.albumShelf, { borderColor: colors.line }, !a.cover && styles.emptyAlbumShelf]}
+            >
+              <AlbumCover album={a} contextId={contextId} personId={phien.person_id} />
+              <View style={styles.albumWords}>
+                <Text style={[typography.title, { color: colors.ink }]}>{a.title}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauKhoang(a, ngayChuyen[a.outing_id])}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauThongKeAlbum(a)}</Text>
+              </View>
+              <RudiIcon color={colors.inkSoft} name="chevron-forward" size={20} />
+            </PressScale>
           ))
         : null}
     </RudiScreen>
   );
+}
+
+/** The shelf uses the server's own cover, or an honest empty photo frame. */
+function AlbumCover({ album, contextId, personId }: { album: TomTatAlbum; contextId: string; personId: string }) {
+  const { colors } = useRudiTheme();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [album.cover?.image_url]);
+  const source = album.cover ? nguonAnh(album.cover.image_url, personId, contextId) : null;
+  if (!source || failed) return (
+    <View style={[album.cover ? styles.unreadCover : styles.emptyCover, { backgroundColor: colors.paperShade, borderColor: colors.line }]}>
+      <PaperObject name="photo-stack" width={64} />
+      {failed ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh chưa mở được.</Text> : null}
+    </View>
+  );
+  return <Image accessibilityLabel={album.cover?.caption || `Ảnh bìa ${album.title}`} contentFit="cover" onError={() => setFailed(true)} source={source} style={styles.shelfCover} />;
 }
 
 /* --------------------------------------------------------------- một album */
@@ -295,6 +322,12 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
 }
 
 const styles = StyleSheet.create({
+  albumShelf: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 16, paddingVertical: 20, borderBottomWidth: StyleSheet.hairlineWidth },
+  emptyAlbumShelf: { flexWrap: "nowrap" },
+  albumWords: { flex: 1, minWidth: 0, gap: 6 },
+  shelfCover: { width: "100%", aspectRatio: 4 / 3, borderRadius: 3 },
+  emptyCover: { width: 84, height: 104, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", alignItems: "center", justifyContent: "center", borderRadius: 3 },
+  unreadCover: { width: "100%", aspectRatio: 4 / 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 3 },
   khung: { gap: 14 },
   ngay: { gap: 6 },
   chuThich: { marginTop: 6 },

@@ -12,6 +12,7 @@ import { tabTu, thuTuViec, type ViecTao } from "../tao-moi";
 import { Heading } from "../ui";
 import { NepDien } from "../ui/NepDien";
 import { PressScale } from "../ui/PressScale";
+import { RudiIcon } from "../ui/RudiIcon";
 import { Sheet } from "../ui/Sheet";
 
 /** One line per action; a second line only where two of them could be
@@ -82,7 +83,12 @@ export function CreateSheet() {
                 pressedScale={0.985}
                 style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}
               >
-                <View style={{ transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }}><PaperObject name={VAT_GIAY[action.vat]} palette={palette} width={i === 0 ? 104 : 88} /></View>
+                <View style={[styles.object, { backgroundColor: colors.ground, transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }]}>
+                  <PaperObject name={VAT_GIAY[action.vat]} palette={{ ...palette, paper: colors.card, shade: colors.lineStrong }} width={i === 0 ? 104 : 88} />
+                  {action.vat === "lich" || action.vat === "hoa-don" ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.objectMark, action.vat === "lich" && styles.ticketMark]}>
+                    <RudiIcon assetIcon={action.vat === "hoa-don" ? "split" : undefined} color={colors.inkSoft} name={action.vat === "lich" ? "calendar-outline" : "receipt-outline"} size={28} />
+                  </View> : null}
+                </View>
                 <View style={i === 0 ? styles.chuDan : styles.chuNho}>
                   <Text style={[typography.title, i === 0 ? null : styles.giua, { color: colors.ink }]}>{action.title}</Text>
                   {action.detail ? <Text style={[typography.note, i === 0 ? null : styles.giua, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
@@ -101,6 +107,9 @@ const styles = StyleSheet.create({
   noiDung: { width: "100%", maxWidth: 560, alignSelf: "center", gap: 18, paddingTop: 2 },
   headingRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   headingText: { flex: 1, gap: 10 },
+  object: { padding: 8, borderRadius: 4 },
+  objectMark: { alignItems: "center", justifyContent: "center" },
+  ticketMark: { paddingLeft: 20 },
   ban: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   vat: { borderWidth: 1, borderRadius: 8, padding: 12 },
   vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 112 },

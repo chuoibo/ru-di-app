@@ -29,7 +29,7 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { SoDoChuyen } from "../ui/SoDoChuyen";
-import { TrangSo } from "../ui/TrangSo";
+import { HoaDonGiay } from "../ui/HoaDonGiay";
 
 /** Transfers by the person paid, in the order they first appear. */
 function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string, T[]][] {
@@ -229,21 +229,17 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   return (
     <RudiScreen material="quiet" tone="split" testID="settlement-screen">
       <TopBar onBack={laDoi ? () => setMoChuyen(false) : undefined} title={laDoi ? "Cân lại chi tiêu" : "Quyết toán"} />
-      {/* The ledger's first line, not a hero: the sum the server holds, its
-          name beside it, written at the head of the group's ledger page. */}
-      <TrangSo ke={false} testID="trang-so-quyet-toan">
-        {/* A sum sits beside its name; a state («Chưa có chuyến») is not a sum
-            and goes under the sentence: holding the right column, it pressed
-            the sentence into nine lines at 320 (QA UI-061). In the money face
-            it read as a value sitting where a number goes (QA 23/09). */}
-        <View style={hero.laSo ? styles.hangDauSo : styles.cotDauSo}>
-          <View style={hero.laSo ? styles.flex : undefined}>
-            <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
+      {/* The total leads the receipt, while an empty state remains prose.
+          Both label and value are the unmodified server-ledger adapter. */}
+      <HoaDonGiay rangTren testID="trang-so-quyet-toan">
+        <View style={styles.cotDauSo}>
+          <View>
+            <Text style={[typography.label, styles.nhanDauSo, { color: colors.ink }]}>{hero.nhan}</Text>
           </View>
-          <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
+          <Text adjustsFontSizeToFit={hero.laSo} numberOfLines={hero.laSo ? 1 : undefined} style={hero.laSo ? [typography.display, styles.tongDauSo, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
+          <Text style={[typography.caption, styles.nhanDauSo, { color: colors.inkSoft }]}>{hero.cau}</Text>
         </View>
-      </TrangSo>
+      </HoaDonGiay>
       <SectionHeader title="Các khoản chuyển" />
       {/* What these rows are is said once, over them: printed under every row
           it read nineteen times on a twenty-person trip (Luật Nói Một Lần). */}
@@ -370,7 +366,9 @@ const styles = StyleSheet.create({
   dauNhomChuyen: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingBottom: 8, borderBottomWidth: 1 },
   hangDauSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
   cotNguoiThu: { gap: 4, alignItems: "flex-start" },
-  cotDauSo: { gap: 6 },
+  cotDauSo: { gap: 8, alignItems: "center", paddingVertical: 12 },
+  nhanDauSo: { textAlign: "center" },
+  tongDauSo: { maxWidth: "100%", fontSize: 36, lineHeight: 44, fontVariant: ["tabular-nums"] },
   transferRight: { alignItems: "flex-end", gap: 6 },
   ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
 });

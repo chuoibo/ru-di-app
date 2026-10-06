@@ -10,8 +10,8 @@
  * own explanation screen (ADR-0018). What is here is the honest half -- pick a
  * city by name -- and it works with no permission at all.
  *
- * UI v2: rows on the paper with a hairline between them, the chosen city
- * marked by a check as well as by colour; loading is the list's own shape.
+ * A large catalogue preview and medium illustrated rows; only the persisted
+ * city carries the selected state. Local artwork is always labelled.
  */
 import { Canh } from "../../ui/art/Canh";
 import { useRouter } from "expo-router";
@@ -26,7 +26,7 @@ import {
   luuDiemDen,
   type DiemDen,
 } from "../../kham-pha/diem-den";
-import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
 import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
 import { VeLop } from "../../ui/art/VeLop";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
@@ -47,6 +47,19 @@ type Trang =
 function khongDau(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase();
 }
+
+/** These scenes illustrate the catalogue theme; they are not venue photos. */
+const CANH_DIEM_DEN: Readonly<Record<string, IllustrationName>> = {
+  "d-da-lat": "scene-hills",
+  "d-ha-noi": "scene-street",
+  "d-hoi-an": "scene-lanterns",
+  "d-da-nang": "scene-coast",
+  "d-nha-trang": "scene-coast",
+  "d-phu-quoc": "scene-coast",
+  "d-vung-tau": "scene-coast",
+  "d-quy-nhon": "scene-coast",
+  "d-mui-ne": "scene-coast",
+};
 
 export function DiemDenScreen() {
   const router = useRouter();
@@ -104,10 +117,18 @@ export function DiemDenScreen() {
           return khongDau(`${d.name} ${d.province ?? ""}`).includes(q);
         })
       : [];
+  // With no saved choice the API's first catalogue row is its default. It can
+  // lead the sheet without writing a choice or falsely marking it selected.
+  const noiNoiBat = tim.trim() === "" ? (loc.find((d) => d.id === dangChon) ?? loc[0])?.id : null;
+  const rongAnh = Math.max(120, Math.min(544, rongLuoi - 16));
 
   return (
-    <RudiScreen testID="diem-den-screen">
+    <RudiScreen contentStyle={styles.content} testID="diem-den-screen">
       <TopBar title="Đi đâu?" />
+      <View style={styles.heading}>
+        <Text style={[typography.h1, { color: colors.ink }]}>Bạn muốn đi đâu?</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Chọn một thành phố để khám phá.</Text>
+      </View>
       <SearchField
         onChangeText={setTim}
         placeholder="Tìm thành phố hoặc tỉnh"
@@ -139,6 +160,9 @@ export function DiemDenScreen() {
         <View onLayout={(e) => setRongLuoi(Math.round(e.nativeEvent.layout.width))} style={styles.luoi}>
           {[...loc].sort((a, b) => Number(b.id === dangChon) - Number(a.id === dangChon)).map((d) => {
             const chonRoi = dangChon === d.id;
+            const noiBat = noiNoiBat === d.id;
+            const canh = CANH_DIEM_DEN[d.id];
+            const rongCanh = noiBat ? rongAnh : 96;
             return (
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}
@@ -150,29 +174,35 @@ export function DiemDenScreen() {
                 onPress={() => void chon(d)}
                 style={({ pressed }) => [
                   styles.the,
-                  !chonRoi && styles.hang,
-                  { backgroundColor: chonRoi ? colors.card : undefined, borderColor: chonRoi ? colors.lineStrong : colors.line, borderWidth: chonRoi ? 1 : 0, borderBottomWidth: chonRoi ? 1 : StyleSheet.hairlineWidth },
-                  chonRoi && bongGiay(1, dark),
+                  !noiBat && styles.hang,
+                  { backgroundColor: colors.card, borderColor: chonRoi ? colors.accent : colors.line, borderWidth: chonRoi ? 2 : 1 },
+                  noiBat && bongGiay(1, dark),
                   pressed && styles.bam,
                 ]}
               >
-                <View style={chonRoi ? styles.canhDan : styles.canhHang}>
-                  {chonRoi ? <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, rongLuoi - 16))} height={140} /> : <VeLop height={Math.round(56 * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={56} />}
+                <View style={noiBat ? styles.canhDan : styles.canhHang}>
+                  <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper }]}>
+                    {canh ? (
+                      <AssetIllustration name={canh} width={rongCanh} height={rongCanh * 2 / 3} fit="contain" />
+                    ) : (
+                      <VeLop height={Math.round(rongCanh * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongCanh} />
+                    )}
+                  </View>
                   <Text style={[typography.caption, { color: colors.inkFaint }]}>Minh hoạ</Text>
                 </View>
-                <View style={[styles.theChu, !chonRoi && styles.chuHang]}>
-                  <Text style={[typography.title, { color: colors.ink }]}>{d.name}</Text>
+                <View style={[styles.theChu, !noiBat && styles.chuHang]}>
+                  <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhuDiemDen(d) === "" ? null : (
-                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
                   )}
-                  {d.blurb === null || !chonRoi ? null : (
-                    <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
+                  {d.blurb === null ? null : (
+                    <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>
                       {d.blurb}
                     </Text>
                   )}
+                  {chonRoi ? <DauLon co="nho" nhan="Đang xem" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
+                  {dangLuu === d.id ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu…</Text> : null}
                 </View>
-                {dangLuu === d.id ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu…</Text> : null}
-                {chonRoi ? <DauLon co="nho" nhan="Đang xem" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
               </Pressable>
             );
           })}
@@ -185,14 +215,16 @@ export function DiemDenScreen() {
 const KHE = 10;
 
 const styles = StyleSheet.create({
+  content: { maxWidth: 560, gap: 14 },
+  heading: { gap: 6 },
   luoi: { gap: KHE },
-  hang: { flexDirection: "row", alignItems: "center", borderWidth: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderRadius: 0 },
+  hang: { flexDirection: "row", alignItems: "center" },
   canhDan: { alignItems: "center", gap: 2 },
-  canhHang: { alignItems: "center", width: 72, gap: 2 },
-  chuHang: { flex: 1 },
-  the: { borderRadius: 4, padding: 8, gap: 8, minHeight: 64 },
+  canhHang: { alignItems: "center", width: 96, gap: 2 },
+  canhFrame: { borderRadius: 3, overflow: "hidden", minHeight: 64, justifyContent: "center" },
+  chuHang: { flex: 1, minWidth: 0 },
+  the: { borderRadius: 6, padding: 8, gap: 10, minHeight: 96, minWidth: 48 },
   theChu: { gap: 2, paddingHorizontal: 2, paddingBottom: 2 },
-  // The postmark sits over the card's top corner, clear of the name.
-  dauBuuDien: { position: "absolute", top: 6, right: 6, alignSelf: "auto" },
+  dauBuuDien: { alignSelf: "flex-start", marginTop: 8 },
   bam: { opacity: 0.7 },
 });
