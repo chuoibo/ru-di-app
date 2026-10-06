@@ -15,21 +15,22 @@
  */
 import { Canh } from "../../ui/art/Canh";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import {
-  cotDiemDen,
   docDiemDen,
   docDiemDenDaChon,
   dongPhuDiemDen,
   luuDiemDen,
   type DiemDen,
 } from "../../kham-pha/diem-den";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
-import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { VeLop } from "../../ui/art/VeLop";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { DauLon } from "../../ui/DauLon";
 import { RudiScreen, SearchField, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
@@ -54,6 +55,9 @@ export function DiemDenScreen() {
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [tim, setTim] = useState("");
   const [dangChon, setDangChon] = useState<string | null>(null);
+  const [dangLuu, setDangLuu] = useState<string | null>(null);
+  const [loiLuu, setLoiLuu] = useState<string | null>(null);
+  const luuLock = useRef(false);
 
   const nap = useCallback(async () => {
     setTrang({ pha: "dang-doc" });
@@ -74,9 +78,22 @@ export function DiemDenScreen() {
   }, [nap]);
 
   const chon = async (diemDen: DiemDen) => {
-    setDangChon(diemDen.id);
-    await luuDiemDen(diemDen.id);
-    luiVeVe(router as never, "/explore");
+    if (luuLock.current) return;
+    luuLock.current = true;
+    setDangLuu(diemDen.id);
+    setLoiLuu(null);
+    try {
+      await luuDiemDen(diemDen.id);
+      // The destination is already persisted before returning. Reordering the
+      // native postcard children in the same frame as the route pop can make
+      // Fabric mount a clipped child twice; the next visit reads the new key.
+      luiVeVe(router as never, "/explore");
+    } catch {
+      setLoiLuu("Chưa lưu được điểm đến trên máy này. Chọn lại để thử lần nữa.");
+    } finally {
+      luuLock.current = false;
+      setDangLuu(null);
+    }
   };
 
   const loc =
@@ -116,42 +133,46 @@ export function DiemDenScreen() {
           illustration={<Canh id="bo-loc-che-het" width={168} />} title="Chưa có nơi nào khớp"
         />
       ) : null}
+      <CauTaiCho cau={loiLuu} />
       {loc.length > 0 ? (
-        // Postcards, two a row (ADR-0037 D1, plan S4): each city its own sketch,
-        // the one you are in postmarked «Đang ở» -- a stamp as well as a colour.
+        // One selected postcard, then compact rows with the catalogue city marks.
         <View onLayout={(e) => setRongLuoi(Math.round(e.nativeEvent.layout.width))} style={styles.luoi}>
-          {loc.map((d) => {
+          {[...loc].sort((a, b) => Number(b.id === dangChon) - Number(a.id === dangChon)).map((d) => {
             const chonRoi = dangChon === d.id;
-            const { rongThe } = cotDiemDen(rongLuoi, KHE);
             return (
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}
                 accessibilityRole="button"
+                disabled={dangLuu !== null}
                 {...giuState(chonRoi)}
+                accessibilityState={{ selected: chonRoi, disabled: dangLuu !== null, busy: dangLuu === d.id }}
                 key={d.id}
                 onPress={() => void chon(d)}
                 style={({ pressed }) => [
                   styles.the,
-                  { width: rongThe > 0 ? rongThe : undefined, backgroundColor: colors.card, borderColor: chonRoi ? colors.ink : colors.lineStrong, borderWidth: chonRoi ? 2 : 1 },
-                  bongGiay(1, dark),
+                  !chonRoi && styles.hang,
+                  { backgroundColor: chonRoi ? colors.card : undefined, borderColor: chonRoi ? colors.lineStrong : colors.line, borderWidth: chonRoi ? 1 : 0, borderBottomWidth: chonRoi ? 1 : StyleSheet.hairlineWidth },
+                  chonRoi && bongGiay(1, dark),
                   pressed && styles.bam,
                 ]}
               >
-                {rongThe > 0 ? (
-                  <VeLop height={Math.round(((rongThe - 16) * KHUNG_THANH_PHO.h) / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongThe - 16} />
-                ) : null}
-                <View style={styles.theChu}>
+                <View style={chonRoi ? styles.canhDan : styles.canhHang}>
+                  {chonRoi ? <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, rongLuoi - 16))} height={140} /> : <VeLop height={Math.round(56 * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={56} />}
+                  <Text style={[typography.caption, { color: colors.inkFaint }]}>Minh hoạ</Text>
+                </View>
+                <View style={[styles.theChu, !chonRoi && styles.chuHang]}>
                   <Text style={[typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhuDiemDen(d) === "" ? null : (
                     <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
                   )}
-                  {d.blurb === null ? null : (
+                  {d.blurb === null || !chonRoi ? null : (
                     <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
                       {d.blurb}
                     </Text>
                   )}
                 </View>
-                {chonRoi ? <DauLon co="nho" nhan="Đang ở" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
+                {dangLuu === d.id ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu…</Text> : null}
+                {chonRoi ? <DauLon co="nho" nhan="Đang xem" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
               </Pressable>
             );
           })}
@@ -164,7 +185,11 @@ export function DiemDenScreen() {
 const KHE = 10;
 
 const styles = StyleSheet.create({
-  luoi: { flexDirection: "row", flexWrap: "wrap", gap: KHE },
+  luoi: { gap: KHE },
+  hang: { flexDirection: "row", alignItems: "center", borderWidth: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderRadius: 0 },
+  canhDan: { alignItems: "center", gap: 2 },
+  canhHang: { alignItems: "center", width: 72, gap: 2 },
+  chuHang: { flex: 1 },
   the: { borderRadius: 4, padding: 8, gap: 8, minHeight: 64 },
   theChu: { gap: 2, paddingHorizontal: 2, paddingBottom: 2 },
   // The postmark sits over the card's top corner, clear of the name.

@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../../ui/AssetIllustration";
 /**
  * Tường nhóm on a real session (M6): the group's memories as the server
  * lists them, newest first, paged by its cursor. Hearts and comments are one
@@ -12,7 +13,6 @@
  * does not scroll away under a form.
  */
 import { Ionicons } from "@expo/vector-icons";
-import { Canh } from "../../ui/art/Canh";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { KhungAnh } from "../../ui/KhungAnh";
 import { Image } from "expo-image";
@@ -252,7 +252,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   );
 
   return (
-    <RudiScreen cot="doc" overlay={khayCheckIn} testID="group-wall-screen">
+    <RudiScreen material="quiet" cot="doc" overlay={khayCheckIn} testID="group-wall-screen">
       <TopBar subtitle={laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"} title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
       <Text style={[typography.h1, { color: colors.ink }]}>{tenNhom}</Text>
       {thongBao !== null && !moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
@@ -269,7 +269,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void chay(docTrangDau)} title="Chưa đọc được tường" /> : null}
       {trang.pha === "xong" && trang.kyNiem.length === 0 ? (
-        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm: một tấm ảnh, hay một check-in ở chỗ cả hội đang ngồi. «Tôi đã tới» ở kèo chỉ báo cho hội, không tự lên tường." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ky-niem" width={168} />} title="Chưa có kỷ niệm nào" />
+        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm: một tấm ảnh, hay một check-in ở chỗ cả hội đang ngồi. «Tôi đã tới» ở kèo chỉ báo cho hội, không tự lên tường." kind="first-use" layout="inline" illustration={<AssetIllustration name="spot-memory" width={240} height={204} />} title="Chưa có kỷ niệm nào" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>

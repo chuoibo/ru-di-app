@@ -21,6 +21,8 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { ConfirmedArrival } from "../../asset-pack/react-native/ConfirmedArrival";
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import type { Place } from "../../../screens/kham-pha/places";
@@ -54,6 +56,7 @@ import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../ui";
+import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
 import { BanXoay } from "../../ui/BanXoay";
@@ -138,6 +141,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const [gio, setGio] = useState(gioTiepTheo());
   const [nhan, setNhan] = useState("");
   const [danhMuc, setDanhMuc] = useState<Place[]>([]);
+  const [danhMucPha, setDanhMucPha] = useState<"chua-doc" | "dang-doc" | "xong" | "hong">("chua-doc");
+  const danhMucRef = useRef<"chua-doc" | "dang-doc" | "xong" | "hong">("chua-doc");
+  const [loiDanhMuc, setLoiDanhMuc] = useState<string | null>(null);
   const [timCho, setTimCho] = useState("");
   const [choDiaDiem, setChoDiaDiem] = useState<Place | null>(null);
   const [ganChoChang, setGanChoChang] = useState<ChangDung | null>(null);
@@ -178,16 +184,23 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   );
 
   const napDanhMuc = useCallback(async () => {
-    if (danhMuc.length > 0) return;
+    if (danhMucRef.current === "dang-doc" || danhMucRef.current === "xong") return;
+    danhMucRef.current = "dang-doc";
+    setDanhMucPha("dang-doc");
+    setLoiDanhMuc(null);
     try {
       // The destination the person picked on Khám phá, not the default one:
       // the default is a curated town, so reading it here meant no real place
       // could ever be attached to a stop.
       setDanhMuc((await docDanhMucCoLui(await docDiemDenDaChon())).places);
+      danhMucRef.current = "xong";
+      setDanhMucPha("xong");
     } catch (error) {
-      setThongBao(loiRaChu(error));
+      danhMucRef.current = "hong";
+      setDanhMucPha("hong");
+      setLoiDanhMuc(loiRaChu(error));
     }
-  }, [danhMuc.length]);
+  }, []);
 
   const theoChang = useMemo<Record<string, CheckIn[]>>(
     () => (trang.pha === "xong" ? nhomCheckInTheoChang(trang.daToi) : {}),
@@ -237,10 +250,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const oTimCho = (
     <SearchField accessibilityLabel="Ô tìm địa điểm" onChangeText={setTimCho} placeholder="Tìm theo tên, món, địa chỉ" value={timCho} />
   );
-  const khongKhop =
-    danhMuc.length > 0 && choHienRa.length === 0 ? (
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>Không có chỗ nào khớp «{timCho}». Thử tên ngắn hơn nhé.</Text>
-    ) : null;
+  const khongKhop = danhMucPha === "dang-doc" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc danh mục địa điểm…</Text>
+    : danhMucPha === "hong" ? <View style={styles.form}><Text style={[typography.body, { color: colors.warn }]}>{loiDanhMuc}</Text><RudiButton compact label="Tải lại địa điểm" variant="outline" onPress={() => void napDanhMuc()} /></View>
+    : danhMucPha === "xong" && choHienRa.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{danhMuc.length === 0 ? "Điểm đến này chưa có địa điểm trong danh mục. Bạn vẫn có thể đặt tên chặng." : `Không có chỗ nào khớp «${timCho}». Thử tên ngắn hơn nhé.`}</Text> : null;
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
 
   // The context slip. Declared here rather than in the route adapter because
@@ -315,15 +327,19 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   };
 
   const daToiChang = async (keo: BuoiDi, stop: ChangDung) => {
+    if (writing.current) return;
+    writing.current = true;
     setDangGhi(true);
     setThongBao(null);
     try {
-      await danhDauToi(stop.id, keo.context_id, phien.person_id, newAttempt());
+      const confirmed = await danhDauToi(stop.id, keo.context_id, phien.person_id, newAttempt());
+      setTrang((previous) => previous.pha === "xong" && previous.keo.id === keo.id ? { ...previous, daToi: [...previous.daToi.filter((arrival) => arrival.id !== confirmed.id), confirmed] } : previous);
       setVuaToi(stop.id);
       await nap();
     } catch (error) {
       setThongBao(loiRaChu(error));
     } finally {
+      writing.current = false;
       setDangGhi(false);
     }
   };
@@ -511,6 +527,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
           {conflict ? <RudiButton label="Tải bản mới để đối chiếu" variant="outline" onPress={() => void nap()} /> : null}
           {trang.keo.stops.length > 0 ? (
             <View style={styles.danhSach}>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>«Tôi đã tới» là bạn tự đánh dấu cho hội; không gửi vị trí GPS hay ảnh.</Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>Giữ tay nắm bên phải rồi kéo để đổi thứ tự. Giờ hẹn không đổi khi bạn đổi thứ tự.</Text>
               <ReorderList items={draft?.stops ?? trang.keo.stops} itemKey={(stop) => stop.id} label={(stop) => stop.label}
                 disabled={dangGhi || moThem || ganChoChang !== null} onDragging={setDragging}
@@ -542,7 +559,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                           // Arrived is a fact, not a control that went grey: the
                           // «ĐÃ TỚI» stamp of DESIGN.md, landing once on the row
                           // just reached (B3 finish review; the demo already did).
-                          <Stamp dong={vuaToi === stop.id} label="Đã tới" tilt={-2} tone="split" />
+                          <ConfirmedArrival eventId={vuaToi === stop.id ? `${stop.id}:arrived` : null}><Stamp label="Đã tới" tilt={-2} tone="split" /></ConfirmedArrival>
                         ) : (
                           <RudiButton compact disabled={dangGhi} lyDo={dangGhi ? "Đang ghi" : undefined} full={false} label="Tôi đã tới" onPress={() => void daToiChang(trang.keo, stop)} variant="ghost" />
                         )
@@ -576,15 +593,13 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 </> : null}
                 <RudiButton label="Lưu thứ tự" loading={dangGhi} disabled={conflict || draft.revision !== trang.keo.timeline_revision} lyDo={conflict || draft.revision !== trang.keo.timeline_revision ? "Lịch trình vừa đổi trên máy khác. Ghép thứ tự trước rồi lưu." : undefined}
                   onPress={() => void ghiLichTrinh({ ...trang.keo, timeline_revision: draft.revision }, draft.stops.map(changGuiTu)).then((ok) => { if (ok) setDraft(null); })} />
-                <RudiButton label="Bỏ thứ tự nháp" tone="warn" variant="ghost" disabled={dangGhi}
+                <RudiButton label="Bỏ thứ tự nháp" tone="warn" variant="ghost" disabled={dangGhi} lyDo={dangGhi ? "Đang ghi lịch trình." : undefined}
                   onPress={() => { setDraft(null); setConflict(false); setThongBao(null); }} />
-              </View> : <RudiButton label="Xếp theo giờ hẹn" variant="ghost" disabled={dangGhi}
+              </View> : <RudiButton label="Xếp theo giờ hẹn" variant="ghost" disabled={dangGhi} lyDo={dangGhi ? "Đang ghi lịch trình." : undefined}
                 onPress={() => setDraft({ stops: sapXepChang(trang.keo.stops), revision: trang.keo.timeline_revision })} />}
             </View>
           ) : (
-            <Text style={[typography.body, { color: colors.inkSoft }]}>
-              Bấm «Thêm chặng», hoặc mở một địa điểm ở Khám phá rồi «Thêm vào kèo».
-            </Text>
+            <EmptyState kind="first-use" layout="inline" title="Lời hẹn đang chờ chặng đầu" body="Đặt một giờ và một nơi muốn ghé. Bạn cũng có thể mở địa điểm ở Khám phá rồi thêm vào kèo." illustration={<AssetIllustration name="spot-map" width={168} height={128} resolution="small" />} action={{ label: "Thêm chặng", onPress: moThemChang }} />
           )}
         </ScrollView>
       ) : null}

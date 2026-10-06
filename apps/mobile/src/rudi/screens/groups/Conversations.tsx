@@ -22,7 +22,7 @@ import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
-import { tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
+import { gioPhut, tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { cauLoiMoi, docLoiMoiNhom, loiMoiTruoc, tuChoiLoiMoiNhom, type LoiMoiNhom } from "../../nhom/loi-moi-nhom";
 import { useNepNguCanh } from "../../nep/NepProvider";
@@ -31,7 +31,7 @@ import { StoryRail } from "../story/StoryRail";
 import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
-import { Canh } from "../../ui/art/Canh";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ErrorState } from "../../ui/ErrorState";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -67,6 +67,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     return () => { conMo.current = false; };
   }, []);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  const actionLock = useRef(false);
+  const [readError, setReadError] = useState<string | null>(null);
   const [dangBam, setDangBam] = useState<string | null>(null);
   // QA UI-080: who invited, read for each open invitation; and an answer that
   // failed is said under its own row, the list stays (QA UI-077 pattern).
@@ -80,6 +82,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     try {
       const nhom = await docNhomCuaToi(lucBatDau.person_id);
       if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
+      setReadError(null);
       setTrang({ pha: "xong", nhom });
       // An invitation that cannot be read still shows, without a name.
       for (const n of nhom.filter((x) => x.my_state === "invited" && !laPair(x))) {
@@ -94,7 +97,9 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       const moi = await ganDanhSachNhom(phienMoiNhat.current, nhom);
       if (conMo.current && phienMoiNhat.current.token === lucBatDau.token) datPhien(moi);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
+      setReadError(loiRaChu(error));
+      setTrang((held) => held.pha === "xong" ? held : { pha: "hong", loi: loiRaChu(error) });
     }
     // `phien` changes identity on every `datPhien`; refetching on that would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,6 +121,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   }, [nap]);
 
   const moNhom = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     try {
       // A pair is never the current group (ADR-0021 §2.5): the money screens
@@ -128,11 +135,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
   const dongY = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     setLoiHang(null);
     try {
@@ -147,11 +157,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
   const tuChoi = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     setLoiHang(null);
     try {
@@ -161,15 +174,16 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
   return (
-    <RudiScreen bottomInset="tab" onRefresh={nap} testID="conversations-screen">
+    <RudiScreen material="quiet" cot="doc" bottomInset="tab" onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" subtitle="Nhóm của bạn" />
+          <Heading title="Tin nhắn" subtitle="Lời mời và kho tin nhắn cũ của bạn" />
         </View>
         {/* Not in the top-right corner: on the development build the
             dev-launcher's floating gear covers it. A compact button beside the
@@ -178,6 +192,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       </View>
       {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
       <StoryRail personId={phien.person_id} />
+      {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow leading={44} />
@@ -189,8 +204,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
-          body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
-          illustration={<Canh id="chua-co-hoi" width={168} />}
+          body="Tạo nhóm cho cả hội hoặc nhận lời mời. Lịch sử tin nhắn cũ của nhóm sẽ nằm ở đây."
+          illustration={<AssetIllustration name="spot-keeps" width={220} height={170} />}
           kind="first-use"
           layout="inline"
           title="Chưa có nhóm nào"
@@ -229,15 +244,15 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                     )
                   )}
                   <View style={styles.hangChu}>
-                    <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
+                    <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
                       {duocMoi && !laPair(nhom)
                         ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
                         : nhom.unavailable === true
                           ? "Không còn nhận tin"
                           : laPair(nhom)
-                            ? "Nhắn riêng"
-                            : `${nhom.member_count} thành viên`}
+                            ? "Kho riêng · chỉ đọc"
+                            : `${nhom.member_count} thành viên · kho cũ chỉ đọc`}
                       {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
                     </Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
@@ -246,11 +261,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                         : "Chưa có tin nhắn nào."}
                     </Text>
                   </View>
+                  <View style={styles.meta}>
+                  {nhom.last_message && Number.isFinite(Date.parse(nhom.last_message.created_at)) ? <Text style={[typography.note, { color: colors.inkSoft }]}>{gioPhut(nhom.last_message.created_at)}</Text> : null}
                   {nhom.unread_count > 0 ? (
                     <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
                       <Text style={[typography.caption, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
                     </View>
                   ) : null}
+                  </View>
                 </Pressable>
                 {duocMoi && hoiTuChoi !== nhom.id ? (
                   // Two answers side by side (QA UI-080): yes, or no.
@@ -319,8 +337,8 @@ const styles = StyleSheet.create({
   gay: { width: 34, height: 48, borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", overflow: "hidden", paddingLeft: 4 },
   gayBanLe: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
   gayNhan: { position: "absolute", bottom: 7, left: 10, right: 5, height: 4, borderRadius: 1 },
-  flex: { flex: 1 },
-  dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  flex: { flexGrow: 1, flexBasis: 180 },
+  dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   // Answers start under the text column (avatar 44 + gap 12).
@@ -328,7 +346,8 @@ const styles = StyleSheet.create({
   hoi: { gap: 4, paddingLeft: 56 },
   khongThut: { paddingLeft: 0 },
   hinh: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  hangChu: { flex: 1, gap: 2 },
+  hangChu: { flex: 1, minWidth: 0, gap: 2 },
+  meta: { alignItems: "flex-end", gap: 6 },
   chuaDoc: { minWidth: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
   bam: { opacity: 0.7 },
 });

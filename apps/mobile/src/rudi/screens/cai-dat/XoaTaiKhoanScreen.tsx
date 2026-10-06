@@ -8,7 +8,7 @@
  * lại được thành cái đẹp nhất trên màn.
  */
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
@@ -32,14 +32,15 @@ export function XoaTaiKhoanScreen() {
   // Back on the second step returns to the first, as its «Quay lại» would.
   useLuiLop(buoc === 2, () => setBuoc(1));
   const [daGo, setDaGo] = useState("");
+  const deleting = useRef(false);
   const [dangXoa, setDangXoa] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
 
   if (!phienDaDoc) return null;
 
   const xoa = async () => {
-    if (phien === null || !xacNhanHopLe(daGo) || dangXoa) return;
-    setDangXoa(true);
+    if (phien === null || !xacNhanHopLe(daGo) || deleting.current) return;
+    deleting.current = true; setDangXoa(true);
     setLoi(null);
     try {
       await xoaTaiKhoan(phien.person_id, newAttempt());
@@ -50,12 +51,12 @@ export function XoaTaiKhoanScreen() {
     } catch (error) {
       setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
-      setDangXoa(false);
+      deleting.current = false; setDangXoa(false);
     }
   };
 
   return (
-    <RudiScreen testID="xoa-tai-khoan-screen">
+    <RudiScreen material="quiet" cot="form" avoidKeyboard testID="xoa-tai-khoan-screen">
       <TopBar title="Xoá tài khoản" />
       {buoc === 1 ? (
         <>
@@ -85,6 +86,7 @@ export function XoaTaiKhoanScreen() {
               onChangeText={setDaGo}
               placeholder={TU_XAC_NHAN}
               value={daGo}
+              editable={!dangXoa}
             />
           </View>
           {loi ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}

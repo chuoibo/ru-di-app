@@ -95,7 +95,8 @@ function loaiLoiDau(error: unknown): "phien" | "vinh-vien" | "tam" {
 
 const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, hetTinCu: false, loi: null, loiCu: null, loiLoai: null, hangCho: [] };
 
-export function useTinNhan(contextId: string, personId: string) {
+export function useTinNhan(contextId: string, personId: string, { readOnly = false }: { readOnly?: boolean } = {}) {
+  const requireWritable = useCallback(() => { if (readOnly) throw new ApiError(409, "legacy_read_only", "Kho tin nhắn cũ chỉ đọc. Chưa có luồng chat v2 mã hoá đầu cuối ở đây."); }, [readOnly]);
   const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
   const tinRef = useRef<Tin[]>(TRANG_DAU.tin);
   // A POST acknowledgement is not a contiguous receive cursor: other people
@@ -228,6 +229,7 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const chay = useCallback(
     async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>): Promise<TinDaGui | null> => {
+      requireWritable();
       const chu = chuSoHuu.current;
       if (!chu.active || chu.contextId !== contextId || chu.personId !== personId) return null;
       const theHe = theHeRef.current;
@@ -246,7 +248,7 @@ export function useTinNhan(contextId: string, personId: string) {
         throw error;
       }
     },
-    [contextId, personId, dat, datHang, napMoi],
+    [contextId, personId, dat, datHang, napMoi, requireWritable],
   );
 
   const napCuHon = useCallback(async () => {
@@ -268,6 +270,7 @@ export function useTinNhan(contextId: string, personId: string) {
   // leaves the target pending; polling/focus/visibility retries it. Never
   // advance the local acknowledged watermark before the server answers.
   const ghiDaDoc = useCallback(async () => {
+    if (readOnly) return;
     if (dangGhiDoc.current !== null || !dangFocus.current || AppState.currentState !== "active") return;
     const theHe = theHeRef.current;
     dangGhiDoc.current = theHe;
@@ -284,7 +287,7 @@ export function useTinNhan(contextId: string, personId: string) {
     } finally {
       if (theHe === theHeRef.current) dangGhiDoc.current = null;
     }
-  }, [contextId, personId]);
+  }, [contextId, personId, readOnly]);
 
   const danhDauHienThi = useCallback((ids: readonly string[]) => {
     if (!dangFocus.current || AppState.currentState !== "active") return;
@@ -349,6 +352,7 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const guiAnhMoi = useCallback(
     async (imageUrl: string, caption: string | null): Promise<TinDaGui | null> => {
+      requireWritable();
       // The caption is part of the request body, so it is part of what the key
       // stands for: retrying with it dropped would send the same key with
       // different bytes and earn a 422 for a message that is already there.
@@ -360,7 +364,7 @@ export function useTinNhan(contextId: string, personId: string) {
         (a) => guiAnh(contextId, personId, imageUrl, caption, a),
       );
     },
-    [contextId, personId, chay, datHang],
+    [contextId, personId, chay, datHang, requireWritable],
   );
 
   /** One sticker, by id; the server refuses an id outside the vocabulary. */
@@ -385,6 +389,7 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const thuLaiMot = useCallback(
     async (khoa: string): Promise<TinDaGui | null> => {
+      requireWritable();
       const cho = timTrongHang(hangRef.current, khoa);
       if (cho === null || cho.trangThai !== "that-bai" || !cho.thuLaiDuoc) return null;
       datHang(danhDauThuLai(hangRef.current, khoa));
@@ -396,7 +401,7 @@ export function useTinNhan(contextId: string, personId: string) {
             : guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
       return chay({ ...cho, trangThai: "dang-gui", loi: null }, goi);
     },
-    [contextId, personId, chay, datHang],
+    [contextId, personId, chay, datHang, requireWritable],
   );
 
   /** Dismiss a failed row locally. A lost response may still have committed. */
@@ -409,6 +414,7 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const xoaTinCuaToi = useCallback(
     async (messageId: string): Promise<void> => {
+      requireWritable();
       const theHe = theHeRef.current;
       try {
         await xoaTin(contextId, messageId, personId);
@@ -420,11 +426,12 @@ export function useTinNhan(contextId: string, personId: string) {
       dat(thayTinDaXoa(tinRef.current, messageId, new Date().toISOString()), { loi: null });
       void napMoi();
     },
-    [contextId, personId, dat, napMoi],
+    [contextId, personId, dat, napMoi, requireWritable],
   );
 
   const doiPhanUng = useCallback(
     async (messageId: string, kind: LoaiPhanUng, dangCoCuaToi: boolean) => {
+      requireWritable();
       const theHe = theHeRef.current;
       let ket;
       try {
@@ -438,7 +445,7 @@ export function useTinNhan(contextId: string, personId: string) {
       if (theHe !== theHeRef.current) return;
       dat(thayPhanUng(tinRef.current, messageId, ket.reactions));
     },
-    [contextId, personId, dat],
+    [contextId, personId, dat, requireWritable],
   );
 
   const nhanAnhChup = useCallback((snapshot: AnhChupChat) => {

@@ -40,3 +40,10 @@ chúng (khai báo, không phải bằng chứng).
 
 Flow `_community*`, `_diary*` là flow lẻ chạy bằng tay, không thuộc bảng (như
 trên `main`).
+
+
+## Phạm vi Nếp UI 2026-10-06
+
+Tám nhãn đã đổi được đồng bộ trong các flow nhóm/bạn/settlement/chat và ba helpers diary. Bản rút hướng dẫn cũ từng giữ năm nhãn đã mất ở corpus; sinh lại bản rút giúp bộ kiểm phát hiện chúng. Kiểm `chuoi-maestro-con-song` chỉ chứng minh literal tồn tại tại source, không chứng minh các flow native đã chạy.
+
+`30-chat-that.yaml` vẫn giữ assertion gửi tin, phản ứng, bỏ phiếu và `kiem_may_chu_sau_30` vẫn đòi dữ liệu thật từ máy chủ. Renderer hiện mở kho legacy chỉ đọc; adapter E2EE v2 chưa nối nên flow 30 hiện **BLOCKED**. Không bỏ assertion, đổi thành tin seed hoặc bật lại plaintext để làm bảng xanh. Flow 24 thay bước chờ ô soạn bằng state kho chỉ đọc và kiểm không có ô soạn; lời mời dùng lookup người nhận rồi gửi đúng người. Những flow có gửi tin khác, gồm 41, vẫn cần adapter E2EE v2 và lượt kiểm mới trên thiết bị. Không gọi các cập nhật nhãn là pass native.

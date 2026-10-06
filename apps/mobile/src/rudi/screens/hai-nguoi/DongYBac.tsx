@@ -40,6 +40,8 @@ function BacDongY({
   nhanDeNghi,
   tenNguoiKia,
   testID,
+  dangLam = false,
+  loi = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,6 +65,8 @@ function BacDongY({
   /** Who is waiting on this, by name; the app knows it, so it says it. */
   tenNguoiKia?: string;
   testID: string;
+  dangLam?: boolean;
+  loi?: string | null;
 }) {
   const { colors, space } = useRudiTheme();
   const { phien } = useRudiSession();
@@ -109,6 +113,7 @@ function BacDongY({
             <ChuKy choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
           </View>
         </TrangSo>
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
         {dangCho && !deNghiCuaToi ? (
           // Người ấy đề nghị: việc của màn này là một nút, không phải một câu
           // nói rằng đang chờ chính mình.
@@ -116,14 +121,14 @@ function BacDongY({
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
               {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
             </Text>
-            <StampButton label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
+            <StampButton disabled={dangLam} loading={dangLam} label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
           </>
         ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
             Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
           </Text>
         ) : (
-          <StampButton label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
+          <StampButton disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
         )}
         <RudiButton label="Để sau" onPress={onClose} variant="ghost" />
       </View>
@@ -131,7 +136,7 @@ function BacDongY({
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string; dangLam?: boolean; loi?: string | null }) {
   return (
     <BacDongY
       {...props}
@@ -148,7 +153,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string; dangLam?: boolean; loi?: string | null }) {
   return (
     <BacDongY
       {...props}

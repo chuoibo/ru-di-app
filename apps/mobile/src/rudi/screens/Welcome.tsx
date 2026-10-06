@@ -15,6 +15,7 @@ import {
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AssetIllustration } from "../asset-pack/react-native/AssetIllustration";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { giuState } from "../../ui/a11y";
 import { displayFace, lopPhu, mauSang, typography, useRudiTheme } from "../theme";
@@ -28,24 +29,8 @@ import { useMotion } from "../ui/useMotion";
 import { Washi } from "../ui/Washi";
 import { Wordmark } from "../ui/Wordmark";
 
-/**
- * The closed cover of the group's travel journal (FIRST VIEWPORT of the v2
- * contract): indigo cloth full-bleed, the wordmark pressed into the upper
- * third, one coral washi strip carrying the positioning line, and the
- * invitation as a coral seal at the foot. Pressing the seal hands the cover
- * to the native page transition onto Login. No photograph: the
- * cover is the brand, and a stock photo of strangers was never ours to show.
- *
- * ## One line leads
- *
- * The 2026-09-06 review read the first cut as five voices at once: a very
- * large wordmark, the tape, the route, the page title and the body. The page
- * title is the sentence the person is meant to remember, so it is the one
- * thing at reading size; the wordmark is smaller than it was, the tape is a
- * caption-scale line, and the route draws itself in once and then stays
- * still. Nothing loops. On a short window the route is the first thing to go,
- * before any word or button; at a large font scale the cover scrolls instead
- * of clipping its own seal.
+/** The indigo journal cover keeps four accessible chapters and one opening action.
+ * Local scenery is illustration; the chapter copy carries the product promise.
  */
 
 export const WELCOME_PAGES = [
@@ -66,9 +51,6 @@ export const WELCOME_PAGES = [
     body: "Một buổi hẹn thành khoảnh khắc. Những ngày đi xa thành cuốn sổ. Giữ riêng, hoặc mở cho mọi người.",
   },
 ];
-
-/** One glyph per page above: friends, finding a place, the bill, the memories. */
-const CHANG_GLYPHS = ["people", "compass", "receipt", "images"] as const;
 
 export function WelcomeScreen() {
   const router = useRouter();
@@ -134,9 +116,10 @@ export function WelcomeScreen() {
     transform: [{ translateY: (1 - routeIn.value) * 12 }],
   }));
 
-  const short = layout.heightClass === "short" || windowHeight - insets.top - insets.bottom < 660 || fontScale >= 1.3;
+  // Android exposes the system's 1.3 setting as a float close to 1.3.
+  const short = layout.heightClass === "short" || windowHeight - insets.top - insets.bottom < 660 || Math.round(fontScale * 100) >= 130;
   const compact = layout.sizeClass === "compact";
-  const markHeight = short ? 64 : compact ? 100 : 136;
+  const markHeight = short ? 48 : compact ? 72 : 88;
 
   return (
     <View role="main" style={[styles.root, { backgroundColor: colors.ground }]} testID="welcome-screen">
@@ -170,19 +153,11 @@ export function WelcomeScreen() {
             style={[styles.route, short && styles.routeShort, routeStyle]}
             pointerEvents="none"
           >
-            {routeBox.h > 72 && !short ? (
-              <RouteLine
-                width={routeBox.w}
-                height={routeBox.h}
-                color={colors.coverInk}
-                opacity={0.72}
-                stops={WELCOME_PAGES.length}
-                activeStop={page}
-                glyphs={CHANG_GLYPHS}
-                activeColor={brand.coral}
-                activeInk={mauSang.ink}
-                accessibilityLabel={`Chặng ${page + 1} trên ${WELCOME_PAGES.length}`}
-              />
+            {routeBox.w > 0 ? (
+              <View style={styles.coverScene}>
+                <AssetIllustration name={page === 3 ? "scene-coast" : page === 1 ? "scene-cafe" : "scene-street"} width={Math.min(routeBox.w, 480)} height={Math.max(60, Math.min(short ? 88 : 190, routeBox.h - (short ? 0 : 112)))} />
+                {!short ? <RouteLine width={Math.min(routeBox.w, 400)} height={104} color={colors.coverInk} opacity={0.6} stops={WELCOME_PAGES.length} activeStop={page} activeColor={brand.coral} activeInk={mauSang.ink} accessibilityLabel={`Chặng ${page + 1} trên ${WELCOME_PAGES.length}`} /> : null}
+              </View>
             ) : null}
           </Animated.View>
 
@@ -261,15 +236,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   cover: { flexGrow: 1, paddingHorizontal: 20 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 28 },
-  mark: { alignItems: "center", gap: 18, marginTop: 28 },
+  mark: { alignItems: "center", gap: 10, marginTop: 8 },
   markShort: { gap: 10, marginTop: 8 },
   // Never wider than a page: on a tablet the S-curve across 1600px read as a wire.
   // `minHeight: 0` lets it give way first when the words need the room.
-  route: { flex: 1, minHeight: 0, marginVertical: 8, marginHorizontal: 12, alignSelf: "center", width: "100%", maxWidth: 560 },
-  routeShort: { flex: 0, height: 20 },
+  route: { flex: 1, minHeight: 120, marginVertical: 8, marginHorizontal: 12, alignSelf: "center", width: "100%", maxWidth: 560 },
+  routeShort: { flex: 0, height: 88, minHeight: 88 },
+  coverScene: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   tape: { alignSelf: "center", paddingHorizontal: 16, maxWidth: "100%" },
   tagline: { fontFamily: displayFace.bold, fontSize: 15, lineHeight: 19, letterSpacing: -0.1, textAlign: "center" },
-  bottom: { gap: 12, marginHorizontal: -20 },
+  bottom: { gap: 8, marginHorizontal: -20 },
   bottomWide: { alignSelf: "center", width: "100%", maxWidth: 640, marginHorizontal: 0 },
   page: { paddingHorizontal: 20 },
   pageTitle: { fontFamily: displayFace.extraBold, fontSize: 28, lineHeight: 33, letterSpacing: -0.7, minHeight: 68 },

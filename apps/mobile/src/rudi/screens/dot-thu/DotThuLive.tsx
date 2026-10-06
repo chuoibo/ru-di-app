@@ -147,7 +147,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
 
   if (contextId === null) {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <Heading title="Vào một nhóm trước" subtitle="Đợt thu là của nhóm; chưa có nhóm thì chưa có ai để thu." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} tone="split" variant="outline" />
@@ -196,7 +196,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
 
   if (trang.pha === "dang-doc") {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="50%" lineHeight={24} lines={2} />
@@ -208,7 +208,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   }
   if (trang.pha === "hong") {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <ErrorState body={trang.loi} onRetry={docLai} title="Chưa đọc được bảng thu" />
       </RudiScreen>
@@ -222,7 +222,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   const bang = [...trang.nghiaVu].sort((a, b) => Number(daVeRoi(a.trangThai)) - Number(daVeRoi(b.trangThai)));
 
   return (
-    <RudiScreen tone="split" testID="collection-batch-screen">
+    <RudiScreen material="quiet" tone="split" testID="collection-batch-screen">
       <TopBar subtitle={trang.trangThai === null ? undefined : cauTrangThaiDot(trang.trangThai)} title="Đợt thu" />
       {/* The head of the collection's page: the count the server derived from
           receipts, a strip of teal tape that fills as transfers arrive, and

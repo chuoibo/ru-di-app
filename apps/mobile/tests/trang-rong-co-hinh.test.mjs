@@ -29,8 +29,6 @@ const KHONG_HINH = {
   // The comments under a wall post: a line under the post it answers, where a
   // scene would outweigh the post itself.
   "src/rudi/screens/tuong/BaiChiTietScreen.tsx": ['"Chưa có lời nhắn nào"'],
-  // A private list of notes reached from the feed's settings sheet.
-  "src/rudi/community/Keeps.tsx": ['"Chưa có ghi chép nào"'],
 };
 
 /**

@@ -61,6 +61,7 @@ export function ToLoiRu({
   toiId,
   tenNguoiKia,
   dan,
+  dangLam = false,
   onGui,
   onSuaNhap,
   onBoNhap,
@@ -81,6 +82,7 @@ export function ToLoiRu({
   tenNguoiKia?: string;
   /** This sheet is the thing to do now on this surface. */
   dan?: boolean;
+  dangLam?: boolean;
   onGui?: () => void;
   onSuaNhap?: () => void;
   onBoNhap?: () => void;
@@ -231,7 +233,7 @@ export function ToLoiRu({
         <View style={[styles.nutChinh, doc && styles.nutDoc, { gap: space.sm }]}>
           {chinh.map((n, i) => (
             <View key={n} style={doc ? styles.nutFull : styles.nutNua}>
-              <RudiButton label={chuNut(n, pb)} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
+              <RudiButton loading={dangLam} disabled={dangLam} label={chuNut(n, pb)} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
             </View>
           ))}
         </View>
@@ -244,7 +246,7 @@ export function ToLoiRu({
         // trông như «Tuần này nghỉ»; tờ xác nhận ở dưới mới nói ra hậu quả.
         <View style={[styles.thoat, { borderTopColor: colors.line, gap: space.sm }]}>
           {phu.map((n) => (
-            <RudiButton key={n} label={chuNut(n, pb)} onPress={bam[n]!} tone={n === "bo" || n === "huy" ? "warn" : undefined} variant="ghost" />
+            <RudiButton disabled={dangLam} key={n} label={chuNut(n, pb)} onPress={bam[n]!} tone={n === "bo" || n === "huy" ? "warn" : undefined} variant="ghost" />
           ))}
         </View>
       ) : null}

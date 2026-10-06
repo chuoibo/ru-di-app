@@ -74,6 +74,7 @@ export function TheAiView({
   daCoToHen,
   tenToHen,
   banToHen,
+  readOnly = false,
 }: {
   the: TheAi;
   contextId: string;
@@ -90,6 +91,7 @@ export function TheAiView({
   /** That sheet's title and revision, so the card can name what it feeds. */
   tenToHen?: string | null;
   banToHen?: number | null;
+  readOnly?: boolean;
 }) {
   const { colors } = useRudiTheme();
   switch (the.loai) {
@@ -151,19 +153,19 @@ export function TheAiView({
           {nhap ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
               {dangMo
-                ? `Cả hội sửa được tờ này · bản ${nhap.revision}`
+                ? `Tờ hẹn đang mở · bản ${nhap.revision}`
                 : daThanhKeo
                   ? `${the.the.chang.length} chặng · đã thành kèo`
                   : "Tờ này đã được bỏ."}
             </Text>
           ) : null}
           {!daThanhKeo && !nhap ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Xem lại ngày, ngân sách và chặng trước khi tạo kèo.</Text> : null}
-          {onOpenPlan ? <RudiButton label={daThanhKeo ? "Mở kèo của hội" : dangMo ? "Sửa cùng hội" : "Sửa tờ hẹn này"} variant="outline" onPress={onOpenPlan} /> : null}
+          {onOpenPlan && (!readOnly || daThanhKeo) ? <RudiButton label={daThanhKeo ? "Mở kèo của hội" : dangMo ? "Sửa cùng hội" : "Sửa tờ hẹn này"} variant="outline" onPress={onOpenPlan} /> : null}
         </ToGiay>
       );
     }
     case "poll":
-      return <ThePoll the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
+      return <ThePoll readOnly={readOnly} the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
     case "expense_draft":
       return (
         <ToGiay nhan="Nháp chia bill từ chat" tone="split">
@@ -203,6 +205,7 @@ function ThePoll({
   daCoToHen,
   tenToHen,
   banToHen,
+  readOnly = false,
 }: {
   the: Extract<TheAi, { loai: "poll" }>;
   contextId: string;
@@ -213,6 +216,7 @@ function ThePoll({
   daCoToHen?: boolean;
   tenToHen?: string | null;
   banToHen?: number | null;
+  readOnly?: boolean;
 }) {
   const { colors, dark } = useRudiTheme();
   const [ketQua, setKetQua] = useState<CuocBinhChonWire | null>(null);
@@ -247,6 +251,7 @@ function ThePoll({
   }, [nap]);
 
   const bo = async (optionId: string) => {
+    if (readOnly) return;
     setDangBo(optionId);
     try {
       await boPhieu(the.vote_id, optionId, personId, contextId);
@@ -259,6 +264,7 @@ function ThePoll({
   };
 
   const closePoll = async () => {
+    if (readOnly) return;
     setDangBo("close");
     try { await dongBinhChon(the.vote_id, personId, contextId); await nap(); if (mounted.current) setConfirmClose(false); }
     catch (error) { if (mounted.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null)); }
@@ -272,7 +278,7 @@ function ThePoll({
   const highest = Math.max(0, ...dem.values());
   const leading = the.options.filter((option) => dem.get(option.id) === highest);
   const summary = highest === 0 ? "Chưa có phiếu" : leading.length === 1 ? `${leading[0].label} · ${highest} phiếu` : `${leading.length} lựa chọn ngang phiếu`;
-  const cuaNguoiTao = !dong && ketQua?.created_by_id === personId;
+  const cuaNguoiTao = !readOnly && !dong && ketQua?.created_by_id === personId;
 
   if (live?.deleted) return <View style={[styles.card, { borderColor: colors.line, backgroundColor: colors.card }]}><Text style={[typography.caption, { color: colors.inkSoft }]}>Bình chọn này không còn.</Text></View>;
 
@@ -294,14 +300,14 @@ function ThePoll({
             const muc = cuaToi ? colors.accent : colors.inkSoft;
             return (
               <Pressable
-                {...toggleState("radio", cuaToi, dangBo !== null || dong ? undefined : () => void bo(o.id))}
-                accessibilityLabel={`Bỏ phiếu ${o.label}`}
+                {...toggleState("radio", cuaToi, readOnly || dangBo !== null || dong ? undefined : () => void bo(o.id))}
+                accessibilityLabel={readOnly ? `${o.label}: ${so} phiếu, kho cũ chỉ đọc` : `Bỏ phiếu ${o.label}`}
                 // The count is said by value on native, so the name stays the one
                 // the manual quotes. Not on the web: `aria-valuetext` is not an
                 // attribute a radio may carry (axe aria-allowed-attr).
                 accessibilityValue={Platform.OS !== "web" && so > 0 ? { text: `${so} phiếu` } : undefined}
-                aria-disabled={dangBo !== null || dong}
-                disabled={dangBo !== null || dong}
+                aria-disabled={readOnly || dangBo !== null || dong}
+                disabled={readOnly || dangBo !== null || dong}
                 key={o.id}
                 onPress={() => void bo(o.id)}
                 style={({ pressed }) => [styles.luaChon, thu > 0 && { borderTopColor: colors.line, borderTopWidth: StyleSheet.hairlineWidth }, pressed && styles.bam]}
@@ -375,7 +381,7 @@ function ThePoll({
       {dong ? <RudiButton label={showClosedVotes ? "Thu gọn phiếu" : "Xem các phiếu"} variant="ghost" compact onPress={() => setShowClosedVotes((value) => !value)} /> : null}
       {/* Where a decision turns into a plan. Without this the vote ends and the
           group is back to one person filling a private form (reviewer C1/C6). */}
-      {dong && onMoToHen ? (
+      {!readOnly && dong && onMoToHen ? (
         <View style={styles.tiepTheo}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
             {tenToHen

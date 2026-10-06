@@ -17,9 +17,11 @@
 import { Redirect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, type TextInput } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View, type TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { usePaperPalette } from "../../asset-pack/react-native/usePaperPalette";
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { kiemTraTaoBuoiDi, nhanKhoangNgay, type OTaoBuoiDi } from "../../../screens/len-plan/buoi-di";
@@ -56,7 +58,8 @@ const MUC_NGAN_SACH = [
 function tienDaGo(chu: string): string | null {
   const t = chu.trim();
   if (!/^[0-9]+$/.test(t)) return null;
-  return dinhDangTienVnd(Number(t));
+  const amount = Number(t);
+  return Number.isSafeInteger(amount) ? dinhDangTienVnd(amount) : null;
 }
 
 function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: boolean } {
@@ -71,6 +74,8 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, radius } = useRudiTheme();
+  const palette = usePaperPalette();
+  const { fontScale } = useWindowDimensions();
   const nhom = nhomHienTai(phien);
   const [title, setTitle] = useState("");
   // The boxes hold the spelling a person types and reads; ISO lives on the wire.
@@ -190,7 +195,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
         }
       }
       // `vua=tao`: the outing opens on the moment it was made (M5).
-      router.replace(`/outings/${id}?vua=tao` as never);
+      router.replace(`/outings/${id}?ctx=${encodeURIComponent(contextId)}&vua=tao` as never);
     } catch (error) {
       setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
       if (sourceMessageId && error instanceof ApiError && error.code === "plan_already_promoted") {
@@ -219,6 +224,8 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
     // bar however tall the form grows: at font 1.3 the button sat below the
     // fold behind the IME and the live board could not reach it (2026-09-07).
     <RudiScreen
+      material="quiet"
+      avoidKeyboard
       bottomInset={Math.max(insets.bottom, 16) + 40}
       contentStyle={styles.screen}
       footer={
@@ -238,7 +245,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
       testID="create-outing-screen"
     >
       <TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />
-      <Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} />
+      <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><PaperObject name="ticket" width={72} palette={palette} /></View>
       {/* The invitation said out loud, with its blanks: what, when, how many,
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>
@@ -298,11 +305,12 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
                 haptic="select"
                 key={m.dong}
                 onPress={() => { setNganSach(String(m.dong)); boLoi("ngan-sach"); }}
-                style={[styles.phongBi, { backgroundColor: chon ? colors.accentSoft : colors.paper, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }]}
+                style={[styles.phongBi, Math.round(fontScale * 100) >= 130 && styles.motCot, { backgroundColor: chon ? colors.accentSoft : colors.paper, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }]}
               >
                 <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
                 <View style={[styles.dayPhongBi, { height: 2 + i * 2, backgroundColor: colors.lineStrong }]} />
-                <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{m.nhan}</Text>
+                <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
+                {chon ? <Ionicons name="checkmark-circle" size={18} color={colors.accent} style={styles.dauChon} /> : null}
               </PressScale>
             );
           })}
@@ -347,10 +355,10 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           <RudiButton compact full={false} label="Bỏ chỗ này" onPress={() => setChoDau(null)} variant="ghost" />
         </View>
       ) : null}
-      {daTaoThieuCho ? <RudiButton label="Mở kèo vừa tạo" variant="outline" onPress={() => router.replace(`/outings/${daTaoThieuCho}?vua=tao` as never)} /> : null}
+      {daTaoThieuCho ? <RudiButton label="Mở kèo vừa tạo" variant="outline" onPress={() => router.replace(`/outings/${daTaoThieuCho}?ctx=${encodeURIComponent(contextId)}&vua=tao` as never)} /> : null}
       {existingId ? <View style={styles.khoi}>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ hẹn này đã thành kèo. Mọi người tiếp tục sửa trên cùng một lịch trình.</Text>
-        <RudiButton label="Mở kèo đã tạo" variant="outline" onPress={() => router.replace(`/outings/${existingId}` as never)} />
+        <RudiButton label="Mở kèo đã tạo" variant="outline" onPress={() => router.replace(`/outings/${existingId}?ctx=${encodeURIComponent(contextId)}` as never)} />
       </View> : null}
       {sourceFailed ? <RudiButton label="Viết kèo mới" variant="outline" onPress={() => router.replace({ pathname: "/outings/new", params: { contextId } } as never)} /> : null}
     </RudiScreen>
@@ -358,7 +366,11 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
 }
 
 const styles = StyleSheet.create({
-  screen: { maxWidth: 640 },
+  screen: { maxWidth: 560 },
+  flex: { flex: 1 },
+  dauForm: { flexDirection: "row", alignItems: "center", gap: 12 },
+  motCot: { flexBasis: "100%", maxWidth: "100%" },
+  dauChon: { position: "absolute", right: 6, top: 6 },
   khoi: { gap: 8 },
   chan: { gap: 8 },
   // The invitation card: a sheet of the coral paper's card, taped at the top.
@@ -372,7 +384,7 @@ const styles = StyleSheet.create({
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // An envelope per budget: thicker as the amount grows.
-  phongBi: { flexGrow: 1, flexBasis: 60, minHeight: 64, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  phongBi: { flexGrow: 1, flexBasis: "46%", maxWidth: "50%", minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 8, paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
 });

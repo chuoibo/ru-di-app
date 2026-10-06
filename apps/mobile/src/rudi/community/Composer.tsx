@@ -16,6 +16,7 @@ import { MentionPicker } from "./MentionPicker";
 import { coTuongNhom } from "../so/ban-tinh";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 import { toggleState } from "../../ui/a11y";
+import { SkeletonLines } from "../ui/Skeleton";
 /** Who reads a story: the title and the line under it, one place for both forms. */
 const NGUOI_DOC: Record<Audience, [string, string]> = {
   friends: ["Riêng tư · Bạn bè", "Chỉ bạn và những người đang kết bạn với bạn."],
@@ -39,6 +40,9 @@ export function Composer() {
     const [topics, setTopics] = useState("");
     const [mentions, setMentions] = useState<string[]>([]);
     const [media, setMedia] = useState<Media[]>([]);
+    const [groupError, setGroupError] = useState<string | null>(null);
+    const [groupLoading, setGroupLoading] = useState(false);
+    const [groupRetry, setGroupRetry] = useState(0);
     const [groups, setGroups] = useState<NhomTomTat[]>([]);
     const [group, setGroup] = useState<string | null>(null);
     const [advanced, setAdvanced] = useState(false);
@@ -46,13 +50,34 @@ export function Composer() {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [revision, setRevision] = useState(0);
+    const [editReady, setEditReady] = useState(!params.edit);
+    const [loading, setLoading] = useState(Boolean(params.edit));
+    const [retry, setRetry] = useState(0);
+    const sending = useRef(false);
     const attempt = useRef(newAttempt().key);
-    useEffect(() => { if (!phien)
-        return; void docNhomCuaToi(phien.person_id).then((rows) => setGroups(rows.filter((g) => g.my_state === "active" && coTuongNhom(g)))).catch(() => { }); if (params.edit)
-        void getPost(phien.person_id, params.edit).then((p) => { setBody(p.body); setAudience(p.audience); setTopics(p.topics.join(", ")); setMentions(p.mentions); setMedia(p.media); setRevision(p.revision); setGroup(p.context_id); }).catch((e) => setError(String(e.message))); }, [phien, params.edit]);
+    useEffect(() => {
+        if (!phien) return;
+        let current = true;
+
+        if (params.edit) {
+            setLoading(true); setEditReady(false); setError(null);
+            void getPost(phien.person_id, params.edit).then((p) => {
+                if (!current) return;
+                setBody(p.body); setAudience(p.audience); setTopics(p.topics.join(", ")); setMentions(p.mentions); setMedia(p.media); setRevision(p.revision); setGroup(p.context_id); setEditReady(true);
+            }).catch((e) => { if (current) setError(e instanceof Error ? e.message : "Chưa mở được bản viết."); }).finally(() => { if (current) setLoading(false); });
+        } else setLoading(false);
+        return () => { current = false; };
+    }, [phien, params.edit, retry]);
+    useEffect(() => {
+        if (!phien) return;
+        let current = true; setGroupLoading(true); setGroupError(null);
+        void docNhomCuaToi(phien.person_id).then((rows) => { if (current) setGroups(rows.filter((g) => g.my_state === "active" && coTuongNhom(g))); }).catch((e) => { if (current) setGroupError(e instanceof Error ? e.message : "Chưa đọc được nhóm của bạn."); }).finally(() => { if (current) setGroupLoading(false); });
+        return () => { current = false; };
+    }, [phien, groupRetry]);
     const send = async () => {
-        if (!phien || busy || uploading)
+        if (!phien || sending.current || loading || uploading || !body.trim() || loiChuDe(topics) || (audience === "group" && !group) || !editReady)
             return;
+        sending.current = true;
         setBusy(true);
         setError(null);
         const input = { logical_id: attempt.current, body, audience, topics: topics.split(",").map((s) => s.trim()).filter(Boolean), mentions, media_ids: media.map((m) => m.id), context_id: audience === "group" ? group : null, revision };
@@ -71,6 +96,7 @@ export function Composer() {
             setError(e instanceof Error ? e.message : "Chưa gửi được bài. Bản viết vẫn ở đây.");
         }
         finally {
+            sending.current = false;
             setBusy(false);
         }
     };
@@ -81,7 +107,8 @@ export function Composer() {
     if (!phien)
         return <RudiScreen><TopBar title="Kể một khoảnh khắc"/><Text style={[typography.body, { color: colors.ink }]}>Đăng nhập để viết câu chuyện của bạn.</Text></RudiScreen>;
     const choice = (value: Audience, title: string, detail: string) => <Pressable key={value} {...toggleState("radio", audience === value, params.edit ? undefined : () => change(() => setAudience(value)))} aria-disabled={Boolean(params.edit)} disabled={Boolean(params.edit)} onPress={() => change(() => setAudience(value))} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: colors.line, gap: 4 }}><Text style={[typography.title, { color: audience === value ? colors.accent : colors.ink }]}>{title}{audience === value ? " · Đã chọn" : ""}</Text><Text style={[typography.caption, { color: colors.inkSoft }]}>{detail}</Text></Pressable>;
-    return <RudiScreen avoidKeyboard cot="form" footerInset={insets.bottom + 12} testID="community-composer" footer={<View style={{ gap: 8 }}>
+    if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
+    return <RudiScreen material="quiet" avoidKeyboard cot="form" footerInset={insets.bottom + 12} testID="community-composer" footer={<View style={{ gap: 8 }}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={error} testID="cong-dong-loi-gui" />
       <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} disabled={busy || uploading || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null} lyDo={!body.trim() ? "Viết vài dòng về khoảnh khắc trước khi gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
@@ -97,7 +124,7 @@ export function Composer() {
         no «Lựa chọn khác» opening more choices that cannot be taken. */}
     <View accessibilityRole="radiogroup">{params.edit ? choice(audience, ...NGUOI_DOC[audience]) : <>{choice("friends", ...NGUOI_DOC.friends)}{choice("public", ...NGUOI_DOC.public)}{advanced ? <>{choice("only_me", ...NGUOI_DOC.only_me)}{choice("group", ...NGUOI_DOC.group)}</> : null}</>}</View>
     {params.edit ? <Text style={[typography.caption, { color: colors.inkSoft }]} testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc như lúc đăng. Muốn đổi người đọc, mở «Thêm lựa chọn cho bài» (⋯) ở trang bài.</Text> : <RudiButton compact full={false} label={advanced ? "Thu gọn lựa chọn" : "Lựa chọn khác"} variant="ghost" onPress={() => setAdvanced(!advanced)}/>}
-    {audience === "group" && !params.edit ? groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change(() => setGroup(g.id))}/>) : null}
+    {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change(() => setGroup(g.id))}/>)}</> : null}
     {audience === "public" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Cộng đồng dành cho đi chơi, ăn uống, du lịch và trải nghiệm. Nội dung cần được duyệt trước khi công khai; bạn có thể sửa hoặc yêu cầu xem xét.</Text> : null}
   </RudiScreen>;
 }

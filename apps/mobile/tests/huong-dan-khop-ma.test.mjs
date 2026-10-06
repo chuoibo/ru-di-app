@@ -902,6 +902,37 @@ test("(e) canary: bộ rút đặt tên route và đích như expo-router", () =
   assert.deepEqual(ra.canh, [{ den: "smart-split/[id]/review", nhan: "Tạo" }]);
 });
 
+test("bộ rút giữ đích alias dùng helper canonical và query động", () => {
+  const helper = readFileSync(new URL("../src/rudi/duong-cu.ts", import.meta.url), "utf8");
+  const route = [
+    'import { duongKeoCu as legacy, duongChiaBillCu } from "./duong-cu";',
+    'const a = <Redirect href={legacy(id, ctx) as never} />;',
+    'const href = duongChiaBillCu(id, ctx, dip);',
+    'const b = <Redirect href={href as never} />;',
+  ].join("\n");
+  const extracted = rutTuNguon(route, [...CAC_MAN], "alias.tsx", { "./duong-cu": helper });
+  assert.deepEqual(extracted.di_toi, ["outings/[id]", "plan", "smart-split/[id]/review"]);
+  assert.deepEqual(extracted.canh, []);
+});
+
+test("bộ rút chỉ đọc return của helper được gọi, không thực thi hay gom mọi import", () => {
+  const helper = [
+    'export function target() { throw Error("must never execute"); return "/plan"; }',
+    'export function unused() { return "/finance"; }',
+    'export function nested() { function irrelevant() { return "/finance"; } return "/messages"; }',
+    'export function cycle() { return cycle(); }',
+  ].join("\n");
+  const route = [
+    'import { target, unused, nested, cycle } from "./helper";',
+    'const a = <RudiButton label="Tới kế hoạch" onPress={() => router.push(target())} />;',
+    'const b = <Redirect href={nested()} />;',
+    'const c = <Redirect href={cycle()} />;',
+  ].join("\n");
+  const extracted = rutTuNguon(route, [...CAC_MAN], "route.tsx", { "./helper": helper });
+  assert.deepEqual(extracted.di_toi, ["messages", "plan"]);
+  assert.deepEqual(extracted.canh, [{ den: "plan", nhan: "Tới kế hoạch" }]);
+});
+
 test("(e) canary: bộ rút chỉ ghép nhãn với điều hướng của cùng một thứ người ta bấm", () => {
   const nguon = [
     "const a = <View>",

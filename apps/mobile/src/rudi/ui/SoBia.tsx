@@ -18,6 +18,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reani
 
 import { BIA_MO, choLatBia } from "../san-khau/dong-hoc";
 import { bongGiay, phuMau, typography, useRudiTheme } from "../theme";
+import { Grain } from "./Grain";
 
 /** The ruled page: first rule under a header band, then one every `DONG` dp. */
 const DONG = 14;
@@ -96,6 +97,7 @@ export function SoBia({
           </Animated.View>
         ) : null}
         <Animated.View style={[StyleSheet.absoluteFill, styles.bia, { backgroundColor: colors.cover, transformOrigin: "left center" }, lat]}>
+          <Grain material="vaiBia" opacity={dark ? 0.3 : 0.4} />
           <View style={[styles.gay, { backgroundColor: phuMau(colors.ink, dark ? 0.35 : 0.45) }]} />
           <View style={styles.nhan}>
             {nhan ?? ten.map((t) => (

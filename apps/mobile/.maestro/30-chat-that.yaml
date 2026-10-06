@@ -1,3 +1,7 @@
+# BLOCKED on the current archive adapter: the legacy room is read-only.
+# The original write/reaction/poll assertions remain intentional; this flow
+# cannot pass until a separately verified E2EE v2 transport is connected.
+# Renamed empty copy below is source alignment, not native runtime proof.
 # Chat thật (M3), một người một máy, trên API prod không có khoá Gemini.
 #
 # Chạy SAU flow 24/25 trong cùng lượt: C có nhóm «Hoi QA» và là bạn của D. Gõ một
@@ -33,7 +37,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Hoi QA"
 - extendedWaitUntil:
-    visible: "Có hội rồi. Mở lời thôi."
+    visible: "Chưa có tin nhắn trong kho cũ"
     timeout: 60000
 - assertVisible: "Ô soạn tin"
 - takeScreenshot: 30-chat-rong
@@ -44,7 +48,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Toi nay an gi moi nguoi"
     timeout: 30000
-- assertNotVisible: "Có hội rồi. Mở lời thôi."
+- assertNotVisible: "Chưa có tin nhắn trong kho cũ"
 - hideKeyboard
 - takeScreenshot: 30-da-gui
 # Tắt mở lại: tin đến từ máy chủ, không phải từ state của lần gửi.

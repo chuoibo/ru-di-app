@@ -51,6 +51,7 @@ export function CaiDatNhomSheet({
   const [dangLuu, setDangLuu] = useState<"ten" | "theme" | "roi" | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [xacNhanRoi, setXacNhanRoi] = useState(false);
+  const writeLock = useRef(false);
   const attempts = useRef<Record<string, Attempt>>({});
   const laPair = nhom.kind === "pair";
   const mauChon = bangMauChat(nhom.theme, dark);
@@ -67,7 +68,8 @@ export function CaiDatNhomSheet({
     setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
 
   const luuTen = async () => {
-    if (!coGiDeDoi({ display_name: ten }) || dangLuu !== null) return;
+    if (!coGiDeDoi({ display_name: ten }) || writeLock.current) return;
+    writeLock.current = true;
     setDangLuu("ten");
     setLoi(null);
     try {
@@ -76,12 +78,14 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
 
   const chonTheme = async (slug: ThemeChat) => {
-    if (dangLuu !== null || slug === nhom.theme) return;
+    if (writeLock.current || slug === nhom.theme) return;
+    writeLock.current = true;
     setDangLuu("theme");
     setLoi(null);
     try {
@@ -90,12 +94,14 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
 
   const roi = async () => {
-    if (dangLuu !== null) return;
+    if (writeLock.current) return;
+    writeLock.current = true;
     setDangLuu("roi");
     setLoi(null);
     try {
@@ -107,6 +113,7 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
@@ -116,13 +123,13 @@ export function CaiDatNhomSheet({
       <Heading size="h2" title={laPair ? "Cuộc trò chuyện" : "Cài đặt nhóm"} />
       {!laPair ? (
         <View style={styles.khoi}>
-          <Field accessibilityLabel="Ô tên nhóm" label="Tên nhóm" onChangeText={setTen} value={ten} />
+          <Field editable={dangLuu === null} accessibilityLabel="Ô tên nhóm" label="Tên nhóm" onChangeText={setTen} value={ten} />
           {/* ADR-0038 §2.2: the save appears once there is something to
               save, instead of a greyed button under an unchanged name. */}
           {ten.trim() !== nhom.display_name ? (
             <RudiButton
               compact
-              disabled={!coGiDeDoi({ display_name: ten })}
+              disabled={dangLuu !== null || !coGiDeDoi({ display_name: ten })}
               full={false}
               label="Lưu tên"
               loading={dangLuu === "ten"}
@@ -215,14 +222,14 @@ export function CaiDatNhomSheet({
           title="Thành viên"
         />
       ) : null}
-      {loi ? <Text style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
+      {loi ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
       {/* Leaving sits apart, under a rule, well away from the rows above. */}
       {!laPair ? <View style={[styles.ke, { backgroundColor: colors.line }]} /> : null}
       {!laPair ? (
         xacNhanRoi ? (
           <View style={styles.khoi}>
             <Text style={[typography.body, { color: colors.ink }]}>Rời nhóm này? Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
-            <RudiButton label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
+            <RudiButton disabled={dangLuu !== null} label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
             <RudiButton label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
           </View>
         ) : (

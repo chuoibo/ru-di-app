@@ -1,13 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import { typography, useRudiTheme } from "../theme";
-import { Avatar } from "../ui/Avatar";
+import { AvatarNguoi } from "../ui/AvatarNguoi";
+import { RudiButton } from "../ui";
 import { PressScale } from "../ui/PressScale";
 import { useMotion } from "../ui/useMotion";
 import { imageSource, relativeTime, type Media, type Post } from "./api";
@@ -68,6 +69,7 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   // 4:3 like the owner's mockup. Its 4:3 room is held from the first render
   // (`khungAlbum`): drawn only once measured, a card the list remounts above
   // the viewport came back ~270 dp short for a frame and the feed jumped.
+  const album = useRef<ScrollView>(null);
   const [rongAlbum, setRongAlbum] = useState(0);
   const [trangDangXem, setTrangDangXem] = useState(0);
   const kichAnh = kichTrangAlbum(rongAlbum);
@@ -86,9 +88,9 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   }, [daChiaSe]);
   return <View testID={`community-post-${post.id}`} style={[styles.post, { borderBottomColor: colors.line }]}>
     <View style={styles.identity}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><Avatar name={post.author} size={42} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><AvatarNguoi personId={post.author_id} name={post.author} size={42} /></Pressable>
       <View style={styles.identityText}><Text style={[typography.title, { color: colors.ink }]}>{post.author}</Text><Text style={[typography.caption, { color: colors.inkFaint }]}>{relativeTime(post.created_at)} · {post.audience === "public" ? "Cộng đồng" : post.audience === "friends" ? "Bạn bè" : post.audience === "group" ? "Trong nhóm" : "Chỉ mình tôi"}</Text></View>
-      {post.author_id !== person ? <Pressable accessibilityRole="button" accessibilityLabel={post.following ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"} onPress={onFollow} style={styles.follow}><Ionicons name={post.following ? "checkmark" : "add"} size={20} color={colors.accent} /></Pressable> : null}
+      {post.author_id !== person ? <Pressable accessibilityRole="button" accessibilityLabel={post.following ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"} onPress={onFollow} disabled={busy} aria-disabled={busy} style={styles.follow}><Ionicons name={post.following ? "checkmark" : "add"} size={20} color={colors.accent} /></Pressable> : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Thêm lựa chọn cho bài" onPress={onMore} style={styles.follow}><Ionicons name="ellipsis-horizontal" size={20} color={colors.inkSoft} /></Pressable>
     </View>
     {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
@@ -98,12 +100,14 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
     {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(e.nativeEvent.layout.width)} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
-      <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
+      <ScrollView ref={album} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
         {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo khung={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>
+
       {/* Which picture of how many; each picture already names itself to a screen reader. */}
       {soTrang ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.soTrang, { backgroundColor: colors.card, borderRadius: radius.pill }]}><Text style={[typography.caption, { color: colors.ink }]}>{soTrang}</Text></View> : null}
     </View> : null}</View> : null}
+    {!post.diary && post.media.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}><RudiButton full={false} compact label="Ảnh trước" variant="ghost" disabled={trangDangXem === 0} lyDo={trangDangXem === 0 ? "Đang ở ảnh đầu tiên." : undefined} onPress={() => album.current?.scrollTo({ x: Math.max(0, trangDangXem - 1) * rongAlbum, animated: motion.ms("standard") > 0 })}/><RudiButton full={false} compact label="Ảnh sau" variant="ghost" disabled={trangDangXem >= post.media.length - 1} lyDo={trangDangXem >= post.media.length - 1 ? "Đây là ảnh cuối cùng." : undefined} onPress={() => album.current?.scrollTo({ x: Math.min(post.media.length - 1, trangDangXem + 1) * rongAlbum, animated: motion.ms("standard") > 0 })}/></View> : null}
     {photo ? <PhotoViewer title="Ảnh khoảnh khắc" photos={post.media.filter((m) => m.type.startsWith("image/")).map((m) => ({ id: m.id, source: imageSource(person, m.url), caption: post.body }))} initialIndex={post.media.filter((m) => m.type.startsWith("image/")).findIndex((m) => m.id === photo.id)} onClose={() => setPhoto(null)} /> : null}
     {post.topics.length ? <View style={styles.topics}>{post.topics.map((t) => <Pressable key={t} accessibilityRole="button" onPress={() => onTopic ? onTopic(t) : router.push({ pathname: "/community/topic", params: { topic: t } } as never)} style={[styles.topic, { backgroundColor: colors.accentSoft }]}><Text style={[typography.caption, { color: colors.accent }]}>{t}</Text></Pressable>)}</View> : null}
     <View style={styles.actions}>

@@ -10,6 +10,8 @@
  * chuyên môn pháp lý đọc trang này. Gỡ con dấu là việc của Lead sau khi có
  * người đọc, không phải của lát này.
  */
+import Constants from "expo-constants";
+import appConfig from "../../../../app.json";
 import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
@@ -40,6 +42,8 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
     cau: [
       "Tin nhắn và ảnh gốc trong nhóm dành cho thành viên. Ảnh được chọn có thể xuất hiện trong sổ công khai của một thành viên; chủ sổ gỡ hoặc thay ảnh khi được yêu cầu.",
       "Bài trên tường: theo mức bạn chọn khi đăng, và bạn đặt được ai bình luận.",
+      "Phòng chat v2 dùng mã hoá đầu cuối. Máy chủ không giữ khoá giải mã. Khi nhờ AI trong phòng này, chỉ phần văn bản bạn chọn gửi được đưa cho AI.",
+      "Khi dựng sổ, bạn xem và chọn ảnh, trích đoạn được gửi cho Nếp trước khi đồng ý. Ghi chép riêng từ Nếp trong «Điều mình muốn giữ» chỉ mình bạn đọc được.",
       "Story: chỉ bạn bè, và tự biến mất sau 24 giờ.",
       "Ảnh cá nhân: chỉ mở được khi có một bài hoặc một story bạn cho phép người ấy đọc.",
     ],
@@ -66,8 +70,10 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
 export function VeRuDiScreen() {
   const { colors } = useRudiTheme();
   return (
-    <RudiScreen testID="ve-rudi-screen">
+    <RudiScreen material="quiet" cot="form" testID="ve-rudi-screen">
       <TopBar title="Về Rủ Đi" />
+      <Text style={[typography.title, { color: colors.ink }]}>Rủ Đi · {Constants.expoConfig?.version ?? appConfig.expo.version}</Text>
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>Giấy phép mã nguồn MIT · © 2026 chuoibo</Text>
       <View style={styles.dau}>
         <Stamp label="BẢN NHÁP" tilt={-3} tone="accent" variant="ink" />
       </View>

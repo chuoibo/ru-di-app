@@ -22,7 +22,7 @@ import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Nep } from "../../ui/art/Nep";
+import { AssetIllustration } from "../../ui/AssetIllustration";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 
 function loiRaChu(error: unknown): string {
@@ -60,6 +60,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const [ban, setBan] = useState(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  const posting = useRef(false);
   // Leaving keeps the pick and the words as a draft; sharing, «Bỏ ảnh» or
   // «Bỏ bản nháp» is what lets the picked file go.
   const daGuiRef = useRef(false);
@@ -76,7 +77,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 
   if (contextId === null) {
     return (
-      <RudiScreen testID="share-moment-screen">
+      <RudiScreen material="quiet" testID="share-moment-screen">
         <TopBar title="Thả khoảnh khắc" />
         <Heading title="Vào một nhóm trước" subtitle="Khoảnh khắc đăng vào tường của một nhóm; chưa có nhóm thì chưa có tường." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
@@ -98,7 +99,8 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   };
 
   const chiaSe = async () => {
-    if (anh === null) return;
+    if (anh === null || posting.current) return;
+    posting.current = true;
     setBan(true);
     setThongBao(null);
     try {
@@ -107,12 +109,13 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       boNhapDang(khoaNhap);
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
-      // The caption stays, but `nenVaDung` discarded the picked file.
-      setAnh(null);
-      setThongBao(`${loiRaChu(error)} Chọn lại ảnh rồi thử lần nữa.`);
+      // Compression discards its own copy, while the picked original survives
+      // a refused upload. Keep the preview and caption for the same retry.
+      setThongBao(`${loiRaChu(error)} Ảnh và lời viết vẫn ở đây; bạn thử lại nhé.`);
     } finally {
       setGiaiDoan(null);
       setBan(false);
+      posting.current = false;
     }
   };
 
@@ -121,6 +124,9 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 
   return (
     <RudiScreen
+      material="quiet"
+      cot="form"
+      avoidKeyboard
       contentStyle={styles.screen}
       // The one action stays on screen however tall the photo is: under the
       // print and the caption it was pushed past the fold (QA 23/09).
@@ -156,7 +162,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       <View style={[styles.instax, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(2, dark)]}>
         {anh === null ? (
           <Pressable accessibilityLabel="Chưa chọn ảnh, chạm để chọn" accessibilityRole="button" disabled={ban} onPress={() => void chon()} style={[styles.khungTrong, { backgroundColor: colors.ground, borderColor: colors.lineStrong }]}>
-            <Nep gap="trang" pose="giu-khung" size={88} />
+            <AssetIllustration name="spot-memory" width={240} height={220} />
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chạm để chọn một tấm.</Text>
           </Pressable>
         ) : (

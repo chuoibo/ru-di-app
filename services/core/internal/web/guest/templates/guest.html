@@ -61,6 +61,7 @@
       <span class="amount__figure">{{ block.amount_display }}</span><span class="amount__unit">đ</span>
       <span class="amount__hint">chạm để chép</span>
     </button>
+    <p class="copy-feedback" data-copy-feedback role="status" aria-live="polite"></p>
 
     {# The page claimed collection had paused while giving no sign of it. A
        promise that leaves no trace on the screen it was made on is not a
@@ -101,7 +102,7 @@
          that is finished. The objection routes stay: disagreeing about an
          amount is independent of whether it was paid. #}
       <button class="btn {% if block.receiver_confirmed %}btn--quiet{% else %}btn--primary{% endif %}"
-              type="button" data-reveal>
+              type="button" data-reveal aria-expanded="false" aria-controls="transfer-{{ block.obligation_id }}">
         {%- if block.receiver_confirmed or block.already_reported -%}
         Xem lại cách chuyển
         {%- else -%}
@@ -128,7 +129,7 @@
        and how the money actually moves is between the two people. Saying that
        out loud beats showing an amount with no next step and letting somebody
        wonder whether the page failed to load. #}
-    <div class="transfer" data-transfer>
+    <div class="transfer" data-transfer id="transfer-{{ block.obligation_id }}">
       <p class="eyebrow">Trả cho</p>
       <p class="recipient">{{ block.recipient_display_name }}</p>
       <p class="note">RuDi chỉ tính phần của bạn. Chuyển bằng cách nào là chuyện giữa bạn và {{ block.recipient_display_name }}.</p>
@@ -140,7 +141,7 @@
            must not sound like it did. #}
         <p class="status">Bạn đã báo là đã chuyển. Đang chờ {{ block.recipient_display_name }} xác nhận.</p>
       {% elif view.can_report_payment %}
-        <form method="post" action="/g/{{ token }}/da-chuyen">
+        <form method="post" action="/g/{{ token }}/da-chuyen" data-claim-form>
           <input type="hidden" name="obligation_id" value="{{ block.obligation_id }}">
           <button class="btn btn--ghost" type="submit">Tôi đã chuyển</button>
         </form>
@@ -158,7 +159,6 @@
   <p class="footer">Chỉ hiển thị phần của bạn. Trang này không cho xem gì khác của nhóm.</p>
 </main>
 
-<div class="toast" data-toast role="status" aria-live="polite" hidden>Đã chép</div>
 <script src="/static/guest.js" defer></script>
 </body>
 </html>

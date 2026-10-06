@@ -11,12 +11,12 @@
  * thẳng lên máy chủ qua `PATCH /people/me`, mỗi lần một khoá.
  */
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
 import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
-import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
+import { boAnh, chonAnh, nenVaDung, type TempPhoto } from "../../ky-niem/chon-anh";
 import { AnhNhomError } from "../../../camera/anh-nhom";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach } from "../../nguoi/chinh-sach-tuong";
 import { docHoSoToi, type HoSoToi } from "../../../phien";
@@ -27,6 +27,8 @@ import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader,
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { congTac } from "../../ui/cong-tac";
+import { SkeletonLines } from "../../ui/Skeleton";
+import { toggleState } from "../../../ui/a11y";
 import { useGiaoDien } from "../../ui/GiaoDienProvider";
 
 export function CaiDatScreen() {
@@ -34,6 +36,9 @@ export function CaiDatScreen() {
   const { colors } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const { cheDo, datCheDo } = useGiaoDien();
+  const policyWorking = useRef(false); const avatarWorking = useRef(false);
+  const [pendingPhoto, setPendingPhoto] = useState<TempPhoto | null>(null);
+  const [loading, setLoading] = useState(true);
   const [hoSo, setHoSo] = useState<HoSoToi | null>(null);
   // QA UI-107: each control says its own failure under itself; one sentence
   // at the foot of the page was 700px below the switch that failed.
@@ -45,12 +50,13 @@ export function CaiDatScreen() {
   const [dangDoiAnh, setDangDoiAnh] = useState(false);
 
   const nap = useCallback(async () => {
-    if (phien === null) return;
+    if (phien === null) { setLoading(false); return; }
+    setLoading(true); setLoi(null);
     try {
       setHoSo(await docHoSoToi(phien.person_id));
     } catch (error) {
       setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
-    }
+    } finally { setLoading(false); }
   }, [phien]);
 
   useEffect(() => {
@@ -59,7 +65,8 @@ export function CaiDatScreen() {
 
   const doiChinhSach = async (ma: string) => {
     if (!laChinhSach(ma)) return;
-    if (phien === null || dangLuu) return;
+    if (phien === null || policyWorking.current || !hoSo) return;
+    policyWorking.current = true;
     setDangLuu(true);
     setLoiChinhSach(null);
     try {
@@ -68,33 +75,24 @@ export function CaiDatScreen() {
     } catch (error) {
       setLoiChinhSach(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
-      setDangLuu(false);
+      policyWorking.current = false; setDangLuu(false);
     }
   };
 
-  const doiAnhDaiDien = async () => {
-    if (phien === null || dangDoiAnh) return;
-    setLoiAnh(null);
-    const daChon = await chonAnh().catch((error: unknown) => {
-      setLoiAnh(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
-      return null;
-    });
-    if (daChon === null) return;
-    setDangDoiAnh(true);
+  const doiAnhDaiDien = async (retry?: TempPhoto) => {
+    if (phien === null || avatarWorking.current) return;
+    avatarWorking.current = true; setDangDoiAnh(true); setLoiAnh(null);
     try {
-      const daTai = await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
-      // The new id is the new version: every frame on this phone switches now;
-      // the stream tells everyone who shares a group with us.
-      baoDaDoiAnh(phien.person_id, phien.person_id, daTai.id);
+      const chosen = retry ?? await chonAnh();
+      if (!chosen) return;
+      if (pendingPhoto && pendingPhoto !== chosen) await boAnh(pendingPhoto);
+      setPendingPhoto(chosen);
+      const uploaded = await nenVaDung(chosen, (compressed) => taiAnhDaiDien(phien.person_id, compressed, phien.person_id));
+      setPendingPhoto(null);
+      baoDaDoiAnh(phien.person_id, phien.person_id, uploaded.id);
     } catch (error) {
-      await boAnh(daChon);
-      // `AnhNhomError` carries the device's own words ("not a picture", "too
-      // large"); replacing them with the network sentence sent people looking
-      // at their Wi-Fi for a file that was never an image (measured 2026-09-24).
       setLoiAnh(error instanceof ApiError || error instanceof AnhNhomError ? error.message : thongDiepNguoiDoc(0, null));
-    } finally {
-      setDangDoiAnh(false);
-    }
+    } finally { avatarWorking.current = false; setDangDoiAnh(false); }
   };
 
   if (!phienDaDoc) return null;
@@ -104,8 +102,9 @@ export function CaiDatScreen() {
   const tenToi = hoSo?.display_name ?? phien?.profile?.display_name ?? "";
 
   return (
-    <RudiScreen testID="cai-dat-screen">
+    <RudiScreen material="quiet" cot="form" testID="cai-dat-screen">
       <TopBar title="Cài đặt" />
+      {loading && !hoSo ? <SkeletonLines lines={3}/> : null}
       {loi !== null && hoSo === null ? <CauTaiCho cau={loi} hanhDong={{ label: "Thử lại", onPress: () => { setLoi(null); void nap(); } }} /> : null}
       {/* Rows on paper, one hairline under each: the same surface system as
           Cá nhân and the ledger next door. Eight floating white cards here read
@@ -132,6 +131,7 @@ export function CaiDatScreen() {
             variant="outline"
           />
           <CauTaiCho cau={loiAnh} co="nho" />
+          {pendingPhoto && !dangDoiAnh ? <><RudiButton label="Thử lại ảnh đã chọn" variant="outline" onPress={() => void doiAnhDaiDien(pendingPhoto)}/><RudiButton label="Bỏ ảnh đang chờ" variant="ghost" onPress={() => { void boAnh(pendingPhoto); setPendingPhoto(null); setLoiAnh(null); }}/></> : null}
         </View>
         <ListRow
           icon="person-outline"
@@ -159,17 +159,10 @@ export function CaiDatScreen() {
       <NhomHang>
         <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
-          <View accessibilityRole="radiogroup" style={styles.chips}>
-            {CHINH_SACH.map((muc) => (
-              <Chip
-                key={muc.id}
-                label={muc.nhan}
-                onPress={() => void doiChinhSach(muc.id)}
-                selected={hoSo !== null && hoSo.wall_comment_policy === muc.id}
-                vaiRadio
-              />
-            ))}
-          </View>
+          {hoSo ? <View accessibilityRole="radiogroup" style={styles.chips}>
+            {CHINH_SACH.map((muc) => <Pressable key={muc.id} {...toggleState("radio", hoSo.wall_comment_policy === muc.id, () => void doiChinhSach(muc.id))} accessibilityLabel={muc.nhan} disabled={dangLuu} aria-disabled={dangLuu} onPress={() => void doiChinhSach(muc.id)} style={{ minHeight: 48, justifyContent: "center" }}><Chip label={muc.nhan} selected={hoSo.wall_comment_policy === muc.id}/></Pressable>)}
+          </View> : loading ? <SkeletonLines lines={2}/> : null}
+          {dangLuu ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu lựa chọn…</Text> : null}
           {hoSo !== null ? (
             <Text style={[typography.caption, { color: colors.inkFaint }]}>
               {(CHINH_SACH.find((muc) => muc.id === hoSo.wall_comment_policy) ?? CHINH_SACH[0]).giaiThich}

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { doiTenTrongPhien, suaHoSoToi } from "../../phien";
 import { duongTiep, manDau } from "../duong-vao";
@@ -63,6 +63,8 @@ export function PersonalizationScreen() {
   // (not from the URL, which anyone can edit).
   const quaLoiMoi = laVaoQuaLoiMoi(useRudiSession().phien);
   const { colors, dark } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const motCot = Math.round(fontScale * 100) >= 130;
   // At a large font scale two columns leave a label the width of one word,
   // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
   // board, 2026-09-08). The grid falls back to one column instead.
@@ -178,7 +180,7 @@ export function PersonalizationScreen() {
   const nhanNut = dangLuu ? "Đang lưu…" : personId === null ? "Tiếp tục" : "Lưu sở thích";
 
   return (
-    <RudiScreen contentStyle={styles.personalization} testID="personalization-screen">
+    <RudiScreen material="quiet" avoidKeyboard contentStyle={styles.personalization} testID="personalization-screen">
       <TopBar
         right={
           <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void boQua()} style={({ pressed }) => [styles.boQua, pressed && styles.pressed]}>
@@ -220,6 +222,7 @@ export function PersonalizationScreen() {
                 onPress={() => doiMucChon(m.id)}
                 style={({ pressed }) => [
                   styles.sticker,
+                  motCot && styles.motCot,
                   {
                     backgroundColor: selected ? colors.accentSoft : colors.card,
                     borderColor: selected ? colors.accent : colors.lineStrong,
@@ -232,7 +235,7 @@ export function PersonalizationScreen() {
                 ]}
               >
                 <GuGlyph id={m.id} size={52} tone={selected ? "accent" : "ink"} />
-                <Text numberOfLines={2} style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
+                <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
                 <Ionicons color={selected ? colors.accent : colors.lineStrong} name={selected ? "checkmark-circle" : "ellipse-outline"} size={18} style={styles.dauChon} />
               </Pressable>
             );
@@ -258,12 +261,13 @@ export function PersonalizationScreen() {
                 {...toggleState("radio", chon, () => doiKhoang(k.id))}
                 key={k.id}
                 onPress={() => doiKhoang(k.id)}
-                style={({ pressed }) => [styles.phongBi, { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.phongBi, motCot && styles.motCot, { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }, pressed && styles.pressed]}
               >
                 <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
                 <View style={[styles.dayPhongBi, { height: 2 + i * 3, backgroundColor: colors.lineStrong }]} />
-                <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{k.nhan}</Text>
-                <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{k.phu}</Text>
+                <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{k.nhan}</Text>
+                <Text style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>{k.phu}</Text>
+                {chon ? <Ionicons name="checkmark-circle" size={18} color={colors.accent} style={styles.dauChon} /> : null}
               </Pressable>
             );
           })}
@@ -294,12 +298,13 @@ const styles = StyleSheet.create({
   blockNganSach: { gap: 8, marginTop: 10 },
   bangSticker: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   // Three a row on a phone, more on a wider sheet; never narrower than the drawing.
-  sticker: { flexGrow: 1, flexBasis: 96, maxWidth: 160, minHeight: 116, alignItems: "center", justifyContent: "center", gap: 6, padding: 10, borderRadius: 10 },
+  sticker: { flexGrow: 1, flexBasis: "47%", maxWidth: "50%", minHeight: 116, alignItems: "center", justifyContent: "center", gap: 6, padding: 10, borderRadius: 10 },
+  motCot: { flexBasis: "100%", maxWidth: "100%" },
   dauChon: { position: "absolute", top: 6, right: 6 },
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // Four envelopes since ADR-0038 §2.5: two to a row, never a lone fourth.
-  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },

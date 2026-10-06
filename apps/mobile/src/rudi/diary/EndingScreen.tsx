@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../ui/AssetIllustration";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -134,7 +135,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
     {actionError("save")}
     <StampButton testID="diary-save-button" size="vua" tilt={-1} label={audience === "private" ? "Lưu riêng tư" : "Đăng sổ công khai"} loading={busy} onPress={() => void keep()} />
   </View> : undefined;
-  return <RudiScreen footer={saveAction} footerInset={insets.bottom} cot="form" cuonVeDau={`${phase}-${edit}`} header={<TopBar title={phase === "loading" || phase === "ending" ? "Trang cuối" : kind === "trip" ? "Sổ chuyến đi" : "Khoảnh khắc"} />} testID="diary-ending-screen" avoidKeyboard overlay={<Sheet open={pickTarget !== null} onClose={() => setPickTarget(null)} accessibilityLabel="Chọn ảnh cho trang"><View style={styles.section}>
+  return <RudiScreen material="quiet" footer={saveAction} footerInset={insets.bottom} cot="form" cuonVeDau={`${phase}-${edit}`} header={<TopBar title={phase === "loading" || phase === "ending" ? "Trang cuối" : kind === "trip" ? "Sổ chuyến đi" : "Khoảnh khắc"} />} testID="diary-ending-screen" avoidKeyboard overlay={<Sheet open={pickTarget !== null} onClose={() => setPickTarget(null)} accessibilityLabel="Chọn ảnh cho trang"><View style={styles.section}>
     <Heading size="h2" title={pickTarget === "cover" ? "Tấm nào mở đầu câu chuyện?" : "Ảnh cho trang này"} subtitle={pickTarget === "cover" ? "Chọn một tấm làm bìa. Những ảnh khác vẫn ở trong sổ." : "Tối đa bốn ảnh mỗi trang. Chạm ảnh đã chọn để bỏ."} />
     <View style={styles.grid}>{source?.photos.map((p) => <Pressable key={p.id} accessibilityRole={pickTarget === "cover" ? "radio" : "checkbox"} aria-checked={pickTarget === "cover" ? document?.cover_id === p.id : typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) === true} accessibilityLabel={`Chọn ảnh ${p.caption || p.day}`} onPress={() => choosePhoto(p.id)} style={styles.tile}><Image source={photo(p.id)} cachePolicy="none" contentFit="cover" style={styles.thumb} /><Text style={[typography.caption, { color: colors.ink }]}>{pickTarget === "cover" && document?.cover_id === p.id ? "Bìa hiện tại" : typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) ? "Đã chọn" : ngayKieuViet(p.day)}</Text></Pressable>)}</View>
     <RudiButton label="Xong phần ảnh" onPress={() => setPickTarget(null)} /></View>
@@ -142,6 +143,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
     {error?.site === "load" ? error.retryable ? <ErrorState title="Chưa mở được trang cuối" body={error.message} onRetry={() => void load()} /> : <EmptyState kind="failure" title="Chưa mở được trang cuối" body={error.message} action={{ label: "Về lịch hẹn", onPress: () => router.replace("/plan") }} illustration={<Canh id="chua-doc-duoc" width={168} />} /> : null}
     {phase === "loading" && !error ? <SkeletonGroup><SkeletonCard media={240} lines={3} /></SkeletonGroup> : null}
     {phase === "ending" ? <View style={styles.section}>
+      <AssetIllustration name="spot-memory" width={260} height={220} style={{ alignSelf: "center" }}/>
       <Heading title={waiting === "future" ? "Cuộc đi còn ở phía trước." : waiting === "organizer" ? "Trang cuối đang chờ cả hội." : "Khép cuộc đi, giữ câu chuyện."} subtitle={waiting === "future" ? "Cứ dành thời gian cho cuộc hẹn. Trang cuối vẫn ở đây khi bạn trở về." : waiting === "organizer" ? "Người tổ chức sẽ khép cuộc đi. Sau đó bạn tự chọn những điều muốn giữ." : "Một khoảnh khắc nhỏ, hay cả cuốn sổ cho những ngày đi xa?"} />
       <TrangSo tone="accent" ke={false} style={styles.invitation}>
         <Text style={[typography.h1, { color: colors.ink }]}>{ending?.title}</Text>
@@ -158,7 +160,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
       {actionError("close")}
     </View> : null}
     {phase === "sources" && source && bundle ? <View style={styles.section}>
-      <Heading title="Mang theo điều gì vào sổ?" subtitle="Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau." />
+      <Heading title="Những điều bạn muốn giữ" subtitle="Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau." />
       <Text style={[typography.label, { color: colors.ink }]}>{selected.length} / 40 ảnh đã chọn</Text>
       <View style={styles.grid}>{source.photos.map((p) => <Pressable key={p.id} {...toggleState("checkbox", selected.includes(p.id), () => setSelected((ids) => togglePhoto(ids, p.id, 40)))} accessibilityLabel={`Giữ ảnh ${p.caption || p.day}`} onPress={() => setSelected((ids) => togglePhoto(ids, p.id, 40))} style={[styles.tile, { borderColor: selected.includes(p.id) ? colors.accent : colors.line, borderWidth: 2 }]}>
         <Image source={p.url ? diaryImage(person, p.url) : undefined} cachePolicy="none" contentFit="cover" style={styles.thumb} /><Text style={[typography.caption, { color: colors.ink }]}>{selected.includes(p.id) ? "Đã chọn · " : ""}{ngayKieuViet(p.day)}</Text>{p.caption ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>{p.caption}</Text> : null}
@@ -166,7 +168,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
       <RudiButton label="Thêm ảnh từ máy" variant="outline" loading={busy} onPress={() => void upload()} />
       {actionError("upload")}
       <ONhapMuc testID="diary-excerpt-input" label="Một đoạn chuyện muốn gửi cùng" placeholder="Dán trích đoạn bạn chọn, hoặc để trống" multiline maxLength={2000} value={excerpt} onChangeText={setExcerpt} helper="Chat không được tự đọc. Chỉ đoạn bạn đặt ở đây sẽ đi cùng ảnh." />
-      <Heading size="h2" title="Nếp sẽ nhận đúng phần này" />
+      <Heading size="h2" title="Phần bạn gửi cho Nếp" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>{bundle.title}{"\n"}{ngayKieuViet(bundle.starts_on)} · {ngayKieuViet(bundle.ends_on)}{"\n"}{bundle.photos.length} ảnh · {bundle.excerpts.length} trích đoạn</Text>
       {bundle.places.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Nơi đã check-in: {bundle.places.join(", ")}</Text> : null}
       {bundle.excerpts.map((v, i) => <Text key={i} style={[typography.body, { color: colors.ink }]}>{v}</Text>)}

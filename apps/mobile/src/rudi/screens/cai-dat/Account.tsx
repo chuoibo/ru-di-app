@@ -6,7 +6,8 @@ import { changeEmail, changePassword, getAccount, linkGoogle, logoutAll, reauthe
 import type { Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { OtpBoxes, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { OtpBoxes, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { GoogleButton } from "../../components/auth/GoogleButton";
@@ -20,7 +21,9 @@ export function AccountScreen() {
  const [challenge, setChallenge] = useState<Challenge | null>(null); const [sentTo, setSentTo] = useState(""); const [code, setCode] = useState(""); const [notice, setNotice] = useState<string | null>(null); const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false); const lock = useRef(false);
  // When this screen last proved who is here: a reauth, or a session the server just rotated (a new session starts fresh).
  const [freshAt, setFreshAt] = useState<number | null>(null); const [now, setNow] = useState(() => Date.now());
- useEffect(() => { if (!phien) return; let live = true; void getAccount(phien.person_id).then(a => { if (live) setAccount(a); }).catch(() => { if (live) setError("Chưa tải được tài khoản."); }); return () => { live = false; }; }, [phien?.token]);
+ const [retry, setRetry] = useState(0);
+ const [loading, setLoading] = useState(true);
+ useEffect(() => { if (!phien) return; let live = true; setLoading(true); setError(null); void getAccount(phien.person_id).then(a => { if (live) setAccount(a); }).catch(() => { if (live) setError("Chưa tải được tài khoản."); }).finally(() => { if (live) setLoading(false); }); return () => { live = false; }; }, [phien?.token, retry]);
  useEffect(() => { setNow(Date.now()); if (freshAt === null) return; const timer = setTimeout(() => setNow(Date.now()), Math.max(0, freshAt + FRESH_MS - Date.now()) + 50); return () => clearTimeout(timer); }, [freshAt]);
  if (!phienDaDoc) return null;
  if (!phien) return <CuaDangNhap />;
@@ -30,9 +33,11 @@ export function AccountScreen() {
  const googleKey = `${phien.token}:${freshAt ?? 0}`;
  const rotated = (next: Phien) => { datPhien(next); setFreshAt(Date.now()); };
  const run = async (action: () => Promise<void>) => { if (lock.current) return; lock.current = true; setBusy(true); setError(null); setNotice(null); try { await action(); } catch (e) { setError(e instanceof ApiError ? e.message : "Chưa lưu được. Hãy thử lại."); } finally { setBusy(false); lock.current = false; setCurrent(""); setPassword(""); } };
- return <RudiScreen testID="account-security-screen"><TopBar title="Tài khoản & bảo mật" /><View style={{ gap: 16, maxWidth: 560, alignSelf: "center", width: "100%" }}>
+ return <RudiScreen material="quiet" cot="form" avoidKeyboard testID="account-security-screen"><TopBar title="Tài khoản & bảo mật" /><View style={{ gap: 16, maxWidth: 560, alignSelf: "center", width: "100%" }}>
+ {loading ? <SkeletonGroup><SkeletonRow /><SkeletonRow /></SkeletonGroup> : null}
  {account && <><Text style={[typography.h2, { color: colors.ink }]}>@{account.username}</Text><Text style={[typography.body, { color: colors.inkSoft }]}>{account.email || "Chưa có email khôi phục"}</Text>
- <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={[typography.body, { color: colors.ink }]}>Cho bạn bè tìm theo username</Text><Switch accessibilityLabel="Cho tìm theo username" disabled={busy} value={account.discoverable_by_username} onValueChange={value => void run(async () => { await setDiscovery(person, value); setAccount({ ...account, discoverable_by_username: value }); })} /></View>
+ <View style={{ minHeight: 48, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}><Text style={[typography.body, { color: colors.ink, flex: 1, minWidth: 160 }]}>Cho bạn bè tìm theo username</Text><View style={{ minHeight: 48, minWidth: 48, justifyContent: "center", alignItems: "center" }}><Switch accessibilityLabel="Cho tìm theo username" disabled={busy} value={account.discoverable_by_username} onValueChange={value => void run(async () => { await setDiscovery(person, value); setAccount({ ...account, discoverable_by_username: value }); })} /></View></View>
+ <SectionHeader title="Xác thực và khôi phục" />
  <Text style={[typography.body, { color: colors.inkSoft }]}>Xác thực lại trước khi đổi mật khẩu, email hoặc liên kết Google. Lượt xác thực có hiệu lực 5 phút.</Text>
  {account.has_password && <><ONhapMuc label="Mật khẩu hiện tại" secureTextEntry autoComplete="current-password" value={current} onChangeText={setCurrent} editable={!busy} /><RudiButton label="Xác thực lại" disabled={busy || !current} lyDo={!current ? "Nhập mật khẩu hiện tại trước đã." : undefined} onPress={() => void run(async () => { await reauthenticate(person, { password: current }); setFreshAt(Date.now()); setNotice("Đã xác thực lại."); })} /></>}
  {account.has_google && <GoogleButton key={googleKey} purpose="reauth" actorId={person} disabled={busy} onError={setError} onProof={proof => run(async () => { await reauthenticate(person, { google: proof }); setFreshAt(Date.now()); setNotice("Đã xác thực lại."); })} />}
@@ -44,6 +49,6 @@ export function AccountScreen() {
  : googleHere() && <Text style={[typography.body, { color: colors.inkSoft }]} testID="account-link-google-wait">Xác thực lại ở trên để liên kết Google.</Text>}
  <RudiButton label="Các phiên đăng nhập" variant="outline" onPress={() => router.push("/settings/phien" as never)} /><RudiButton label="Đăng xuất tất cả thiết bị" variant="outline" disabled={busy} onPress={() => void run(async () => { await logoutAll(person); quenTaiCho(); router.replace("/login" as never); })} />
  <Text style={[typography.caption, { color: colors.inkSoft }]}>Khôi phục tài khoản không khôi phục khóa chat mã hóa trên thiết bị đã mất.</Text></>}
- {notice && <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>{notice}</Text>}{error && <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{error}</Text>}
+ {notice && <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>{notice}</Text>}{error && <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{error}</Text>}{!account && error ? <RudiButton label="Thử lại" variant="outline" onPress={() => setRetry((value) => value + 1)} /> : null}
  </View></RudiScreen>;
 }

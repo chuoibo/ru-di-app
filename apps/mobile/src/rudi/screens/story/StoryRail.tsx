@@ -9,13 +9,14 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docStories, laCuaToi, nhanVong, type NhomStoryWire } from "../../story/story";
 import { typography, useRudiTheme } from "../../theme";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
+import { RudiButton } from "../../ui";
 import { Skeleton } from "../../ui/Skeleton";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; nhom: NhomStoryWire[] } | { pha: "hong"; loi: string };
@@ -25,20 +26,29 @@ const CO = 56;
 export function StoryRail({ personId }: { personId: string }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const live = useRef(true);
+  const [loiDoc, setLoiDoc] = useState<string | null>(null);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
 
   const nap = useCallback(async () => {
     try {
       const dai = await docStories(personId);
+      if (!live.current) return;
+      setLoiDoc(null);
       setTrang({ pha: "xong", nhom: dai.authors });
     } catch (error) {
-      setTrang({ pha: "hong", loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
+      if (!live.current) return;
+      const loi = error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
+      setLoiDoc(loi);
+      setTrang((held) => held.pha === "xong" ? held : { pha: "hong", loi });
     }
   }, [personId]);
 
   useFocusEffect(
     useCallback(() => {
+      live.current = true;
       void nap();
+      return () => { live.current = false; };
     }, [nap]),
   );
 
@@ -102,9 +112,7 @@ export function StoryRail({ personId }: { personId: string }) {
             })
           : null}
       </ScrollView>
-      {trang.pha === "hong" ? (
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa đọc được story: {trang.loi}</Text>
-      ) : null}
+      {loiDoc ? <><Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Chưa cập nhật được story: {loiDoc}</Text><RudiButton label="Đọc lại story" variant="ghost" compact full={false} onPress={() => void nap()} /></> : null}
     </View>
   );
 }

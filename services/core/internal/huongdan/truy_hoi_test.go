@@ -388,25 +388,29 @@ func TestBoVangKhongSua(t *testing.T) {
 // 0.01 regression budget: duongVang MRR 0.9124 -> 0.9122, accentless unchanged
 // at 0.9865; off-screen recall 0.9565 -> 0.9783 and MRR 0.7647 -> 0.7861.
 // The two-person and model-query sets are unchanged. Golden bytes stay frozen.
+// The 2026-10-06 archive truth copy and canonical helper route extraction change
+// four first-correct ranks and no recall@5 outcomes. Reviewed characterization:
+// guest-checks/guide-characterization/changed-cases.{md,json}; golden inputs,
+// recall floor, accent bounds and shortest-path assertions remain unchanged.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9122"},
+		"":          {"0.9505", "0.9120"},
 		"co_dau":    {"0.9405", "0.8972"},
 		"khong_dau": {"1.0000", "0.9865"},
-		"teen":      {"0.8333", "0.7354"},
+		"teen":      {"0.8333", "0.7343"},
 	},
 	duongTruyVan: {
 		"": {"1.0000", "0.8878"},
 	},
 	duongManKhac: {
-		"":          {"0.9783", "0.7861"},
-		"co_dau":    {"1.0000", "0.8244"},
+		"":          {"0.9783", "0.7839"},
+		"co_dau":    {"1.0000", "0.8189"},
 		"khong_dau": {"1.0000", "0.8922"},
-		"teen":      {"0.9286", "0.6161"},
+		"teen":      {"0.9286", "0.6151"},
 	},
 	duongHaiNguoi: {
-		"":          {"1.0000", "0.7051"},
-		"co_dau":    {"1.0000", "0.7222"},
+		"":          {"1.0000", "0.7436"},
+		"co_dau":    {"1.0000", "0.8056"},
 		"khong_dau": {"1.0000", "0.8750"},
 		"teen":      {"1.0000", "0.4444"},
 	},

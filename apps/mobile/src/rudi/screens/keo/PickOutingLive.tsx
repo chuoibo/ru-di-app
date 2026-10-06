@@ -8,8 +8,8 @@
  * action per row says what it does.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { Canh } from "../../ui/art/Canh";
-import { useCallback, useState } from "react";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
@@ -49,6 +49,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
   const placeId = thamSoChuoi(params.place);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangGhi, setDangGhi] = useState<string | null>(null);
+  const ghiLock = useRef(false);
   const [loi, setLoi] = useState<string | null>(null);
   const contextId = phien.context_id;
   const today = homNay();
@@ -86,6 +87,8 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
   );
 
   const them = async (keo: BuoiDi, ten: string) => {
+    if (ghiLock.current) return;
+    ghiLock.current = true;
     setDangGhi(keo.id);
     setLoi(null);
     try {
@@ -99,6 +102,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoi(loiRaChu(error));
     } finally {
+      ghiLock.current = false;
       setDangGhi(null);
     }
   };
@@ -108,12 +112,12 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
   // skeleton that never ends (QA UI-046).
   if (!placeId) {
     return (
-      <RudiScreen testID="pick-outing-screen">
+      <RudiScreen material="quiet" contentStyle={{ maxWidth: 640 }} testID="pick-outing-screen">
         <TopBar title="Thêm vào kèo" />
         <EmptyState
           action={{ label: "Mở Khám phá", onPress: () => router.replace("/explore" as never) }}
           body="Mở một địa điểm ở Khám phá, rồi chọn «Thêm vào kèo» để đưa nó vào lịch trình."
-          illustration={<Canh id="tim-khong-ra" width={168} />}
+          illustration={<AssetIllustration name="spot-map" width={168} height={128} resolution="small" />}
           kind="no-results"
           title="Chưa có địa điểm để thêm"
         />
@@ -122,7 +126,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
   }
 
   return (
-    <RudiScreen testID="pick-outing-screen">
+    <RudiScreen material="quiet" contentStyle={{ maxWidth: 640 }} testID="pick-outing-screen">
       <TopBar title="Thêm vào kèo" />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -139,11 +143,11 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
           <CauTaiCho cau={loi} />
           {trang.keo.length === 0 && trang.hen.length === 0 ? (
             <EmptyState
-              action={{ label: "Tạo kèo", onPress: () => router.push("/outings/new") }}
-              body="Tạo kèo trước ở Lên plan, rồi quay lại thêm địa điểm này."
+              action={{ label: "Tạo kèo", onPress: () => router.push(`/outings/new?place=${encodeURIComponent(placeId)}` as never) }}
+              body="Tạo một lời hẹn mới. Địa điểm này sẽ được giữ làm chặng đầu."
               kind="first-use"
               layout="inline"
-              illustration={<Canh id="chua-co-keo" width={168} />} title="Chưa có kèo nào để thêm vào"
+              illustration={<AssetIllustration name="spot-map" width={168} height={128} resolution="small" />} title="Chưa có kèo nào để thêm vào"
             />
           ) : null}
           {trang.hen.length > 0 ? <SectionHeader title="Hẹn của hai bạn" /> : null}
@@ -162,7 +166,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
                 </View>
                 <View style={styles.hangChu}>
                   <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
-                  <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>
                     {nhanKhoangNgay(k.starts_on, k.ends_on)} · {cauSoChang(k.stops.length)}
                     {nhan ? ` · ${nhan}` : ""}
                   </Text>
@@ -173,6 +177,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
                   full={false}
                   label="Thêm vào"
                   loading={dangGhi === k.id}
+                  lyDo={dangGhi !== null && dangGhi !== k.id ? "Đang thêm vào kèo đã chọn." : undefined}
                   onPress={() => void them(k, trang.ten)}
                 />
               </View>
@@ -196,19 +201,19 @@ function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi: string; t
       </View>
       <View style={styles.hangChu}>
         <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
-        <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
           với {voi} · {cauSoChang(k.stops.length)}
           {nhan ? ` · ${nhan}` : ""}
         </Text>
       </View>
-      <RudiButton compact disabled={dangGhi !== null} full={false} label="Thêm vào" loading={dangGhi === k.id} onPress={onThem} />
+      <RudiButton compact disabled={dangGhi !== null} full={false} label="Thêm vào" loading={dangGhi === k.id} lyDo={dangGhi !== null && dangGhi !== k.id ? "Đang thêm vào kèo đã chọn." : undefined} onPress={onThem} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   dauLich: { width: 48, alignItems: "center" },
   ngay: { fontFamily: displayFace.extraBold, fontSize: 24, lineHeight: 28, fontVariant: ["tabular-nums"] },
-  hangChu: { flex: 1, gap: 3 },
+  hangChu: { flex: 1, minWidth: 100, gap: 3 },
 });

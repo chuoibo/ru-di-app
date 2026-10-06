@@ -12,7 +12,7 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import {
@@ -45,9 +45,12 @@ type Trang =
 
 export function GroupMembersScreen() {
   const router = useRouter();
+  const { width, fontScale } = useWindowDimensions();
+  const compactWidth = width < 380 || fontScale > 1.3;
   const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
+  const [readError, setReadError] = useState<string | null>(null);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangDoiVaiTro, setDangDoiVaiTro] = useState<string | null>(null);
   // A refused role change is said under the row it was pressed on (QA UI-095 pattern).
@@ -59,17 +62,19 @@ export function GroupMembersScreen() {
   // the group itself; every other admin is «Quản trị». Unknown until it answers.
   const [nguoiLap, setNguoiLap] = useState<string | null>(null);
   // One attempt per (person, target role): a re-render never mints a second key.
+  const actionLock = useRef(false);
   const attempts = useRef<Record<string, Attempt>>({});
 
   const nap = useCallback(async () => {
     if (phien === null || typeof id !== "string") return;
     try {
-      setTrang({ pha: "xong", thanhVien: await danhSachThanhVien(id, phien.person_id) });
+      const thanhVien = await danhSachThanhVien(id, phien.person_id);
+      setReadError(null);
+      setTrang({ pha: "xong", thanhVien });
     } catch (error) {
-      setTrang({
-        pha: "hong",
-        loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-      });
+      const loi = error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
+      setReadError(loi);
+      setTrang((held) => held.pha === "xong" ? held : { pha: "hong", loi });
     }
   }, [id, phien]);
 
@@ -92,13 +97,14 @@ export function GroupMembersScreen() {
 
   /** Promote or demote one member (ADR-0021 L1 wires the M2 route into the roster). */
   const doiVaiTro = async (tv: ThanhVien, daHoi = false) => {
-    if (dangDoiVaiTro !== null) return;
+    if (actionLock.current) return;
     const vaiTro = vaiTroDoiThanh(tv);
     if (tv.person_id === phien.person_id && vaiTro === "member" && !daHoi) {
       setHoiTuBo(true);
       setLoiVaiTro(null);
       return;
     }
+    actionLock.current = true;
     setDangDoiVaiTro(tv.person_id);
     setLoiVaiTro(null);
     try {
@@ -108,6 +114,7 @@ export function GroupMembersScreen() {
     } catch (error) {
       setLoiVaiTro({ id: tv.person_id, cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
     } finally {
+      actionLock.current = false;
       setDangDoiVaiTro(null);
     }
   };
@@ -123,7 +130,7 @@ export function GroupMembersScreen() {
   return (
     // A list of people is read, not stretched: the reading column on a tablet
     // keeps each action beside its name (QA UI-081: 487–679px apart).
-    <RudiScreen cot="doc" testID="group-members-screen">
+    <RudiScreen material="quiet" cot="doc" testID="group-members-screen">
       <TopBar title={tenNhom} />
       <Heading
         title="Thành viên"
@@ -139,6 +146,7 @@ export function GroupMembersScreen() {
         <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
         <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
       </View>
+      {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow />
@@ -161,6 +169,7 @@ export function GroupMembersScreen() {
                 compact
                 full={false}
                 label={nhanNutVaiTro(tv)}
+                disabled={dangDoiVaiTro !== null}
                 loading={dangDoiVaiTro === tv.person_id}
                 onPress={() => void doiVaiTro(tv)}
                 // A quiet word, not a pill: the action repeats on every
@@ -171,7 +180,7 @@ export function GroupMembersScreen() {
             return { key: tv.id, node: (luoi: boolean) => (
               // In the grid a cell fills its line, so neighbours share one hairline.
               <View style={[styles.hangKhoi, luoi && styles.oLuoi, { borderBottomColor: colors.line }]}>
-                <View style={styles.hang}>
+                <View style={[styles.hang, compactWidth && { flexDirection: "column", alignItems: "stretch" }]}>
                   {/* The person is the way to their profile (QA UI-076); the role
                       action stands beside it, never inside it. */}
                   <Pressable
@@ -192,13 +201,13 @@ export function GroupMembersScreen() {
                   </Pressable>
                   {/* Beside the name on a phone; under it, in the text column, in
                       a two-column grid, where beside it broke the name in two. */}
-                  {nutVaiTro && !luoi ? (
+                  {nutVaiTro && !luoi && !compactWidth ? (
                     nutVaiTro
                   ) : coDau ? (
                     <Stamp label="Quản trị" tilt={-3} tone="ink" />
                   ) : null}
                 </View>
-                {nutVaiTro && luoi ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
+                {nutVaiTro && (luoi || compactWidth) ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
                 {laToi && hoiTuBo ? (
                   <View style={styles.hoi}>
                     <HoiTaiHang
@@ -218,7 +227,7 @@ export function GroupMembersScreen() {
           {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
         </View>
       ) : null}
-      <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
+      {conSong.some((member) => member.person_id === phien.person_id && member.state === "active" && member.role === "admin") ? <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} /> : null}
       {/* Consent, said where the invitation starts: a margin note, still read. */}
       <ChuThichLe icon="mail-open-outline">
         Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.

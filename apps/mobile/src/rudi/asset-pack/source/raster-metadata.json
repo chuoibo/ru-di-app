@@ -1,0 +1,146 @@
+{
+  "scene-hills": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.55,
+      0.53
+    ],
+    "fit": "cover",
+    "sha256": "4b97063043c38fb7a7c80b2fd40ff207508fef27f17c21705d976aa1908541db"
+  },
+  "scene-street": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.55
+    ],
+    "fit": "cover",
+    "sha256": "8708e78659376bd9ab87fe9c6c73edd978063189223fc2e5077ce18e6e77e350"
+  },
+  "scene-lanterns": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.53
+    ],
+    "fit": "cover",
+    "sha256": "475aa39f18d3378a7459df89b22d45ff59f893d9f77aa7780842cd64f6fd33cc"
+  },
+  "scene-coast": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.55,
+      0.52
+    ],
+    "fit": "cover",
+    "sha256": "ddfaca38fc8dc0f9857dc193ce2e464b84aa61f294dc63a065ac86aed6e8f28c"
+  },
+  "scene-atelier": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.57,
+      0.6
+    ],
+    "fit": "cover",
+    "sha256": "df141f1be415134a734de4cd16c917b0ff81535516cef4617a33377c1d323632"
+  },
+  "scene-cafe": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.68
+    ],
+    "fit": "cover",
+    "sha256": "37f341412a81c0e4e7481e75bb2d7b4d3772857dbb1ae8d4d100892cd4f08206"
+  },
+  "decor-branch": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "d3ec61f674a46407613e30fee4af2a3cb2c4213c57f564de82ada1c1aa15cb73"
+  },
+  "decor-pines": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "6d97f400bccd2586a97a1b84b4e9b6e9e192a8943659188e4438a1697c4b2470"
+  },
+  "decor-cover": {
+    "size": [
+      1086,
+      1448
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "73b1e560ca39f5bf0222ed4b7f001d9dee1512677b66d94878c250d1d8e53cbc"
+  },
+  "spot-keeps": {
+    "size": [
+      1312,
+      1199
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "1a683fbff20aacb424bcd3ce787026ae29e0175b0eeddaca8c2c9f82ae2e7007"
+  },
+  "spot-memory": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "c86f7b2bb8f52a726457be88798c4ccd3d16bf33245dccb8abb423cfafe52d38"
+  },
+  "spot-map": {
+    "size": [
+      1536,
+      1024
+    ],
+    "focal": [
+      0.5,
+      0.5
+    ],
+    "fit": "contain",
+    "sha256": "a18a82c990472dc4b68c6748f2e4da4e28a0d2f9ec0dc116f8f9916499d91012"
+  }
+}

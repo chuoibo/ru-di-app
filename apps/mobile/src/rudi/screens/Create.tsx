@@ -2,14 +2,14 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { KHUNG_VAT, hinhVat } from "../art/vat-ban";
+import { PaperObject, type PaperName } from "../asset-pack/react-native/PaperObject";
+import { usePaperPalette } from "../asset-pack/react-native/usePaperPalette";
 import { bongGiay, typography, useRudiTheme } from "../theme";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { luiVeVe } from "../lui-ve";
 import { tabTu, thuTuViec, type ViecTao } from "../tao-moi";
 import { Heading } from "../ui";
-import { VeLop } from "../ui/art/VeLop";
 import { NepDien } from "../ui/NepDien";
 import { PressScale } from "../ui/PressScale";
 import { Sheet } from "../ui/Sheet";
@@ -31,6 +31,7 @@ export const ACTIONS: ViecTao[] = [
 
 /** Objects lie on the desk a little askew, the same way every time. */
 const NGHIENG = [-3, 2, -2, 3, -1];
+const VAT_GIAY: Record<ViecTao["vat"], PaperName> = { lich: "ticket", "hoa-don": "receipt", "anh-in": "photo-stack", polaroid: "postcard", "thu-gap": "envelope", "bai-viet": "document", sticker: "note", "phieu-bau": "document" };
 
 /**
  * Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route.
@@ -44,6 +45,7 @@ const NGHIENG = [-3, 2, -2, 3, -1];
 export function CreateSheet() {
   const router = useRouter();
   const { colors, dark } = useRudiTheme();
+  const palette = usePaperPalette();
   const { phien } = useRudiSession();
   const [open, setOpen] = useState(true);
   const currentGroup = phien?.contexts?.find((group) => group.id === phien.context_id);
@@ -80,7 +82,7 @@ export function CreateSheet() {
                 pressedScale={0.985}
                 style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}
               >
-                <VeLop height={i === 0 ? 72 : 64} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(action.vat)} style={{ transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }} width={i === 0 ? 72 : 64} />
+                <View style={{ transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }}><PaperObject name={VAT_GIAY[action.vat]} palette={palette} width={i === 0 ? 104 : 88} /></View>
                 <View style={i === 0 ? styles.chuDan : styles.chuNho}>
                   <Text style={[typography.title, i === 0 ? null : styles.giua, { color: colors.ink }]}>{action.title}</Text>
                   {action.detail ? <Text style={[typography.note, i === 0 ? null : styles.giua, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
@@ -101,9 +103,9 @@ const styles = StyleSheet.create({
   headingText: { flex: 1, gap: 10 },
   ban: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   vat: { borderWidth: 1, borderRadius: 8, padding: 12 },
-  vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 96 },
+  vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 112 },
   // Two a row: each takes half the desk less half the gap.
-  vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 132 },
+  vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 156 },
   chuDan: { flex: 1, gap: 2 },
   chuNho: { gap: 2, alignSelf: "stretch" },
   giua: { textAlign: "center" },

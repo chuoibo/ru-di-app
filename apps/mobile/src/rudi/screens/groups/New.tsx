@@ -26,7 +26,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiScreen, TopBar } from "../../ui";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
-import { SoBia } from "../../ui/SoBia";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { StampButton } from "../../ui/StampButton";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
@@ -39,12 +39,14 @@ export function GroupNewScreen() {
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
+  const lock = useRef(false);
   const lanBam = useRef<{ ten: string; attempt: Attempt } | null>(null);
 
   if (!phienDaDoc) return null;
   if (phien === null) return <CuaDangNhap />;
 
   const mo = async () => {
+    if (lock.current) return;
     const sach = ten.trim();
     if (sach === "") {
       setTrang({ pha: "hong", loi: "Đặt tên cho nhóm." });
@@ -53,6 +55,7 @@ export function GroupNewScreen() {
     if (lanBam.current === null || lanBam.current.ten !== sach) {
       lanBam.current = { ten: sach, attempt: newAttempt() };
     }
+    lock.current = true;
     setTrang({ pha: "dang-mo" });
     try {
       const lap = await taoNhom(sach, phien.person_id, lanBam.current.attempt);
@@ -68,40 +71,31 @@ export function GroupNewScreen() {
         pha: "hong",
         loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
       });
-    }
+    } finally { lock.current = false; }
   };
 
   const dangMo = trang.pha === "dang-mo";
 
   // A new notebook on the table (ADR-0037 D1, plan S3): its cloth cover, and
   // the group's name written on the label pasted on the front.
-  const rongBia = Math.min(300, width - 64);
+  const rongBia = Math.max(140, Math.min(220, width - 64));
   return (
-    <RudiScreen contentStyle={styles.screen} testID="group-new-screen">
+    <RudiScreen material="quiet" contentStyle={styles.screen} testID="group-new-screen">
       <TopBar title="Nhóm mới" />
       <Heading title="Đặt tên cho hội" subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau." />
-      <SoBia
-        cao={Math.round(rongBia * 0.62)}
-        nhan={
-          <View style={[styles.nhan, { backgroundColor: colors.card, borderColor: colors.coverLineStrong }]}>
-            <ONhapMuc
-              accessibilityLabel="Ô tên nhóm"
-              autoFocus
-              editable={!dangMo}
-              maxLength={200}
-              onChangeText={setTen}
-              onSubmitEditing={() => void mo()}
-              placeholder="Hội cafe cuối tuần"
-              returnKeyType="done"
-              style={styles.giua}
-              value={ten}
-            />
-          </View>
-        }
-        rong={rongBia}
-        style={styles.bia}
-        ten={[]}
-        testID="bia-nhom-moi"
+      <View style={styles.bia} pointerEvents="none" accessible={false}>
+        <AssetIllustration name="decor-cover" width={rongBia} height={Math.round(rongBia / 0.75)} />
+      </View>
+      <ONhapMuc
+        accessibilityLabel="Tên nhóm mới"
+        label="Tên trên bìa sổ"
+        editable={!dangMo}
+        maxLength={200}
+        onChangeText={setTen}
+        onSubmitEditing={() => void mo()}
+        placeholder="Hội cà phê cuối tuần"
+        returnKeyType="done"
+        value={ten}
       />
       {trang.pha === "hong" ? (
         <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
@@ -112,7 +106,7 @@ export function GroupNewScreen() {
           where the two-person notebook lives. */}
       <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")}>
         <ChuThichLe icon="people-outline">
-          Hai người đã thành một hội. Nếu là cặp đôi, hai bạn có thể mở sổ riêng từ cuộc trò chuyện.{" "}
+          Muốn rủ riêng một người? Hai bạn có thể cùng đồng ý mở sổ hai người.{" "}
           <Text style={{ color: colors.ink, textDecorationLine: "underline" }}>Thêm bạn</Text>
         </ChuThichLe>
       </Pressable>

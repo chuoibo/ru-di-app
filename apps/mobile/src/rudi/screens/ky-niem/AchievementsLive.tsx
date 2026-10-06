@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../../ui/AssetIllustration";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -94,10 +95,10 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   };
 
   if (page.phase === "loading") {
-    return <RudiScreen cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><SkeletonGroup><SkeletonRow /><SkeletonRow /><SkeletonRow /></SkeletonGroup></RudiScreen>;
+    return <RudiScreen material="quiet" cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><SkeletonGroup><SkeletonRow /><SkeletonRow /><SkeletonRow /></SkeletonGroup></RudiScreen>;
   }
   if (page.phase === "error") {
-    return <RudiScreen cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><ErrorState title="Chưa mở được sổ hành trình" body={page.message} onRetry={() => { setPage({ phase: "loading" }); void reload().catch((error: unknown) => setPage({ phase: "error", message: messageOf(error) })); }} /></RudiScreen>;
+    return <RudiScreen material="quiet" cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><ErrorState title="Chưa mở được sổ hành trình" body={page.message} onRetry={() => { setPage({ phase: "loading" }); void reload().catch((error: unknown) => setPage({ phase: "error", message: messageOf(error) })); }} /></RudiScreen>;
   }
 
   const book = page.book;
@@ -111,10 +112,11 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const chapterTarget = nextChapter ? book.candidates.find((choice) => choice.id === nextChapter.target_ending_id) : undefined;
 
   return (
-    <RudiScreen contentStyle={styles.page} cot="doc" onRefresh={async () => { try { await reload(); } catch (error) { setActionError({ key: "lam-moi", cau: messageOf(error) }); } }} testID="achievements-screen">
+    <RudiScreen material="quiet" contentStyle={styles.page} cot="doc" onRefresh={async () => { try { await reload(); } catch (error) { setActionError({ key: "lam-moi", cau: messageOf(error) }); } }} testID="achievements-screen">
       <TopBar title="Hành trình" />
       {actionError?.key === "lam-moi" ? <CauTaiCho cau={actionError.cau} co="nho" /> : null}
       <View style={[styles.cover, { backgroundColor: colors.cover, borderRadius: radius.base }]}>
+        <AssetIllustration name="spot-map" width={180} height={140} style={{ alignSelf: "center" }}/>
         <View style={[styles.coverRule, { backgroundColor: colors.coverLineStrong }]} />
         <Text style={[styles.coverTitle, { color: colors.coverInk }]}>Cuốn sổ có nhiều ngã rẽ</Text>
         <Text style={[typography.body, { color: colors.coverInkSoft }]}>Bạn chọn cách kể chuyến đi của mình. Mỗi huy hiệu mở thêm một trang, và những trang đã mở sẽ ở lại.</Text>
@@ -131,8 +133,8 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
           {/* At least 120dp for the words (QA UI-106: at 320 «Mở hà / ng» broke
               in three); Nếp moves under them when the row is too narrow. */}
           <View style={styles.freshChu}>
-            <Text style={[typography.caption, { color: colors.accent }]}>MỚI MỞ</Text>
-            <Text style={[typography.h2, { color: colors.ink }]}>{BADGE_TITLES[moi] ?? "Huy hiệu hành trình"}</Text>
+
+            <Text style={[typography.h2, { color: colors.ink }]}>{BADGE_TITLES[moi] ?? "Huy hiệu hành trình"} · Vừa mở</Text>
           </View>
           <NepDien khoanhKhac="M8" suKien={`huy-hieu:${moi}`} />
         </View>
@@ -161,7 +163,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       </View>
       {nextChapter && chapterTarget ? <ToGiay dan style={styles.chapter}>
         <View style={styles.chapterHeading}>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>TRANG VỪA MỞ TỪ LỐI BẠN CHỌN</Text>
+
           <Ionicons color={colors.accent} name="git-branch-outline" size={20} />
         </View>
         <Text style={[typography.h2, { color: colors.ink }]}>{nextChapter.title}</Text>

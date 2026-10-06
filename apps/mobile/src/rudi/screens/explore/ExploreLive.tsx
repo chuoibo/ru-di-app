@@ -24,7 +24,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, type TextInput } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type TextInput } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -58,7 +58,7 @@ import {
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
-import { SanThanhPho } from "../../ui/SanThanhPho";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { Canh } from "../../ui/art/Canh";
 import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
@@ -199,16 +199,24 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
     }, [nap]),
   );
 
+  const luuLock = useRef(new Set<string>());
+  const [dangLuu, setDangLuu] = useState<string[]>([]);
   const doiLuu = async (place: Place) => {
-    const truoc = daLuu;
-    setDaLuu(daoLuu(daLuu, place.id));
+    if (luuLock.current.has(place.id)) return;
+    luuLock.current.add(place.id);
+    setDangLuu([...luuLock.current]);
+    const truoc = daLuu.includes(place.id);
+    setDaLuu((current) => daoLuu(current, place.id));
     setLoiLuu(null);
     try {
-      if (truoc.includes(place.id)) await boLuuDiaDiem(phien.person_id, place.id);
+      if (truoc) await boLuuDiaDiem(phien.person_id, place.id);
       else await luuDiaDiem(phien.person_id, place.id);
     } catch (error) {
-      setDaLuu(truoc);
+      setDaLuu((current) => current.includes(place.id) === truoc ? current : daoLuu(current, place.id));
       setLoiLuu(loiRaChu(error));
+    } finally {
+      luuLock.current.delete(place.id);
+      setDangLuu([...luuLock.current]);
     }
   };
 
@@ -255,7 +263,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
   // A search session (a name, a question, an answer) keeps the top of the
   // screen for the results: the city's stage folds away.
-  const gapSan = dangLoc || query !== "";
+  const { width: screenWidth } = useWindowDimensions();
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
@@ -265,17 +273,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
     setSoHang(HANG_MOI_LUOT);
   }, [khoaKetQua, query, diemDen?.id]);
   const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated);
-  // The lead is a photograph at reading size. A catalogue that has no picture
-  // for its first place (a fresh server, no licensed photos yet) would open
-  // on a screenful of empty frame, so without a photo nothing is promoted
-  // and every place is a row (report §7.3: a placeholder must be honest,
-  // not a stage).
+  // Promote the first real result with either credited media or labelled category artwork.
   const daNhat = danhSach[0];
-  const coAnhDan = daNhat !== undefined && anhBiaThe(daNhat) !== null;
-  const dan = coAnhDan ? daNhat : undefined;
+  const dan = daNhat;
   // Two candidates to compare before the list: the same axis for both, so the
   // choice starts as a comparison (`taiSoSanh`).
-  const { soSanh, hang: conLai } = taiSoSanh(coAnhDan ? danhSach.slice(1) : danhSach);
+  const { soSanh, hang: conLai } = taiSoSanh(danhSach.slice(1));
   const rong = danhSach.length === 0;
   // An empty list for a city with nothing in it is not an empty search: it
   // must not advise dropping a filter that is not there (QA UI-028).
@@ -314,8 +317,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           what the server says about the place. It stands up once per city and
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
-      {diemDen !== null ? (
-        <SanThanhPho gap={gapSan} id={diemDen.id} ten={diemDen.name} />
+      {diemDen !== null && !dangLoc && query.trim() === "" ? (
+        <View style={styles.buuThiep}><AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={150} /><Text style={[typography.caption, { color: colors.inkFaint }]}>Minh hoạ hành trình</Text></View>
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -466,6 +469,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                   dd={hienThiDiaDiem(dan)}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}
                   onSave={() => void doiLuu(dan)}
+                  saving={dangLuu.includes(dan.id)}
                 />
               ) : null}
               {soSanh !== null ? (
@@ -477,6 +481,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                     const place = soSanh.find((p) => p.id === id);
                     if (place !== undefined) void doiLuu(place);
                   }}
+                  saving={(id) => dangLuu.includes(id)}
                   testID="explore-compare"
                 />
               ) : null}
@@ -489,6 +494,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                       key={place.id}
                       onOpen={() => router.push(`/places/${place.id}` as never)}
                       onSave={() => void doiLuu(place)}
+                      saving={dangLuu.includes(place.id)}
                     />
                   ))}
                 </ResponsiveRow>
@@ -514,6 +520,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   // Above the city stage, whose sky rises under this line (SanThanhPho).
   dau: { gap: 6, zIndex: 1 },
+  buuThiep: { alignItems: "center", marginTop: -12, gap: 2 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },

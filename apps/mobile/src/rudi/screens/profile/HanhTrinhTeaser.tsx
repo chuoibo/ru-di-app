@@ -59,7 +59,7 @@ export function HanhTrinhTeaser({ personId }: { personId: string }) {
 const styles = StyleSheet.create({
   cover: { padding: 20, gap: 16, overflow: "hidden" },
   rule: { height: 2, width: 88 },
-  row: { flexDirection: "row", alignItems: "center", gap: 14 },
-  copy: { flex: 1, gap: 8 },
+  row: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  copy: { flex: 1, minWidth: 170, gap: 8 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 13 },
 });

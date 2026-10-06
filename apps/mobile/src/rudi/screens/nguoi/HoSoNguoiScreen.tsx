@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../../ui/AssetIllustration";
 import { DiaryWall } from "../../diary/Wall";
 /**
  * Somebody else's profile and wall (M8): `/people/{id}`.
@@ -298,7 +299,7 @@ export function HoSoNguoiScreen() {
   if (!phienDaDoc) return null;
 
   return (
-    <RudiScreen overlay={khayHanhDong} testID="ho-so-nguoi-screen">
+    <RudiScreen material="quiet" overlay={khayHanhDong} testID="ho-so-nguoi-screen">
       <TopBar title="Hồ sơ" />
       {hoSo.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -341,7 +342,7 @@ export function HoSoNguoiScreen() {
                   </View>
                   <View style={styles.dauChu}>
                     <Text style={[typography.caption, { color: colors.inkSoft }]}>Họ tên</Text>
-                    <Text numberOfLines={2} style={[typography.h1, { color: mucNguoi(personId, dark) }]}>
+                    <Text style={[typography.h1, { color: mucNguoi(personId, dark) }]}>
                       {hoSo.hoSo.display_name}
                     </Text>
                     {hoSo.hoSo.city ? (
@@ -491,7 +492,7 @@ export function HoSoNguoiScreen() {
               action={hoSo.hoSo.relation === "self" ? { label: "Viết bài đầu tiên", onPress: () => router.push("/posts/new" as never) } : undefined}
               body={cauTuongRong(hoSo.hoSo.relation).than}
               // Not the diary shelf's scene: the two empty states sit one under the other on your own page.
-              illustration={<Canh id="chua-co-bai" width={150} />}
+              illustration={<AssetIllustration name="spot-memory" width={220} height={188} />}
               kind="first-use"
               layout="inline"
               title={cauTuongRong(hoSo.hoSo.relation).tieuDe}
@@ -558,8 +559,8 @@ const styles = StyleSheet.create({
   anhHoChieu: { borderWidth: 1, padding: 4, borderRadius: 4 },
   hangDau: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" },
   flex: { flex: 1 },
-  dau: { flexDirection: "row", alignItems: "center", gap: 14 },
-  dauChu: { flex: 1, gap: 2 },
+  dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauChu: { flex: 1, minWidth: 160, gap: 4 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   dongChay: { gap: 16, paddingBottom: 24 },
   bai: { gap: 12, padding: 16, borderWidth: 1, borderRadius: 18, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },

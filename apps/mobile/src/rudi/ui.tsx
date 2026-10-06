@@ -14,6 +14,7 @@ import { luiVe as luiVeAnToan } from "./lui-ve";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
 import { Grain } from "./ui/Grain";
+import { AssetIcon, type AssetIconName } from "./asset-pack/react-native/AssetIcon";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
@@ -27,6 +28,19 @@ import { TABLIST, giuState, tabState, toggleState } from "../ui/a11y";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
+const paperUtilityIcons: Partial<Record<IconName, AssetIconName>> = {
+  "arrow-back": "arrow-left",
+  "chevron-back": "chevron-left",
+  "chevron-forward": "chevron-right",
+  "chevron-down": "chevron-down",
+  close: "close",
+  "close-outline": "close",
+  "ellipsis-horizontal": "more",
+  "settings-outline": "settings",
+  "search-outline": "search",
+  "add-outline": "add",
+};
+
 type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
@@ -39,6 +53,8 @@ type ScreenProps = {
   contentStyle?: StyleProp<ViewStyle>;
   /** `cover` when the first child is a CoverBand: the status-bar area is indigo, not paper. */
   surface?: "page" | "cover";
+  /** Quiet reading ground; texture belongs to the task's paper object. */
+  material?: "journal" | "quiet";
   testID?: string;
   /** Only opt in when this screen owns the composer; live chat owns its own IME. */
   avoidKeyboard?: boolean;
@@ -86,6 +102,7 @@ export function RudiScreen({
   footerInset = 0,
   contentStyle,
   surface = "page",
+  material = "journal",
   testID,
   avoidKeyboard = false,
   scrollEnabled = true,
@@ -102,6 +119,35 @@ export function RudiScreen({
   const { fontScale } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  const keyboardVisible = useRef(false);
+  const keyboardReveal = useRef(false);
+  const keyboardInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput> | null>(null);
+  const keyboardFrame = useRef<number | null>(null);
+  // The footer remains available above the IME; reveal the focused field
+  // after the scroll viewport has resized so the two never overlap.
+  const revealFocusedField = () => {
+    if (!avoidKeyboard || !scroll || Platform.OS === "web" || !keyboardVisible.current || !keyboardReveal.current) return;
+    if (keyboardFrame.current !== null) cancelAnimationFrame(keyboardFrame.current);
+    keyboardFrame.current = requestAnimationFrame(() => {
+      keyboardFrame.current = requestAnimationFrame(() => {
+        keyboardFrame.current = null;
+        const input = TextInput.State.currentlyFocusedInput();
+        const viewport = cuon.current?.getNativeScrollRef();
+        if (!input || !viewport || !keyboardVisible.current) return;
+        // ScrollView's keyboard helper assumes a full-screen viewport. Measure
+        // this form's actual viewport instead, which excludes its fixed footer.
+        viewport.measureInWindow((_x, top, _width, height) => {
+          input.measureInWindow((_inputX, inputTop, _inputWidth, inputHeight) => {
+            if (!keyboardVisible.current || TextInput.State.currentlyFocusedInput() !== input) return;
+            const bottomDelta = inputTop + inputHeight + 16 - (top + height);
+            const topDelta = inputTop - top - 16;
+            const delta = bottomDelta > 0 ? bottomDelta : topDelta < 0 ? topDelta : 0;
+            if (delta !== 0) cuon.current?.scrollTo({ y: Math.max(0, cuonY.value + delta), animated: false });
+          });
+        });
+      });
+    });
+  };
   // The scroll a stage folds with; published only when the screen has one.
   const coCanh = canh !== undefined && canh !== null && canh !== false;
   const cuonY = useSharedValue(0);
@@ -134,10 +180,24 @@ export function RudiScreen({
   useChamLaiTab(bottomInset === "tab" ? () => cuon.current?.scrollTo({ y: 0, animated: !motion.reduced }) : null);
   useEffect(() => {
     if (!avoidKeyboard) return;
-    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
-    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
-    return () => { show.remove(); hide.remove(); };
-  }, [avoidKeyboard]);
+    const show = Keyboard.addListener("keyboardDidShow", () => {
+      keyboardVisible.current = true;
+      keyboardReveal.current = true;
+      keyboardInput.current = TextInput.State.currentlyFocusedInput();
+      setKeyboardOpen(true);
+      revealFocusedField();
+    });
+    const hide = Keyboard.addListener("keyboardDidHide", () => {
+      keyboardVisible.current = false;
+      keyboardReveal.current = false;
+      setKeyboardOpen(false);
+    });
+    return () => {
+      show.remove(); hide.remove();
+      keyboardVisible.current = false;
+      if (keyboardFrame.current !== null) cancelAnimationFrame(keyboardFrame.current);
+    };
+  }, [avoidKeyboard, scroll]);
   const tablet = layout.sizeClass !== "compact";
   const inner = [
     styles.screenInner,
@@ -165,7 +225,7 @@ export function RudiScreen({
             table — the ground is the cover cloth (its weave measures ≈ 8 grey levels at
             0.30; the paper tile measured ≈ 2 on the dark ground, i.e. flat), and every
             drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
-        {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
+        {material === "journal" ? (dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />) : null}
       </View>
       <KheLopProvider khe={khe}>
       <CuonContext.Provider value={cuonMan}>
@@ -183,6 +243,7 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
+          onLayout={revealFocusedField}
           onScroll={theoCuon}
           scrollEventThrottle={16}
           refreshControl={
@@ -202,7 +263,22 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : undefined}
+          onLayout={revealFocusedField}
+          onScroll={avoidKeyboard ? (event) => {
+            cuonY.value = event.nativeEvent.contentOffset.y;
+            if (!keyboardVisible.current) return;
+            const input = TextInput.State.currentlyFocusedInput();
+            if (input !== keyboardInput.current) {
+              keyboardInput.current = input;
+              keyboardReveal.current = true;
+            }
+            // Android can finish its own focus scroll after the IME layout.
+            // Recheck that final viewport, until the person scrolls by hand.
+            if (keyboardReveal.current) revealFocusedField();
+          } : undefined}
+          onScrollBeginDrag={avoidKeyboard ? () => { keyboardReveal.current = false; } : undefined}
+          scrollEventThrottle={avoidKeyboard ? 16 : undefined}
+          onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : avoidKeyboard ? revealFocusedField : undefined}
           refreshControl={
             keoLamMoi ? (
               <RefreshControl colors={[colors.accent]} onRefresh={() => void keoLamMoi()} progressBackgroundColor={colors.card} refreshing={dangKeo} tintColor={colors.accent} />
@@ -218,6 +294,7 @@ export function RudiScreen({
       )}
       {footer ? (
         <View
+          onLayout={revealFocusedField}
           style={[
             styles.screenFooter,
             { paddingHorizontal: tablet ? space.lg : space.md, paddingBottom: keyboardOpen ? 8 : footerInset },
@@ -362,7 +439,7 @@ export function Logo({ compact = false, ink }: { compact?: boolean; ink?: string
         start={{ x: 0, y: 0 }}
         style={[styles.logoMark, compact && styles.logoMarkCompact]}
       >
-        <Text style={[styles.logoMarkType, compact && styles.logoMarkTypeCompact]}>
+        <Text allowFontScaling={false} style={[styles.logoMarkType, compact && styles.logoMarkTypeCompact]}>
           Rủ{"\n"}Đi
         </Text>
       </LinearGradient>
@@ -521,6 +598,8 @@ type ButtonProps = {
   /** When the visible label is not enough on its own («Nhắn tin» on a row
    *  that names somebody): the sentence a screen reader, and Maestro, get. */
   accessibilityLabel?: string;
+  /** Disclosure controls expose the same state their visible label names. */
+  expanded?: boolean;
   /**
    * ADR-0038 §2.2: why a disabled button cannot be used yet («Chọn một tấm
    * ảnh trước đã.»), printed under it and given to a screen reader as the
@@ -552,6 +631,7 @@ export function RudiButton({
   full = true,
   style,
   accessibilityLabel,
+  expanded,
   lyDo,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
@@ -586,7 +666,7 @@ export function RudiButton({
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
       {!loading && icon ? <Ionicons color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
-      <Text numberOfLines={1} style={[typography.label, styles.buttonLabel, { color: foreground }]}>
+      <Text style={[typography.label, styles.buttonLabel, { color: foreground }]}>
         {label}
       </Text>
     </>
@@ -600,7 +680,8 @@ export function RudiButton({
       accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      accessibilityState={{ disabled: disabled || loading, busy: loading, expanded }}
+      aria-expanded={expanded}
       disabled={disabled || loading}
       onPress={onPress}
       pressedScale={0.98}
@@ -635,9 +716,10 @@ export function RudiButton({
 
 export function IconButton({
   icon,
+  assetIcon,
   onPress,
   accessibilityLabel,
-  selected = false,
+  selected,
   quiet = false,
   solid = false,
   dim = false,
@@ -647,6 +729,7 @@ export function IconButton({
   tron = false,
 }: {
   icon: IconName;
+  assetIcon?: AssetIconName;
   onPress?: () => void;
   accessibilityLabel: string;
   selected?: boolean;
@@ -669,6 +752,7 @@ export function IconButton({
   // box empty) is not a full coral disc. It is the same outline every button
   // takes when it cannot be used yet: dashed edge, soft ink glyph.
   const tatSolid = solid && disabled && !loading;
+  const paperIcon = assetIcon ?? paperUtilityIcons[icon];
   const background = tatSolid
     ? colors.card
     : solid
@@ -693,7 +777,7 @@ export function IconButton({
       accessibilityRole="button"
       aria-busy={loading}
       aria-disabled={disabled || loading}
-      {...giuState(Boolean(selected))}
+      {...(selected === undefined ? {} : giuState(selected))}
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
@@ -705,7 +789,7 @@ export function IconButton({
         tron && styles.iconButtonTron,
       ]}
     >
-      {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}
+      {loading ? <ActivityIndicator color={glyph} size="small" /> : paperIcon ? <AssetIcon color={glyph} name={paperIcon} size={24} /> : <Ionicons color={glyph} name={icon} size={22} />}
     </PressScale>
   );
 }
@@ -1203,10 +1287,10 @@ const styles = StyleSheet.create({
   // `minWidth` pairs with `minHeight`: a content-sized button («Bỏ», `full={false}`)
   // measured 47.2dp wide on device once it stopped being full-width (finish
   // review 10/09, F41). The floor lives here so every future short label gets it.
-  button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
+  button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   buttonFull: { width: "100%" },
-  buttonCompact: { minHeight: 48, paddingHorizontal: 14 },
-  buttonLabel: { zIndex: 1 },
+  buttonCompact: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10 },
+  buttonLabel: { zIndex: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
   nutCoLyDoFull: { alignSelf: "stretch" },

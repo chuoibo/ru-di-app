@@ -116,7 +116,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Sổ không còn ai nợ ai.*"
     timeout: 60000
-- assertNotVisible: "Cách chuyển gọn nhất, tính từ sổ.*"
+- assertNotVisible: "Cách cân lại sổ.*"
 - assertNotVisible: "Tạo đợt thu từ sổ"
 - assertVisible: "Sổ không còn khoản nào ngoài đợt.*"
 - takeScreenshot: 29-quyet-toan-co-dot

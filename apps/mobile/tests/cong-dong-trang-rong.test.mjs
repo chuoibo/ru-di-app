@@ -1,7 +1,7 @@
 /**
  * Khám phá › Cộng đồng's empty lists after the redraw of 03/10: every one is
- * the shared `EmptyState`, the four a reader meets in the feed each carry a
- * scene of the app's own world, and the hidden posts -- an administrative
+ * the shared `EmptyState`, the four a reader meets in the feed each carry an
+ * illustration from the accepted production pack, and the hidden posts -- an administrative
  * list reached from the settings sheet -- stay without one, as DESIGN.md asks
  * of administrative silences («Bạn chưa chặn ai», «Chưa có phiên nào»).
  * Before, all five were an Ionicons glyph over an `h1`, the last empty states
@@ -38,12 +38,12 @@ test("năm danh sách rỗng đều là EmptyState, không còn icon trên chữ
   assert.equal((rong.match(/<EmptyState\b/g) ?? []).length, 5);
 });
 
-test("mỗi danh sách người đọc gặp trong bảng tin có cảnh của riêng nó", () => {
-  const canh = (tieuDe) => oRong(tieuDe).match(/<Canh id="([^"]+)"/)?.[1] ?? null;
-  assert.equal(canh("Chưa lưu bài nào"), "chua-luu-bai");
-  assert.equal(canh("Chưa kể chuyện nào"), "chua-co-bai");
-  assert.equal(canh("Chưa theo dõi ai"), "chua-co-ban");
-  assert.equal(canh("Một ngày đáng kể"), "chua-co-ky-niem");
+test("mỗi danh sách người đọc gặp trong bảng tin có asset đúng công việc", () => {
+  const canh = (tieuDe) => oRong(tieuDe).match(/<AssetIllustration name="([^"]+)"/)?.[1] ?? null;
+  assert.equal(canh("Chưa lưu bài nào"), "spot-keeps");
+  assert.equal(canh("Chưa kể chuyện nào"), "spot-memory");
+  assert.equal(canh("Chưa theo dõi ai"), "spot-map");
+  assert.equal(canh("Một ngày đáng kể"), "spot-memory");
 });
 
 test("«Bài đã ẩn» là danh sách quản trị: rỗng thì không có cảnh", () => {
@@ -111,8 +111,8 @@ test("danh sách rỗng: không tiêu đề chồng tiêu đề, không lời xi
   // short window that is also cramped (320×640: the action ended under the
   // strip at 168 and at 144), never a whole class of phones by height alone.
   assert.match(man, /const rongCanh = caoCuaSo < 700 && \(hep \|\| fontScale > 1\.15\) \? 120 : 168;/);
-  const canh = [...rong.matchAll(/<Canh id="[^"]+" width=\{([^}]+)\} \/>/g)].map((m) => m[1]);
-  assert.deepEqual(canh, ["rongCanh", "rongCanh", "rongCanh", "rongCanh"]);
+  const canh = [...rong.matchAll(/<AssetIllustration name="[^"]+" width=\{([^}]+)\} height=\{\(rongCanh \+ 64\) \* 0\.85\} \/>/g)].map((m) => m[1]);
+  assert.deepEqual(canh, ["rongCanh + 64", "rongCanh + 64", "rongCanh + 64", "rongCanh + 64"]);
   assert.match(man, /empty: \{ marginHorizontal: 16, paddingTop: 0 \}/);
 });
 

@@ -235,10 +235,19 @@ function nhanTrongTep(sf) {
 }
 
 /** Candidate targets of a navigation argument; PH marks a dynamic piece. Null = fully dynamic. */
-function dichCuaBieuThuc(e) {
+function dichCuaBieuThuc(e, goi = () => null) {
   if (!e) return null;
   if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [e.text];
-  if (ts.isTemplateExpression(e)) return [e.head.text + e.templateSpans.map((s) => PH + s.literal.text).join("")];
+  if (ts.isTemplateExpression(e)) {
+    let patterns = [e.head.text];
+    for (const span of e.templateSpans) {
+      const values = ts.isCallExpression(span.expression) ? goi(span.expression) : null;
+      patterns = patterns.flatMap((head) => (values ?? [PH]).map((value) => head + value + span.literal.text));
+    }
+    return patterns;
+  }
+  if (ts.isCallExpression(e)) return goi(e);
+  if (ts.isIdentifier(e)) return goi.variable?.(e) ?? null;
   if (
     ts.isParenthesizedExpression(e) ||
     ts.isAsExpression(e) ||
@@ -246,45 +255,45 @@ function dichCuaBieuThuc(e) {
     ts.isTypeAssertionExpression(e) ||
     (ts.isSatisfiesExpression && ts.isSatisfiesExpression(e))
   ) {
-    return dichCuaBieuThuc(e.expression);
+    return dichCuaBieuThuc(e.expression, goi);
   }
   if (ts.isConditionalExpression(e)) {
-    const a = dichCuaBieuThuc(e.whenTrue) ?? [];
-    const b = dichCuaBieuThuc(e.whenFalse) ?? [];
+    const a = dichCuaBieuThuc(e.whenTrue, goi) ?? [];
+    const b = dichCuaBieuThuc(e.whenFalse, goi) ?? [];
     return a.length + b.length ? [...a, ...b] : null;
   }
   if (ts.isBinaryExpression(e)) {
     const k = e.operatorToken.kind;
     if (k === ts.SyntaxKind.PlusToken) {
-      const trai = dichCuaBieuThuc(e.left);
-      const phai = dichCuaBieuThuc(e.right);
+      const trai = dichCuaBieuThuc(e.left, goi);
+      const phai = dichCuaBieuThuc(e.right, goi);
       if (!trai && !phai) return null;
       const ra = [];
       for (const a of trai ?? [PH]) for (const b of phai ?? [PH]) ra.push(a + b);
       return ra;
     }
     if (k === ts.SyntaxKind.QuestionQuestionToken || k === ts.SyntaxKind.BarBarToken) {
-      const a = dichCuaBieuThuc(e.left) ?? [];
-      const b = dichCuaBieuThuc(e.right) ?? [];
+      const a = dichCuaBieuThuc(e.left, goi) ?? [];
+      const b = dichCuaBieuThuc(e.right, goi) ?? [];
       return a.length + b.length ? [...a, ...b] : null;
     }
   }
   if (ts.isObjectLiteralExpression(e)) {
     for (const p of e.properties) {
       if (ts.isPropertyAssignment(p) && ts.isIdentifier(p.name) && p.name.text === "pathname") {
-        return dichCuaBieuThuc(p.initializer);
+        return dichCuaBieuThuc(p.initializer, goi);
       }
     }
   }
   return null;
 }
 
-function dichTrongTep(sf) {
-  return dichTrongNut(sf);
+function dichTrongTep(sf, goi) {
+  return dichTrongNut(sf, goi);
 }
 
 /** Raw navigation targets anywhere under one node. */
-function dichTrongNut(goc) {
+function dichTrongNut(goc, goi) {
   const ra = [];
   const di = (node) => {
     if (
@@ -294,11 +303,11 @@ function dichTrongNut(goc) {
       node.expression.expression.text === "router" &&
       ["push", "replace", "navigate"].includes(node.expression.name.text)
     ) {
-      ra.push(...(dichCuaBieuThuc(node.arguments[0]) ?? []));
+      ra.push(...(dichCuaBieuThuc(node.arguments[0], goi) ?? []));
     } else if (ts.isJsxAttribute(node) && ts.isIdentifier(node.name) && node.name.text === "href") {
       const v = node.initializer;
       if (v && ts.isStringLiteral(v)) ra.push(v.text);
-      else if (v && ts.isJsxExpression(v)) ra.push(...(dichCuaBieuThuc(v.expression) ?? []));
+      else if (v && ts.isJsxExpression(v)) ra.push(...(dichCuaBieuThuc(v.expression, goi) ?? []));
     } else if (
       ts.isPropertyAssignment(node) &&
       (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) &&
@@ -306,7 +315,7 @@ function dichTrongNut(goc) {
     ) {
       // A menu written as data (`{ title, href: "/outings/new" }`) and pushed
       // through a variable: the literal lives here, not at the call.
-      ra.push(...(dichCuaBieuThuc(node.initializer) ?? []));
+      ra.push(...(dichCuaBieuThuc(node.initializer, goi) ?? []));
     }
     ts.forEachChild(node, di);
   };
@@ -318,6 +327,78 @@ function tenThuocTinh(p) {
   return p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) ? p.name.text : null;
 }
 
+/** Resolve return patterns of named relative helpers only when a navigation calls them. */
+function goiTuNguon(sf, docNhap, seen = new Set()) {
+  const functions = new Map();
+  const variables = new Map();
+  const scopeOf = (node) => {
+    for (let parent = node.parent; parent; parent = parent.parent) {
+      if (ts.isBlock(parent) || ts.isSourceFile(parent)) return parent;
+    }
+    return sf;
+  };
+  const collectVariables = (node) => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      const scope = scopeOf(node);
+      if (!variables.has(scope)) variables.set(scope, new Map());
+      variables.get(scope).set(node.name.text, node);
+    }
+    ts.forEachChild(node, collectVariables);
+  };
+  collectVariables(sf);
+  for (const node of sf.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && node.body) functions.set(node.name.text, { node, sf });
+    if (!ts.isImportDeclaration(node) || !node.importClause || node.importClause.isTypeOnly ||
+        !ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith(".")) continue;
+    const bindings = node.importClause.namedBindings;
+    if (!bindings || !ts.isNamedImports(bindings)) continue;
+    const imported = docNhap(sf, node.moduleSpecifier.text);
+    if (!imported) continue;
+    for (const binding of bindings.elements) {
+      if (binding.isTypeOnly) continue;
+      const name = binding.propertyName?.text ?? binding.name.text;
+      const fn = imported.statements.find((n) => ts.isFunctionDeclaration(n) && n.name?.text === name && n.body &&
+        n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword));
+      if (fn) functions.set(binding.name.text, { node: fn, sf: imported });
+    }
+  }
+  const goi = (call) => {
+    if (!ts.isIdentifier(call.expression)) return null;
+    const fn = functions.get(call.expression.text);
+    const key = fn ? `${fn.sf.fileName}:${fn.node.pos}` : null;
+    if (!fn || seen.has(key)) return null;
+    const active = new Set(seen).add(key);
+    const nested = goiTuNguon(fn.sf, docNhap, active);
+    const values = [];
+    const visit = (node) => {
+      // A nested function's returns do not belong to the called helper.
+      if (node !== fn.node.body && ts.isFunctionLike(node)) return;
+      if (ts.isReturnStatement(node)) values.push(...(dichCuaBieuThuc(node.expression, nested) ?? []));
+      ts.forEachChild(node, visit);
+    };
+    visit(fn.node.body);
+    return values.length ? [...new Set(values)] : null;
+  };
+  goi.variable = (identifier) => {
+    for (let scope = scopeOf(identifier); scope; scope = scope.parent ? scopeOf(scope) : null) {
+      const node = variables.get(scope)?.get(identifier.text);
+      if (!node) continue;
+      const key = `${sf.fileName}:variable:${node.pos}`;
+      if (seen.has(key)) return null;
+      return dichCuaBieuThuc(node.initializer, goiTuNguon(sf, docNhap, new Set(seen).add(key)));
+    }
+    return null;
+  };
+  return goi;
+}
+
+function docNhapTuTep(sf, module) {
+  const base = resolve(dirname(sf.fileName), module);
+  const file = [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx")]
+    .find((p) => /\.tsx?$/.test(p) && existsSync(p));
+  return file ? docNguon(file) : null;
+}
+
 /**
  * Labelled edges of one file, as [label, raw target] pairs: see the file
  * header. Each tap in `NHAN_CUA_CHAM` is paired with the labels that name it
@@ -325,7 +406,7 @@ function tenThuocTinh(p) {
  * `onAction`, an `action={{ … }}` object, a render prop) never lend a
  * navigation to the wrong words; that object is read on its own.
  */
-function canhTrongTep(sf) {
+function canhTrongTep(sf, goi) {
   const ra = [];
   // nhan: label prop -> the strings it can hold; cham: tap -> raw targets.
   const ghep = (nhan, cham) => {
@@ -352,9 +433,9 @@ function canhTrongTep(sf) {
           else if (v && ts.isJsxExpression(v)) nhan.set(ten, chuCuaBieuThuc(v.expression));
         } else if (ten === "href") {
           if (v && ts.isStringLiteral(v)) cham.set(ten, [v.text]);
-          else if (v && ts.isJsxExpression(v)) cham.set(ten, dichCuaBieuThuc(v.expression) ?? []);
+          else if (v && ts.isJsxExpression(v)) cham.set(ten, dichCuaBieuThuc(v.expression, goi) ?? []);
         } else if (NHAN_CUA_CHAM.has(ten) && v && ts.isJsxExpression(v) && v.expression) {
-          cham.set(ten, dichTrongNut(v.expression));
+          cham.set(ten, dichTrongNut(v.expression, goi));
         }
       }
       ghep(nhan, cham);
@@ -365,8 +446,8 @@ function canhTrongTep(sf) {
         if (!ts.isPropertyAssignment(p)) continue;
         const ten = tenThuocTinh(p);
         if (ten !== null && KHOA_NHAN.has(ten)) nhan.set(ten, chuCuaBieuThuc(p.initializer));
-        else if (ten === "href") cham.set(ten, dichCuaBieuThuc(p.initializer) ?? []);
-        else if (ten !== null && NHAN_CUA_CHAM.has(ten)) cham.set(ten, dichTrongNut(p.initializer));
+        else if (ten === "href") cham.set(ten, dichCuaBieuThuc(p.initializer, goi) ?? []);
+        else if (ten !== null && NHAN_CUA_CHAM.has(ten)) cham.set(ten, dichTrongNut(p.initializer, goi));
       }
       ghep(nhan, cham);
     }
@@ -441,7 +522,7 @@ export function rutBanDo() {
     for (const tep of [p, ...tepManDuocNhap(p, sf)]) {
       const sfTep = tep === p ? sf : docNguon(tep);
       muc.tep.add(posix(relative(GOC_MOBILE, tep)));
-      docMotTep(sfTep, cacMan, muc);
+      docMotTep(sfTep, cacMan, muc, goiTuNguon(sfTep, docNhapTuTep));
     }
   }
   const routes = cacMan.map((m) => {
@@ -501,13 +582,13 @@ function mucTrongTab() {
 }
 
 /** Adds one parsed file's labels, targets and labelled edges to a route's sets. */
-function docMotTep(sf, cacMan, muc) {
+function docMotTep(sf, cacMan, muc, goi) {
   for (const n of nhanTrongTep(sf)) muc.nhan.add(n);
-  for (const d of dichTrongTep(sf)) {
+  for (const d of dichTrongTep(sf, goi)) {
     const den = manDich(d, cacMan);
     if (den !== null) muc.di_toi.add(den);
   }
-  for (const [nhan, tho] of canhTrongTep(sf)) {
+  for (const [nhan, tho] of canhTrongTep(sf, goi)) {
     const den = manDich(tho, cacMan);
     if (den === null) continue;
     muc.nhan.add(nhan);
@@ -594,10 +675,12 @@ export function literalTrongMa() {
 }
 
 /** Labels, route targets and labelled edges of one source text, the way `rutBanDo` reads a file. */
-export function rutTuNguon(chu, cacMan, ten = "nguon.tsx") {
+export function rutTuNguon(chu, cacMan, ten = "nguon.tsx", nguonNhap = {}) {
   const sf = ts.createSourceFile(ten, chu, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const muc = { nhan: new Set(), di_toi: new Set(), canh: new Map() };
-  docMotTep(sf, cacMan, muc);
+  const docNhap = (_parent, module) => nguonNhap[module] === undefined ? null
+    : ts.createSourceFile(module, nguonNhap[module], ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  docMotTep(sf, cacMan, muc, goiTuNguon(sf, docNhap));
   return { nhan: [...muc.nhan].sort(), di_toi: [...muc.di_toi].sort(), canh: sapCanh(muc.canh) };
 }
 

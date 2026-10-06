@@ -15,6 +15,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
 import { nhanKhoangNgay, type BuoiDi } from "../../../screens/len-plan/buoi-di";
@@ -70,7 +71,7 @@ function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: ()
   return (
     <Pressable accessibilityLabel={`Mở kèo ${keo.title}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && styles.bam}>
       <TheVe
-        cao={2}
+        cao={1}
         cuong={
           <>
             <DauLich iso={keo.starts_on} lon />
@@ -82,6 +83,7 @@ function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: ()
         {nhan ? <Stamp label={nhan} tilt={-2} tone={nhip.kieu === "dang-dien-ra" || nhip.kieu === "hom-nay" ? "split" : "ink"} /> : null}
         <Text style={[typography.h2, { color: colors.ink }]}>{keo.title}</Text>
         <Text style={[typography.body, { color: colors.inkSoft }]}>{nhanKhoangNgay(keo.starts_on, keo.ends_on)}</Text>
+        {keo.stops[0] ? <Text style={[typography.label, { color: colors.ink }]}>{keo.stops[0].at} · {keo.stops[0].label}</Text> : null}
         {keo.stops.length > 0 ? <RouteLine color={colors.inkSoft} height={24} stops={Math.min(5, keo.stops.length)} width={120} /> : null}
         <View style={styles.tienRow}>
           {keo.budget_per_person_vnd > 0 ? <Money size="label" vnd={keo.budget_per_person_vnd} /> : null}
@@ -216,7 +218,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
           <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
         </View>
         <HenCuaHaiBan phien={phien} today={today} />
-        <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
+        <EmptyState kind="first-use" title="Gom hội mình trước" body="Chọn một nhóm trong Tin nhắn, rồi cùng nhau tạo lời hẹn. Những kèo của hai bạn vẫn hiện ở đây." illustration={<AssetIllustration name="spot-map" width={180} height={140} resolution="small" />} action={{ label: "Tới Tin nhắn", onPress: () => router.push("/(tabs)/messages" as never) }} />
       </RudiScreen>
     );
   }
@@ -247,7 +249,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
         <EmptyState
           action={{ label: "Tạo kèo", onPress: () => router.push("/outings/new") }}
           body="Bắt đầu bằng một lời rủ: hôm nào, mấy người, dành bao nhiêu. Những nơi muốn ghé mình thêm dần."
-          illustration={<RouteLine color={colors.inkFaint} dashed height={72} stops={3} width={200} />}
+          illustration={<AssetIllustration name="spot-map" width={180} height={140} resolution="small" />}
           kind="first-use"
           title="Chưa có kèo nào"
         />

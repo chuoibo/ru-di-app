@@ -119,24 +119,24 @@ export function SoDoiSongProvider({
           xoa: (kind) => song.xoaRangBuocNay(kind),
         });
       },
-      dongSo: (revision: string) => void song.dongSoNay(revision),
+      dongSo: (revision: string) => song.dongSoNay(revision),
 
       dongYDeNghi: (id: string) => song.dongYDeNghiNay(id),
 
       ruDiChoi: () => void song.xinTo(),
       lamMoi: () => void song.lamMoi(),
-      suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.suaNhap(content, lyDo),
-      gui: () => void song.gui(),
+      suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => song.suaNhap(content, lyDo),
+      gui: () => song.gui(),
       // «Bỏ» a draft and «nghỉ tuần» are one command on the wire: §3.3's table
       // says a draft nobody received is simply dropped for the week.
-      boNhap: () => void song.nghiTuanNay(),
-      dongY: () => void song.dongYTo(),
-      deNghiSua: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.deNghiSuaTo(content, lyDo),
-      rut: () => void song.rut(),
-      nghiTuan: () => void song.nghiTuanNay(),
-      daDi: () => void song.ghiDaDiRoi(),
-      giu: (_id: string, line: string) => void song.giuDong(line),
-      huy: () => void song.nghiTuanNay(),
+      boNhap: () => song.nghiTuanNay(),
+      dongY: () => song.dongYTo(),
+      deNghiSua: (_id: string, content: NoiDungTo, lyDo: string | null) => song.deNghiSuaTo(content, lyDo),
+      rut: () => song.rut(),
+      nghiTuan: () => song.nghiTuanNay(),
+      daDi: () => song.ghiDaDiRoi(),
+      giu: (_id: string, line: string) => song.giuDong(line),
+      huy: () => song.nghiTuanNay(),
     };
   }, [contextId, daDung, loiGu, song, tenNguoiKia, toiId]);
 

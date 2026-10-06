@@ -1,7 +1,8 @@
+import { AssetIllustration } from "../ui/AssetIllustration";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Canh } from "../ui/art/Canh";
+import { SkeletonLines } from "../ui/Skeleton";
 import { docKeoCuaNhom } from "../keo/keo";
 import { homNay } from "../keo/nhip-keo";
 import { useRudiSession } from "../session";
@@ -29,7 +30,7 @@ export function DiaryWall({ person, owner }: { person: string; owner: string }) 
     <Heading size="h2" title="Những ngày muốn giữ" subtitle={person === owner ? "Những cuộc đi trở thành chuyện của bạn." : undefined} />
     {error ? <ErrorState title="Sổ chưa mở được" body={error} onRetry={() => void load()} /> : null}
     {!loading && !error && !books.length ? person === owner ? <KeTrong /> : <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có trang nào được mở cho mọi người.</Text> : null}
-    {loading && !books.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Đang mở những trang đã giữ…</Text> : null}
+    {loading && !books.length ? <SkeletonLines lines={3}/> : null}
     {books.map((b, i) => <View key={b.id} style={styles.entry}>
       {b.kind === "moment" && (i === 0 || books[i - 1].created_at.slice(0, 7) !== b.created_at.slice(0, 7)) ? <Text style={[typography.label, { color: colors.inkSoft }]}>{thangNamVN(b.created_at)}</Text> : null}
       <Pressable accessibilityRole="button" accessibilityLabel={`Mở ${b.document.title}`} onPress={() => router.push(`/diaries/${b.id}` as never)}>
@@ -68,7 +69,7 @@ function KeTrong() {
   return <EmptyState
     action={action}
     body={loi?.kieu === "keo" ? "Mở cuộc đi đã qua rồi chạm «Giữ lại cuộc đi»: nó thành trang đầu tiên của bạn." : "Khi một cuộc đi khép lại, giữ nó lại từ màn của kèo: nó thành trang đầu tiên ở đây."}
-    illustration={<Canh id="chua-co-ky-niem" width={144} />}
+    illustration={<AssetIllustration name="spot-memory" width={220} height={188} />}
     kind="first-use"
     layout="inline"
     testID="ke-trong"

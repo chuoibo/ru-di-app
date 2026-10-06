@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../ui/AssetIllustration";
 import { translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +15,6 @@ import { HangChuTab, type MucChuTab } from "../ui/HangChuTab";
 import { useChamLaiTab } from "../ui/cham-lai-tab";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { EmptyState } from "../ui/EmptyState";
-import { Canh } from "../ui/art/Canh";
 import { Sheet } from "../ui/Sheet";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
@@ -281,7 +281,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   };
   const dongCaiDat = () => { setSettings(false); setXacNhanXoa(false); setDaXoaLichSu(false); };
   if (!person)
-    return <RudiScreen header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
+    return <RudiScreen material="quiet" header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
   // A mode with a tab names itself in the row; only the hidden posts need a title.
   const tieuDeRieng = mode === "hidden" ? "Những bài bạn đã ẩn" : !dau && mode === "mine" ? "Những điều bạn đã kể" : !dau && mode === "saved" ? "Để dành cho một ngày" : null;
   const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={() => { setCoMoi(false); router.push("/community/notifications" as never); }} style={styles.icon}>
@@ -290,7 +290,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   </Pressable>;
   const nutCaiDat = <Pressable accessibilityRole="button" accessibilityLabel="Cài đặt bảng tin" onPress={() => setSettings(true)} style={styles.icon}><Ionicons name="options-outline" size={24} color={colors.ink}/></Pressable>;
   const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
-  return <RudiScreen header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
+  return <RudiScreen material="quiet" header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
       {/* One rhythm (finish review 03/10): the title close over its line, 16 to
           the actions, 8 between every action, the quiet ones too. */}
@@ -413,12 +413,12 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         mode === "hidden" ? <EmptyState body="Bài bạn chọn «Không quan tâm» sẽ nằm ở đây, để bỏ ẩn khi đổi ý." kind="first-use" layout="inline" style={styles.empty} title="Chưa ẩn bài nào" />
         // The reader's own two lists say what goes in them, and how; saved
         // posts, like followed people, are found in the feeds.
-        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<Canh id="chua-luu-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
-        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<Canh id="chua-co-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
+        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<AssetIllustration name="spot-keeps" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
+        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<AssetIllustration name="spot-memory" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
         // Following fills by finding someone to follow, and they are found
         // in the feeds; writing a post of one's own does not fill it.
-        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<Canh id="chua-co-ban" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
-        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<Canh id="chua-co-ky-niem" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
+        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<AssetIllustration name="spot-map" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
+        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<AssetIllustration name="spot-memory" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
     />

@@ -1,0 +1,873 @@
+{
+  "compass": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 15.8 7.8 L 14 14 L 8.2 16.2 L 10 10 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 12 3 L 12 4.5 M 21 12 L 19.5 12 M 12 21 L 12 19.5 M 3 12 L 4.5 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "map": [
+    {
+      "kind": "path",
+      "d": "M 3 5.4 L 8.8 3 L 15.1 5.2 L 21 3.2 L 21 18.6 L 15.1 21 L 8.8 18.8 L 3 20.8 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 8.8 3 L 8.8 18.8 M 15.1 5.2 L 15.1 21",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "add": [
+    {
+      "kind": "path",
+      "d": "M 12 4 L 12 20 M 4 12 L 20 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "chat": [
+    {
+      "kind": "path",
+      "d": "M 5.3 4 L 18.6 4 C 20 4 21 5.1 21 6.5 L 21 15 C 21 16.4 20 17.5 18.6 17.5 L 9 17.5 L 4 21 L 4.8 17.4 C 3.7 17 3 16.2 3 15 L 3 6.5 C 3 5.1 4 4 5.3 4 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 9 L 17 9 M 7 12.8 L 14 12.8",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "profile": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 7.5,
+      "r": 3.7,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 4.3 21 L 4.3 19.6 C 4.3 15.4 7.5 13.5 12 13.5 C 16.5 13.5 19.7 15.4 19.7 19.6 L 19.7 21",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "search": [
+    {
+      "kind": "circle",
+      "cx": 10.3,
+      "cy": 10.3,
+      "r": 6.5,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 15 15 L 21 21",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "heart": [
+    {
+      "kind": "path",
+      "d": "M 12 20.5 C 10.3 19.2 3 14.3 3 8.8 C 3 5.6 5.2 3.5 8 3.5 C 10 3.5 11.3 4.6 12 6 C 12.7 4.6 14 3.5 16 3.5 C 18.8 3.5 21 5.6 21 8.8 C 21 14.3 13.7 19.2 12 20.5 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "bookmark": [
+    {
+      "kind": "path",
+      "d": "M 6 3 L 18 3 L 18 21 L 12 16.8 L 6 21 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "bell": [
+    {
+      "kind": "path",
+      "d": "M 4 17 L 6.1 14.6 L 6.1 9 C 6.1 5.7 8.4 3.5 12 3.5 C 15.6 3.5 17.9 5.7 17.9 9 L 17.9 14.6 L 20 17 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 9.5 20 C 10.7 21.4 13.3 21.4 14.5 20 M 12 2 L 12 3.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "calendar": [
+    {
+      "kind": "path",
+      "d": "M 5 5 L 19 5 C 20.1 5 21 5.9 21 7 L 21 19 C 21 20.1 20.1 21 19 21 L 5 21 C 3.9 21 3 20.1 3 19 L 3 7 C 3 5.9 3.9 5 5 5 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 3 L 7 7 M 17 3 L 17 7 M 3 10 L 21 10 M 7 14 L 10 14 M 14 14 L 17 14 M 7 17.5 L 10 17.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "clock": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 12 6.5 L 12 12 L 16 14.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "pin": [
+    {
+      "kind": "path",
+      "d": "M 12 21 C 9.6 18.1 5 13.3 5 9.7 C 5 5.8 8 3 12 3 C 16 3 19 5.8 19 9.7 C 19 13.3 14.4 18.1 12 21 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 9.5,
+      "r": 2.2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "route": [
+    {
+      "kind": "circle",
+      "cx": 5,
+      "cy": 5,
+      "r": 2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 19,
+      "cy": 19,
+      "r": 2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 5 L 16 5 C 22 5 22 12 16 12 L 8 12 C 2 12 2 19 8 19 L 17 19",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "photo": [
+    {
+      "kind": "path",
+      "d": "M 3 4 L 21 4 L 21 20 L 3 20 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 16.6,
+      "cy": 8.5,
+      "r": 1.4,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 3 16 L 8.4 10.8 L 14.2 16.4 L 17 13.7 L 21 17.6",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "camera": [
+    {
+      "kind": "path",
+      "d": "M 3 7 L 7.2 7 L 9 4 L 15 4 L 16.8 7 L 21 7 L 21 20 L 3 20 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 13.5,
+      "r": 4,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 18.4,
+      "cy": 9.6,
+      "r": 0.55,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    }
+  ],
+  "video": [
+    {
+      "kind": "path",
+      "d": "M 3 6 L 15 6 L 15 18 L 3 18 Z M 15 9 L 21 5.5 L 21 18.5 L 15 15",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "send": [
+    {
+      "kind": "path",
+      "d": "M 3 4 L 21 12 L 3 20 L 6.5 12 Z M 6.5 12 L 21 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "envelope": [
+    {
+      "kind": "path",
+      "d": "M 3 5 L 21 5 L 21 19 L 3 19 Z M 3 5 L 12 12 L 21 5 M 3 19 L 8.8 12 M 21 19 L 15.2 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "people": [
+    {
+      "kind": "circle",
+      "cx": 9,
+      "cy": 7.2,
+      "r": 3.2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 2.5 21 L 2.5 18.5 C 2.5 14.8 5.2 13.2 9 13.2 C 12.8 13.2 15.5 14.8 15.5 18.5 L 15.5 21",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 16 4 C 19.6 4 20.6 8.5 17.6 10.3 M 17.5 13.8 C 20.2 14.2 21.5 15.7 21.5 18.4 L 21.5 20.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "person-add": [
+    {
+      "kind": "circle",
+      "cx": 8.5,
+      "cy": 7.5,
+      "r": 3.4,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 2 21 L 2 19 C 2 15.2 4.7 13.5 8.5 13.5 C 10.2 13.5 11.5 13.8 12.6 14.5 M 18 12 L 18 20 M 14 16 L 22 16",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "settings": [
+    {
+      "kind": "path",
+      "d": "M 4 6 L 5.8 6 M 10.2 6 L 20 6 M 4 12 L 13.8 12 M 18.2 12 L 20 12 M 4 18 L 7.8 18 M 12.2 18 L 20 18",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 8,
+      "cy": 6,
+      "r": 2.2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 16,
+      "cy": 12,
+      "r": 2.2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 10,
+      "cy": 18,
+      "r": 2.2,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "lock": [
+    {
+      "kind": "path",
+      "d": "M 5 10 L 19 10 L 19 21 L 5 21 Z M 8 10 L 8 6 C 8 1.6 16 1.6 16 6 L 16 10",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 14.7,
+      "r": 0.85,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 12 15.5 L 12 17.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "shield": [
+    {
+      "kind": "path",
+      "d": "M 12 2.7 L 20 6 L 19 14 C 18.4 17.4 15.3 20 12 21.4 C 8.7 20 5.6 17.4 5 14 L 4 6 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 8.7 12 L 11 14.5 L 15.4 9.7",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "eye": [
+    {
+      "kind": "path",
+      "d": "M 2 12 C 6.2 3.7 17.8 3.7 22 12 C 17.8 20.3 6.2 20.3 2 12 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 3,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "eye-off": [
+    {
+      "kind": "path",
+      "d": "M 3 3 L 21 21 M 6 6.8 C 4.4 8 3.1 9.8 2 12 C 6 19.6 14.8 20.2 19 16.8 M 9.5 5.7 C 14.5 4.6 19 7 22 12 M 9.2 10.7 C 8.6 13.3 10.7 15.4 13.3 14.8",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "close": [
+    {
+      "kind": "path",
+      "d": "M 5 5 L 19 19 M 19 5 L 5 19",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "chevron-left": [
+    {
+      "kind": "path",
+      "d": "M 15 4.5 L 7.5 12 L 15 19.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "chevron-right": [
+    {
+      "kind": "path",
+      "d": "M 9 4.5 L 16.5 12 L 9 19.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "chevron-down": [
+    {
+      "kind": "path",
+      "d": "M 4.5 9 L 12 16.5 L 19.5 9",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "arrow-left": [
+    {
+      "kind": "path",
+      "d": "M 20 12 L 4 12 M 10.5 5.5 L 4 12 L 10.5 18.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "menu": [
+    {
+      "kind": "path",
+      "d": "M 4 5 L 20 5 M 4 12 L 20 12 M 4 19 L 16 19",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.9
+    }
+  ],
+  "more": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 4.5,
+      "r": 1.3,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 1.3,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 19.5,
+      "r": 1.3,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    }
+  ],
+  "check": [
+    {
+      "kind": "path",
+      "d": "M 4.5 12 L 9.3 17 L 20 6.2",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 2
+    }
+  ],
+  "receipt": [
+    {
+      "kind": "path",
+      "d": "M 5 3 L 7.3 4.5 L 9.7 3 L 12 4.5 L 14.3 3 L 16.7 4.5 L 19 3 L 19 21 L 16.7 19.5 L 14.3 21 L 12 19.5 L 9.7 21 L 7.3 19.5 L 5 21 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 8 8 L 16 8 M 8 12 L 13 12 M 8 16 L 16 16",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "ledger": [
+    {
+      "kind": "path",
+      "d": "M 4 3 L 18 3 C 19.1 3 20 3.9 20 5 L 20 21 L 6 21 C 4.9 21 4 20.1 4 19 Z M 4 18 L 20 18 M 8 3 L 8 18 M 11 7 L 17 7 M 11 11 L 15 11",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "split": [
+    {
+      "kind": "path",
+      "d": "M 12 3 L 12 8 C 12 11 6 11 6 15 L 6 21 M 12 8 C 12 11 18 11 18 15 L 18 21 M 3 18 L 6 21 L 9 18 M 15 18 L 18 21 L 21 18",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "upload": [
+    {
+      "kind": "path",
+      "d": "M 12 16 L 12 3 M 6 9 L 12 3 L 18 9 M 4 16 L 4 21 L 20 21 L 20 16",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "download": [
+    {
+      "kind": "path",
+      "d": "M 12 3 L 12 16 M 6 10 L 12 16 L 18 10 M 4 17 L 4 21 L 20 21 L 20 17",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "edit": [
+    {
+      "kind": "path",
+      "d": "M 4 15 L 15.6 3.4 C 16.4 2.6 17.5 2.6 18.3 3.4 L 20.6 5.7 C 21.4 6.5 21.4 7.6 20.6 8.4 L 9 20 L 3 21 Z M 13.8 5.2 L 18.8 10.2 M 4 15 L 9 20",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "trash": [
+    {
+      "kind": "path",
+      "d": "M 3 6 L 21 6 M 9 6 L 9 3 L 15 3 L 15 6 M 5 6 L 6.3 21 L 17.7 21 L 19 6 M 10 10 L 10.5 17 M 14 10 L 13.5 17",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "filter": [
+    {
+      "kind": "path",
+      "d": "M 3 4 L 21 4 L 14 12 L 14 20 L 10 22 L 10 12 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "globe": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 3 12 L 21 12 M 12 3 C 6.7 8 6.7 16 12 21 C 17.3 16 17.3 8 12 3 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "coffee": [
+    {
+      "kind": "path",
+      "d": "M 4 9 L 16 9 L 15 17 C 14.7 19 5.3 19 5 17 Z M 16 10 L 18 10 C 22 10 22 15 18 15 L 15.2 15 M 3 21 L 18 21 M 7 3 C 5 5 9 5 7 7 M 12 2 C 10 4 14 4 12 6",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "food": [
+    {
+      "kind": "path",
+      "d": "M 5 3 L 5 9 C 5 12 11 12 11 9 L 11 3 M 8 3 L 8 21 M 17 3 C 13.5 7 14.5 12 19 12 L 19 3 L 19 21",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "play": [
+    {
+      "kind": "path",
+      "d": "M 7 3.5 L 21 12 L 7 20.5 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "leaf": [
+    {
+      "kind": "path",
+      "d": "M 4 20 C 2 9 9 3 21 3 C 21 15 15 22 4 20 Z M 4 20 L 17 7 M 10 14 L 10 8 M 10 14 L 16 14",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "sparkles": [
+    {
+      "kind": "path",
+      "d": "M 13 3 L 15.8 9.2 L 22 12 L 15.8 14.8 L 13 21 L 10.2 14.8 L 4 12 L 10.2 9.2 Z M 4 3 L 4 7 M 2 5 L 6 5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "report": [
+    {
+      "kind": "path",
+      "d": "M 5 21 L 5 3 M 5 4 C 10 1 13 7 20 4 L 20 14 C 13 17 10 11 5 14",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "logout": [
+    {
+      "kind": "path",
+      "d": "M 10 3 L 4 3 L 4 21 L 10 21 M 9 12 L 21 12 M 16 7 L 21 12 L 16 17",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "link": [
+    {
+      "kind": "path",
+      "d": "M 10 15 L 7.5 17.5 C 4.5 20.5 0.5 16.5 3.5 13.5 L 7.5 9.5 C 9 8 11 8 12.5 9 M 14 9 L 16.5 6.5 C 19.5 3.5 23.5 7.5 20.5 10.5 L 16.5 14.5 C 15 16 13 16 11.5 15 M 8.5 15.5 L 15.5 8.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "copy": [
+    {
+      "kind": "path",
+      "d": "M 8 8 L 21 8 L 21 21 L 8 21 Z M 16 8 L 16 3 L 3 3 L 3 16 L 8 16",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "star": [
+    {
+      "kind": "path",
+      "d": "M 12 2.8 L 14.8 8.5 L 21.2 9.4 L 16.6 13.8 L 17.7 20.1 L 12 17.1 L 6.3 20.1 L 7.4 13.8 L 2.8 9.4 L 9.2 8.5 Z",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "book": [
+    {
+      "kind": "path",
+      "d": "M 12 5 C 8 2.7 5 2.7 2 4.2 L 2 20 C 5 18.5 8 18.5 12 21 C 16 18.5 19 18.5 22 20 L 22 4.2 C 19 2.7 16 2.7 12 5 Z M 12 5 L 12 21 M 5 8 L 9 9 M 15 9 L 19 8 M 5 12 L 9 13 M 15 13 L 19 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "folder": [
+    {
+      "kind": "path",
+      "d": "M 3 5 L 9 5 L 11 8 L 21 8 L 21 21 L 3 21 Z M 3 12 L 21 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "refresh": [
+    {
+      "kind": "path",
+      "d": "M 20 9 C 17 1 5 2 3.7 10 M 3 5 L 3.7 10 L 9 9 M 4 15 C 7 23 19 22 20.3 14 M 21 19 L 20.3 14 L 15 15",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "info": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 7.5,
+      "r": 0.9,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 11 11 L 12 11 L 12 17 M 10.5 17 L 13.5 17",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "warning": [
+    {
+      "kind": "path",
+      "d": "M 12 3 L 22 21 L 2 21 Z M 12 9 L 12 14",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 17.5,
+      "r": 0.8,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    }
+  ],
+  "check-circle": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 12 L 10.5 15.6 L 17.5 8.5",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "minus-circle": [
+    {
+      "kind": "circle",
+      "cx": 12,
+      "cy": 12,
+      "r": 9,
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 12 L 17 12",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "poll": [
+    {
+      "kind": "path",
+      "d": "M 3 3 L 3 21 L 22 21 M 7 17 L 7 12 M 12 17 L 12 6 M 17 17 L 17 9",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ],
+  "sticker": [
+    {
+      "kind": "path",
+      "d": "M 3 3 L 21 3 L 21 13 L 13 21 L 3 21 Z M 13 21 L 13 13 L 21 13",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 8,
+      "cy": 8,
+      "r": 0.8,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "circle",
+      "cx": 14,
+      "cy": 8,
+      "r": 0.8,
+      "role": "ink",
+      "fill": true,
+      "strokeWidth": 1.65
+    },
+    {
+      "kind": "path",
+      "d": "M 7 11 C 8.5 13 10.5 13 12 11",
+      "role": "ink",
+      "fill": false,
+      "strokeWidth": 1.65
+    }
+  ]
+}

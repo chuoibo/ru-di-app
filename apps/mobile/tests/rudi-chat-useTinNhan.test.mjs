@@ -76,14 +76,14 @@ function batFetch() {
 const cuaNhom = (daGoi, ctx, method) => daGoi.filter((g) => g.url.includes(`/contexts/${ctx}/`) && (method === undefined || g.method === method));
 
 let ketQua;
-function Probe({ contextId, personId }) {
-  ketQua = useTinNhan(contextId, personId);
+function Probe({ contextId, personId, readOnly = false }) {
+  ketQua = useTinNhan(contextId, personId, { readOnly });
   return null;
 }
-async function dung(contextId, personId = P1) {
+async function dung(contextId, personId = P1, readOnly = false) {
   let root;
   await act(async () => {
-    root = TestRenderer.create(React.createElement(Probe, { contextId, personId }));
+    root = TestRenderer.create(React.createElement(Probe, { contextId, personId, readOnly }));
   });
   return root;
 }
@@ -519,4 +519,52 @@ test("nhóm rỗng nhận một đợt vượt trang vẫn cho cuộn đọc nh�
     await older;
     assert.ok(ids().includes("a-100"));
   } finally { await bo(root); }
+});
+
+
+test("kho cũ chỉ đọc vẫn tải lịch sử nhưng mọi đường ghi đều bị chặn trước network", async () => {
+  const calls = batFetch();
+  const root = await dung(A, P1, true);
+  try {
+    await tra(calls[0], trang(A, "cu"));
+    assert.deepEqual(ids(), ["a-cu"]);
+    const writes = [
+      () => ketQua.gui("Một lời chưa được gửi"),
+      () => ketQua.guiAnhMoi("/photos/synthetic.png", "Ảnh chưa gửi"),
+      () => ketQua.guiSticker("cho-ti"),
+      () => ketQua.thuLaiMot("attempt-synthetic"),
+      () => ketQua.xoaTin("a-cu"),
+      () => ketQua.doiPhanUng("a-cu", "heart", false),
+    ];
+    for (const write of writes) {
+      const before = calls.length;
+      let pending;
+      await act(async () => { pending = write(); pending.catch(() => undefined); });
+      assert.equal(calls.length, before, "write crossed the read-only boundary before rejecting");
+      await assert.rejects(pending, (error) => error.code === "legacy_read_only");
+    }
+    assert.equal(ketQua.hangCho.length, 0, "archive must not invent an optimistic sent row");
+    assert.ok(calls.every((call) => call.method === "GET"), "archive emitted a write");
+    assert.deepEqual(ids(), ["a-cu"], "refused actions altered history");
+  } finally { await bo(root); }
+});
+
+test("kho cũ không ghi read marker khi tin thật đã ở viewport", async () => {
+  const calls = batFetch();
+  CAU_HINH.focus = true;
+  const originalState = Object.getOwnPropertyDescriptor(AppState, "currentState");
+  const originalListener = AppState.addEventListener;
+  AppState.addEventListener = () => ({ remove() {} });
+  Object.defineProperty(AppState, "currentState", { configurable: true, value: "active" });
+  const root = await dung(A, P1, true);
+  try {
+    for (const call of [...calls]) await tra(call, trang(A, "cu"));
+    await act(async () => { ketQua.danhDauHienThi(["a-cu"]); });
+    assert.ok(calls.every((call) => call.method === "GET"), "read-only viewport emitted PUT/POST");
+  } finally {
+    await bo(root);
+    if (originalState) Object.defineProperty(AppState, "currentState", originalState);
+    AppState.addEventListener = originalListener;
+    CAU_HINH.focus = false;
+  }
 });

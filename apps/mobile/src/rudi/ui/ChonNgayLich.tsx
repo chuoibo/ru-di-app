@@ -21,6 +21,7 @@ import { displayFace, typography, useRudiTheme } from "../theme";
 import { ONhapMuc } from "./ONhapMuc";
 import { THU_NGAN, cungNgay, dinhDangNgay, docNgay, luoiThang, tenThang, tenThu, thangSau, type NgayLich } from "./lich/lich-thang";
 import { useMotion } from "./useMotion";
+import { useLuiLop } from "./useLuiLop";
 import { giuState } from "../../ui/a11y";
 
 function homNayThat(): NgayLich {
@@ -48,6 +49,7 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
   const hn = homNay ?? homNayThat();
   const ngay = docNgay(giaTri);
   const [mo, setMo] = useState(false);
+  useLuiLop(mo, () => setMo(false));
   const [rongLuoi, setRongLuoi] = useState(7 * O_TOI_DA);
   const o = Math.max(1, Math.min(O_TOI_DA, Math.floor(rongLuoi / 7)));
   const [xem, setXem] = useState({ thang: ngay?.thang ?? hn.thang, nam: ngay?.nam ?? hn.nam });

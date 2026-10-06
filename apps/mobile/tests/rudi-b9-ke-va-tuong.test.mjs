@@ -28,7 +28,7 @@ test("kệ trống: lối vào là kèo đã qua gần nhất, không có thì d
 
   const wall = nguon("diary/Wall.tsx");
   assert.match(wall, /<KeTrong \/>/, "kệ của chính chủ dùng trạng thái rỗng có hành động");
-  assert.match(wall, /illustration=\{<Canh id="chua-co-ky-niem"/);
+  assert.match(wall, /illustration=\{<AssetIllustration name="spot-memory" width=\{220\} height=\{188\}/);
   assert.match(wall, /router\.push\(`\/outings\/\$\{loi\.id\}`/);
   assert.doesNotMatch(wall, /Mở cuộc đi đã qua để giữ khoảnh khắc đầu tiên\./, "câu cũ không có lối đi");
 });

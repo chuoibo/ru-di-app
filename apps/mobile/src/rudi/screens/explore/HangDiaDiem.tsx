@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextStyle } from "react-native";
 
+import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
@@ -11,7 +12,6 @@ import { khoaNguon, veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
-import { KyHoa } from "../../ui/art/KyHoa";
 import { chiaDongSuThat, guTheoLoai, moDauBangSao, tachGia } from "../../kham-pha/dia-diem";
 
 /*
@@ -85,6 +85,7 @@ interface CommonProps {
   onOpen: () => void;
   onSave: () => void;
   testID?: string;
+  saving?: boolean;
 }
 
 /**
@@ -103,6 +104,17 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
       {id === null ? <Ionicons color={colors.ink} name={glyph} size={size} /> : <GuGlyph id={id} size={Math.round(size * 1.15)} tone="ink" />}
     </View>
   );
+}
+
+/** Generic category artwork is labelled, never presented as the venue itself. */
+export function PlaceArtwork({ loai, width, height = 180 }: { loai?: string; width?: number; height?: number }) {
+  const { colors } = useRudiTheme();
+  const [measured, setMeasured] = useState(width ?? 280);
+  const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
+  return <View onLayout={(e) => setMeasured(e.nativeEvent.layout.width)} style={{ width: width ?? "100%", height, alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: colors.paper, overflow: "hidden" }}>
+    <AssetIllustration name={scene} width={Math.min(width ?? measured, 520)} height={Math.max(36, height - 24)} />
+    <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ</Text>
+  </View>;
 }
 
 /**
@@ -136,7 +148,7 @@ function dauCon(dd: DiaDiemHienThi): string | null {
  * reason in the AI tone and the price, whole (`tachGia`). The heart is the
  * card's sibling, not inside its tap, so a screen reader meets two controls.
  */
-export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
+export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
@@ -156,11 +168,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         {dd.anh === null ? (
           // No honest picture: the sketch of the KIND of place («ký hoạ trong
           // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-          <KyHoa loai={dd.loai} style={styles.kyHoaTrongThe} tags={dd.tags} />
+          <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 180 : 220} />
         ) : (
           <MediaSlot
             alt={dd.name}
-            fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={44} />}
+            fallback={<PlaceArtwork loai={dd.loai} height={180} />}
             nguon={{ loai: "danh-muc", anh: dd.anh }}
             overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
             radius={0}
@@ -169,9 +181,9 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         )}
         <View style={styles.chuDan}>
           {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
-          <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
+          <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
           {dd.sub ? (
-            <Text numberOfLines={1} style={[typography.body, { color: colors.inkSoft }]}>
+            <Text style={[typography.body, { color: colors.inkSoft }]}>
               {dd.sub}
             </Text>
           ) : null}
@@ -189,6 +201,8 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
           icon={daLuu ? "heart" : "heart-outline"}
           onPress={onSave}
+          disabled={saving}
+          loading={saving}
           selected={daLuu}
           tron
         />
@@ -197,7 +211,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   );
 }
 
-export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
+export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   // The facts that decide come first and whole: rating, distance and hours on
@@ -224,7 +238,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
-          <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={33} />
+          <PlaceArtwork loai={dd.loai} width={72} height={64} />
         )}
         <View style={styles.rowText}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
@@ -255,6 +269,8 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
         icon={daLuu ? "heart" : "heart-outline"}
         onPress={onSave}
+        disabled={saving}
+        loading={saving}
         quiet
         selected={daLuu}
       />
@@ -283,11 +299,13 @@ export function PlaceCompare({
   onOpen,
   onSave,
   testID,
+  saving,
 }: {
   items: readonly [DiaDiemHienThi, DiaDiemHienThi];
   daLuu: (id: string) => boolean;
   onOpen: (id: string) => void;
   onSave: (id: string) => void;
+  saving?: (id: string) => boolean;
   testID?: string;
 }) {
   const { colors } = useRudiTheme();
@@ -296,12 +314,7 @@ export function PlaceCompare({
   // column cannot hold a name and a price whole, the two stack and compare
   // down the same fields in the same order (review 08/09 F04).
   const xepDoc = chuLon(fontScale);
-  // One axis means one frame. When neither candidate has a picture, both take
-  // the compact header and the pair costs less height; when one of them does,
-  // BOTH keep the 4:3 frame and the photoless one draws its object inside that
-  // frame. A photo tile beside a glyph strip is two shapes and the eye stops
-  // comparing (finish review of this batch).
-  const khongAnhNao = items.every((dd) => !dd.anh);
+  const { sizeClass } = useAdaptiveLayout();
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -318,44 +331,19 @@ export function PlaceCompare({
             {cuoiFact ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           </>
         );
-        if (khongAnhNao) {
-          // No honest picture on one side: BOTH tiles take the object, the seal
-          // and the heart on one line, then the same words, so the two still
-          // compare on one axis. A photo tile beside a glyph strip does not.
-          return (
-            <View key={dd.id} style={styles.ungVien}>
-              {/* The object and the heart on one line, the seal under them: all
-                  three on one line pushed the heart out of the tile at 320 (QA UI-113). */}
-              <View style={styles.ungVienDau}>
-                <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={24} />
-                <View style={styles.flex1} />
-                <IconButton
-                  accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
-                  icon={luu ? "heart" : "heart-outline"}
-                  onPress={() => onSave(dd.id)}
-                  quiet
-                  selected={luu}
-                />
-              </View>
-              {dauCon(dd) ? <Stamp label={dauCon(dd) as string} style={styles.dauUngVien} tone="ai" /> : null}
-              <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
-                {chu}
-              </Pressable>
-            </View>
-          );
-        }
+
         return (
           <View key={dd.id} style={styles.ungVien}>
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={34} />}
+                fallback={<PlaceArtwork loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
                 overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                 // The credit is the frame's own line now, printed under the
                 // picture instead of after the facts: it was the one call site
                 // that handed this frame a bare address (review 08/09, F31).
                 nguon={dd.anh === null ? null : { loai: "danh-muc", anh: dd.anh }}
-                ratio={4 / 3}
+                ratio={xepDoc ? 2 : sizeClass === "compact" ? 4 / 3 : 16 / 7}
               />
               {chu}
             </Pressable>
@@ -366,6 +354,8 @@ export function PlaceCompare({
                 accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
                 icon={luu ? "heart" : "heart-outline"}
                 onPress={() => onSave(dd.id)}
+                disabled={saving?.(dd.id)}
+                loading={saving?.(dd.id)}
                 selected={luu}
               />
             </View>

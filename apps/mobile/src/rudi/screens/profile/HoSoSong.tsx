@@ -16,7 +16,7 @@
  * page too, with the error next to the field it is about.
  */
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -51,6 +51,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   const [ten, setTen] = useState("");
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");
+  const saving = useRef(false);
   const [dangLuu, setDangLuu] = useState(false);
   const [loiLuu, setLoiLuu] = useState<string | null>(null);
   // QA UI-108: Back closes the form and stays on Cá nhân; what was typed is
@@ -86,11 +87,12 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   };
 
   const luu = async () => {
+    if (saving.current) return;
     if (ten.trim() === "") {
       setLoiLuu("Tên hiển thị không được rỗng.");
       return;
     }
-    setDangLuu(true);
+    saving.current = true; setDangLuu(true);
     try {
       const hoSo = await suaHoSoToi(phien.person_id, { display_name: ten.trim(), bio, city });
       setTrang({ pha: "xong", hoSo });
@@ -101,7 +103,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiLuu(loiRaChu(error));
     } finally {
-      setDangLuu(false);
+      saving.current = false; setDangLuu(false);
     }
   };
 
@@ -214,7 +216,7 @@ const styles = StyleSheet.create({
   anhHoChieu: { borderWidth: 1, padding: 4, borderRadius: 4 },
   hangDau: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" },
   form: { gap: 12 },
-  dau: { flexDirection: "row", alignItems: "center", gap: 14 },
-  dauChu: { flex: 1, gap: 2 },
+  dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauChu: { flex: 1, minWidth: 160, gap: 4 },
   bam: { opacity: 0.7 },
 });

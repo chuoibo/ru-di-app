@@ -17,6 +17,7 @@ import { Easing, cancelAnimation, runOnJS, useAnimatedReaction, useSharedValue, 
 import { TIET_MUC, noiTietMuc, type NhipRung, type TietMuc } from "../art/nep-dien";
 import { KHOANH_KHAC, khoaKhoanhKhac, nenDien, type CachDien, type KhoanhKhacId } from "../khoanh-khac";
 import { useMotion } from "./useMotion";
+import { useScreenActive } from "./useScreenActive";
 
 export interface KhoanhKhacDangDien {
   /** The joined performance, or null when there is nothing to show. */
@@ -29,8 +30,9 @@ export interface KhoanhKhacDangDien {
   boQua: () => void;
 }
 
-export function useKhoanhKhac(id: KhoanhKhacId, suKien: string | null, tuyChon: { hopLe?: boolean; coLoi?: boolean } = {}): KhoanhKhacDangDien {
+export function useKhoanhKhac(id: KhoanhKhacId, suKien: string | null, tuyChon: { hopLe?: boolean; coLoi?: boolean; focused?: boolean } = {}): KhoanhKhacDangDien {
   const motion = useMotion();
+  const active = useScreenActive(tuyChon.focused ?? true);
   const { hopLe = true, coLoi = false } = tuyChon;
   const tm = useMemo(() => noiTietMuc(KHOANH_KHAC[id].tietMuc.map((x) => TIET_MUC[x])), [id]);
   const tTinh = tm.khoa[tm.khungTinh].t;
@@ -41,11 +43,15 @@ export function useKhoanhKhac(id: KhoanhKhacId, suKien: string | null, tuyChon: 
   const khoa = suKien ? khoaKhoanhKhac(id, suKien) : "";
 
   useEffect(() => {
+    cancelAnimation(t);
+    dangChaySV.value = false;
+    setDangChay(false);
     if (!khoa) {
       setCach(null);
+      t.value = tTinh;
       return;
     }
-    const c = nenDien({ khoa, reduced: motion.reduced, hopLe, coLoi });
+    const c = nenDien({ khoa, reduced: motion.reduced || !active, hopLe, coLoi });
     setCach(c);
     if (c !== "dien") {
       t.value = tTinh;
@@ -61,10 +67,11 @@ export function useKhoanhKhac(id: KhoanhKhacId, suKien: string | null, tuyChon: 
     return () => {
       cancelAnimation(t);
       dangChaySV.value = false;
+      t.value = tTinh;
     };
-    // The decision is per event key; the motion kit and the state flags are read at that moment.
+    // A lifecycle change consumes the same key into its still frame, never a replay.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [khoa, hopLe, coLoi]);
+  }, [khoa, hopLe, coLoi, active, motion.reduced]);
 
   const rung = (kieu: NhipRung) => {
     if (kieu === "cham") motion.haptic.impact();

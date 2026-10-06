@@ -178,6 +178,12 @@ function sourceFiles(dir) {
 /* Ids used as ids. Each line says what the value is FOR, because "it is fine"
  * is not a reason anybody can re-check later. */
 const CHO_PHEP = new Map([
+  // An invitation response key reaches only the session motion registry.
+  // The envelope hides its decorative subtree; neither key is display copy.
+  ["rudi/asset-pack/react-native/AnimatedEnvelope.tsx", ["eventKey ?? confirmedEventId"]],
+  // The retained comment attempt identifies a retry, not its author or body.
+  // It is persisted with the draft and submitted as the logical request id.
+  ["rudi/community/Comments.tsx", ["initialDraft?.logical_id ?? newAttempt().key"]],
   // ADR-0027: these are persisted anchor references, never display fallbacks.
   ["rudi/hanh-trinh/SoHanhTrinh.tsx", ["selected ? null : editStop.id"]],
   ["rudi/hanh-trinh/ke-hoach.ts", [

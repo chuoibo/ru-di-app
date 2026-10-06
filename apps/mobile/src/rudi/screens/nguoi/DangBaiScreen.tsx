@@ -45,6 +45,7 @@ export function DangBaiScreen() {
   const [muc, setMuc] = useState<Audience>(MAC_DINH_NGUOI_DOC);
   const [nhom, setNhom] = useState<NhomTomTat[]>([]);
   const [nhomChon, setNhomChon] = useState<string | null>(null);
+  const posting = useRef(false);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
   // ADR-0022 §2.1: a picture of one's own goes up first, as a personal
@@ -109,39 +110,35 @@ export function DangBaiScreen() {
   const guiDuoc = phien !== null && coTheDang(form) && !dangGui;
 
   const gui = async () => {
-    if (phien === null) return;
-    setDangGui(true);
+    if (phien === null || posting.current || !coTheDang(form)) return;
+    posting.current = true; setDangGui(true);
     setLoi(null);
     let uploadFinished = false;
     try {
       let imageUrl = anhDaTai;
       if (anh !== null) {
-        try {
-          const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
-          imageUrl = daTai.url;
-          setAnhDaTai(daTai.url);
-          uploadFinished = true;
-        } finally {
-          // `nenVaDung` deletes the picked file even when upload fails.
-          setAnh(null);
-        }
+        const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+        imageUrl = daTai.url;
+        setAnhDaTai(daTai.url);
+        uploadFinished = true;
+        setAnh(null);
       }
       const key = JSON.stringify({ body: form.body.trim(), audience: form.audience, contextId: form.contextId, imageUrl });
       await guiBai(phien.person_id, { ...form, imageUrl }, attemptFor(attempts.current, key));
       router.replace(`/people/${phien.person_id}`);
     } catch (error) {
-      const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
+      const repickHint = anh !== null && !uploadFinished ? " Ảnh và lời viết vẫn ở đây; bạn thử lại nhé." : "";
       setLoi(loiRaChu(error) + repickHint);
     } finally {
       setGiaiDoan(null);
-      setDangGui(false);
+      posting.current = false; setDangGui(false);
     }
   };
 
   const cauGiaiDoan = giaiDoan === "chuan-bi-anh" ? "Đang chuẩn bị ảnh…" : giaiDoan === "dang-gui" ? "Đang tải ảnh lên…" : null;
 
   return (
-    <RudiScreen testID="dang-bai-screen">
+    <RudiScreen material="quiet" cot="form" avoidKeyboard testID="dang-bai-screen">
       <TopBar title="Đăng bài" />
       {/* The post is a page of a letter: ruled lines, the words in ink (ADR-0037 D1). */}
       <View style={[styles.trangThu, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
@@ -152,6 +149,7 @@ export function DangBaiScreen() {
           onChangeText={setThan}
           placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
           value={than}
+          editable={!dangGui}
         />
       </View>
       {/* ADR-0022 §2.1: one photograph of one's own, optional; it goes up first
@@ -183,7 +181,9 @@ export function DangBaiScreen() {
               accessibilityLabel={`Mức người đọc: ${MUC_NGUOI_DOC[a].nhan}`}
               {...toggleState("radio", chon, () => setMuc(a))}
               key={a}
-              onPress={() => setMuc(a)}
+              disabled={dangGui}
+              aria-disabled={dangGui}
+              onPress={() => { if (!posting.current) setMuc(a); }}
               style={({ pressed }) => [
                 styles.phongBi,
                 { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 },

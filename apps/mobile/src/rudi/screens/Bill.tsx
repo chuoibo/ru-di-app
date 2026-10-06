@@ -9,7 +9,7 @@ import { caHaiDongY } from "../to-giay/so-doi-map";
  * with the state as a word beside each.
  */
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -30,7 +30,6 @@ import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { SoDoChuyen } from "../ui/SoDoChuyen";
 import { TrangSo } from "../ui/TrangSo";
-import {  } from "../../ui/a11y";
 
 /** Transfers by the person paid, in the order they first appear. */
 function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string, T[]][] {
@@ -47,6 +46,7 @@ export function SettlementScreen() {
   // split in a pair (never the current group) showed the current group's
   // ledger under «Xem quyết toán». Only a context the person is active in.
   const mo = session.phien === null ? null : nguCanhMo(session.phien, params.id);
+  if (mo?.kieu === "tu-choi") return <Redirect href="/plan" />;
   if (session.phien !== null && mo?.kieu === "khac") {
     return <QuyetToanLive actorId={session.phien.person_id} contextId={mo.contextId} key={mo.contextId} />;
   }
@@ -56,7 +56,7 @@ export function SettlementScreen() {
   if (session.phien === null) return <CuaDangNhap />;
   // Signed in with no group: there is no ledger to settle.
   return (
-    <RudiScreen tone="split" testID="settlement-screen">
+    <RudiScreen material="quiet" tone="split" testID="settlement-screen">
       <TopBar title="Quyết toán" />
       <EmptyState
         action={{ label: "Tới Tin nhắn", onPress: () => router.replace("/messages" as never) }}
@@ -93,6 +93,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     return () => { current = false; };
   }, [actorId, contextId, phien?.contexts]));
   const [moChuyen, setMoChuyen] = useState(false);
+  const [moSoDo, setMoSoDo] = useState(false);
   const [du, setDu] = useState<QuyetToanLive | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   // The group's collection rounds, read beside the balances. `"hong"` keeps
@@ -179,7 +180,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
 
   if (loi !== null) {
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán" />
         <ErrorState body={loi} onRetry={() => void docSo()} title="Chưa đọc được sổ" />
       </RudiScreen>
@@ -187,7 +188,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   }
   if (du === null) {
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="45%" lineHeight={24} lines={2} />
@@ -201,7 +202,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   if (laDoi && !moChuyen) {
     const chung = dongChiTieuChung(du.nguoi, du.soDu);
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Chi tiêu chung" />
         <Text style={[typography.body, { color: colors.inkSoft }]}>
           {chung.ngangNhau
@@ -226,7 +227,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     );
   }
   return (
-    <RudiScreen tone="split" testID="settlement-screen">
+    <RudiScreen material="quiet" tone="split" testID="settlement-screen">
       <TopBar onBack={laDoi ? () => setMoChuyen(false) : undefined} title={laDoi ? "Cân lại chi tiêu" : "Quyết toán"} />
       {/* The ledger's first line, not a hero: the sum the server holds, its
           name beside it, written at the head of the group's ledger page. */}
@@ -243,20 +244,11 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
           <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
         </View>
       </TrangSo>
-      {/* Who pays whom, drawn: ink arrows between the people, no number on
-          them -- the amounts are the rows under it. */}
-      {du.chuyenTien.length > 0 ? (
-        <SoDoChuyen
-          chuyen={du.chuyenTien.map((row) => ({ tu: row.fromId, toi: row.toId }))}
-          nguoi={du.nguoi.map((n) => ({ id: n.personId, ten: n.ten }))}
-          testID="so-do-chuyen"
-        />
-      ) : null}
       <SectionHeader title="Các khoản chuyển" />
       {/* What these rows are is said once, over them: printed under every row
           it read nineteen times on a twenty-person trip (Luật Nói Một Lần). */}
       {du.chuyenTien.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Cách chuyển gọn nhất, tính từ sổ. Chưa ai phải trả gì: mỗi người chỉ nhận phần của mình khi một đợt thu được phát.</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Cách cân lại sổ. Nghĩa vụ và trạng thái từng lượt chuyển nằm trong các đợt thu bên dưới.</Text>
       ) : null}
       {du.chuyenTien.length === 0 ? (
         <Text style={[typography.body, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>
@@ -288,6 +280,25 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
             : "Danh sách này chưa được chứng minh là ngắn nhất."}
         </Text>
       </View>
+      {du.chuyenTien.length > 0 ? (
+        <>
+          <RudiButton
+            expanded={moSoDo}
+            icon={moSoDo ? "chevron-up" : "git-network-outline"}
+            label={moSoDo ? "Gấp sơ đồ chuyển" : "Xem sơ đồ chuyển"}
+            onPress={() => setMoSoDo((mo) => !mo)}
+            tone="split"
+            variant="ghost"
+          />
+          {moSoDo ? (
+            <SoDoChuyen
+              chuyen={du.chuyenTien.map((row) => ({ tu: row.fromId, toi: row.toId }))}
+              nguoi={du.nguoi.map((n) => ({ id: n.personId, ten: n.ten }))}
+              testID="so-do-chuyen"
+            />
+          ) : null}
+        </>
+      ) : null}
       <SectionHeader title="Đợt thu" />
       {dotThu === null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc các đợt thu…</Text> : null}
       {dotThu === "hong" ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa đọc được các đợt thu của nhóm.</Text> : null}

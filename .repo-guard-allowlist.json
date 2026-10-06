@@ -1698,6 +1698,352 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B9 · Kỷ niệm · Sổ chuyến đi · Hồ sơ · Cài đặt): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», kèo và ảnh do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-branch-384.webp",
+      "sha256": "85c20425bc13828baec40f8524693cd2d0a54079d7c4ea9f5620aa70a3fe0dcc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-branch-768.webp",
+      "sha256": "eaa989715f900fe3684a5f2cf3893e82048638bc7a5550d4af0eb58e89b5d457",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-branch.webp",
+      "sha256": "63dd2eea0b05b7c07d0bfd6104445341a732741fe28f52268060dae92545d599",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-cover-384.webp",
+      "sha256": "3a22407605fbcb3075f95ef4486b7343e028a744c160ec53a05003bd49b47366",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-cover-768.webp",
+      "sha256": "8e932b116e9119749b9c794ca399e09b4684e6a918fa1aefc8ab123bb70668f0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-cover.webp",
+      "sha256": "e37c3676a29332304d482f3b984726f7431a1ef4a4e18f98d58e12f126a2255a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-pines-384.webp",
+      "sha256": "b698360464898beba14ec1513aa784335221c6980ef295c2ac12b5b1ed8d8ea7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-pines-768.webp",
+      "sha256": "5dcaaea3c81b1bd21dbb8e0ea2d545cd0f040222fa452acbfe9beae2b61cd81b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/decor/decor-pines.webp",
+      "sha256": "26ddc2f163b600f2251fb5c3825557c49015534326974edfb37e11e674c2dc39",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-atelier-384.webp",
+      "sha256": "2e077878cd0937d91a805108a372b5ebbcca711b60a5357bc4b67c9cdce54a54",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-atelier-768.webp",
+      "sha256": "03b2b8399e164bbceeb573bac4f2a752d451fd5f40ef1004c7add777f8fc51e1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-atelier.webp",
+      "sha256": "b3bcb76ca401417233be98fe7c39de8560af8a2c976f5b91a8a578910798c87a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-cafe-384.webp",
+      "sha256": "cc1e8cf8845da1a28df61e4c667fc8c32bca55c5da77e8fc1285f4116f578feb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-cafe-768.webp",
+      "sha256": "d07adddbf432d47ff171590e5cb30bfbe5939417e316aad31a0824eb3c2f148a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-cafe.webp",
+      "sha256": "b27a43770f42c3a5acb529e7a95903aace6364320c9aa0e5f8f28dac380d0754",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-coast-384.webp",
+      "sha256": "00cc177258c199a939e056c1f65e8155d19d571ecfc67fdc401819917645bc46",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-coast-768.webp",
+      "sha256": "cfe62e15010680be1be01e630a29bc830e6bf0b1720b1ad317a8f1bd8ed92c7c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-coast.webp",
+      "sha256": "970e1914a62e25147deac915254296448ca749ee78b7df7e19ee2c96fbb4070c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-hills-384.webp",
+      "sha256": "4ae397571458866ae8174177e20ff54f0e1585fb90c19a6cf9e184ec08c93891",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-hills-768.webp",
+      "sha256": "812aacfa7a459a2012b2b0addc0ebaa4d899710496ca502be7f9556a1063067b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-hills.webp",
+      "sha256": "bf160d8f1853ec40b98dec82033a12e4755300e5e825a0d2843ac1019d4229c2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-lanterns-384.webp",
+      "sha256": "1f71c6e45878401681d20b059462a8e072ab591b59bbfd27b1e9186c1b94be43",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-lanterns-768.webp",
+      "sha256": "e5e2b87bfc2e8bca8cdd7053557385df9af7f978a575c333f57c7aa2cf9338ab",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-lanterns.webp",
+      "sha256": "c16880795de3688aefaf8af731d410df7f15e55ddeee4f6b78b58832816753f0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-street-384.webp",
+      "sha256": "a7435c80d1d5d2ab7492366edc6e844fc551ed9c1664235a193c5bcac4cc4e4f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-street-768.webp",
+      "sha256": "8204906c9bd6518ee67c854760280f5fc48df6475186e61d19f14666546f5afe",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/scene-street.webp",
+      "sha256": "510d78a40e8335846e8152409881fcb6c432e3bc8bf325ceccf6f9136df7c6ff",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-keeps-384.webp",
+      "sha256": "21606ccdff151f48750d8674032a4f7759095580143cfde72015b7de6583e4a2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-keeps-768.webp",
+      "sha256": "b79483049ef8353dcb2a8bb33233aff7f35a3174133ffa44e1dbe157fdef4ba1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-keeps.webp",
+      "sha256": "7df260b95a92ad274282fd8a236c5c8a240cb8cb0fb3b31e2c60efd2cc42ae28",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-map-384.webp",
+      "sha256": "75d3f93d0849af0625aaf0c254a7fb8f933dd261b36879a4393ab105c0b74bc2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-map-768.webp",
+      "sha256": "cb3fe812031e3e8e728addf8482a53012038abf7ab2414c3be4417949d9ea3c8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-map.webp",
+      "sha256": "03dbbee4c5b453c3d0ea015793df097916f647d6330d9eac6a6dca8da88d4e54",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-memory-384.webp",
+      "sha256": "5ea15d3e53866419fe54f34fe81d472d3e2acb227d0a11878c2be60f8f3ff27e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-memory-768.webp",
+      "sha256": "0b2380ce9d19ced28f3829fb695a67e9cde848af04ea34c52e3af9554fa2f7e0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/illustrations/spot-memory.webp",
+      "sha256": "ede361212c31455b0cd887dbd3f223c11d82792c362b22ba982a13d7e67449a0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork sản phẩm đã chốt từ bộ Nếp production-assets v1 ngày 05/10/2026; checksum bàn giao đã kiểm. Chỉ minh hoạ/decor, không dữ liệu hay ảnh người dùng. Ghim riêng đường dẫn và SHA; không bao gồm master PNG hoặc evidence."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/source/icon-geometry.json",
+      "sha256": "45ee2665d9d6f6931fc4d03750c5ff19dbcda4a7b01ea4520db170741ac82e1b",
+      "rules": [
+        "long-number",
+        "vn-phone"
+      ],
+      "reason": "Geometry SVG công khai giữ nguyên từng byte từ production-assets đã được bàn giao và QC; số thập phân trong tọa độ/path bị nhận nhầm thành số dài/số điện thoại. Không có dữ liệu người dùng. Pin đúng path/hash, chỉ miễn hai rule nội dung này; không đổi geometry hay scanner."
+    },
+    {
+      "path": "apps/mobile/src/rudi/asset-pack/source/paper-geometry.json",
+      "sha256": "313241bae60dfd6d56269a1c5bd1d09f06113fce7511cb344c2b5ae8d1493491",
+      "rules": [
+        "long-number",
+        "vn-phone"
+      ],
+      "reason": "Geometry SVG công khai giữ nguyên từng byte từ production-assets đã được bàn giao và QC; số thập phân trong tọa độ/path bị nhận nhầm thành số dài/số điện thoại. Không có dữ liệu người dùng. Pin đúng path/hash, chỉ miễn hai rule nội dung này; không đổi geometry hay scanner."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/LAYER-ACTION-COVERAGE.md",
+      "sha256": "f33e961c7d4d2b1a8e2f3f13b3e5dc6d00bbd635233a93c135f64ee4ba51750c",
+      "rules": [
+        "aggregate-base64-fragments"
+      ],
+      "reason": "Bảng Markdown kiểm kê 700 layer/action source, có đường dẫn TSX/CamelCase lặp và markup; không là payload base64, không có media hay capability thật. Đã duyệt nội dung tổng hợp; pin đúng path/hash và chỉ miễn detector cộng lexical fragment, giữ mọi rule dữ liệu/credential khác."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/ASSET-PROVENANCE.md",
+      "sha256": "93033af7b7fd1ee3b32983a5d6282eae3a3e4b2c1be584ef706b471a32c8cb7d",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/BLOCKERS.md",
+      "sha256": "62349b024b85a266a68c94e6a0591315ade3eb1cd698f24f8aacf89b8080de3d",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/HANDOFF.md",
+      "sha256": "b918110691b4dfbd63d56d30e224c35956dce72a5591339cfb8ae9bb335882d2",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/TEST-RESULTS.md",
+      "sha256": "051f3bc6f99131ed501c2c2fc75d40a78314199eb51e9cafcfb38994040274d7",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
     }
   ]
 }

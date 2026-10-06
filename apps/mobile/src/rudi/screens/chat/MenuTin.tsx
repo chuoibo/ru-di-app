@@ -25,8 +25,10 @@ export function MenuTin({
   onTraLoi,
   onXoa,
   onBaoCao,
+  readOnly = false,
 }: {
   tin: Tin | null;
+  readOnly?: boolean;
   cuaToi: boolean;
   onClose: () => void;
   onPhanUng: (tin: Tin, kind: LoaiPhanUng) => void;
@@ -41,7 +43,7 @@ export function MenuTin({
     if (tin === null) setXacNhanXoa(false);
   }, [tin]);
 
-  const xoaDuoc = cuaToi && tin !== null && (tin.kind === "text" || tin.kind === "image" || tin.kind === "sticker");
+  const xoaDuoc = !readOnly && cuaToi && tin !== null && (tin.kind === "text" || tin.kind === "image" || tin.kind === "sticker");
 
   return (
     <Sheet accessibilityLabel="Tin nhắn" onClose={onClose} open={tin !== null} testID="menu-tin">
@@ -65,7 +67,7 @@ export function MenuTin({
           {/* Six 48dp targets edge to edge: at 320dp the sheet has exactly
               288dp for them, so the bar is a tinted ground, not a bordered pill
               with padding that shrank each to 44 (QA UI-001, F05 menu). */}
-          <View style={[styles.thanhPhanUng, { backgroundColor: colors.paperShade }]}>
+          {!readOnly ? <View style={[styles.thanhPhanUng, { backgroundColor: colors.paperShade }]}>
             {PHAN_UNG.map((p) => (
               <Pressable
                 accessibilityLabel={p.nhan}
@@ -77,8 +79,8 @@ export function MenuTin({
                 <Text style={styles.glyph}>{p.glyph}</Text>
               </Pressable>
             ))}
-          </View>
-          {tin.kind !== "deleted" ? (
+          </View> : <Text style={[typography.caption, { color: colors.inkSoft }]}>Kho cũ · chỉ đọc. Có thể sao chép hoặc báo cáo nội dung.</Text>}
+          {!readOnly && tin.kind !== "deleted" ? (
             <ListRow chevron={false} icon="return-up-back-outline" onPress={() => onTraLoi(tin)} title="Trả lời" />
           ) : null}
           {tin.kind === "text" && tin.body ? (

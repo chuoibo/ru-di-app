@@ -1,3 +1,4 @@
+import { AssetIllustration } from "../../ui/AssetIllustration";
 /**
  * Album chuyến đi on a real session (M6): three depths, all read-only.
  *
@@ -46,7 +47,6 @@ import {
 import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Heading, ListRow, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { AlbumAnh } from "./AlbumAnh";
-import { Canh } from "../../ui/art/Canh";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { PhotoViewer, type ViewerPhoto } from "../../ui/PhotoViewer";
@@ -129,7 +129,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
   }, [contextId, phien.person_id]);
 
   return (
-    <RudiScreen cot="doc" testID="trip-album-screen">
+    <RudiScreen material="quiet" cot="doc" testID="trip-album-screen">
       <TopBar subtitle="Mỗi kèo một album" title="Album chuyến đi" />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -141,7 +141,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
       {trang.pha === "xong" && trang.albums.length === 0 ? (
         <EmptyState
           body={cauRong.than}
-          illustration={<Canh id="chua-co-keo" width={168} />}
+          illustration={<AssetIllustration name="spot-memory" width={240} height={204} />}
           kind="first-use"
           layout="inline"
           title={cauRong.tieuDe}
@@ -207,7 +207,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
 
   if (trang.pha === "dang-doc") {
     return (
-      <RudiScreen cot="doc" testID="trip-album-screen">
+      <RudiScreen material="quiet" cot="doc" testID="trip-album-screen">
         <TopBar title="Album" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonCard lines={1} media={240} />
@@ -218,7 +218,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
   }
   if (trang.pha === "hong") {
     return (
-      <RudiScreen cot="doc" testID="trip-album-screen">
+      <RudiScreen material="quiet" cot="doc" testID="trip-album-screen">
         <TopBar title="Album" />
         <ErrorState body={trang.loi} onRetry={() => { setTrang({ pha: "dang-doc" }); void layAlbum(contextId, outingId, me).then((album) => setTrang({ pha: "xong", album, phim: null, dangDung: false, loiPhim: null })).catch((error: unknown) => setTrang({ pha: "hong", loi: loiRaChu(error) })); }} title="Chưa mở được album" />
       </RudiScreen>
@@ -230,7 +230,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
     return source === null ? [] : [{ id: photo.memory_id, source, caption: photo.caption || "Khoảnh khắc của nhóm", created_at: photo.created_at }];
   });
   return (
-    <RudiScreen cot="doc" testID="trip-album-screen">
+    <RudiScreen material="quiet" cot="doc" testID="trip-album-screen">
       {viewer ? <PhotoViewer photos={viewer.photos} initialIndex={viewer.index} title={viewer.title} onClose={() => setViewer(null)} /> : null}
       <TopBar title="Album" />
       <Heading title={a.title} subtitle={`${cauKhoang(a, ngayChuyen[outingId])} · ${cauThongKeAlbum(a)}`} />
@@ -238,7 +238,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
       {photos.length === 0 ? (
         <EmptyState
           body="Thả khoảnh khắc lên tường nhóm trong những ngày này là ảnh về đây."
-          illustration={<Canh id="chua-co-anh" width={168} />}
+          illustration={<AssetIllustration name="spot-memory" width={240} height={204} />}
           kind="first-use"
           layout="inline"
           title="Chưa có khoảnh khắc"

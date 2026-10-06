@@ -44,7 +44,7 @@ test("thành viên: hỏi trước khi tự bỏ quyền, nút có tên người
   assert.match(man, /router\.push\(`\/people\/\$\{tv\.person_id\}`/);
   assert.match(man, /if \(nguoiLap === tv\.person_id\) return "Người lập nhóm"/);
   assert.doesNotMatch(man, /tv\.role === "admin" && tv\.state === "active" \? "Người lập nhóm"/, "không gán «Người lập nhóm» cho mọi quản trị");
-  assert.match(man, /<RudiScreen cot="doc"/);
+  assert.match(man, /<RudiScreen[^>]*cot="doc"/);
   assert.match(doc("screens/friends/Friends.tsx"), /cot="doc"/);
   // Two columns where 280dp each fit: the action stays beside its name on a tablet.
   assert.match(doc("ui/LuoiNguoi.tsx"), /gridFor\(rong, 280, 16, 2\)/);

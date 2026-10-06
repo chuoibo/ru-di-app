@@ -178,6 +178,8 @@ export function bongGiay(cao: CaoGiayTheme, dark: boolean, goc = 0): ViewStyle {
 
 /** The light palette as static values, for artwork that never switches scheme. */
 export const mauSang = tokens.color.light;
+/** Decorative pigments from the accepted asset pack; never text/control ink. */
+export const mauVatLieuAsset = { ochre: "#b98b53", ochreDark: "#cda878" };
 /** Brand tier (glow / coral / rose / violet); large areas only, never under small text. */
 export const mauThuongHieu = tokens.brand;
 /** Ink on photos, gradients and tone fills. */

@@ -59,17 +59,19 @@ test("số thành viên đọc lại khi người vừa vào nhắn, kể cả k
   assert.match(LIVE, /setDangOIds\(new Set\(ds\.filter\(\(tv\) => tv\.state === "active"\)/);
 });
 
-test("trang rỗng là phần co giãn của cột, ô soạn luôn ở đáy", () => {
+test("kho cũ rỗng co giãn, vật thể nhường chỗ và trạng thái chỉ đọc ở đáy", () => {
   assert.match(LIVE, /<ScrollView contentContainerStyle=\{\[styles\.rongNoi/);
   assert.match(LIVE, /rong: \{ flex: 1 \}/);
   assert.match(LIVE, /style=\{rongTrang \? styles\.dsRong : styles\.ds\}/);
-  assert.match(LIVE, /thapCuaSo \|\| khay !== null \? null : <Nep/, "hình vẽ nhường chỗ trước");
+  assert.match(LIVE, /thapCuaSo \|\| khay !== null \? null : <PaperObject/, "hình vẽ nhường chỗ trước");
   assert.match(LIVE, /const gonDau = khay !== null && thapCuaSo;/);
   assert.match(LIVE, /\(toHen \|\| keoTrenBang\) && !gonDau/, "dải ghim nhường chỗ cho khay ở cửa sổ thấp");
   assert.match(LIVE, /!khongNhanTin && !gonDau \? <HangToGiaySong/, "hàng tờ giấy cũng vậy");
   assert.match(LIVE, /veCuoi: \{ position: "absolute"/, "nút «Tin mới nhất» nổi trên danh sách, không lấy chỗ của nó");
   assert.match(doc("rudi", "screens", "chat", "SoHen.tsx"), /tools: \{[^}]*flexShrink: 1, minHeight: 0/, "khay co lại thay vì đẩy ô soạn ra ngoài");
   assert.match(LIVE, /label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\}/);
+  assert.match(LIVE, /testID="chat-archive-read-only"/);
+  assert.match(LIVE, /readOnly: archiveReadOnly/);
 });
 
 test("lớp phòng giữ nguyên khi quay lại, và phòng hai người tự đọc lại", () => {

@@ -7,7 +7,7 @@
  * việc vào một nút là cách nhanh nhất để ai đó tự khoá mình ra ngoài.
  */
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -19,6 +19,8 @@ import { Stamp } from "../../ui/Stamp";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ngayVN } from "../../ngay-viet";
 
 type Trang =
@@ -31,6 +33,9 @@ export function PhienScreen() {
   const { phien: sessionCuaToi, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangThuHoi, setDangThuHoi] = useState<string | null>(null);
+  const working = useRef(false);
+  const [hoiThuHoi, setHoiThuHoi] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ id: string; cau: string } | null>(null);
   const [attempts] = useState<Record<string, Attempt>>({});
 
   const personId = sessionCuaToi?.person_id ?? "";
@@ -55,25 +60,23 @@ export function PhienScreen() {
   );
 
   const thuHoi = async (id: string) => {
-    if (dangThuHoi !== null) return;
+    if (working.current) return;
+    working.current = true; setActionError(null);
     setDangThuHoi(id);
     try {
       await thuHoiPhien(id, personId, attemptFor(attempts, `thu-hoi:${id}`));
-      await nap();
+      setHoiThuHoi(null); await nap();
     } catch (error) {
-      setTrang({
-        pha: "hong",
-        loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-      });
+      setActionError({ id, cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
     } finally {
-      setDangThuHoi(null);
+      working.current = false; setDangThuHoi(null);
     }
   };
 
   if (!phienDaDoc) return null;
 
   return (
-    <RudiScreen testID="phien-screen">
+    <RudiScreen material="quiet" cot="form" testID="phien-screen">
       <TopBar title="Đăng nhập & phiên" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>
         Mỗi lần đăng nhập là một phiên. Đăng xuất một phiên ở đây thì máy đó phải đăng nhập lại.
@@ -118,10 +121,12 @@ export function PhienScreen() {
                   full={false}
                   label="Đăng xuất phiên đó"
                   loading={dangThuHoi === row.id}
-                  onPress={() => void thuHoi(row.id)}
+                  onPress={() => { setHoiThuHoi(row.id); setActionError(null); }}
                   variant="outline"
                 />
               )}
+              {hoiThuHoi === row.id && !row.current ? <View style={{ width: "100%" }}><HoiTaiHang cau="Đăng xuất phiên này? Máy dùng phiên đó sẽ phải đăng nhập lại." dangLam={dangThuHoi === row.id} nhan="Đăng xuất phiên đó" onDongY={() => void thuHoi(row.id)} onThoi={() => setHoiThuHoi(null)}/></View> : null}
+              <CauTaiCho cau={actionError?.id === row.id ? actionError.cau : null}/>
             </View>
           ))}
         </NhomHang>
@@ -132,6 +137,6 @@ export function PhienScreen() {
 
 const styles = StyleSheet.create({
   khoi: { gap: 12 },
-  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
-  hangChu: { flex: 1, gap: 2 },
+  hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 56 },
+  hangChu: { flex: 1, minWidth: 150, gap: 2 },
 });

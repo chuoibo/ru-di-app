@@ -1,18 +1,3 @@
-/**
- * THESIS: The group unfolds its day as a map and a page from its trip notebook.
- * OWN-WORLD: Existing paper, ink, coral and place sketches; no new palette.
- * STORY: Read the route, inspect a stop, compare changes before keeping them.
- * FIRST VIEWPORT: Geography above a compact, collapsible day page; wide screens
- * keep the page beside the map. Important times remain with their stops.
- * FORM: Approved itinerary extension, code-led; no replacement visual world.
- * Inherits the app's roll, never re-rolled: v3 «Sân khấu giấy» (ADR-0037,
- * app/_layout.tsx) on the v2 seed c8e88116.
- * FINISH (bản đồ hành trình): stops are paper stamps that say their state by shape and
- * word (reached = pencil + tick, next = coral, lifted); the plan is one ink
- * line with its minutes on it, a draft is a broken pencil line; the page head
- * names the day and stamps what the line is -- a real road, a draft, or «chưa
- * tính được» -- so a straight line is never read as a road.
- */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,7 +22,7 @@ export type NeoNgay = { xuatPhat: string | null; ketThuc: string | null; veDiemD
 
 import { useMotion } from "../ui/useMotion";
 import { useNhuongChoNep } from "../nep/NepProvider";
-import { Canh } from "../ui/art/Canh";
+import { AssetIllustration } from "../asset-pack/react-native/AssetIllustration";
 import { NenGiay } from "../ui/NenGiay";
 import { MoNgang } from "../ui/MoNgang";
 import { hinhTrangXe } from "../art/giay";
@@ -384,7 +369,7 @@ export function ManHinhHanhTrinh({
               {/* The drawing only where the window has room for it: on a
                   short one it pushed the sentence and «Về Lịch trình» off the
                   page (QA UI-033, 390×460). */}
-              {availableHeight >= 560 ? <Canh id="tim-khong-ra" width={144} /> : null}
+              {availableHeight >= 560 ? <AssetIllustration name="spot-map" width={144} height={108} resolution="small" /> : null}
               {chuaXep && soChuaXep > 0 ? (
                 <>
                   <Text style={[typography.h2, { color: colors.ink }]}>Ngày này chưa có chặng nào</Text>

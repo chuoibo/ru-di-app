@@ -83,7 +83,7 @@ import { BanGanMon } from "../../ui/BanGanMon";
 import { BAN_DAI_TU } from "../../ui/hinh-tien";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { CuongPhieu } from "../../ui/CuongPhieu";
-import { DauLon } from "../../ui/DauLon";
+import { LedgerStamp } from "../../asset-pack/react-native/LedgerStamp";
 import { HaiCot } from "../../ui/HaiCot";
 import { DongHoaDon, HoaDonGiay, TieuDeHoaDon, VachCat } from "../../ui/HoaDonGiay";
 import { KhungAnh } from "../../ui/KhungAnh";
@@ -440,6 +440,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
 
   return (
     <RudiScreen
+      material="quiet"
       bottomInset={Math.max(insets.bottom, 16) + 40}
       cuonVeDau={buoc.ten}
       footer={
@@ -925,7 +926,9 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                 // strip of the step before (B4 finish review).
                 <DongSo key={h.id} nhan={h.id === buoc.nguoiTraId ? "Đã trả" : undefined} phai={h.tien} trai={h.ten} />
               ))}
-              <DauLon co="vua" dong key={buoc.expenseVersionId} nhan="Đã ghi sổ" style={styles.dauGhi} tre={300} />
+              <View style={styles.dauGhi}>
+                <LedgerStamp confirmedEventId={buoc.expenseVersionId} color={colors.split} textStyle={typography.stamp} />
+              </View>
             </TrangSo>
           </View>
           <RudiButton icon="wallet-outline" label="Xem quyết toán" onPress={() => router.replace(`/settlements/${ctx}` as never)} tone="split" />

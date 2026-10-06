@@ -88,7 +88,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
 
   if (panel === "account") {
     return (
-      <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
+      <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Tài khoản" />
         <Text style={[typography.body, { color: colors.ink }]}>
           Đang xem với tư cách {phien.profile?.display_name ?? "bạn"}.
@@ -113,7 +113,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
   if (panel === "saved") {
     return (
-      <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
+      <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
           title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
@@ -132,7 +132,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
 
   return (
-    <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
+    <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
       <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
@@ -281,7 +281,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
 
   if (loi !== null) {
     return (
-      <RudiScreen tone="split" testID="finance-screen">
+      <RudiScreen material="quiet" tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
         <ErrorState body={loi} onRetry={() => setLan((n) => n + 1)} title="Chưa đọc được sổ" />
       </RudiScreen>
@@ -289,7 +289,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
   }
   if (du === null) {
     return (
-      <RudiScreen tone="split" testID="finance-screen">
+      <RudiScreen material="quiet" tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="50%" lineHeight={28} lines={2} />
@@ -300,7 +300,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
   }
   const gioiHan = ghiChuGioiHan(du.movements);
   return (
-    <RudiScreen tone="split" testID="finance-screen">
+    <RudiScreen material="quiet" tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
       {/* The one answer first, as the first line of a ledger: what this
           person's share of everything has come to, written on the ledger page. */}

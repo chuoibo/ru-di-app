@@ -23,7 +23,8 @@ import { useRudiSession } from "../../session";
 import { dangStory } from "../../story/story";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Nep } from "../../ui/art/Nep";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { luiVeVe } from "../../lui-ve";
@@ -41,6 +42,7 @@ const TRAN_CHU_THICH = 200;
 export function DangStoryScreen() {
   const { phien, phienDaDoc } = useRudiSession();
   if (!phienDaDoc) return null;
+  if (!phien) return <CuaDangNhap tiep="/stories/new" />;
   return <DangStory key={phien?.person_id ?? "-"} />;
 }
 
@@ -52,14 +54,16 @@ function DangStory() {
   const khoaNhap = khoaNhapDang("story", phien?.person_id ?? "-", null);
   const [nhapCu] = useState(() => docNhapDang(khoaNhap));
   const [anh, setAnh] = useState<TempPhoto | null>(nhapCu?.anh ?? null);
-  const [anhDaTai, setAnhDaTai] = useState<string | null>(null);
+  const [anhDaTai, setAnhDaTai] = useState<string | null>(nhapCu?.anhDaTai ?? null);
   const attempts = useRef<Record<string, Attempt>>({});
   const [chuThich, setChuThich] = useState(nhapCu?.chu ?? "");
   const [conNhapCu, setConNhapCu] = useState(nhapCu !== null);
+  const sendLock = useRef(false);
+  const pickerLock = useRef(false);
   const daDang = useRef(false);
   useEffect(() => {
-    if (!daDang.current) ghiNhapDang(khoaNhap, { anh, chu: chuThich });
-  }, [khoaNhap, anh, chuThich]);
+    if (!daDang.current) ghiNhapDang(khoaNhap, { anh, chu: chuThich, anhDaTai });
+  }, [khoaNhap, anh, chuThich, anhDaTai]);
   const boBanNhap = () => {
     if (anh !== null) void boAnh(anh);
     setAnh(null);
@@ -73,7 +77,8 @@ function DangStory() {
   const [loi, setLoi] = useState<string | null>(null);
 
   const chonAnhMoi = async () => {
-    if (dangGui) return;
+    if (sendLock.current || pickerLock.current) return;
+    pickerLock.current = true;
     setLoi(null);
     try {
       const daChon = await chonAnh();
@@ -83,7 +88,7 @@ function DangStory() {
       setAnh(daChon);
     } catch (error) {
       setLoi(loiRaChu(error));
-    }
+    } finally { pickerLock.current = false; }
   };
 
   const boAnhDaChon = async () => {
@@ -96,21 +101,20 @@ function DangStory() {
   const guiDuoc = phien !== null && (anh !== null || anhDaTai !== null) && chuThich.length <= TRAN_CHU_THICH && !dangGui;
 
   const gui = async () => {
-    if (phien === null || (anh === null && anhDaTai === null)) return;
+    if (sendLock.current || pickerLock.current || phien === null || (anh === null && anhDaTai === null) || chuThich.length > TRAN_CHU_THICH) return;
+    sendLock.current = true;
     setDangGui(true);
     setLoi(null);
     let uploadFinished = false;
     try {
       let imageUrl = anhDaTai;
       if (anh !== null) {
-        try {
-          const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
-          imageUrl = daTai.url;
-          setAnhDaTai(daTai.url);
-          uploadFinished = true;
-        } finally {
-          setAnh(null);
-        }
+        const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+        imageUrl = daTai.url;
+        setAnhDaTai(daTai.url);
+        ghiNhapDang(khoaNhap, { anh: null, chu: chuThich, anhDaTai: daTai.url });
+        uploadFinished = true;
+        setAnh(null);
       }
       if (imageUrl === null) return;
       await dangStory(imageUrl, chuThich, phien.person_id, attemptFor(attempts.current, JSON.stringify({ imageUrl, chuThich })));
@@ -118,10 +122,11 @@ function DangStory() {
       boNhapDang(khoaNhap);
       luiVeVe(router as never, "/messages");
     } catch (error) {
-      const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
+      const repickHint = anh !== null && !uploadFinished ? " Ảnh và chú thích vẫn còn để bạn thử lại." : "";
       setLoi(loiRaChu(error) + repickHint);
     } finally {
       setGiaiDoan(null);
+      sendLock.current = false;
       setDangGui(false);
     }
   };
@@ -130,13 +135,13 @@ function DangStory() {
   const conLai = TRAN_CHU_THICH - chuThich.length;
 
   return (
-    <RudiScreen testID="dang-story-screen">
+    <RudiScreen material="quiet" cot="doc" testID="dang-story-screen">
       <TopBar title="Đăng story" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
-      {conNhapCu && (anh !== null || chuThich.trim() !== "") ? (
+      {conNhapCu && (anh !== null || anhDaTai !== null || chuThich.trim() !== "") ? (
         <View style={styles.nhapCu} testID="dang-story-nhap-cu">
           <Text style={[typography.note, styles.flexNhap, { color: colors.inkSoft }]}>Bản nháp lần trước còn đây.</Text>
-          <RudiButton compact full={false} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
+          <RudiButton compact full={false} disabled={dangGui} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
         </View>
       ) : null}
       {/* A polaroid that lasts a day (ADR-0037 D1): the picture, then the
@@ -150,7 +155,7 @@ function DangStory() {
         ) : null}
         {anh === null && anhDaTai === null ? (
           <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
-            <Nep gap="trang" pose="giu-khung" size={88} />
+            <PaperObject name="photo-stack" width={140} />
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh nào. Chạm để chọn.</Text>
           </Pressable>
         ) : null}
@@ -161,6 +166,7 @@ function DangStory() {
           accessibilityLabel="Ô chú thích"
           label="Chú thích, nếu muốn"
           maxLength={TRAN_CHU_THICH}
+          editable={!dangGui}
           multiline
           numberOfLines={2}
           onChangeText={setChuThich}

@@ -10,7 +10,7 @@
  */
 import type { TempPhoto } from "./chon-anh";
 
-export type NhapDang = { anh: TempPhoto | null; chu: string };
+export type NhapDang = { anh: TempPhoto | null; chu: string; anhDaTai?: string | null };
 
 const kho = new Map<string, NhapDang>();
 
@@ -24,7 +24,7 @@ export function docNhapDang(khoa: string): NhapDang | null {
 
 /** Keeps the draft; an empty one (no photo, no words) is not a draft. */
 export function ghiNhapDang(khoa: string, nhap: NhapDang): void {
-  if (nhap.anh === null && nhap.chu.trim() === "") kho.delete(khoa);
+  if (nhap.anh === null && !nhap.anhDaTai && nhap.chu.trim() === "") kho.delete(khoa);
   else kho.set(khoa, nhap);
 }
 

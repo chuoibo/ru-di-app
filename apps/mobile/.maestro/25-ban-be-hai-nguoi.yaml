@@ -46,11 +46,11 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Thêm bạn bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Ô username bạn"
+    visible: "Tên tài khoản của bạn ấy"
     timeout: 30000
 - takeScreenshot: 25-c-nhap
 # Dạng username sai bị chặn ngay trên máy, không gọi máy chủ.
-- tapOn: "Ô username bạn"
+- tapOn: "Tên tài khoản của bạn ấy"
 - inputText: "x!"
 - hideKeyboard
 - tapOn: "Tìm"
@@ -58,7 +58,7 @@ appId: com.lakiet.rudi
     visible: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới."
     timeout: 30000
 - takeScreenshot: 25-c-hong
-- tapOn: "Ô username bạn"
+- tapOn: "Tên tài khoản của bạn ấy"
 - eraseText: 5
 - inputText: "${TK_D}"
 - hideKeyboard
@@ -67,7 +67,7 @@ appId: com.lakiet.rudi
 # một tên do mô hình hay client đoán. Người tìm thấy hiện bằng đúng hàng người
 # của danh sách bạn.
 - extendedWaitUntil:
-    visible: "Tìm thấy theo username"
+    visible: "Người nhận lời mời"
     timeout: 30000
 - assertVisible: "Ban QA"
 - takeScreenshot: 25-c-tim-thay

@@ -46,10 +46,12 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Dữ liệu demo"
 - takeScreenshot: 24-danh-sach-nhom
 - tapOn: "Hoi QA"
-# M3: bấm hàng mở CHAT; roster nằm sau icon «Thành viên nhóm» ở header.
+# The room is the read-only legacy archive; membership controls stay available.
+# This flow checks invitation/profile behavior, not plaintext chat writes.
 - extendedWaitUntil:
-    visible: "Ô soạn tin"
+    visible: "Kho tin nhắn cũ chỉ đọc"
     timeout: 60000
+- assertNotVisible: "Ô soạn tin"
 - tapOn: "Thành viên nhóm"
 - extendedWaitUntil:
     visible: "Thành viên"
@@ -62,14 +64,19 @@ appId: com.lakiet.rudi
 # membership `invited`. Không bịa id, không đặt tên thay ai.
 - tapOn: "Mời bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Mời bằng username"
+    visible: "Gửi một lời rủ"
     timeout: 30000
-- tapOn: "Tên tài khoản"
+- tapOn: "Tên tài khoản của người nhận"
 - inputText: "${TK_D}"
 - hideKeyboard
-- tapOn: "Gửi lời mời"
+- tapOn: "Tìm người nhận"
 - extendedWaitUntil:
-    visible: "Đã gửi lời mời tới Ban QA."
+    visible: "Gửi lời mời tới .*"
+    timeout: 30000
+- assertVisible: "Ban QA"
+- tapOn: "Gửi lời mời tới .*"
+- extendedWaitUntil:
+    visible: "Đã gửi lời mời tới .*"
     timeout: 60000
 - takeScreenshot: 24-da-moi
 - tapOn: "Về nhóm"
@@ -82,7 +89,7 @@ appId: com.lakiet.rudi
 # Cá nhân: hồ sơ của máy chủ, không phải «Minh Anh · Cấp 12».
 - tapOn: "Quay lại"
 - extendedWaitUntil:
-    visible: "Ô soạn tin"
+    visible: "Kho tin nhắn cũ chỉ đọc"
     timeout: 30000
 - tapOn: "Quay lại"
 - extendedWaitUntil:
