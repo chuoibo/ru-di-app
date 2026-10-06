@@ -39,10 +39,11 @@ theo từng tin · (và một lỗi ở lần trước tóm tắt). Mỗi bản 
   chatlegacychange, aigate, dieuchinh, routes, httpapi, cmd/core, db) · `npm test` mobile 1566/1566 ·
   `scripts/chat_drill.sh` ĐẠT (Go drill + engine 2/2) · `gate.sh crypto` ĐẠT ở `a6969181` (34 canary, SONAME; Rust
   không đổi sau đó).
-- **Parity**: ở `1d565850` chế độ dev 348 kịch bản / 10671 bước, 0 khác biệt; lần canary «identity» lệch 6 chỗ, cùng
-  một dấu thời gian `w1/reports` (`f6` với `f0`). Go (`pyjson.DateTime`) bỏ phần lẻ khi micro-giây = 0 đúng như
-  Python, nên đây là giá trị ngẫu nhiên hợp lệ, không phải lệch Go↔Python — nhưng chưa chứng minh. Chế độ prod
-  chưa chạy. Lần ở `28eb032f` bị dừng chủ động (mục dưới).
+- **Parity ở `fc0b85cf`** (06/10, khung giờ phiên audit nhường, có bộ canh RAM ≥ 4 GiB): dev 348 kịch bản / 10671
+  bước, làn phụ 1/35, prod 23/602 — cả ba **0 khác biệt**; canary «identity» ok ở mọi bảng, mọi chế độ hư hại đều bị
+  bắt. (Lần ở `1d565850` có một lần canary lệch dấu thời gian `w1/reports` `f6`/`f0`; Go bỏ phần lẻ khi micro-giây = 0
+  đúng như Python, lần chạy sạch này không lặp lại.)
+- Đã vào `main` local bằng `ff-only` ở `fc0b85cf` (38 commit từ `811c893f`); chưa push `origin`.
 
 ## Sự cố: tải của phiên này làm soak 24 giờ của audit tự huỷ
 
@@ -53,12 +54,11 @@ memory `feedback-tai-may-khi-audit-chay`.
 
 ## Còn mở
 
-1. Parity sạch ở SHA cuối (cả dev và prod) trước khi đưa nhánh lên `main`.
-2. Push phía app (`expo-notifications`): cần `google-services.json` (FCM) và khoá APNs của chủ sản phẩm.
-3. Chuyển lịch sử sang thiết bị mới, mã khôi phục, mã an toàn so ngoài kênh đầy đủ (ADR-0057 §1.3, §4.2–§4.3).
-4. iOS: Swift chưa biên dịch lần nào; cần EAS/macOS.
-5. Làn v2 còn hỏi lại mỗi 3 giây; route `/stream` chưa có client (G5, PER-FE-01).
-6. Hiệu năng: mỗi lần gửi `UPDATE chat_v2_conversations SET last_sequence=last_sequence+1` trên một hàng mỗi phòng —
+1. Push phía app (`expo-notifications`): cần `google-services.json` (FCM) và khoá APNs của chủ sản phẩm.
+2. Chuyển lịch sử sang thiết bị mới, mã khôi phục, mã an toàn so ngoài kênh đầy đủ (ADR-0057 §1.3, §4.2–§4.3).
+3. iOS: Swift chưa biên dịch lần nào; cần EAS/macOS.
+4. Làn v2 còn hỏi lại mỗi 3 giây; route `/stream` chưa có client (G5, PER-FE-01).
+5. Hiệu năng: mỗi lần gửi `UPDATE chat_v2_conversations SET last_sequence=last_sequence+1` trên một hàng mỗi phòng —
    audit nêu là ứng viên gây xếp hàng khi có một lần chậm (cần đo lại trên máy yên, G5).
-7. AI trong phòng E2EE chưa đo đầu-cuối với mô hình thật (stack e2e không có khoá AI).
-8. Review crypto độc lập và thử nghiệm 5 người (cổng ngoài, ADR-0031).
+6. AI trong phòng E2EE chưa đo đầu-cuối với mô hình thật (stack e2e không có khoá AI).
+7. Review crypto độc lập và thử nghiệm 5 người (cổng ngoài, ADR-0031).
