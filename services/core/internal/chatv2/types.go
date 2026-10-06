@@ -37,12 +37,14 @@ type Envelope struct {
 }
 
 type Event struct {
-	Sequence  int64     `json:"sequence"`
-	Kind      string    `json:"kind"`
-	ActorID   string    `json:"actor_id"`
-	Envelope  *Envelope `json:"envelope,omitempty"`
-	Mark      *Mark     `json:"mark,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	Sequence int64     `json:"sequence"`
+	Kind     string    `json:"kind"`
+	ActorID  string    `json:"actor_id"`
+	Envelope *Envelope `json:"envelope,omitempty"`
+	Mark     *Mark     `json:"mark,omitempty"`
+	// Commit is a roster change with the roster to verify it against (ADR-0057).
+	Commit    *CommitBody `json:"commit,omitempty"`
+	CreatedAt time.Time   `json:"created_at"`
 }
 
 type SendResult struct {

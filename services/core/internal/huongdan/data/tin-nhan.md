@@ -17,8 +17,7 @@ Tab «Tin nhắn» liệt kê các nhóm và các cuộc trò chuyện hai ngư�
 ## Mở một cuộc trò chuyện
 
 1. Chạm vào tên nhóm («Mở nhóm …») hoặc tên người («Mở cuộc trò chuyện với …»).
-2. Kho tin nhắn cũ mở ra để đọc lịch sử. Tin cũ chưa mã hoá đầu cuối; gửi tin, phản ứng, xoá, bỏ phiếu và công cụ AI được đóng ở đây. Luồng chat v2 cần thiết lập khoá E2EE riêng; khi adapter chưa nối, màn này không gửi tin thường để thay thế.
-3. Bạn vẫn có thể mở màn thành viên để mời bạn, mở sổ hai người hoặc tạo một buổi đi từ nhóm này theo quyền hiện có.
+2. Màn chat mở ra. Chat hai người có Rủ Đi AI và công cụ y như nhóm: khay dấu cộng có bình chọn và tờ hẹn, gõ @Rủ Đi trong tin nhắn để gọi Rủ Đi AI. Tờ giấy chỉ có khi hai bạn đã cùng bật trong sổ.
 
 ## Tạo nhóm mới
 

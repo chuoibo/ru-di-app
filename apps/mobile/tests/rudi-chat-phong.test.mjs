@@ -59,7 +59,7 @@ test("số thành viên đọc lại khi người vừa vào nhắn, kể cả k
   assert.match(LIVE, /setDangOIds\(new Set\(ds\.filter\(\(tv\) => tv\.state === "active"\)/);
 });
 
-test("kho cũ rỗng co giãn, vật thể nhường chỗ và trạng thái chỉ đọc ở đáy", () => {
+test("phòng rỗng co giãn, vật thể nhường chỗ và ô soạn ở đáy", () => {
   assert.match(LIVE, /<ScrollView contentContainerStyle=\{\[styles\.rongNoi/);
   assert.match(LIVE, /rong: \{ flex: 1 \}/);
   assert.match(LIVE, /style=\{rongTrang \? styles\.dsRong : styles\.ds\}/);
@@ -70,8 +70,10 @@ test("kho cũ rỗng co giãn, vật thể nhường chỗ và trạng thái ch�
   assert.match(LIVE, /veCuoi: \{ position: "absolute"/, "nút «Tin mới nhất» nổi trên danh sách, không lấy chỗ của nó");
   assert.match(doc("rudi", "screens", "chat", "SoHen.tsx"), /tools: \{[^}]*flexShrink: 1, minHeight: 0/, "khay co lại thay vì đẩy ô soạn ra ngoài");
   assert.match(LIVE, /label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\}/);
-  assert.match(LIVE, /testID="chat-archive-read-only"/);
-  assert.match(LIVE, /readOnly: archiveReadOnly/);
+  assert.match(LIVE, /const v2 = useTinNhanV2\(contextId, personId, lan\.lan !== "v2"\)/);
+  assert.match(LIVE, /const cu = useTinNhan\(contextId, personId, lan\.lan !== "legacy"\)/);
+  assert.match(LIVE, /lan\.lan === "v2" \? hopLanV2\(cu, v2\) : lan\.lan === "legacy" \? cu : khoaLan\(cu, lan\.lan === "dang-xet"\)/);
+  assert.doesNotMatch(LIVE, /archiveReadOnly/, "mỗi phòng phải giữ làn thực, không ép mọi chat thành kho chỉ đọc");
 });
 
 test("lớp phòng giữ nguyên khi quay lại, và phòng hai người tự đọc lại", () => {

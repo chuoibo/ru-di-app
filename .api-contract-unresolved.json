@@ -11,8 +11,8 @@
   "unresolved": [
     {
       "where": "apps/mobile/src/api.ts :: BASE_URL + path",
-      "count": 2,
-      "reason": "Thân của call<T>() và của đường tải ảnh lên — đây LÀ cái phễu mà mọi lời gọi có route đi qua. Route thật nằm ở chỗ gọi call(...), và những chỗ đó cổng đọc được. Bản thân phễu thì không bao giờ đọc được, và cũng không cần."
+      "count": 3,
+      "reason": "Thân của call<T>() và của đường tải ảnh lên — đây LÀ cái phễu mà mọi lời gọi có route đi qua. Route thật nằm ở chỗ gọi call(...), và những chỗ đó cổng đọc được. Bản thân phễu thì không bao giờ đọc được, và cũng không cần. Thứ ba là goiNhiPhan (ADR-0057): phễu cho thân nhị phân của ảnh chat v2 đã niêm; route thật nằm ở chỗ gọi goiNhiPhan(`/v2/chat/media/...`) trong useTinNhanV2.ts."
     },
     {
       "where": "apps/mobile/src/api.ts :: photo.uri",

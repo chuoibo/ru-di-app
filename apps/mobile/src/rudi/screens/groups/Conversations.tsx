@@ -22,6 +22,9 @@ import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
+import { apiV2 } from "../../chat/e2ee/api-v2";
+import { gopTomTatV2 } from "../../chat/e2ee/tom-tat";
+import { xemTruocV2 } from "../../chat/e2ee/useTinNhanV2";
 import { gioPhut, tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { cauLoiMoi, docLoiMoiNhom, loiMoiTruoc, tuChoiLoiMoiNhom, type LoiMoiNhom } from "../../nhom/loi-moi-nhom";
@@ -80,10 +83,17 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const nap = useCallback(async () => {
     const lucBatDau = phienMoiNhat.current;
     try {
-      const nhom = await docNhomCuaToi(lucBatDau.person_id);
+      // End-to-end rooms take their last message and unread count from the
+      // lane's summary and their words from this device (tom-tat.ts); a host
+      // without the lane answers nothing and the list is the legacy one.
+      const [nhom, rooms] = await Promise.all([
+        docNhomCuaToi(lucBatDau.person_id),
+        apiV2.summaries(lucBatDau.person_id).catch(() => []),
+      ]);
+      const xemTruoc = await xemTruocV2(lucBatDau.person_id, rooms.map((r) => r.conversation_id)).catch(() => ({}));
       if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
       setReadError(null);
-      setTrang({ pha: "xong", nhom });
+      setTrang({ pha: "xong", nhom: gopTomTatV2(nhom, rooms, xemTruoc) });
       // An invitation that cannot be read still shows, without a name.
       for (const n of nhom.filter((x) => x.my_state === "invited" && !laPair(x))) {
         docLoiMoiNhom(n.id, phien.person_id)
@@ -183,7 +193,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     <RudiScreen material="quiet" cot="doc" bottomInset="tab" onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" subtitle="Lời mời và kho tin nhắn cũ của bạn" />
+          <Heading title="Tin nhắn" subtitle="Nhóm của bạn" />
         </View>
         {/* Not in the top-right corner: on the development build the
             dev-launcher's floating gear covers it. A compact button beside the
@@ -204,7 +214,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
-          body="Tạo nhóm cho cả hội hoặc nhận lời mời. Lịch sử tin nhắn cũ của nhóm sẽ nằm ở đây."
+          body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
           illustration={<AssetIllustration name="spot-keeps" width={220} height={170} />}
           kind="first-use"
           layout="inline"
@@ -251,8 +261,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                         : nhom.unavailable === true
                           ? "Không còn nhận tin"
                           : laPair(nhom)
-                            ? "Kho riêng · chỉ đọc"
-                            : `${nhom.member_count} thành viên · kho cũ chỉ đọc`}
+                            ? "Nhắn riêng"
+                            : `${nhom.member_count} thành viên`}
                       {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
                     </Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>

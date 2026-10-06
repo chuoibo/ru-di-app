@@ -10,7 +10,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sender = Client::new(&id(1), &id(11))?;
     let mut peer = Client::new(&id(2), &id(22))?;
     sender.create_group(&id(100))?;
-    let invitation = sender.stage_add(&id(200), &[(peer.identity(), peer.key_package()?)])?;
+    let invitation = sender.stage_add(
+        &id(100),
+        &id(200),
+        &[(peer.identity(), peer.key_package()?)],
+    )?;
     peer.join_group(
         &id(100),
         invitation.welcome.as_ref().ok_or("missing welcome")?,
@@ -18,6 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     sender.acknowledge_commit(&invitation.envelope)?;
     let envelope = sender.encrypt(
+        &id(100),
         &id(300),
         Operation::Text {
             body: "Synthetic Go/MLS interoperability canary".into(),

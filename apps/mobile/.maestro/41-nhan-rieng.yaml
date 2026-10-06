@@ -1,11 +1,8 @@
-# BLOCKED for writes on the current legacy archive adapter.
-# Keep the original message/persistence/server assertions until an actual
-# E2EE v2 flow is implemented and independently verified; do not seed a pass.
 # Nhắn riêng 1:1 (L2, ADR-0021 §2.5) trên API prod.
 #
 # Chạy SAU flow 39 trong cùng lượt. Ai đang đăng nhập (C sau 37/39, hoặc D nếu
 # app đang ở màn chào) cũng là bạn của người kia từ flow 25. Cá nhân → «Bạn bè,
-# lời mời đã nhận và đã gửi» → nút «Mở kho tin cũ và không gian với <tên>» trên hàng bạn → màn chat
+# lời mời đã nhận và đã gửi» → nút «Nhắn tin cho <tên>» trên hàng bạn → màn chat
 # mang TÊN NGƯỜI KIA, không có pill «n thành viên · xem và mời» (không mời ai vào
 # một cuộc trò chuyện riêng được) mà có pill «Xem hồ sơ» → gõ «Chao rieng» → gửi.
 # Về tab Tin nhắn: hàng «Nhắn riêng» đọc «Bạn: Chao rieng» → mở lại → vẫn là
@@ -48,9 +45,9 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
 - extendedWaitUntil:
-    visible: "Mở kho tin cũ và không gian với .*"
+    visible: "Nhắn tin cho .*"
     timeout: 30000
-- tapOn: "Mở kho tin cũ và không gian với .*"
+- tapOn: "Nhắn tin cho .*"
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 60000

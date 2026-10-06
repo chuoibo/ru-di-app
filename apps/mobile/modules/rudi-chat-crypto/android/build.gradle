@@ -1,0 +1,14 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+group = 'expo.modules.rudichatcrypto'
+version = '1.0.0'
+android {
+  namespace "expo.modules.rudichatcrypto"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+    // The Rust library exists for these ABIs (scripts/build-android.sh).
+    ndk { abiFilters 'arm64-v8a', 'x86_64', 'armeabi-v7a' }
+  }
+  externalNativeBuild { cmake { path "src/main/cpp/CMakeLists.txt" } }
+}

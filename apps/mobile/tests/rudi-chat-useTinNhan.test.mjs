@@ -76,20 +76,20 @@ function batFetch() {
 const cuaNhom = (daGoi, ctx, method) => daGoi.filter((g) => g.url.includes(`/contexts/${ctx}/`) && (method === undefined || g.method === method));
 
 let ketQua;
-function Probe({ contextId, personId, readOnly = false }) {
-  ketQua = useTinNhan(contextId, personId, { readOnly });
+function Probe({ contextId, personId, tatLan = false }) {
+  ketQua = useTinNhan(contextId, personId, tatLan);
   return null;
 }
-async function dung(contextId, personId = P1, readOnly = false) {
+async function dung(contextId, personId = P1, tatLan = false) {
   let root;
   await act(async () => {
-    root = TestRenderer.create(React.createElement(Probe, { contextId, personId, readOnly }));
+    root = TestRenderer.create(React.createElement(Probe, { contextId, personId, tatLan }));
   });
   return root;
 }
-async function doi(root, contextId, personId = P1) {
+async function doi(root, contextId, personId = P1, tatLan = false) {
   await act(async () => {
-    root.update(React.createElement(Probe, { contextId, personId }));
+    root.update(React.createElement(Probe, { contextId, personId, tatLan }));
   });
 }
 async function tra(g, body, status) {
@@ -522,45 +522,40 @@ test("nhóm rỗng nhận một đợt vượt trang vẫn cho cuộn đọc nh�
 });
 
 
-test("kho cũ chỉ đọc vẫn tải lịch sử nhưng mọi đường ghi đều bị chặn trước network", async () => {
+test("làn legacy tắt không tải lịch sử; chỉ tải khi được bật đúng phòng", async () => {
   const calls = batFetch();
   const root = await dung(A, P1, true);
   try {
+    assert.equal(calls.length, 0, "legacy không được đọc phòng thuộc làn khác");
+    assert.deepEqual(ids(), []);
+    assert.equal(ketQua.hangCho.length, 0);
+    await doi(root, A, P1, false);
+    assert.equal(calls.length, 1, "bật làn legacy phải tải trang đầu");
     await tra(calls[0], trang(A, "cu"));
     assert.deepEqual(ids(), ["a-cu"]);
-    const writes = [
-      () => ketQua.gui("Một lời chưa được gửi"),
-      () => ketQua.guiAnhMoi("/photos/synthetic.png", "Ảnh chưa gửi"),
-      () => ketQua.guiSticker("cho-ti"),
-      () => ketQua.thuLaiMot("attempt-synthetic"),
-      () => ketQua.xoaTin("a-cu"),
-      () => ketQua.doiPhanUng("a-cu", "heart", false),
-    ];
-    for (const write of writes) {
-      const before = calls.length;
-      let pending;
-      await act(async () => { pending = write(); pending.catch(() => undefined); });
-      assert.equal(calls.length, before, "write crossed the read-only boundary before rejecting");
-      await assert.rejects(pending, (error) => error.code === "legacy_read_only");
-    }
-    assert.equal(ketQua.hangCho.length, 0, "archive must not invent an optimistic sent row");
-    assert.ok(calls.every((call) => call.method === "GET"), "archive emitted a write");
-    assert.deepEqual(ids(), ["a-cu"], "refused actions altered history");
+    await doi(root, B, P1, true);
+    assert.equal(cuaNhom(calls, B).length, 0, "đổi sang phòng bị tắt không khởi động GET legacy");
+    assert.deepEqual(ids(), [], "không giữ lịch sử của phòng trước trong phòng mới");
   } finally { await bo(root); }
 });
 
-test("kho cũ không ghi read marker khi tin thật đã ở viewport", async () => {
+test("tắt làn legacy dừng read marker cho tin đã có trong viewport", async () => {
   const calls = batFetch();
   CAU_HINH.focus = true;
   const originalState = Object.getOwnPropertyDescriptor(AppState, "currentState");
   const originalListener = AppState.addEventListener;
   AppState.addEventListener = () => ({ remove() {} });
   Object.defineProperty(AppState, "currentState", { configurable: true, value: "active" });
-  const root = await dung(A, P1, true);
+  const root = await dung(A, P1, false);
   try {
     for (const call of [...calls]) await tra(call, trang(A, "cu"));
+    await doi(root, A, P1, true);
+    const before = calls.length;
     await act(async () => { ketQua.danhDauHienThi(["a-cu"]); });
-    assert.ok(calls.every((call) => call.method === "GET"), "read-only viewport emitted PUT/POST");
+    assert.equal(calls.length, before, "viewport không được ghi sau khi làn legacy tắt");
+    assert.ok(calls.every((call) => call.method === "GET"), "làn đã tắt phát PUT/POST");
+    assert.deepEqual(ids(), ["a-cu"], "tắt làn không sửa lịch sử đã đọc");
+    assert.equal(ketQua.hangCho.length, 0);
   } finally {
     await bo(root);
     if (originalState) Object.defineProperty(AppState, "currentState", originalState);

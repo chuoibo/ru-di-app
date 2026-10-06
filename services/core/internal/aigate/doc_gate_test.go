@@ -381,7 +381,7 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 			t.Errorf("Nếp's path names a forbidden column: %q", s)
 		}
 	}
-	for _, forbidden := range []string{".chuanBiNhom", ".chuDaLuu", ".authority", ".thuocPhong", ".tacGia", ".publish", "service.GroupTaste", "service.ModelPlaceRows"} {
+	for _, forbidden := range []string{".chuanBiNhom", ".chuDaLuu", ".authority", ".authorityV2", ".authorityLane", ".thuocPhong", ".thuocPhongV2", ".tacGia", ".tacGiaV2", ".publish", ".publishV2", "service.GroupTaste", "service.ModelPlaceRows"} {
 		for name := range c.funcs {
 			if strings.HasSuffix(name, forbidden) || strings.Contains(name, forbidden+"(") {
 				t.Errorf("Nếp's path reaches %s, a function that lays room context on a question", name)

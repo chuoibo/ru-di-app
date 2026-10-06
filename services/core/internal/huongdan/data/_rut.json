@@ -429,8 +429,8 @@
         "Chưa có bạn nào",
         "Chưa đọc được danh sách bạn",
         "Không có lời mời nào đang chờ",
-        "Mở kho tin cũ và không gian với …",
-        "Mở không gian",
+        "Nhắn tin",
+        "Nhắn tin cho …",
         "Thêm bạn bằng tên tài khoản",
         "Từ chối",
         "Đồng ý"
@@ -531,15 +531,13 @@
       "nhan": [
         "Báo cáo tin nhắn",
         "Bạn có thể tiếp tục soạn tin trong lúc chờ.",
-        "Bản nháp cũ vẫn được giữ trên thiết bị; chưa gửi đi.",
         "Bỏ",
         "Bỏ trả lời",
-        "Cuộc trò chuyện này không còn nhận tin.",
+        "Chưa mã hoá đầu cuối",
         "Cài đặt cuộc trò chuyện",
         "Cài đặt nhóm",
         "Gửi tin nhắn",
-        "Kho cũ · chỉ đọc · chưa mã hoá đầu cuối",
-        "Kho tin nhắn cũ chỉ đọc",
+        "Mã hoá đầu cuối",
         "Mời bạn vào nhóm",
         "Nhắn cho hội…",
         "Nhắn cho …",
@@ -551,7 +549,6 @@
         "Thêm vào cuộc trò chuyện",
         "Thử lại",
         "Thử lại lời nhờ",
-        "Tin cũ chưa mã hoá đầu cuối. Gửi, phản ứng, xoá, bỏ phiếu và công cụ AI được đóng tại đây. Chat v2 cần luồng thiết lập khoá riêng.",
         "Tin mới nhất",
         "Tin nhắn đã bị xoá",
         "Tin nhắn: sticker",
@@ -559,15 +556,17 @@
         "Trích: …",
         "Trả lời:",
         "Trả lời: …",
-        "Tạo một buổi đi",
         "Tự tạo kèo",
         "Về tin nhắn mới nhất",
         "Xem danh sách đã chặn",
         "Xem hồ sơ",
+        "· Chưa kiểm tra được mã hoá. Thử lại",
         "· Đang nối lại",
+        "· đang thiết lập",
         "Ô soạn tin",
         "Đang gửi…",
         "Đang hỏi Rủ Đi AI...",
+        "Đang kiểm tra mã hoá",
         "Đang trả lời",
         "Đang trả lời …",
         "Đang tải tin cũ...",
@@ -1642,6 +1641,10 @@
           "nhan": "Phiên đăng nhập"
         },
         {
+          "den": "settings/thiet-bi",
+          "nhan": "Thiết bị nhắn tin mã hoá"
+        },
+        {
           "den": "settings/ve-rudi",
           "nhan": "Điều khoản và dữ liệu"
         },
@@ -1655,6 +1658,7 @@
         "settings/account",
         "settings/da-chan",
         "settings/phien",
+        "settings/thiet-bi",
         "settings/ve-rudi",
         "settings/xoa-tai-khoan"
       ],
@@ -1670,6 +1674,7 @@
         "Phiên đăng nhập",
         "Quyền riêng tư",
         "Sở thích",
+        "Thiết bị nhắn tin mã hoá",
         "Thử lại ảnh đã chọn",
         "Tài khoản",
         "Tài khoản & bảo mật",
@@ -1766,6 +1771,38 @@
       "tep": [
         "app/settings/phien.tsx",
         "src/rudi/screens/cai-dat/PhienScreen.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "settings/thiet-bi",
+      "nhan": [
+        "Bản ứng dụng này chưa có mã hoá đầu cuối nên máy này không có trong danh sách.",
+        "Chưa có thiết bị nào",
+        "Chưa đọc được danh sách thiết bị",
+        "Dấu khoá",
+        "Dấu khoá máy này",
+        "Dấu khoá máy này …",
+        "Dấu khoá …",
+        "Gỡ",
+        "Gỡ thiết bị …, thêm ngày …",
+        "MÁY NÀY",
+        "Máy chủ không liệt kê máy này",
+        "Máy chủ đang giữ một khoá khác cho máy này. Đừng nhắn tin mã hoá trên máy này cho tới khi hỏi rõ.",
+        "Máy này giữ khoá mã hoá nhưng không có trong danh sách dưới đây. Đừng tin danh sách này cho tới khi hỏi rõ.",
+        "Thiết bị nhắn tin mã hoá",
+        "Thêm ngày",
+        "Thêm ngày …",
+        "Tin trong phòng mã hoá đầu cuối chỉ mở được trên các máy dưới đây. Thấy máy lạ thì gỡ ngay: máy đã gỡ không đọc được tin gửi sau đó.",
+        "thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở đây với dấu khoá hiện trên chính máy đó.",
+        "trên tối đa",
+        "Đang dùng",
+        "Đang dùng … trên tối đa … thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở đây với dấu khoá hiện trên chính máy đó."
+      ],
+      "tep": [
+        "app/settings/thiet-bi.tsx",
+        "src/rudi/screens/cai-dat/ThietBiMaHoaScreen.tsx"
       ]
     },
     {

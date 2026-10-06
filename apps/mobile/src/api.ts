@@ -2765,3 +2765,17 @@ export async function luuHanhTrinh(outingId: string, draft: import("./rudi/hanh-
   const { noiDungGui } = await import("./rudi/hanh-trinh/ke-hoach");
   return callAsActor(`/outings/${outingId}/itinerary`, { method: "PUT", body: noiDungGui(draft), actorId, attempt, contexts: contextId });
 }
+
+/**
+ * Raw bytes to or from an authenticated route: the chat v2 lane's sealed
+ * media (ADR-0057 §5.2). The same identity headers as every call; the bytes
+ * are ciphertext the device sealed or will open, never a plaintext file.
+ */
+export async function goiNhiPhan(path: string, actorId: string, method: "GET" | "PUT", body?: Uint8Array): Promise<Uint8Array> {
+  const headers = actorHeaders(actorId);
+  if (body !== undefined) headers["Content-Type"] = "application/octet-stream";
+  else delete headers["Content-Type"];
+  const res = await fetch(BASE_URL + path, { method, headers, body: body as BodyInit | undefined });
+  if (!res.ok) throw new ApiError(res.status, `http_${res.status}`, thongDiepNguoiDoc(res.status, null));
+  return new Uint8Array(await res.arrayBuffer());
+}

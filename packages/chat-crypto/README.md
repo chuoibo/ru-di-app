@@ -70,14 +70,22 @@ tin cậy hoặc backup recovery-code chưa triển khai.
 
 ## Giới hạn để review
 
-- Một Client chỉ giữ một group; API Rust thuần, chưa có ABI/JNI/Swift/Expo bridge.
-  Không expose symbol C để gọi tuỳ ý và không bỏ `forbid(unsafe_code)` để giả native
-  integration. Expo Go không nạp module native tuỳ ý này.
-- Tối đa 128 logical sends còn giữ trong outbox, kể cả commit đã ACK; đầy thì
-  `Capacity`. Chưa có garbage collection/durable idempotency tombstone. Checkpoint
-  tối đa 8 MiB; KeyPackage generation của client chưa join bị giới hạn. Roster
-  enforce 100 account, 5 device/account, 500 leaf, nhưng canary mới chạy 2–4 peer,
-  **chưa đo nhóm 500 leaf**.
+- ADR-0057 (05/10): một `Client` = một danh tính thiết bị trong nhiều phòng (≤ 1024),
+  mọi thao tác theo phòng nhận `conversation_id`; `receive`/`acknowledge_commit` lấy
+  phòng từ envelope. Cầu C ABI ở `packages/chat-crypto-ffi` (9 symbol, vòng đời qua
+  `rudi_chat_crypto_call`, mở lại checkpoint qua `rudi_chat_crypto_client_resume`), có
+  test ABI riêng; module Expo/JNI/Swift chưa có.
+- Outbox tối đa 128 bản gửi **chưa được ACK**: `acknowledge_sent` / `acknowledge_commit`
+  bỏ ciphertext khỏi outbox và ghi logical ID vào tombstone (≤ 4096/phòng) để lần thử
+  lại muộn bị từ chối `Conflict`, không mã hoá lại. Thua cuộc đua epoch thì
+  `abandon_commit`. Tối đa 64 KeyPackage chưa dùng. Roster enforce 100 account,
+  5 device/account, 500 leaf, nhưng canary mới chạy 2–4 peer, **chưa đo nhóm 500 leaf**.
+- Op v2: reply, edit, image, sticker, voice; media niêm phong trên máy bằng
+  XChaCha20-Poly1305 (khoá + nonce mỗi tệp, media id làm AAD), `open_media` kiểm
+  sha256 và kích thước trước khi giải mã. Strip EXIF là việc của app trước khi gọi.
+- RUSTSEC-2026-0173 (`proc-macro-error2` 2.0.1) chỉ là proc-macro lúc biên dịch, qua
+  `hax-lib` ← `libcrux` ← `hpke-rs` ← `openmls_rust_crypto`; không có trong thư viện
+  ship ra. Chưa có bản `hax-lib` mới để nâng — theo dõi, không coi là đã sửa.
 - Snapshot giao dịch nhận sao chép memory state: thuận tiện cho spike an toàn
   khi reject, chưa đo latency/RAM trên điện thoại. Storage hiện dùng provider
   MemoryStorage của OpenMLS; chưa phải kho native bền vững.

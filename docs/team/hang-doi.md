@@ -9,6 +9,21 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
+## MỚI 2026-10-06 — chat v2 E2EE đã chạy thật (G3, `main` local `fc0b85cf`); còn nợ trước TestFlight
+
+Ghi chép: `docs/claude/2026-10-06/e2ee-g3/ket-qua.md`. Theo mức nghiêm trọng:
+
+1. **Review crypto độc lập** (ADR-0031 §4) — chặn bật production; người ngoài ký `APPROVE`.
+2. **Push phía app** (`expo-notifications`) — máy chủ đã có (`internal/push`, không nội dung); cần FCM
+   `google-services.json` + khoá APNs của chủ sản phẩm. Route `/push/devices/{installation_id}` đang ghi nợ.
+3. **iOS**: module Swift (Keychain, RoomLog) chưa biên dịch lần nào — cần EAS/macOS và một máy thật.
+4. **Chuyển lịch sử sang thiết bị mới, mã khôi phục, mã an toàn đầy đủ** (ADR-0057 §1.3, §4.2–§4.3).
+5. **Làn v2 hỏi lại mỗi 3 giây**: route `/v2/chat/{c}/stream` chưa có client (G5, PER-FE-01).
+6. **Hàng nóng `chat_v2_conversations.last_sequence`**: mỗi lần gửi cập nhật một hàng mỗi phòng; audit 05/10 nêu là
+   ứng viên gây xếp hàng khi có một lần chậm. Đo lại trên máy yên (G5) trước khi đổi thiết kế.
+7. **AI trong phòng E2EE** chưa đo đầu-cuối với mô hình thật (stack e2e không có khoá AI); `chia_bill` cố ý tắt ở đó.
+8. **Danh sách cuộc trò chuyện v2** chưa có ảnh chụp máy thật (logic có test; chờ máy yên để dựng stack + emulator).
+
 ## MỚI 2026-10-03 — trạng thái rỗng: hai màn còn nợ cảnh, một chỗ chật ở cỡ chữ lớn
 
 Đợt vẽ lại trạng thái rỗng Cộng đồng (`63e40909`, ghi chép `docs/claude/2026-10-03/cong-dong-trang-rong/ket-qua.md`)

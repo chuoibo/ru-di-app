@@ -39,6 +39,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -59,7 +60,10 @@ import (
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/chatassist"
+	"mobile/services/core/internal/chatbus"
 	"mobile/services/core/internal/chatlegacychange"
+	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/chatv2http"
 	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
@@ -80,6 +84,7 @@ import (
 	"mobile/services/core/internal/nepnho"
 	"mobile/services/core/internal/profilemedia"
 	"mobile/services/core/internal/proxy"
+	"mobile/services/core/internal/push"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/rag/nap"
@@ -494,6 +499,114 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if websession.Matches(r.URL.Path) {
 				webSessions.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+	// ADR-0024/0057 §7: push. MOBILE_PUSH_MODE is log or expo; empty means
+	// off; anything else refuses to start (a typo must not silence pushes).
+	if mode := getenv("MOBILE_PUSH_MODE"); mode != "" && pool != nil {
+		var sender push.Sender
+		switch mode {
+		case "log":
+			sender = push.LogSender{Logger: logger}
+		case "expo":
+			sender = push.ExpoSender{AccessToken: getenv("MOBILE_EXPO_ACCESS_TOKEN")}
+		default:
+			logger.Error("refusing to start push", "error", "MOBILE_PUSH_MODE must be log or expo")
+			return 1
+		}
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := push.CheckSchema(check, pool)
+		cancel()
+		if err != nil {
+			logger.Error("refusing to start push", "error", err.Error())
+			return 1
+		}
+		pushes := push.Store{Pool: pool}
+		background.Add(1)
+		go func() { defer background.Done(); pushes.Run(chatCtx, sender, 2*time.Second, logger) }()
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(push.Handler{Store: pushes})
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if push.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+	// ADR-0057 §8.2: wherever the chat v2 schema exists, legacy chat writes to
+	// a room on the v2 lane are refused -- with the lane's flag on or off.
+	// It fails closed at startup too (security review 05/10): chat v2 tables
+	// present but the schema not as this binary expects, or the question not
+	// answerable, refuses to start; only a database that never had chat v2
+	// runs without the guard.
+	if pool != nil {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		installed, err := chatv2.Installed(check, pool)
+		if err == nil && installed {
+			err = chatv2.CheckSchema(check, pool)
+		}
+		cancel()
+		if err != nil {
+			logger.Error("refusing to start: cannot establish the legacy chat guard", "error", err.Error())
+			return 1
+		}
+		if installed {
+			guard := chatv2http.LegacyGuard{Store: chatv2.NewStore(pool),
+				Resolve: func(r *http.Request) (string, map[string]string, bool) {
+					d := table.DecideTarget(r.Method, r.RequestURI, r.Host, "http")
+					return d.RouteID, d.Params, d.Kind == router.KindFull
+				}}
+			inner := front
+			front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if guard.Guard(w, r) {
+					return
+				}
+				inner.ServeHTTP(w, r)
+			})
+		}
+	}
+	// ADR-0031/0057: the E2EE chat lane. Off until `core migrate-chat` ran and
+	// MOBILE_CHAT_V2_ENABLED=1; bearer sessions only, whatever MOBILE_AUTH_MODE.
+	if pool != nil && getenv("MOBILE_CHAT_V2_ENABLED") == "1" {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := chatv2.CheckSchema(check, pool)
+		cancel()
+		if err != nil {
+			logger.Error("refusing to start chat v2", "error", err.Error())
+			return 1
+		}
+		laneStore := chatv2.NewStore(pool)
+		if root := getenv(storage.MediaRootEnv); root != "" {
+			sealed, err := storage.NewAt(filepath.Join(root, "chat-v2"))
+			if err != nil {
+				logger.Error("refusing to start chat v2", "error", "media root unusable")
+				return 1
+			}
+			laneStore.WithMedia(sealed)
+		}
+		lane := chatv2http.New(chatv2http.Options{Store: laneStore, BatchSessions: true,
+			Authenticate: chatv2http.Sessions(pool), Experimental: true, Context: chatCtx})
+		go lane.Listen(chatCtx, pool)
+		bus := chatbus.Postgres()
+		if raw := getenv("MOBILE_CHAT_V2_REDIS_URL"); raw != "" {
+			if bus, err = chatbus.New(raw, getenv("MOBILE_CHAT_V2_REDIS_NAMESPACE")); err != nil {
+				logger.Error("refusing to start chat v2", "error", "invalid MOBILE_CHAT_V2_REDIS_URL")
+				return 1
+			}
+			go bus.Listen(chatCtx, lane.Wake, nil)
+		}
+		defer bus.Close()
+		background.Add(1)
+		go func() { defer background.Done(); bus.Relay(chatCtx, pool) }()
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(lane)
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if chatv2http.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
 				return
 			}
 			inner.ServeHTTP(w, r)
@@ -1173,6 +1286,8 @@ func featureRoutes() []featureView {
 		"nepnho":           nepnho.Routes(),
 		"accountauth":      accountauth.Routes(),
 		"dieuchinh":        dieuchinh.Routes(),
+		"chatv2http":       chatv2http.RouteIDs(),
+		"push":             push.RouteIDs(),
 	}
 	var out []featureView
 	for _, pkg := range ownership.FeaturePackages {
@@ -1291,6 +1406,16 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	// any account can be deleted by a binary that holds memory.
 	if err == nil {
 		err = nepnho.Migrate(ctx, pool)
+	}
+	// ADR-0057: the E2EE lane's tables (devices, key packages, Welcomes,
+	// commits). Installed with the rest so a deployment can turn the lane on
+	// with MOBILE_CHAT_V2_ENABLED once its gates pass.
+	if err == nil {
+		err = chatv2.Migrate(ctx, pool)
+	}
+	// ADR-0057 §7: content-free push, after chat v2 (its worker reads that log).
+	if err == nil {
+		err = push.Migrate(ctx, pool)
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)

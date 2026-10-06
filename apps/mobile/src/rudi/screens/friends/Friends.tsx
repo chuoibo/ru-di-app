@@ -171,12 +171,12 @@ export function FriendsScreen() {
               <HangNguoi
                 duoi={
                   <RudiButton
-                    accessibilityLabel={`Mở kho tin cũ và không gian với ${b.display_name}`}
+                    accessibilityLabel={`Nhắn tin cho ${b.display_name}`}
                     compact
                     disabled={dangNhan !== null}
                     full={false}
                     icon="chatbubble-outline"
-                    label="Mở không gian"
+                    label="Nhắn tin"
                     loading={dangNhan === b.person_id}
                     onPress={() => void nhanTin(b)}
                     variant="soft"

@@ -4,7 +4,8 @@ import type { TraLoiSong } from "../ai/tra-loi-song";
 import type { BodyTaoBuoiDi, ChangGui } from "../../screens/len-plan/buoi-di";
 
 export type ChatCapabilities = {
-  protocol: "legacy";
+  /** The room's lane: in a `v2` room the caller's device seals the answer (ADR-0057 §6). */
+  protocol: "legacy" | "v2";
   realtime: { available: boolean };
   /**
    * `share_scope` is the GATE, not a label. While a server still says
@@ -93,7 +94,16 @@ export type AiInvocation = {
   so_tin_doc?: number | null;
   created_at: string;
   updated_at: string;
+  /** An end-to-end room only (ADR-0057 §6): the `@Rủ Đi` message's logical send id. */
+  trigger_v2?: string;
+  /** The answer for this device to seal into the room, until it delivered it. */
+  the_v2?: string;
+  the_digest?: string;
+  delivered_sequence?: number;
 };
+
+/** What any member reads to check an `ai_card` that claims to be the assistant's. */
+export type BienNhanAi = { id: string; person_id: string; the_digest: string; trigger_v2: string };
 const options = (contextId: string, personId: string) => ({ actorId: personId, contexts: contextId, timeoutMs: 15000 });
 export function docChatCapabilities(contextId: string, personId: string) {
   return translatedAsActor<ChatCapabilities>({}, `/contexts/${contextId}/chat-capabilities`, { ...options(contextId, personId), method: "GET" });
@@ -128,6 +138,13 @@ export const LOI_GOI_AI: Record<string, string> = {
   authentication_required: "Phiên đăng nhập đã hết. Bạn đăng nhập lại rồi nhờ AI tiếp nhé.",
   membership_required: "Bạn không còn ở trong cuộc trò chuyện này nên chưa nhờ AI ở đây được.",
   encrypted_invocation_required: "Cuộc trò chuyện này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
+  // An end-to-end room (ADR-0057 §6): the answer is sealed by this device.
+  trigger_required: "Trong cuộc trò chuyện mã hoá, hãy nhắc @Rủ Đi trong một tin để nhờ AI.",
+  chia_bill_unavailable_encrypted: "Trong cuộc trò chuyện mã hoá, Rủ Đi chưa chia bill được vì máy chủ không đọc được lời gốc. Nhập khoản chi ở mục Chia bill nhé.",
+  delivery_mismatch: "Máy này chưa gửi được câu trả lời của Rủ Đi vào cuộc trò chuyện. Mở lại cuộc trò chuyện để thử lại.",
+  invalid_sequence: "Máy này chưa gửi được câu trả lời của Rủ Đi vào cuộc trò chuyện. Mở lại cuộc trò chuyện để thử lại.",
+  invocation_delivered: "Câu trả lời của Rủ Đi đã có trong cuộc trò chuyện rồi.",
+  invocation_not_deliverable: "Câu trả lời của Rủ Đi không còn chờ gửi nữa. Nhờ lại nếu bạn vẫn cần.",
   invocation_not_found: "Không còn thấy lời nhờ này nữa. Bạn gửi một lời nhờ mới nhé.",
   // ADR-0046: the answer is a reply to the `@Rủ Đi` message, so the message
   // itself can be the reason a request is refused.
@@ -288,6 +305,15 @@ export function thuLaiAi(contextId: string, personId: string, id: string) {
   return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations/${id}/retry`, {
     ...options(contextId, personId), method: "POST", attempt: newAttempt(),
   });
+}
+/** Tells the server where this device sealed the answer; the server then drops it. */
+export function baoDaGiaoAi(contextId: string, personId: string, id: string, sequence: number) {
+  return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations/${id}/delivered`, {
+    ...options(contextId, personId), method: "POST", body: { sequence },
+  });
+}
+export function docBienNhanAi(contextId: string, personId: string, id: string) {
+  return translatedAsActor<BienNhanAi>({}, `/contexts/${contextId}/ai-invocations/${id}/receipt`, { ...options(contextId, personId), method: "GET" });
 }
 export function gopAiInvocations(current: AiInvocation[], incoming: AiInvocation[]) {
   const byId = new Map(current.map((item) => [item.id, item]));

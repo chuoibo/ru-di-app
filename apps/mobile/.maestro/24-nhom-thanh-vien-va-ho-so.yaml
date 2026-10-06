@@ -31,7 +31,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"
     timeout: 30000
-- tapOn: "Ô tên nhóm"
+- tapOn: "Tên nhóm mới"
 - inputText: "Hoi QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
@@ -46,12 +46,11 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Dữ liệu demo"
 - takeScreenshot: 24-danh-sach-nhom
 - tapOn: "Hoi QA"
-# The room is the read-only legacy archive; membership controls stay available.
-# This flow checks invitation/profile behavior, not plaintext chat writes.
+# The active chat lane keeps membership controls in its header.
+# This flow checks invitation/profile behavior; flow 49 proves E2EE transport.
 - extendedWaitUntil:
-    visible: "Kho tin nhắn cũ chỉ đọc"
+    visible: "Ô soạn tin"
     timeout: 60000
-- assertNotVisible: "Ô soạn tin"
 - tapOn: "Thành viên nhóm"
 - extendedWaitUntil:
     visible: "Thành viên"
@@ -89,7 +88,7 @@ appId: com.lakiet.rudi
 # Cá nhân: hồ sơ của máy chủ, không phải «Minh Anh · Cấp 12».
 - tapOn: "Quay lại"
 - extendedWaitUntil:
-    visible: "Kho tin nhắn cũ chỉ đọc"
+    visible: "Ô soạn tin"
     timeout: 30000
 - tapOn: "Quay lại"
 - extendedWaitUntil:

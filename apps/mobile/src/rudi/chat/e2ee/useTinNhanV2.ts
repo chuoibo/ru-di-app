@@ -1,0 +1,528 @@
+/**
+ * One room on the chat v2 lane (ADR-0057), shaped like `useTinNhan` so the
+ * chat screen draws either lane with the same code.
+ *
+ * - The native module seals every change before its answer; this hook only
+ *   orchestrates (`MayMaHoa`) and draws (`so-tin`).
+ * - It polls the lane while focused (the WebSocket stream is the next step);
+ *   history starts where this device joined -- earlier messages were never
+ *   encrypted to it, and the legacy archive stays readable on its own.
+ * - What the room shows comes from the device's sealed record (`so-phong`),
+ *   read before the network: history survives a restart and works offline.
+ * - Nothing here ever writes plaintext anywhere: a failure is said, not
+ *   routed around.
+ */
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { File } from "expo-file-system";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Image, Platform } from "react-native";
+
+import { ApiError, goiNhiPhan, thongDiepNguoiDoc } from "../../../api";
+import { makeIdFactory } from "../../../participants";
+import { ChatCryptoModule } from "../../../../modules/rudi-chat-crypto";
+import { baoDaGiaoAi, docBienNhanAi, type AiInvocation } from "../ai-invocations";
+import type { TinChoGui } from "../hang-cho";
+import type { LoaiPhanUng, PhanUngTomTat, Tin, TinDaGui } from "../tin-song";
+import { PHAN_UNG } from "../tin-song";
+import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
+import { apiV2 } from "./api-v2";
+import type { Card, MediaRef, Operation } from "./kieu";
+import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
+import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
+import { CHU_MA_HOA } from "./tom-tat";
+import { danhSach, moiTruoc } from "./so-tin";
+import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
+
+const NHIP_MS = 3000;
+/** How long an `ai_card` may wait for its receipt before it is read as not the assistant's. */
+const CHO_BIEN_NHAN_MS = 120_000;
+
+/** Base64 of bytes in chunks: spreading megabytes into one call overflows the stack. */
+export function base64TuByte(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+const uuid = makeIdFactory();
+
+const kho = {
+  doc: (k: string) => AsyncStorage.getItem(k),
+  ghi: (k: string, v: string) => AsyncStorage.setItem(k, v),
+};
+
+/** One engine per signed-in person on this phone. */
+const mayTheoNguoi = new Map<string, Promise<MayMaHoa>>();
+
+/**
+ * Everyone listening for new devices, whichever room or screen opened the
+ * engine first: a notice is never bound to the first caller's closure
+ * (security review 05/10: notices for later rooms were dropped).
+ */
+const ngheThietBiMoi = new Set<(m: ThietBiMoi) => void>();
+
+/** Everyone drawing a room, told when its record grows (whoever made it grow). */
+const ngheDoiPhong = new Set<(room: string) => void>();
+
+export function coMaHoa(): boolean {
+  return ChatCryptoModule !== null;
+}
+
+/**
+ * This phone's own card, read from its keys on the device -- never from the
+ * server, whose word is exactly what the key mark exists to check. Null when
+ * this phone never enrolled a device for the person (nothing is enrolled here).
+ */
+export async function theCuaMay(personId: string): Promise<Card | null> {
+  if (ChatCryptoModule === null || (await thietBiCuaMay(personId)) === null) return null;
+  const may = await mayCua(personId);
+  const card = JSON.parse(await ChatCryptoModule.identity()) as Card;
+  // What the module has open must be this person's device: never show
+  // another identity's keys as this phone's.
+  if (card.actor_id !== personId || card.device_id !== (await may.thietBi())) {
+    throw new ApiError(0, "chat_v2_identity_mismatch", "Máy này đang mở khoá của một tài khoản khác. Mở lại ứng dụng rồi thử lại.");
+  }
+  return card;
+}
+
+/**
+ * The words of each v2 room's last message as this device's sealed record
+ * has them, for the conversation list. Only on a phone that already enrolled
+ * a device for the person: opening the list never enrols one.
+ */
+export async function xemTruocV2(personId: string, rooms: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (rooms.length === 0 || (await thietBiCuaMay(personId)) === null) return out;
+  const may = await mayCua(personId);
+  for (const room of rooms) {
+    const cuoi = danhSach(dungPhong((await may.soPhong(room)).ban).so).at(-1);
+    if (cuoi === undefined) continue;
+    out[room] = cuoi.deleted ? "Tin nhắn đã bị xoá" : cuoi.ai !== null ? "Rủ Đi AI đã trả lời" : cuoi.sticker !== null ? "Đã gửi một sticker" : cuoi.media?.type === "image" ? "Đã gửi một ảnh" : cuoi.body ?? CHU_MA_HOA;
+  }
+  return out;
+}
+
+/** This phone's chat v2 device for a person, if it ever enrolled one (never enrols). */
+export async function thietBiCuaMay(personId: string): Promise<string | null> {
+  if (ChatCryptoModule === null) return null;
+  return AsyncStorage.getItem(`rudi.chat-v2.device.${personId}`);
+}
+
+/**
+ * Whose identity the native module has open: it holds one at a time, so an
+ * engine cached for one person must reopen its own before it acts after
+ * another person's was opened on this phone (security review 05/10: an
+ * account switch would otherwise act with the other person's keys).
+ */
+let dangMo: string | null = null;
+
+export async function mayCua(personId: string): Promise<MayMaHoa> {
+  const native = ChatCryptoModule;
+  if (native === null) throw new ApiError(0, "chat_v2_native_missing", "Bản ứng dụng này chưa có mã hoá đầu cuối. Cập nhật ứng dụng để nhắn trong phòng này.");
+  let co = mayTheoNguoi.get(personId);
+  if (co !== undefined && dangMo !== personId) {
+    mayTheoNguoi.delete(personId);
+    co = undefined;
+  }
+  if (co === undefined) {
+    co = (async () => {
+      const so: KhoTinPort = {
+        doc: async (room) => {
+          const raw = await native.roomRead(room);
+          return raw === null ? null : (JSON.parse(raw) as SoPhong);
+        },
+        noi: (room, cursor, ban) => native.roomAppend(room, cursor, JSON.stringify(ban)),
+      };
+      const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, so, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android",
+        onThietBiMoi: (m) => { for (const nghe of ngheThietBiMoi) nghe(m); },
+        onPhong: (room) => { for (const nghe of ngheDoiPhong) nghe(room); } });
+      dangMo = personId;
+      await may.moThietBi();
+      return may;
+    })();
+    co.catch(() => mayTheoNguoi.delete(personId));
+    mayTheoNguoi.set(personId, co);
+  }
+  return co;
+}
+
+export type TrangThaiV2 = {
+  tin: Tin[];
+  dangNap: boolean;
+  loi: string | null;
+  /** Devices that joined since this phone last looked: said in the room. */
+  thietBiMoi: ThietBiMoi[];
+  sanSang: boolean;
+};
+
+export function useTinNhanV2(contextId: string, personId: string, tat = false) {
+  const [phong, setPhong] = useState<SoPhong>(PHONG_TRONG);
+  const [trang, setTrang] = useState<Omit<TrangThaiV2, "tin">>({ dangNap: true, loi: null, thietBiMoi: [], sanSang: false });
+  const [anhDaMo, setAnhDaMo] = useState<Record<string, string>>({});
+  const theHe = useRef(0);
+  const { so, cho, khongMo } = useMemo(() => dungPhong(phong.ban), [phong]);
+
+  /** Draws the room's record as it is now. */
+  const ve = useCallback(async () => {
+    const lan = theHe.current;
+    const p = await (await mayCua(personId)).soPhong(contextId);
+    if (lan === theHe.current) setPhong(p);
+  }, [contextId, personId]);
+
+  const nap = useCallback(async () => {
+    const lan = theHe.current;
+    try {
+      const may = await mayCua(personId);
+      await ve();
+      await may.nhanWelcome();
+      const sanSang = await may.chuanBi(contextId);
+      if (sanSang) {
+        await may.dongBo(contextId);
+        await may.guiLai(contextId);
+      }
+      if (lan !== theHe.current) return;
+      await ve();
+      setTrang((cu) => ({ ...cu, dangNap: false, loi: null, sanSang }));
+    } catch (error) {
+      if (lan !== theHe.current) return;
+      setTrang((cu) => ({ ...cu, dangNap: false, loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) }));
+    }
+  }, [contextId, personId, ve]);
+
+  useEffect(() => {
+    if (tat) return undefined;
+    const nghe = (m: ThietBiMoi) => {
+      if (m.room === contextId) setTrang((cu) => ({ ...cu, thietBiMoi: [...cu.thietBiMoi, m] }));
+    };
+    const doi = (room: string) => {
+      if (room === contextId) void ve().catch(() => undefined);
+    };
+    ngheThietBiMoi.add(nghe);
+    ngheDoiPhong.add(doi);
+    return () => {
+      ngheThietBiMoi.delete(nghe);
+      ngheDoiPhong.delete(doi);
+    };
+  }, [contextId, tat, ve]);
+
+  useEffect(() => {
+    theHe.current += 1;
+    setPhong(PHONG_TRONG);
+    setTrang({ dangNap: !tat, loi: null, thietBiMoi: [], sanSang: false });
+    if (!tat) void nap();
+  }, [nap, tat]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (tat) return undefined;
+      const id = setInterval(() => void nap(), NHIP_MS);
+      return () => clearInterval(id);
+    }, [nap, tat]),
+  );
+
+  /** The room's message for a logical send, once the record holds it. */
+  const daGui = useCallback(
+    async (id: string): Promise<TinDaGui | null> => {
+      await ve();
+      const p = await (await mayCua(personId)).soPhong(contextId);
+      const t = dungPhong(p.ban).so.byId[id];
+      const tin = t === undefined ? null : sangTin(t, contextId, personId, {}, { [khoaXacMinh(t)]: true });
+      return tin === null ? null : { ...tin, intent: null, vote: null, intent_error: null };
+    },
+    [contextId, personId, ve],
+  );
+
+  const guiOp = useCallback(
+    async (op: Operation): Promise<TinDaGui | null> => {
+      const may = await mayCua(personId);
+      const ev = await may.gui(contextId, op);
+      const id = ev?.envelope?.logical_send_id;
+      return id === undefined ? null : daGui(id);
+    },
+    [contextId, personId, daGui],
+  );
+
+  /** Opens a sealed image once: downloads the ciphertext, opens it on the device. */
+  const moAnh = useCallback(
+    async (media: MediaRef) => {
+      if (Object.hasOwn(anhDaMo, media.media_id) || ChatCryptoModule === null) return;
+      const may = await mayCua(personId);
+      const ciphertext = base64TuByte(await goiNhiPhan(`/v2/chat/media/${contextId}/${media.media_id}?device_id=${await may.thietBi()}`, personId, "GET"));
+      const opened = JSON.parse(await ChatCryptoModule.call("open_media", JSON.stringify({ media, ciphertext }))) as { plaintext: string };
+      setAnhDaMo((cu) => ({ ...cu, [media.media_id]: `data:${media.mime};base64,${opened.plaintext}` }));
+    },
+    [anhDaMo, contextId, personId],
+  );
+
+  useEffect(() => {
+    for (const t of danhSach(so)) if (t.media?.type === "image") void moAnh(t.media.media).catch(() => undefined);
+  }, [so, moAnh]);
+
+  // Every `ai_card` is checked once: the server's receipt for its invocation
+  // must name the same asker (the card's sender), the same `@Rủ Đi` message,
+  // and the digest of exactly these bytes. A network failure leaves it
+  // unchecked (not drawn) and it is tried again at the next change.
+  const [xacMinh, setXacMinh] = useState<Record<string, boolean>>({});
+  const dangXacMinh = useRef(new Set<string>());
+  const [lanXacMinh, setLanXacMinh] = useState(0);
+  useEffect(() => {
+    const native = ChatCryptoModule;
+    if (native === null) return undefined;
+    let hoiLai: ReturnType<typeof setTimeout> | null = null;
+    for (const t of danhSach(so)) {
+      if (t.ai === null || t.deleted) continue;
+      const khoa = khoaXacMinh(t);
+      if (Object.hasOwn(xacMinh, khoa) || dangXacMinh.current.has(khoa)) continue;
+      dangXacMinh.current.add(khoa);
+      const ai = t.ai;
+      void (async () => {
+        try {
+          const [bienNhan, cucBo] = await Promise.all([
+            docBienNhanAi(contextId, personId, ai.invocationId).catch((e: unknown) => (e instanceof ApiError && e.status === 404 ? null : Promise.reject(e))),
+            native.call("ai_card_digest", JSON.stringify({ card: ai.card })).then((r) => (JSON.parse(r) as { digest: string }).digest),
+          ]);
+          // No receipt yet: the asker's device posts the card a moment before
+          // it tells the server, so a card that young is asked about again.
+          // Two minutes on, a card with no receipt is no answer of the
+          // assistant's.
+          if (bienNhan === null && Date.now() - Date.parse(t.at ?? "") < CHO_BIEN_NHAN_MS) {
+            hoiLai ??= setTimeout(() => setLanXacMinh((n) => n + 1), 5000);
+            return;
+          }
+          const dung = bienNhan !== null && bienNhan.the_digest === cucBo && bienNhan.person_id === t.authorId && bienNhan.trigger_v2 === t.replyTo;
+          setXacMinh((cu) => ({ ...cu, [khoa]: dung }));
+        } catch {
+          // Unknown: tried again later.
+        } finally {
+          dangXacMinh.current.delete(khoa);
+        }
+      })();
+    }
+    return () => {
+      if (hoiLai !== null) clearTimeout(hoiLai);
+    };
+  }, [so, xacMinh, contextId, personId, lanXacMinh]);
+
+  // What this device has shown the reader, as a read mark on the lane: the
+  // furthest sequence among the messages on screen, sent at most every two
+  // seconds and only forward (ADR-0057 §5 `receipt`). It is what the
+  // conversation list counts unread from.
+  const daDanhDau = useRef(0);
+  const hangDanhDau = useRef<{ seq: number; hen: ReturnType<typeof setTimeout> | null }>({ seq: 0, hen: null });
+  const danhDauDaDoc = useCallback(
+    (ids: string[]) => {
+      let seq = 0;
+      for (const id of ids) seq = Math.max(seq, so.byId[id]?.sequence ?? 0);
+      const hang = hangDanhDau.current;
+      if (seq <= daDanhDau.current || seq <= hang.seq) return;
+      hang.seq = seq;
+      if (hang.hen !== null) return;
+      hang.hen = setTimeout(() => {
+        hang.hen = null;
+        const toi = hang.seq;
+        void (async () => {
+          const may = await mayCua(personId);
+          await apiV2.mark(personId, contextId, await may.thietBi(), toi);
+          daDanhDau.current = Math.max(daDanhDau.current, toi);
+        })().catch(() => undefined);
+      }, 2000);
+    },
+    [so, contextId, personId],
+  );
+  useEffect(() => () => {
+    if (hangDanhDau.current.hen !== null) clearTimeout(hangDanhDau.current.hen);
+  }, []);
+
+  /**
+   * Seals the assistant's answer to this device's own question into the
+   * room (ADR-0057 §6) and tells the server where. The invocation id is the
+   * logical send id, so a crash between the two never sends it twice: the
+   * record or the lane already knows where it landed.
+   */
+  const giaoAi = useCallback(
+    async (inv: AiInvocation) => {
+      if (inv.the_v2 === undefined || inv.trigger_v2 === undefined || inv.delivered_sequence !== undefined) return;
+      const may = await mayCua(personId);
+      let seq = dungPhong((await may.soPhong(contextId)).ban).so.byId[inv.id]?.sequence;
+      if (seq === undefined) {
+        const ev = await may.gui(contextId, { type: "ai_card", invocation_id: inv.id, reply_to: inv.trigger_v2, card: inv.the_v2 }, inv.id);
+        seq = ev?.sequence ?? dungPhong((await may.soPhong(contextId)).ban).so.byId[inv.id]?.sequence;
+      }
+      if (seq !== undefined) await baoDaGiaoAi(contextId, personId, inv.id, seq);
+    },
+    [contextId, personId],
+  );
+
+  return {
+    ...trang,
+    // Newest first, as the screen's inverted list (and the legacy hook) has it.
+    tin: moiTruoc(so).flatMap((t) => {
+      const tin = sangTin(t, contextId, personId, anhDaMo, xacMinh);
+      return tin === null ? [] : [tin];
+    }),
+    giaoAi,
+    danhDauDaDoc,
+    /** Own sends not yet on the lane, newest first: in flight, or failed and waiting for the person. */
+    hangCho: cho.map((c) => sangCho(c, so.byId)).reverse(),
+    /** Envelopes skipped because they will never open. */
+    khongMo,
+    taiLai: nap,
+    gui: (body: string, traLoi: { id: string } | null = null) =>
+      guiOp(traLoi === null ? { type: "text", body } : { type: "reply", reply_to: traLoi.id, body }),
+    sua: (messageId: string, body: string) => guiOp({ type: "edit", message_id: messageId, body }),
+    xoaTin: (messageId: string) => guiOp({ type: "delete", message_id: messageId }),
+    doiPhanUng: (messageId: string, kind: LoaiPhanUng) => guiOp({ type: "reaction", message_id: messageId, emoji: KIND_GLYPH[kind] }),
+    guiSticker: (stickerId: string) => guiOp({ type: "sticker", pack_id: "nep", sticker_id: stickerId }),
+    thuLai: async (id: string): Promise<TinDaGui | null> => {
+      const ev = await (await mayCua(personId)).thuLai(contextId, id);
+      return ev === null ? null : daGui(id);
+    },
+    boQua: (id: string) => {
+      void mayCua(personId)
+        .then((may) => may.boQua(contextId, id))
+        .catch(() => undefined);
+    },
+    /**
+     * A photo already shrunk and re-encoded (`nenVaDung`: no EXIF survives):
+     * sealed on the device, the ciphertext uploaded, then the reference sent.
+     */
+    guiAnhTuTep: async (uri: string, caption: string | null): Promise<TinDaGui | null> => {
+      const [width, height] = await new Promise<[number, number]>((resolve) =>
+        Image.getSize(uri, (w, h) => resolve([w, h]), () => resolve([1, 1])),
+      );
+      if (ChatCryptoModule === null) throw new ApiError(0, "chat_v2_native_missing", "Bản ứng dụng này chưa có mã hoá đầu cuối.");
+      const may = await mayCua(personId);
+      const plaintext = await new File(uri).base64();
+      const sealed = JSON.parse(await ChatCryptoModule.call("seal_media", JSON.stringify({ media_id: uuid(), mime: "image/jpeg", plaintext }))) as {
+        ciphertext: string;
+        media: MediaRef;
+      };
+      const bytes = Uint8Array.from(atob(sealed.ciphertext), (c) => c.charCodeAt(0));
+      await goiNhiPhan(`/v2/chat/media/${contextId}/${sealed.media.media_id}?device_id=${await may.thietBi()}`, personId, "PUT", bytes);
+      return guiOp({ type: "image", media: sealed.media, caption, width, height });
+    },
+  };
+}
+
+export type Lan =
+  | { lan: "dang-xet" }
+  /** The lane could not be established: nothing is read or sent until it is. */
+  | { lan: "khong-ro"; thuLai: () => void }
+  | { lan: "v2" }
+  /** Legacy plaintext, with why the room is not encrypted yet (null: the lane is off here). */
+  | { lan: "legacy"; lyDo: string | null };
+
+/**
+ * Which lane a room is on (ADR-0057 §8.2). A room on v2 stays on v2. A room
+ * not yet on v2 opens it once every active member has an enrolled device;
+ * until then it stays legacy and says who it waits for. Where this build has
+ * no native crypto, or the server's lane is off, the room is legacy -- and a
+ * v2 room refuses legacy writes on the server, so nothing falls back.
+ */
+export function useLanChat(contextId: string, personId: string): Lan {
+  const [lan, setLan] = useState<Lan>({ lan: "dang-xet" });
+  const [lanThu, setLanThu] = useState(0);
+  useEffect(() => {
+    let song = true;
+    setLan({ lan: "dang-xet" });
+    if (!coMaHoa()) {
+      setLan({ lan: "legacy", lyDo: null });
+      return;
+    }
+    void (async () => {
+      try {
+        const thanhVien = (await danhSachThanhVien(contextId, personId)).filter((tv) => tv.state === "active").map((tv) => tv.person_id);
+        const may = await mayCua(personId);
+        const device = await may.thietBi();
+        const r = await apiV2.roster(personId, contextId, device);
+        if (r.exists) {
+          if (song) setLan({ lan: "v2" });
+          return;
+        }
+        const coThietBi = new Set(r.expected.map((c) => c.actor_id));
+        const thieu = thanhVien.filter((id) => !coThietBi.has(id));
+        if (thieu.length > 0) {
+          if (song) setLan({ lan: "legacy", lyDo: `${thieu.length} người trong nhóm chưa dùng bản ứng dụng có mã hoá đầu cuối.` });
+          return;
+        }
+        await may.chuanBi(contextId);
+        if (song) setLan({ lan: "v2" });
+      } catch (error) {
+        if (!song) return;
+        // Legacy only when that is known: the server's lane is off (404).
+        // Anything else is not knowing, and not knowing never opens the
+        // plaintext path (security review 05/10: fail closed).
+        if (error instanceof ApiError && error.status === 404) setLan({ lan: "legacy", lyDo: null });
+        else setLan({ lan: "khong-ro", thuLai: () => setLanThu((n) => n + 1) });
+      }
+    })();
+    return () => {
+      song = false;
+    };
+  }, [contextId, personId, lanThu]);
+  return lan;
+}
+
+/**
+ * The chat screen's `chat` object for a room on the v2 lane: the legacy
+ * shape, with v2's messages and writers. What v2 has no use for -- older
+ * server pages, a pending-send queue, legacy snapshots, read marks -- answers
+ * as nothing to do.
+ */
+export function hopLanV2<L extends { gui: unknown }>(cu: L, v2: ReturnType<typeof useTinNhanV2>): L {
+  return {
+    ...cu,
+    tin: v2.tin,
+    dangNap: v2.dangNap,
+    dangNapCu: false,
+    hetTinCu: true,
+    loi: v2.loi,
+    loiCu: null,
+    loiLoai: v2.loi === null ? null : "tam",
+    hangCho: v2.hangCho,
+    napCuHon: async () => undefined,
+    napMoi: v2.taiLai,
+    taiLai: v2.taiLai,
+    gui: (body: string, traLoi: { id: string } | null = null) => v2.gui(body, traLoi),
+    guiAnhMoi: async () => null,
+    guiSticker: async (stickerId: string) => v2.guiSticker(stickerId),
+    thuLaiMot: (key: string) => v2.thuLai(key),
+    boQua: (key: string) => v2.boQua(key),
+    xoaTin: (id: string) => v2.xoaTin(id),
+    doiPhanUng: (id: string, kind: LoaiPhanUng) => v2.doiPhanUng(id, kind),
+    danhDauHienThi: (ids: string[]) => v2.danhDauDaDoc(ids),
+    nhanAnhChup: () => undefined,
+  } as L;
+}
+
+/**
+ * The chat screen's `chat` object while the lane is not yet known: nothing
+ * shown, nothing sent -- neither lane may act before the room's lane is
+ * established (security review 05/10).
+ */
+export function khoaLan<L extends { gui: unknown }>(cu: L, dangXet: boolean): L {
+  const tuChoi = async (): Promise<never> => {
+    throw new ApiError(0, "chat_lane_unknown", dangXet ? "Đang kiểm tra mã hoá của phòng. Thử lại sau giây lát." : "Chưa xác định được phòng có mã hoá hay không. Bấm thử lại.");
+  };
+  return {
+    ...cu,
+    tin: [],
+    dangNap: dangXet,
+    dangNapCu: false,
+    hetTinCu: true,
+    loi: dangXet ? null : "Chưa xác định được phòng có mã hoá đầu cuối hay không.",
+    loiCu: null,
+    loiLoai: dangXet ? null : "tam",
+    hangCho: [],
+    napCuHon: async () => undefined,
+    gui: tuChoi,
+    guiAnhMoi: tuChoi,
+    guiSticker: tuChoi,
+    thuLaiMot: tuChoi,
+    boQua: () => undefined,
+    xoaTin: tuChoi,
+    doiPhanUng: tuChoi,
+    danhDauHienThi: () => undefined,
+    nhanAnhChup: () => undefined,
+  } as L;
+}

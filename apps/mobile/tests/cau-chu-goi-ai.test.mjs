@@ -95,7 +95,12 @@ const MIEN_TRU_NEP = {
  * (máy chủ không phân loại được lỗi) đều nghĩa là «AI chưa sẵn sàng, việc của
  * bạn vẫn làm được», và máy chủ cố ý không nói thêm.
  */
-const CUNG_SU_KIEN = [["chat_ai_unavailable", "provider_unavailable"]];
+const CUNG_SU_KIEN = [
+  ["chat_ai_unavailable", "provider_unavailable"],
+  // The device's delivery of a sealed answer was refused (ADR-0057 §6): for
+  // the reader one event, the answer did not reach the room.
+  ["delivery_mismatch", "invalid_sequence"],
+];
 
 /* ------------------------------------------------ đọc mã Go -------------- */
 

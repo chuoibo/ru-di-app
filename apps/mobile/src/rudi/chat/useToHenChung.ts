@@ -21,7 +21,7 @@ import {
  * Generation guards follow the same shape as `useChatAi`: a response that
  * arrives after the room or the identity changed is dropped, never applied.
  */
-export function useToHenChung(contextId: string, personId: string, { readOnly = false }: { readOnly?: boolean } = {}) {
+export function useToHenChung(contextId: string, personId: string) {
   const [sheet, setSheet] = useState<ToHenChung | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,12 +68,11 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
       } else if (alive.current) setError("Chưa mở được tờ hẹn. Thử lại nhé.");
       return value;
     },
-    [contextId, personId, guarded, readOnly],
+    [contextId, personId, guarded],
   );
 
   const create = useCallback(
     async (draft: BanNhapToHen) => {
-      if (readOnly) return null;
       setError(null);
       try {
         const value = await guarded(() => moToHenChung(contextId, personId, draft));
@@ -87,12 +86,11 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
         return null;
       }
     },
-    [contextId, personId, guarded, readOnly],
+    [contextId, personId, guarded],
   );
 
   const edit = useCallback(
     async (patch: Partial<BanNhapToHen>) => {
-      if (readOnly) return null;
       const current = sheet;
       if (!current) return null;
       setError(null);
@@ -117,11 +115,10 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
         return null;
       }
     },
-    [contextId, personId, sheet, guarded, readOnly],
+    [contextId, personId, sheet, guarded],
   );
 
   const discard = useCallback(async () => {
-    if (readOnly) return null;
     const current = sheet;
     if (!current) return null;
     setError(null);
@@ -133,7 +130,7 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
       if (alive.current) setError("Chưa bỏ được tờ hẹn. Thử lại nhé.");
       return null;
     }
-  }, [contextId, personId, sheet, guarded, readOnly]);
+  }, [contextId, personId, sheet, guarded]);
 
   /**
    * Turn this sheet into the kèo, from the tray the person is already in.
@@ -141,7 +138,6 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
    * they are looking instead of on another route.
    */
   const confirm = useCallback(async () => {
-    if (readOnly) return null;
     const current = sheet;
     if (!current) return null;
     if (!current.starts_on || !current.ends_on) {
@@ -177,7 +173,7 @@ export function useToHenChung(contextId: string, personId: string, { readOnly = 
       }
       return null;
     }
-  }, [contextId, personId, sheet, guarded, readOnly]);
+  }, [contextId, personId, sheet, guarded]);
 
   const close = useCallback(() => {
     setSheet(null);

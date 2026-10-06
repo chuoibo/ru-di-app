@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -12,9 +13,29 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-// SchemaSQL is the embedded migration, for the gates that read what its
+//go:embed schema_v2.sql
+var schemaV2SQL string
+
+//go:embed schema_v3.sql
+var schemaV3SQL string
+
+// migrations are applied in order, each once, each pinned by its digest.
+var migrations = []string{schemaSQL, schemaV2SQL, schemaV3SQL}
+
+// SchemaSQL is the embedded migrations, for the gates that read what their
 // triggers write (aigate).
-func SchemaSQL() string { return schemaSQL }
+func SchemaSQL() string { return strings.Join(migrations, "\n") }
+
+// SchemaFiles is each embedded version as its file reads.
+func SchemaFiles() []string { return append([]string(nil), migrations...) }
+
+// Installed is whether any chat v2 table exists: false only when this
+// database never ran the chat v2 migration.
+func Installed(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
+	var present bool
+	err := pool.QueryRow(ctx, `SELECT to_regclass('chat_v2_conversations') IS NOT NULL`).Scan(&present)
+	return present, err
+}
 
 // Migrate adds the isolated chat-v2 tables after the legacy schema migration.
 // Call explicitly from a deployment migration command, never a request handler.
@@ -31,22 +52,42 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	if _, err = tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS chat_v2_schema_migrations(version integer PRIMARY KEY, digest text NOT NULL)`); err != nil {
 		return err
 	}
-	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(schemaSQL)))
-	var existing string
-	if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_v2_schema_migrations WHERE version=1),'')`).Scan(&existing); err != nil {
-		return err
-	}
-	if existing != "" {
-		if existing != digest {
-			return fmt.Errorf("chat v2 migration checksum mismatch")
+	for i, sql := range migrations {
+		version := i + 1
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(sql)))
+		var existing string
+		if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_v2_schema_migrations WHERE version=$1),'')`, version).Scan(&existing); err != nil {
+			return err
 		}
-		return tx.Commit(ctx)
-	}
-	if _, err = tx.Exec(ctx, schemaSQL); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, `INSERT INTO chat_v2_schema_migrations(version,digest) VALUES(1,$1)`, digest); err != nil {
-		return err
+		if existing != "" {
+			if existing != digest {
+				return fmt.Errorf("chat v2 migration %d checksum mismatch", version)
+			}
+			continue
+		}
+		if _, err = tx.Exec(ctx, sql); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, `INSERT INTO chat_v2_schema_migrations(version,digest) VALUES($1,$2)`, version, digest); err != nil {
+			return err
+		}
 	}
 	return tx.Commit(ctx)
+}
+
+// CheckSchema refuses a database where Migrate has not applied every version
+// this binary embeds, with the same digests.
+func CheckSchema(ctx context.Context, pool *pgxpool.Pool) error {
+	for i, sql := range migrations {
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(sql)))
+		var existing string
+		err := pool.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_v2_schema_migrations WHERE version=$1),'')`, i+1).Scan(&existing)
+		if err != nil {
+			return fmt.Errorf("chat v2 schema missing; run core migrate-chat: %w", err)
+		}
+		if existing != digest {
+			return fmt.Errorf("chat v2 migration %d not applied or changed; run core migrate-chat", i+1)
+		}
+	}
+	return nil
 }

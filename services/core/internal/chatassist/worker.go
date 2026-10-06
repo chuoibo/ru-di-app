@@ -32,7 +32,9 @@ type work struct {
 	// caller sent none, which is still the shape an older client produces.
 	goi []byte
 	// The `@Rủ Đi` message the answer replies to; "" for a job from a client
-	// that names none, which then publishes the card it always did.
+	// that names none, which then publishes the card it always did. On the v2
+	// lane it is the message's logical send id (trigger_v2): the card names
+	// it, and only the legacy publish path ever looks it up in `messages`.
 	trigger string
 	// How many shared turns the server confirmed at create (so_tin_doc).
 	soTin int
@@ -406,6 +408,12 @@ func sweepIn(ctx context.Context, tx pgx.Tx) ([]work, error) {
 	if _, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`); err != nil {
 		return nil, err
 	}
+	// A v2 answer the caller's device never came for is dropped an hour after
+	// the sharing window: the server keeps no answer it cannot hand over. Its
+	// digest stays (receipt).
+	if _, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET v2_result=NULL,updated_at=clock_timestamp() WHERE v2_result IS NOT NULL AND share_expires_at<=clock_timestamp()-interval '1 hour'`); err != nil {
+		return nil, err
+	}
 	// A sealed personal answer is delivered, not kept: it goes when the sharing
 	// window it was produced under closes (ADR-0036 §2.8).
 	if _, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET result=NULL,updated_at=clock_timestamp() WHERE scope='me' AND result IS NOT NULL AND share_expires_at<=clock_timestamp()`); err != nil {
@@ -458,7 +466,7 @@ func (h *Handler) ClaimByID(ctx context.Context, id string, seq int64) (bool, er
 const claimable = `(status='queued' OR (status='running' AND lease_until<clock_timestamp() AND first_token_at IS NULL)) AND attempts<3 AND share_expires_at>clock_timestamp()`
 
 // The one UPDATE every claim runs; only the choice of candidate differs.
-const claimSet = `UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts,j.enqueue_seq,j.model_calls,j.lane,j.share_expires_at`
+const claimSet = `UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,j.trigger_v2::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts,j.enqueue_seq,j.model_calls,j.lane,j.share_expires_at`
 
 // claimPoll takes the oldest claimable job due at least $3 seconds ago, of the
 // scopes in $4.
@@ -801,11 +809,11 @@ func (h *Handler) publishGu(ctx context.Context, j work, card json.RawMessage, r
 		return err
 	}
 	defer tx.Rollback(ctx)
-	g, err := authority(ctx, tx, j.conversation, j.digest)
+	g, err := authorityV2(ctx, tx, j.conversation, j.digest)
 	// The room is asked again here, not only at prepare: a pair blocked, or
 	// whose other person deleted their account, while the model was writing
-	// gets no card.
-	if err != nil || g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
+	// gets no card; nor does a room that changed lanes meanwhile.
+	if err != nil || g.member != j.member || g.person != j.person || g.lane != laneCua(j) || phongAi(ctx, tx, g) != nil {
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
@@ -818,6 +826,9 @@ func (h *Handler) publishGu(ctx context.Context, j work, card json.RawMessage, r
 			_ = tx.Rollback(ctx)
 			return h.finishFailure(ctx, j, "sharing_unavailable")
 		}
+	}
+	if g.lane == laneV2 {
+		return h.publishV2(ctx, tx, j, card, result)
 	}
 	// The feed head first, then the trigger, then the job: the order every Go
 	// chat write takes (chatlegacychange.BeforeWrite). See giuTrigger.
@@ -864,6 +875,46 @@ func (h *Handler) publishGu(ctx context.Context, j work, card json.RawMessage, r
 	// slice 11, finding 8), and the stream ends with its id.
 	j.luong.nhaThe(card, h.nhipSauChot())
 	j.luong.xongNhom(message.ID)
+	return nil
+}
+
+// laneCua is the lane the job was created on; a job from before the column
+// existed is a legacy job.
+func laneCua(j work) string {
+	if j.lane == laneV2 {
+		return laneV2
+	}
+	return laneLegacy
+}
+
+// publishV2 ends a job of an end-to-end room (ADR-0057 §6): nothing goes into
+// the room. The answer waits, byte for byte, for the caller's device, which
+// seals it as an `ai_card` and says where (delivered); result_digest stays so
+// every member can check the card. The stream carries the text to the caller
+// only (khoa: never a room key on this lane).
+func (h *Handler) publishV2(ctx context.Context, tx pgx.Tx, j work, card json.RawMessage, result json.RawMessage) error {
+	the, err := theV2(card)
+	if err != nil || len(the) > maxTheV2 {
+		_ = tx.Rollback(ctx)
+		return h.finishFailure(ctx, j, "card_too_large")
+	}
+	var id string
+	err = tx.QueryRow(ctx, `SELECT id FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp() FOR UPDATE`, j.id, j.lease).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',v2_result=$3,result_digest=$4,result=$5,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2`, j.id, j.lease, string(the), digestThe(the), ketQuaHoacNull(result))
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	j.luong.nhaThe(card, h.nhipSauChot())
+	j.luong.xongNhom("")
 	return nil
 }
 

@@ -82,7 +82,7 @@ func gioiHanPhong(ctx context.Context, tx pgx.Tx, room string) error {
 // a second job on the same message.
 func daCoTraLoi(err error) bool {
 	var pg *pgconn.PgError
-	return errors.As(err, &pg) && pg.Code == "23505" && pg.ConstraintName == "chat_ai_one_answer_per_trigger"
+	return errors.As(err, &pg) && pg.Code == "23505" && (pg.ConstraintName == "chat_ai_one_answer_per_trigger" || pg.ConstraintName == "chat_ai_one_answer_per_v2_trigger")
 }
 
 // giuTrigger takes a KEY SHARE lock on the trigger. publish calls it AFTER it

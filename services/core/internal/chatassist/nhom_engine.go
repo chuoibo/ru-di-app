@@ -141,11 +141,13 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 		return phongDoc{}, err
 	}
 	defer tx.Rollback(ctx)
-	g, err := authority(ctx, tx, j.conversation, j.digest)
+	g, err := authorityV2(ctx, tx, j.conversation, j.digest)
 	if err != nil {
 		return phongDoc{}, err
 	}
-	if g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
+	// A room that changed lanes since the question was asked answers nothing:
+	// a legacy job must not be read against the lane, nor the reverse.
+	if g.member != j.member || g.person != j.person || g.lane != laneCua(j) || phongAi(ctx, tx, g) != nil {
 		return phongDoc{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
@@ -167,7 +169,12 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 		if err = json.Unmarshal(j.goi, &bc); err != nil {
 			return phongDoc{}, err
 		}
-		if out.authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
+		if g.lane == laneV2 {
+			out.authors, err = tacGiaV2(ctx, tx, j.conversation, &bc)
+		} else {
+			out.authors, err = tacGia(ctx, tx, j.conversation, &bc)
+		}
+		if err != nil {
 			return phongDoc{}, err
 		}
 		if g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {

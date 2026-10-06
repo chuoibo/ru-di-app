@@ -35,7 +35,7 @@ export type CapChoAi = {
  */
 export const NHIP_DOC_LAI_PHONG_DOI_MS = 5000;
 
-export function useChatAi(contextId: string, personId: string, { haiNguoi = false, readOnly = false }: { haiNguoi?: boolean; readOnly?: boolean } = {}) {
+export function useChatAi(contextId: string, personId: string, { haiNguoi = false }: { haiNguoi?: boolean } = {}) {
   const [capabilities, setCapabilities] = useState<ChatCapabilities | null>(null);
   // Which room the held answers belong to. Coming back to the same room keeps
   // them while they are re-read: blanking them on every focus drew the room as
@@ -92,7 +92,6 @@ export function useChatAi(contextId: string, personId: string, { haiNguoi = fals
    * the thread: an older server keeps receiving exactly the old body.
    */
   const goiCap = async (cap: Omit<CapChoAi, "loi">) => {
-    if (readOnly) return;
     const caps = capabilitiesRef.current;
     const version = generation.current;
     setCho((held) => [{ ...cap, loi: null }, ...held.filter((c) => c.khoa !== cap.khoa)]);
@@ -118,7 +117,7 @@ export function useChatAi(contextId: string, personId: string, { haiNguoi = fals
   const boCap = (khoa: string) => setCho((held) => held.filter((c) => c.khoa !== khoa));
 
   const retry = async (id: string) => {
-    if (readOnly || sending.current) return;
+    if (sending.current) return;
     const version = generation.current;
     sending.current = true; setBusy(true); setError(null);
     try {
