@@ -119,7 +119,7 @@ export function DiemDenScreen() {
       : [];
   // With no saved choice the API's first catalogue row is its default. It can
   // lead the sheet without writing a choice or falsely marking it selected.
-  const noiNoiBat = tim.trim() === "" ? (loc.find((d) => d.id === dangChon) ?? loc[0])?.id : null;
+  const noiNoiBat = tim.trim() === "" ? (loc.find((d) => d.id === dangChon) ?? loc[0]) : null;
   const rongAnh = Math.max(120, Math.min(544, rongLuoi - 16));
 
   return (
@@ -160,7 +160,7 @@ export function DiemDenScreen() {
         <View onLayout={(e) => setRongLuoi(Math.round(e.nativeEvent.layout.width))} style={styles.luoi}>
           {[...loc].sort((a, b) => Number(b.id === dangChon) - Number(a.id === dangChon)).map((d) => {
             const chonRoi = dangChon === d.id;
-            const noiBat = noiNoiBat === d.id;
+            const noiBat = noiNoiBat?.id === d.id;
             const canh = CANH_DIEM_DEN[d.id];
             const rongCanh = noiBat ? rongAnh : 96;
             return (

@@ -91,12 +91,22 @@ test("bỏ lưu lỗi thì bài về đúng chỗ cũ trong «Đã lưu»", () =
 
 // Android 03/10: the one action ran edge to edge on a device and as a compact
 // pill on the web, because `full` (width 100%) resolves against different
-// parents. Both buttons of `EmptyState` are sized to their label.
-test("nút của EmptyState gọn theo chữ trên mọi nền tảng, không giãn hết cột", () => {
+// parents. Feed silences use the inline layout, whose buttons remain sized
+// to their label. The full-page layout uses a full-width primary action;
+// its secondary action stays compact.
+test("nút của EmptyState trong bảng tin gọn theo chữ, màn rỗng toàn trang có lối chính rộng", () => {
   const es = readFileSync(new URL("../src/rudi/ui/EmptyState.tsx", import.meta.url), "utf8");
   const nut = [...es.matchAll(/<RudiButton\b[^>]*?\/>/gs)].map((m) => m[0]);
   assert.equal(nut.length, 2);
-  for (const n of nut) assert.match(n, /full=\{false\}/, n);
+  for (const tieuDe of ["Chưa lưu bài nào", "Chưa kể chuyện nào", "Chưa theo dõi ai", "Một ngày đáng kể", "Chưa ẩn bài nào"]) {
+    assert.match(oRong(tieuDe), /\blayout="inline"/, tieuDe);
+  }
+  assert.match(es, /layout = "full"/);
+  assert.match(es, /const full = layout === "full";/);
+  assert.match(nut[0], /full=\{full\}/);
+  assert.match(nut[0], /compact=\{!full\}/);
+  assert.match(nut[1], /full=\{false\}/);
+  assert.match(nut[1], /\bcompact\s*\/>/);
 });
 
 // Finish review 03/10, three fixes of one batch.
@@ -106,7 +116,7 @@ test("danh sách rỗng: không tiêu đề chồng tiêu đề, không lời xi
   assert.match(man, /\{tieuDeRieng && posts\.length > 0 \? <Text/);
   // The personalisation ask waits for posts: over an empty feed it was a
   // second filled coral button beside the scene's.
-  assert.match(man, /mode === "for_you" && posts\.length > 0 \? <View style=\{\[styles\.consent/);
+  assert.match(man, /\{prefs && !prefs\.asked && !topic && mode === "for_you" && posts\.length > 0 \?\s*\(?\s*<View style=\{\[styles\.consent/);
   // One scene size for the five tabs, 120 only where 168 does not fit: a
   // short window that is also cramped (320×640: the action ended under the
   // strip at 168 and at 144), never a whole class of phones by height alone.
