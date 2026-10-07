@@ -8,7 +8,7 @@ export type PaperName = keyof typeof geometry;
 export type { PaperPalette } from "./PaperPalette";
 
 /** A paper surface/layer only. Keep actual words and controls outside its SVG. */
-export function PaperObject({ name, width, palette: providedPalette, layer }: { name: PaperName; width: number; palette?: PaperPalette; layer?: string }) {
+export function PaperObject({ name, width, height, palette: providedPalette, layer }: { name: PaperName; width: number; /** An adaptive paper surface behind live text; illustrations retain their natural ratio. */ height?: number; palette?: PaperPalette; layer?: string }) {
   const themePalette = usePaperPalette();
   const palette = providedPalette ?? themePalette;
   const object = geometry[name];
@@ -16,5 +16,5 @@ export function PaperObject({ name, width, palette: providedPalette, layer }: { 
   const template = layer ? layers[layer] : object.xml;
   if (!template) throw new Error(`Unknown paper layer: ${name}/${layer}`);
   const xml = useMemo(() => template.replace(/\{\{([a-z]+)\}\}/g, (_match, role: keyof PaperPalette) => palette[role]), [template, palette]);
-  return <SvgXml xml={xml} width={width} height={width * object.height / object.width} accessible={false} focusable={false} aria-hidden />;
+  return <SvgXml xml={xml} width={width} height={height ?? width * object.height / object.width} preserveAspectRatio={height === undefined ? "xMidYMid meet" : "none"} accessible={false} focusable={false} aria-hidden />;
 }

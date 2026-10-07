@@ -2,8 +2,9 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { ImageSource } from "expo-image";
-import { typography, useRudiTheme } from "../theme";
-import { RudiButton } from "../ui";
+import { bongGiay, typography, useRudiTheme } from "../theme";
+import { PressScale } from "../ui/PressScale";
+import { RudiIcon } from "../ui/RudiIcon";
 import { SoBia } from "../ui/SoBia";
 import { TrangSo } from "../ui/TrangSo";
 import { KhungAnh } from "../ui/KhungAnh";
@@ -19,6 +20,9 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
   const [width, setWidth] = useState(0);
   const [coverHeight, setCoverHeight] = useState(240);
   const coverWidth = Math.max(1, Math.min(width, 420));
+  const firstPage = pageIndex === 0;
+  const lastPage = pageIndex >= document.pages.length - 1;
+  const pageReason = firstPage ? "Bạn đang ở trang đầu tiên." : lastPage ? "Bạn đang ở trang cuối cùng." : undefined;
   return <View style={styles.book} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
     {paged && !compact && document.pages.length > 0 ? <View style={styles.readingTitle}>
       <Text style={[typography.h2, { color: colors.ink }]}>{document.title}</Text>
@@ -47,9 +51,34 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
       {page.text ? <Text style={[typography.body, { color: colors.inkSoft, lineHeight: 28 }]}>{page.text}</Text> : null}
       <Text style={[typography.caption, { color: colors.inkFaint, alignSelf: "flex-end" }]}>{i + 1} / {document.pages.length}</Text>
     </TrangSo> : null) : null}
-    {!compact && paged && document.pages.length > 1 ? <View style={styles.navigation}><RudiButton full={false} label="Trang trước" variant="outline" disabled={pageIndex === 0} lyDo={pageIndex === 0 ? "Bạn đang ở trang đầu tiên." : undefined} onPress={() => setPageIndex((i) => Math.max(0, i - 1))}/><Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Trang {pageIndex + 1} / {document.pages.length}</Text><RudiButton full={false} label="Trang sau" variant="outline" disabled={pageIndex >= document.pages.length - 1} lyDo={pageIndex >= document.pages.length - 1 ? "Bạn đang ở trang cuối cùng." : undefined} onPress={() => setPageIndex((i) => Math.min(document.pages.length - 1, i + 1))}/></View> : null}
+    {!compact && paged && document.pages.length > 1 ? <View style={styles.navigation}>
+      <View style={styles.pageControls}>
+        <BookPageButton direction="previous" disabled={firstPage} reason={firstPage ? pageReason : undefined} onPress={() => setPageIndex((i) => Math.max(0, i - 1))} />
+        <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.pageCounter, { color: colors.inkSoft }]}>Trang {pageIndex + 1} / {document.pages.length}</Text>
+        <BookPageButton direction="next" disabled={lastPage} reason={lastPage ? pageReason : undefined} onPress={() => setPageIndex((i) => Math.min(document.pages.length - 1, i + 1))} />
+      </View>
+      {pageReason ? <Text style={[typography.caption, styles.pageReason, { color: colors.inkSoft }]}>{pageReason}</Text> : null}
+    </View> : null}
   </View>;
 }
+
+/** Keep the reading controls fixed while the counter and boundary reason wrap. */
+function BookPageButton({ direction, disabled, reason, onPress }: { direction: "previous" | "next"; disabled: boolean; reason?: string; onPress: () => void }) {
+  const { colors, dark } = useRudiTheme();
+  return <PressScale
+    accessibilityRole="button"
+    accessibilityLabel={direction === "previous" ? "Trang trước" : "Trang sau"}
+    accessibilityState={{ disabled }}
+    accessibilityHint={reason}
+    disabled={disabled}
+    onPress={onPress}
+    pressedScale={0.94}
+    style={[styles.pageButton, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderStyle: disabled ? "dashed" : "solid" }, !disabled && bongGiay(1, dark)]}
+  >
+    <RudiIcon name={direction === "previous" ? "chevron-back" : "chevron-forward"} size={24} color={disabled ? colors.inkSoft : colors.ink} />
+  </PressScale>;
+}
+
 function BookPhoto(props: React.ComponentProps<typeof Image>) {
   const { colors } = useRudiTheme();
   const [failed, setFailed] = useState(false);
@@ -59,7 +88,11 @@ function BookPhoto(props: React.ComponentProps<typeof Image>) {
 }
 const styles = StyleSheet.create({
   readingTitle: { gap: 8 },
-  navigation: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  navigation: { gap: 8 },
+  pageControls: { flexDirection: "row", alignItems: "center", gap: 16 },
+  pageButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  pageCounter: { flex: 1, minWidth: 0, textAlign: "center" },
+  pageReason: { textAlign: "center" },
   book: { gap: 28, width: "100%", maxWidth: 560, alignSelf: "center" }, cover: { alignSelf: "center" }, coverLabel: { padding: 8, gap: 8 }, coverPhoto: { width: "100%", aspectRatio: 4 / 3 },
   compactPhoto: { aspectRatio: 16 / 9 },
   coverWords: { padding: 8, gap: 12 }, page: { gap: 16, paddingBottom: 24 },

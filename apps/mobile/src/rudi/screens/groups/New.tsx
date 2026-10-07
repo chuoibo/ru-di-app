@@ -27,6 +27,7 @@ import { Heading, RudiScreen, TopBar } from "../../ui";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { Grain } from "../../ui/Grain";
 import { StampButton } from "../../ui/StampButton";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
@@ -35,7 +36,7 @@ type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string }
 export function GroupNewScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
@@ -78,29 +79,41 @@ export function GroupNewScreen() {
 
   // A new notebook on the table (ADR-0037 D1, plan S3): its cloth cover, and
   // the group's name written on the label pasted on the front.
-  const rongBia = Math.max(140, Math.min(220, width - 64));
+  const nhanTrenBia = fontScale < 1.3 && width >= 360;
+  const rongBia = Math.max(140, Math.min(nhanTrenBia ? 300 : 180, width - 56));
+  const nhapTen = (
+    <ONhapMuc
+      accessibilityLabel="Tên nhóm mới"
+      label="Tên trên bìa sổ"
+      editable={!dangMo}
+      maxLength={200}
+      onChangeText={setTen}
+      onSubmitEditing={() => void mo()}
+      placeholder="Hội cà phê cuối tuần"
+      returnKeyType="done"
+      value={ten}
+    />
+  );
   return (
-    <RudiScreen material="quiet" contentStyle={styles.screen} testID="group-new-screen">
+    <RudiScreen material="quiet" avoidKeyboard contentStyle={styles.screen} testID="group-new-screen">
       <TopBar title="Nhóm mới" />
       <Heading title="Đặt tên cho hội" subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau." />
-      <View style={styles.bia} pointerEvents="none" accessible={false}>
-        <AssetIllustration name="decor-cover" width={rongBia} height={Math.round(rongBia / 0.75)} />
+      <View style={[styles.bia, { width: rongBia, height: Math.round(rongBia / 0.75) }]}>
+        <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}>
+          <AssetIllustration name="decor-cover" width={rongBia} height={Math.round(rongBia / 0.75)} />
+        </View>
+        {nhanTrenBia ? (
+          <View style={[styles.nhan, { left: rongBia * 0.12, top: rongBia * 0.57, width: rongBia * 0.7, backgroundColor: colors.card, borderColor: colors.paperShade }]}>
+            <Grain material="giayTrang" opacity={0.32} />
+            {nhapTen}
+          </View>
+        ) : null}
       </View>
-      <ONhapMuc
-        accessibilityLabel="Tên nhóm mới"
-        label="Tên trên bìa sổ"
-        editable={!dangMo}
-        maxLength={200}
-        onChangeText={setTen}
-        onSubmitEditing={() => void mo()}
-        placeholder="Hội cà phê cuối tuần"
-        returnKeyType="done"
-        value={ten}
-      />
+      {nhanTrenBia ? null : nhapTen}
       {trang.pha === "hong" ? (
         <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
       ) : null}
-      <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} />
+      <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} style={styles.mo} />
       {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
           Linh» here because nothing pointed them at the direct conversation,
           where the two-person notebook lives. */}
@@ -117,6 +130,7 @@ export function GroupNewScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 20, maxWidth: 560 },
   bia: { alignSelf: "center" },
-  nhan: { borderWidth: 1, borderRadius: 3, paddingHorizontal: 12, paddingVertical: 6 },
+  nhan: { position: "absolute", borderWidth: 1, paddingHorizontal: 12, paddingVertical: 14, transform: [{ rotate: "-2deg" }] },
+  mo: { alignSelf: "stretch" },
   giua: { textAlign: "center" },
 });

@@ -110,7 +110,7 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
   );
   if (!tat || !lyDo) return dau;
   return (
-    <View style={styles.coLyDo}>
+    <View style={[styles.coLyDo, { alignSelf: StyleSheet.flatten(style)?.alignSelf ?? "center", width: StyleSheet.flatten(style)?.width }]}>
       {dau}
       <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
         <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />

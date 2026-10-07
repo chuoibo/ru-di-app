@@ -20,6 +20,8 @@ import { useRudiSession } from "../session";
 import { bongGiay, typography, useRudiTheme } from "../theme";
 import { RudiScreen, TopBar } from "../ui";
 import { Grain } from "../ui/Grain";
+import { PaperObject } from "../asset-pack/react-native/PaperObject";
+import { usePaperPalette } from "../asset-pack/react-native/usePaperPalette";
 import { ONhapMuc } from "../ui/ONhapMuc";
 import { StampButton } from "../ui/StampButton";
 import { GuGlyph } from "../ui/art/Gu";
@@ -52,6 +54,22 @@ const TOI_THIEU = 3;
  */
 /** How a pressed sticker leans, the same for the same place on the sheet. */
 const NGHIENG_DAN = [-2, 1.5, -1, 2, -1.5, 1];
+
+/** The supplied cut-paper note grows with live labels, including large text. */
+function GuPaper({ selected }: { selected: boolean }) {
+  const { colors, dark } = useRudiTheme();
+  const palette = usePaperPalette(true);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  return <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill} onLayout={(event) => {
+    const w = Math.round(event.nativeEvent.layout.width), h = Math.round(event.nativeEvent.layout.height);
+    setBox((old) => old.w === w && old.h === h ? old : { w, h });
+  }}>
+    {box.w > 0 ? <View style={{ position: "absolute", left: -box.w * 0.06, top: -box.h * 0.05 }}>
+      <PaperObject name="note" layer="paper" width={box.w * 1.12} height={box.h * 1.1} palette={{ ...palette, paper: selected ? colors.accentSoft : dark ? colors.paper : colors.ground, shade: selected ? colors.accent : colors.lineStrong }} />
+    </View> : null}
+    <Grain material="giayTrang" opacity={0.32} style={styles.stickerGrain} />
+  </View>;
+}
 
 export function PersonalizationScreen() {
   const router = useRouter();
@@ -226,16 +244,13 @@ export function PersonalizationScreen() {
                   styles.sticker,
                   haiCot && styles.haiCot,
                   {
-                    backgroundColor: selected ? colors.accentSoft : colors.paper,
-                    borderColor: selected ? colors.accent : colors.lineStrong,
-                    borderWidth: selected ? 2 : 1,
                     transform: [{ rotate: selected ? `${NGHIENG_DAN[i % NGHIENG_DAN.length]}deg` : "0deg" }],
                   },
                   bongGiay(1, dark),
                   pressed && styles.pressed,
                 ]}
               >
-                <Grain material="giayTrang" opacity={0.32} style={styles.stickerGrain} />
+                <GuPaper selected={selected} />
                 <GuGlyph id={m.id} size={42} tone={selected ? "accent" : "ink"} />
                 <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
                 <Ionicons color={selected ? colors.accent : colors.lineStrong} name={selected ? "checkmark-circle" : "ellipse-outline"} size={18} style={styles.dauChon} />
