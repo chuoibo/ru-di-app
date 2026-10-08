@@ -1,0 +1,55 @@
+# Run separately on a signed-in synthetic member and a real catalogue stop.
+# This exercises the native projection that a JS catch cannot protect before
+# MapLibre has initialized. No login reset, fake provider or API write here.
+appId: com.lakiet.rudi
+---
+- repeat:
+    times: 3
+    commands:
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: "explore-screen"
+          timeout: 90000
+      - openLink: "rudi://outings/${KEO_ID}?ctx=${CTX_ID}"
+      - extendedWaitUntil:
+          visible:
+            id: "outing-screen"
+          timeout: 30000
+      - assertVisible: "${TIEU_DE}"
+      - tapOn:
+          id: "che-do-lich-trinh"
+      - scrollUntilVisible:
+          element: "Chặng ${CHANG}"
+          direction: DOWN
+          timeout: 20000
+      - runFlow:
+          when:
+            notVisible:
+              text: "Chặng ${CHANG}"
+              selected: true
+          commands:
+            - tapOn: "Chặng ${CHANG}"
+      - assertVisible:
+          text: "Chặng ${CHANG}"
+          selected: true
+      - takeScreenshot: selected-stop-before-map
+      - tapOn:
+          id: "che-do-hanh-trinh"
+      - extendedWaitUntil:
+          visible: "Mốc.*${CHANG}.*"
+          timeout: 60000
+      - assertVisible: "Bản quyền dữ liệu bản đồ: OpenStreetMap, OpenFreeMap"
+      - assertNotVisible: "There was a problem loading the project."
+      - takeScreenshot: native-loaded-map-selected
+      - swipe:
+          start: "25%,35%"
+          end: "70%,40%"
+          duration: 400
+      - tapOn: "Khớp hành trình"
+      - assertNotVisible: "There was a problem loading the project."
+      - tapOn:
+          id: "che-do-lich-trinh"
+      - assertVisible:
+          id: "outing-screen"

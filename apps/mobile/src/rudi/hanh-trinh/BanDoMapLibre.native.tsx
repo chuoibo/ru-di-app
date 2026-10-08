@@ -33,12 +33,18 @@ export function BanDo({
   const [groups, setGroups] = useState<string[][]>([]);
   const [choosing, setChoosing] = useState<string[]>([]);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [mapReady, setMapReady] = useState(false);
+  const nativeReady = useRef(false);
   const projection = useRef(0);
   const updateGroups = async () => {
+    // Android's project() dereferences the native map before resolving its
+    // promise. A JS catch cannot recover that crash while the map is loading.
+    const currentMap = map.current;
+    if (!nativeReady.current || !currentMap) return;
     const sequence = ++projection.current;
     try {
-      const points = await Promise.all(mocs.map(async (m) => ({ id: m.id, pixel: await map.current?.project([m.lng, m.lat]) })));
-      if (sequence !== projection.current) return;
+      const points = await Promise.all(mocs.map(async (m) => ({ id: m.id, pixel: await currentMap.project([m.lng, m.lat]) })));
+      if (sequence !== projection.current || currentMap !== map.current) return;
       const pending = points.filter((p) => p.pixel);
       const next: string[][] = [];
       while (pending.length) {
@@ -50,7 +56,14 @@ export function BanDo({
       setGroups(next);
     } catch { /* The map may have unmounted during a camera transition. */ }
   };
-  useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
+  useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [mapReady, cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
+  const mapLoading = () => {
+    nativeReady.current = false;
+    projection.current++;
+    setMapReady(false);
+    setGroups([]);
+  };
+  useEffect(() => () => { nativeReady.current = false; projection.current++; }, []);
   const vuaMoc = useRef(0);
   const duLieu = useMemo(() => tapHop(doan) as never, [doan]);
   const lop = useMemo(() => lopDuong(mau), [mau]);
@@ -62,7 +75,7 @@ export function BanDo({
   const hopBanDau = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
 
   useEffect(() => {
-    if (fitDem === 0 || !viewport.width || !viewport.height) return;
+    if (!mapReady || fitDem === 0 || !viewport.width || !viewport.height) return;
     const hop = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
     // Fit after the map's measured frame reaches native, including a tablet
     // layout change. A hidden view reports zero and keeps its previous frame.
@@ -72,10 +85,10 @@ export function BanDo({
     });
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitDem, cameraKey, padding, viewport.width, viewport.height]);
+  }, [mapReady, fitDem, cameraKey, padding, viewport.width, viewport.height]);
 
   useEffect(() => {
-    if (!toi) return;
+    if (!mapReady || !toi) return;
     // The journey panel covers the bottom of the map, so the geometric centre
     // is behind it: pad the camera by the same amount Fit Journey uses, or a
     // chosen stop eases to a spot the person cannot see. The stop is shown
@@ -84,7 +97,7 @@ export function BanDo({
     const hop = toi.ke?.length ? hopGioi([toi, ...toi.ke]) : null;
     if (hop) void cam.current?.fitBounds(hop, { padding, duration });
     else void cam.current?.easeTo({ center: [toi.lng, toi.lat], duration, padding, zoom: 14 });
-  }, [toi?.dem, padding]);
+  }, [mapReady, toi?.dem, padding]);
 
   return (
     <View style={styles.fill} onLayout={(e) => {
@@ -121,7 +134,9 @@ export function BanDo({
         if (e.nativeEvent.userInteraction) onUserMove();
         void updateGroups();
       }}
-      onDidFinishLoadingMap={() => { void updateGroups(); onSan?.(); }}
+      onWillStartLoadingMap={mapLoading}
+      onDidFailLoadingMap={mapLoading}
+      onDidFinishLoadingMap={() => { nativeReady.current = true; setMapReady(true); onSan?.(); }}
       scaleBar={false}
       style={[styles.fill, { backgroundColor: mauNen }]}
     >
