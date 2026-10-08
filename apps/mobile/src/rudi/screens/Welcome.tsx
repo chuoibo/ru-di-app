@@ -21,6 +21,7 @@ import { DAU_VAN_CAY } from "../dau-van-cay";
 import { giuState } from "../../ui/a11y";
 import { displayFace, lopPhu, typography, useRudiTheme } from "../theme";
 import { CoverButton } from "../ui/CoverButton";
+import { Nep } from "../ui/art/Nep";
 import { Grain } from "../ui/Grain";
 import { PressScale } from "../ui/PressScale";
 import { StampButton } from "../ui/StampButton";
@@ -121,6 +122,7 @@ export function WelcomeScreen() {
   const artWidth = Math.round(contentWidth * 0.5);
   const heroHeight = short ? 160 : Math.max(370, Math.min(520, windowHeight - insets.top - insets.bottom - 296));
   const artHeight = heroHeight + 72;
+  const scene = page === 3 ? "scene-coast" : page === 1 ? "scene-cafe" : "scene-street";
 
   return (
     <View role="main" style={[styles.root, { backgroundColor: colors.ground }]} testID="welcome-screen">
@@ -128,8 +130,8 @@ export function WelcomeScreen() {
       <Grain material={dark ? "vaiBia" : "giayTrang"} opacity={dark ? 0.3 : 0.45} />
       <View style={[styles.flex, { backgroundColor: colors.cover }]}>
         <Grain material="vaiBia" opacity={0.3} />
-        {/* The cover grows for its words. Larger type keeps readable chapters
-            and controls in the scroll flow while the artwork gives way. */}
+        {/* The cover grows for its words. Short windows keep the illustration
+            below the chapter, with larger type and controls in the scroll flow. */}
         <ScrollView
           bounces={false}
           contentContainerStyle={[styles.cover, { paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 16) + 6 }]}
@@ -142,7 +144,7 @@ export function WelcomeScreen() {
           <View style={[styles.hero, { minHeight: heroHeight }]}>
             {!short ? (
               <Animated.View pointerEvents="none" style={[styles.coverArt, { width: artWidth, height: artHeight }, routeStyle]}>
-                <AssetIllustration name={page === 3 ? "scene-coast" : page === 1 ? "scene-cafe" : "scene-street"} width={artWidth} height={artHeight} fit="cover" />
+                <AssetIllustration name={scene} width={artWidth} height={artHeight} fit="cover" />
                 <Svg width={72} height={artHeight} style={styles.pageTurn} accessible={false}>
                   <Path d={`M0 0 C8 ${artHeight * 0.32} 64 ${artHeight * 0.66} 8 ${artHeight} L0 ${artHeight} Z`} fill={colors.cover} />
                   <Path d={`M9 0 C17 ${artHeight * 0.32} 73 ${artHeight * 0.66} 17 ${artHeight} L8 ${artHeight} C64 ${artHeight * 0.66} 8 ${artHeight * 0.32} 0 0 Z`} fill={colors.paper} />
@@ -182,6 +184,18 @@ export function WelcomeScreen() {
             </ScrollView>
               {!short && !narrow ? <AssetIllustration name="spot-memory" width={Math.min(textWidth, 175)} height={116} resolution="small" style={styles.memory} /> : null}
             </View>
+            {short ? (
+              <Animated.View pointerEvents="none" style={[styles.shortArt, { width: contentWidth }, routeStyle]} testID="welcome-compact-art">
+                <AssetIllustration name={scene} width={contentWidth} height={112} fit="cover" />
+                <Svg width={96} height={112} style={styles.pageTurn} accessible={false}>
+                  {/* repo-guard: allow=long-number reason=synthetic-paper-fold-svg-coordinates */}
+                  <Path d="M0 0 L64 0 C88 32 76 80 40 112 L0 112 Z" fill={colors.cover} />
+                  {/* repo-guard: allow=long-number reason=synthetic-paper-fold-svg-coordinates */}
+                  <Path d="M64 0 C88 32 76 80 40 112 L52 112 C88 80 100 32 76 0 Z" fill={colors.paper} />
+                </Svg>
+                <Nep pose="moi" size={76} style={styles.shortNep} />
+              </Animated.View>
+            ) : null}
           </View>
           <View style={[styles.bottom, !compact && styles.bottomWide]}>
             {/* The pager's own indicator: the current page is a short coral bar, the
@@ -233,7 +247,9 @@ const styles = StyleSheet.create({
   pageTurn: { position: "absolute", left: 0, top: 0 },
   chapter: { paddingTop: 56 },
   chapterNarrow: { paddingTop: 40 },
-  chapterShort: { paddingTop: 24, paddingBottom: 20 },
+  chapterShort: { paddingTop: 24, paddingBottom: 8 },
+  shortArt: { height: 112, overflow: "hidden" },
+  shortNep: { position: "absolute", left: 4, bottom: 0 },
   memory: { marginTop: 28, transform: [{ rotate: "-5deg" }] },
   bottom: { gap: 4, paddingTop: 8, zIndex: 1 },
   bottomWide: { alignSelf: "center", width: "100%", maxWidth: 640 },
