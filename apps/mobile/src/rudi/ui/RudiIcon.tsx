@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
-import { View, type StyleProp, type TextStyle } from "react-native";
+import { View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 
 import { AssetIcon, type AssetIconName } from "../asset-pack/react-native/AssetIcon";
 
@@ -112,7 +112,8 @@ export function RudiIcon({
   assetIcon?: AssetIconName;
   /** Existing icon-only controls give paper glyphs a little more room. */
   assetSize?: number;
-  style?: StyleProp<TextStyle>;
+  /** Layout shared by the paper box and the fallback text glyph. */
+  style?: StyleProp<ViewStyle & TextStyle>;
 }) {
   const paper = assetIcon ?? paperIcons[name];
   if (!paper) return <Ionicons accessible={false} aria-hidden color={color} name={name} size={size} style={style} />;

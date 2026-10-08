@@ -7,7 +7,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
-import { typography, useRudiTheme } from "../theme";
+import { lopPhu, typography, useRudiTheme } from "../theme";
+import { useSoSheetDangMo } from "../nep/NepProvider";
 import { TABLIST, tabState } from "../../ui/a11y";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
@@ -60,6 +61,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { fontScale } = useWindowDimensions();
   const motion = useMotion();
   const { phien } = useRudiSession();
+  const coSheet = useSoSheetDangMo() > 0;
   const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
 
   const routes = state.routes;
@@ -142,6 +144,10 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
 
   const bar = (
     <View
+      pointerEvents={coSheet ? "none" : "auto"}
+      accessibilityElementsHidden={coSheet}
+      importantForAccessibility={coSheet ? "no-hide-descendants" : "auto"}
+      aria-hidden={coSheet}
       style={[
         layout.rail ? styles.rail : styles.bar,
         {
@@ -175,7 +181,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         {items}
       </View>
       {/* Over the empty slot, from outside the list. */}
-      <View
+      {coSheet ? null : <View
         pointerEvents="box-none"
         style={
           layout.rail
@@ -184,7 +190,8 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         }
       >
         <ConDauTao coCap={coCap} rail={layout.rail} tab={tabDangMo} />
-      </View>
+      </View>}
+      {coSheet ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }]} testID="tab-sheet-scrim" /> : null}
     </View>
   );
   return bar;
