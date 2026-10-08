@@ -1671,5 +1671,105 @@
       "Motion/privacy/action, TalkBack, measured targets/contrast, mọi breakpoint/iOS/tablet chưa phủ.",
       "Plugin/detector và craft-floor thiếu; không detector clean, full gate hoặc APPROVE toàn Community/Explore/frontend."
     ]
+  },
+  "shippedGu20261009": {
+    "_": "Bàn giao documenter từ artifact d3: chỉ sửa đo nhãn giữa và state tĩnh đã chụp; giữ toàn bộ token/object/history trước, không APPROVE toàn Gu/onboarding/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "d3c4a3aa3db5ee40ca28229103ae87f874a04dcd",
+    "sources": [
+      "apps/mobile/src/rudi/screens/Onboarding.tsx"
+    ],
+    "authority": "Prompt gốc §3/§13/nhóm B, board02-panel4 là concept reference; kế thừa refinement Operate yên và sticker/phong bì của DESIGN v3.",
+    "layout": {
+      "labelMeasurement": "styles.giua thêm alignSelf stretch, giữ textAlign center; sticker/band/dòng phụ đo và wrap theo bề rộng nội dung giấy. Production diff chỉ style này và comment, không đổi font/ngưỡng tiền/từ vựng/handler.",
+      "order": "Câu hỏi Bricolage → dẫn system → tám sticker GuGlyph → count → bốn band phong bì → StampButton.",
+      "stickers": "GuGlyph 42, giấy note đo theo layout, grain chỉ trong object, dấu chọn riêng; 320dp hai cột, không chỉ màu.",
+      "budget": "Ở packet320×640, font1.0 ngân sách2×2; Math.round(fontScale*100)>=130 chuyển một cột. Nhãn Trên 500K và Rộng tay đầy đủ trong save-action130 sáng/tối sau sửa.",
+      "scroll": "Font lớn cuộn qua top/selection/budget/save; mép phong bì ở budget130 không chứng minh clip text khi save-action cùng case thấy đầy đủ.",
+      "historicalSurfaceRecords": "surfaces.Personalization và shippedV5 giữ nguyên như lịch sử; không dùng kích thước/chip của snapshot đó thay cho artifact d3."
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ sửa nhãn giữa và các state tĩnh đã chụp:3-selected/vua-phai/enabled trên Android portrait320×640, sáng/tối font1.0/1.3/2.0.",
+      "resolved": [
+        "Nhãn ngân sách130: before chỉ Trên; after save-action sáng/tối có đủ Trên 500K và Rộng tay."
+      ],
+      "staticScore": "14/14 trên bảy trục quan sát được, interaction/motion N/E; không quy đổi /16 hoặc nghiệm thu đại diện toàn sản phẩm.",
+      "visibleRepairFindings": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-independent-verdict-d3c4a3aa.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-review-packet.json"
+    },
+    "evidence": {
+      "reviewerOpenedPng": 27,
+      "afterPng": 24,
+      "otherPng": [
+        "reference board02-panel4",
+        "actual-tree-fingerprint",
+        "before130"
+      ],
+      "statesPerCase": [
+        "gu-top",
+        "gu-three-selection",
+        "gu-budget",
+        "gu-save-action"
+      ],
+      "viewport": "Android portrait320×640; light/dark × OS font1.0/1.3/2.0.",
+      "javascript": "d3c4a3aa",
+      "receiptScope": "Sáu after receipt exit0, cùng source/harness SHA d3c4a3aa, not_full_gate true; capture không thay kiểm chức năng hoặc nhận xét pixel.",
+      "receipts": [
+        {
+          "file": "gu-after-light100.result.json",
+          "elapsed_s": 17.988,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-light130.result.json",
+          "elapsed_s": 18.84,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark100.result.json",
+          "elapsed_s": 18.038,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark130.result.json",
+          "elapsed_s": 19.04,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-light200-visible.result.json",
+          "elapsed_s": 25.798,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark200-visible.result.json",
+          "elapsed_s": 25.648,
+          "exit": 0
+        }
+      ],
+      "initialFont200Red": "gu-after-light200.result.json và gu-after-dark200.result.json đỏ vì assertion count ngoài fold; giữ nguyên. Hai visible receipt là lượt cuộn bổ sung riêng, không đổi lịch sử thành xanh hoặc gán lỗi UI.",
+      "fontProvenance": "OS font đặt trước fresh attach; chưa telemetry số RN font/window.",
+      "privateFileMode": "Reviewer thấy PNG mode0664 khi đọc ban đầu, báo parent; parent siết quyền rồi reviewer kiểm lại27/27 mode0600. Không gán mode0600 hồi tố; packet/report ngoài mọi worktree.",
+      "documenter": "Đọc source/packet/receipt/verdict; không tự chạy lại native, API hoặc chấm lại ảnh."
+    },
+    "toolAvailability": {
+      "runtime": "imp preflight exit127: runtime plugin/cache không tìm thấy, detector không chạy; không có detector clean.",
+      "craftFloor": "Có và đã đọc bản marketplace; reviewer đọc và documenter đọc lại ở context riêng.",
+      "craftFloorPath": "/home/lakiet/.claude/plugins/marketplaces/impeccable/plugin/skills/impeccable/reference/craft-floor.md",
+      "historicalCorrection": "Đính chính mọi ghi chú trước nói craft-floor thiếu: runtime lookup thất bại không chứng minh reference marketplace không tồn tại. Giữ objects/history trước, không tái khẳng định claim tuyệt đối đó."
+    },
+    "limits": [
+      "Save/cancel/restore tại6f3f5af2 là bằng chứng chức năng riêng của parent; diff handler rỗng không kiểm lại flow tại d3.",
+      "Chỉ state3-selected/vua-phai/enabled; chưa new-account/name, disabled/loading/error/offline/retry hoặc toàn Gu/font/state matrix.",
+      "Chưa TalkBack/focus/target/contrast đo native, motion/timing/reduced/background lifecycle, native390/430/tablet/iOS hoặc toàn frontend.",
+      "Thiếu quality-bar card/platform-reference/clip motion độc lập; không full critique/audit hoặc full gate.",
+      "Ship nhãn có giới hạn không cho phép landingmain khi gate repo còn thiếu; không main merge/push trong lượt documenter."
+    ]
   }
 }

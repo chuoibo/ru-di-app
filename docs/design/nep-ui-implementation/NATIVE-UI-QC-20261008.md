@@ -28,7 +28,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | Nhóm | Chức năng native đã có bằng chứng | Thị giác đối chiếu mockup | Còn phải kiểm/hoàn thiện |
 |---|---|---|---|
 | A — Welcome/auth | Bốn chương, swipe/reset, Login; font130/200, giảm chuyển động, tối; đăng nhập fixture thật | Welcome `34d57ca9`: 15/16; ba finding nhãn/art/fold resolved; CTA→Login warm `3b71838e` có chuỗi frame được mở | Register/reset/error/keyboard toàn bộ; cold/back/cancel/background/reduced lifecycle; không suy toàn motion |
-| B — Gu/onboarding | Save/reopen4 mục/ngân sách thật; Settings entry chọn2/3 khóa lưu, Back/cancel giữ server4; restore UI3/vua-phai, GET200 khớp | Root mở14 ảnh thao tác; chưa verdict đủ state/chữ lớn | Name/new account/keyboard, offline/retry, font matrix và review |
+| B — Gu/onboarding | `6f3f5af2`: save/reopen4 mục/ngân sách thật; Settings entry chọn2/3 khóa lưu, Back/cancel giữ server4; restore UI3/vua-phai, GET200 khớp; tách khỏi capture d3 | Root mở14 ảnh thao tác6f; `d3c4a3aa`: ship chỉ sửa nhãn giữa, resolved; reviewer mở27 ảnh (24after/reference/fingerprint/before130), 14/14 tĩnh ở sáng/tối font1.0/1.3/2.0, state3-selected/vua-phai/enabled; motion N/E | Name/new account/keyboard, disabled/loading/error/offline/retry, TalkBack/motion/lifecycle, native390/430/tablet/iOS; chưa toàn Gu/font/state matrix |
 | C — Explore/destination | Native `6f3f5af2`: Cafe2, tìm tên1, query lạ0; save/unsave GET200 khớp, câu hỏi provider thật ra2; đổi Hà Nội0 nơi/selected persisted/restore Đà Lạt; gallery sáng/tối có fingerprint đúng JS | Ship P2-01 viewport đầu: 14/14 tĩnh ở sáng/tối font 1.0; tên/fact đầu và artwork rõ trước nav | Ảnh thiếu/credit, offline/retry/double tap; chữ lớn/toàn state/motion và review các state mới chưa đạt |
 | D — Place/chọn kèo | Native detail/facts/activities/footer save thật; Thêm vào kèo→chooser→Back/cancel23,697s exit0 | Root mở ảnh so board01-panel3, chưa review đủ | Chưa bấm thêm/chọn/tạo kèo để nhận success; lỗi/empty/layers/font matrix |
 | E — Plan/outing/map | Baseline flow22–29 có bước outing; chưa phải ma trận đầy đủ | Chưa review đủ timeline/map/layer đúng source cuối | Reorder/pin/map provider/permission/conflict/partial creation |
@@ -83,6 +83,23 @@ phải có ảnh/trạng thái đã mở và nhận xét; motion cần clip/chu�
   chữ lớn. Consent dùng RudiButton inline, NBSP ở nhãn nhìn và khoảng trắng
   thường ở accessibilityLabel; source giữ handler/phạm vi consent. Không
   suy TalkBack/target/contrast đo native, lifecycle theme hoặc mọi action.
+- Gu: [verdict d3c4a3aa](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-independent-verdict-d3c4a3aa.md)
+  chốt **ship chỉ sửa nhãn giữa**, finding resolved: `styles.giua` thêm
+  `alignSelf: "stretch"`, giữ chữ giữa/font/ngưỡng tiền/handler. Before130
+  chỉ có «Trên»; after130 save-action sáng/tối có đủ «Trên 500K»/«Rộng tay».
+  Reviewer tự mở27 PNG trong [packet](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-review-packet.json):
+  24after, reference, fingerprint đúng JS và before130. Android320×640,
+  sáng/tối × font1.0/1.3/2.0; chỉ state3-selected/vua-phai/enabled,
+  **14/14 tĩnh**, motion N/E, không quy thành /16. Sáu receipt after exit0:
+  sáng1.0 17.988s, sáng1.3 18.840s, tối1.0 18.038s, tối1.3 19.040s,
+  sáng2.0-visible 25.798s, tối2.0-visible 25.648s; `not_full_gate: true`.
+  Hai lượt font2.0 đầu đỏ do count ngoài fold vẫn giữ; visible là capture
+  cuộn bổ sung, không đổi runner đỏ thành xanh hay gán lỗi UI. Font đặt
+  trước fresh attach, chưa telemetry số RN. Reviewer thấy mode0664 ban đầu;
+  parent sửa quyền rồi reviewer kiểm lại27/27 mode0600, không gán hồi tố.
+  Save/cancel/restore6f là bằng chứng chức năng riêng, chưa chạy lại ở d3;
+  chưa name/new-account/disabled/loading/error/offline/TalkBack/motion,
+  native390/430/tablet/iOS hoặc toàn Gu/frontend.
 - Avatar crop `2c1189d7`: editor thật được mở; Back exit0/6,422s giữ nguyên version
   và hash ảnh640×800. Confirm exit0/13,531s đổi version, GET200 ảnh640×640.
   Root mở editor/cancel/after; không suy crop/permission/retry cho mọi media.
@@ -94,8 +111,11 @@ phải có ảnh/trạng thái đã mở và nhận xét; motion cần clip/chu�
 ## Cổng trước landing
 
 Main chưa nhận batch này. Full mobile sạch gần nhất `2fc1c73f`:1620/1620,
-0fail/skip/cancel/todo; không gán cho sửa sau đó. Plugin detector/craft-floor thiếu,
-không ghi detector clean. Còn full strict gate32 ở cây sạch SHA cuối,
+0fail/skip/cancel/todo; không gán cho sửa sau đó. Runtime plugin/detector
+không tìm thấy, `imp preflight` exit127; không ghi detector clean.
+Craft-floor có và đã được đọc tại
+`/home/lakiet/.claude/plugins/marketplaces/impeccable/plugin/skills/impeccable/reference/craft-floor.md`;
+đính chính các ghi chú cũ nói reference này thiếu. Còn full strict gate32 ở cây sạch SHA cuối,
 identity/canary/ít nhất hai mutant độc lập cùng harness, fresh guest parity,
 state/native matrix và Impeccable finish phù hợp tập capture cuối. Không mở web
 hoặc chạy benchmark/load để thay những phần thiếu.

@@ -2556,6 +2556,57 @@ target/contrast đo native, iOS/tablet. Plugin/detector và craft-floor vẫn
 thiếu; không detector clean, không quy /14 thành /16 và không APPROVE toàn
 Community/Explore/frontend.
 
+### Gu — đo nhãn theo giấy, bàn giao giới hạn 09/10/2026
+
+Artifact được review là `d3c4a3aa3db5ee40ca28229103ae87f874a04dcd`, nguồn
+`screens/Onboarding.tsx`. Sửa production chỉ thêm `alignSelf: "stretch"`
+cho `styles.giua`, giữ `textAlign: "center"`, kèm comment đo nhãn.
+Nhãn sticker, band ngân sách và dòng phụ lấy toàn bề rộng nội dung của giấy
+để đo/wrap; không giảm font, đổi ngưỡng tiền, từ vựng hoặc handler.
+
+Giữ câu hỏi Bricolage → dẫn system → tám sticker `GuGlyph` → count → bốn
+phong bì → `StampButton`. Sticker hiện hành có GuGlyph 42, giấy note co theo
+layout, grain chỉ trong object, dấu chọn riêng; sáng/tối dùng token của hệ.
+Ở 320dp, sticker hai cột; ngân sách 2×2 khi font 1.0, một cột khi
+`Math.round(fontScale * 100) >= 130`. Chữ lớn cuộn qua các vùng, không ép
+toàn màn vào một viewport. Các mô tả Sở thích ở mốc cũ vẫn là lịch sử;
+không lấy kích thước/chip của mốc đó thay cho artifact này.
+
+[Verdict Gu d3c4a3aa](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-independent-verdict-d3c4a3aa.md)
+chốt **ship chỉ sửa nhãn giữa và state tĩnh đã chụp, finding resolved**.
+Reviewer context riêng đã mở **27 ảnh**: 24 after (top/three-selection/
+budget/save-action, sáng/tối × font 1.0/1.3/2.0), reference board02-panel4,
+fingerprint đúng JS và before130. Before130 chỉ thấy «Trên»; after130
+save-action sáng/tối thấy đủ «Trên 500K» và «Rộng tay». Mép phong bì cuối
+trong budget130 là vị trí cuộn; ảnh save-action cùng case cho thấy đủ nhãn.
+
+Android portrait **320×640**, state **3-selected / `vua-phai` / enabled**:
+**14/14 tĩnh** trên bảy trục quan sát được, interaction/motion **N/E**.
+Không quy thành /16 hoặc vượt cổng đại diện toàn sản phẩm. Sáu receipt
+after đều exit 0, cùng SHA, `not_full_gate: true`: sáng1.0 **17.988s**,
+sáng1.3 **18.840s**, tối1.0 **18.038s**, tối1.3 **19.040s**,
+sáng2.0-visible **25.798s**, tối2.0-visible **25.648s**. Hai lượt font2.0
+đầu đỏ vì assertion count ngoài fold được giữ nguyên; lượt visible là capture
+cuộn bổ sung riêng, không sửa lịch sử thành xanh hoặc coi đó là lỗi UI.
+Font theo OS trước fresh attach, chưa telemetry số RN về font/window.
+
+Packet và report nằm ngoài mọi worktree. Reviewer thấy PNG mode0664 ở lần
+đọc đầu; sau phát hiện, parent siết quyền và reviewer kiểm lại **27/27 mode0600**.
+Không gán quyền hiện tại cho thời điểm đọc ban đầu. Documenter đọc source,
+packet/receipt và verdict; không tự chạy lại native hoặc chấm lại ảnh.
+
+Save/cancel/restore tại `6f3f5af2` là bằng chứng chức năng riêng; diff handler
+rỗng không kiểm lại flow đó. Chưa nhận toàn Gu/onboarding: new-account/name,
+disabled/loading/error/offline/retry, TalkBack/focus/target/contrast đo native,
+motion/reduced/lifecycle, native390/430/tablet/iOS hoặc toàn frontend.
+
+**Đính chính availability 09/10:** runtime plugin/detector vẫn không tìm
+thấy, `imp preflight` exit127; không có detector clean. Tuy nhiên craft-floor
+**có và đã được đọc** tại
+`/home/lakiet/.claude/plugins/marketplaces/impeccable/plugin/skills/impeccable/reference/craft-floor.md`.
+Các dòng trước ghi «craft-floor thiếu» được giữ như lịch sử và được đính chính
+bởi ghi chú này; không tiếp tục kết luận bản reference không tồn tại.
+
 ### Inputs / Fields
 - **`Field`**: cao 52 (108 `multiline`), nền `card`, viền 1px `lineStrong`, bo
   14, chữ `body`, placeholder `inkFaint`, nhãn `label` `ink` phía trên, icon
