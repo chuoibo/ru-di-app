@@ -33,7 +33,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | D — Place/chọn kèo | Source và baseline có trong recovery | Chưa nhận đủ native so mockup | Chọn place/context/kèo, lỗi/empty và mọi layer |
 | E — Plan/outing/map | Baseline flow22–29 có bước outing; chưa phải ma trận đầy đủ | Chưa review đủ timeline/map/layer đúng source cuối | Reorder/pin/map provider/permission/conflict/partial creation |
 | F — Create/check-in | Tạo hub/tab thật đã được mở trên native | Chưa chấm toàn bộ sheet/check-in | Từng entry, context/audience, keyboard/location/cancel |
-| G — Chat/story | MLS hai chiều và media nhận/relaunch hai emulator; poll create/vote/tie/switch/author-close/relaunch; Story thay ảnh/draft/đăng/pause/Back/Keep/DELETE thật | Khung media `2fc1c73f` mở ảnh so board03; Story preview/viewer 14/16, câu hỏi xoá `3b71838e` 13/16, cần sửa | Header/history-empty copy; Story question hierarchy/isolation; motion/retry/expiry/friend audience; poll→tờ hẹn thật; reseal/reverse media |
+| G — Chat/story | MLS hai chiều và media nhận/relaunch hai emulator; poll create/vote/tie/switch/author-close/relaunch; Story thay ảnh/draft/đăng/pause/Back/Keep/DELETE thật; Ngọc bạn đọc/seen/nonauthor | Khung media `2fc1c73f` mở ảnh so board03; Story preview/viewer/question `c9a3f541` 14/16, ship chỉ hai P2 và state đã chụp | Header/history-empty copy; motion/retry/expiry/unauthorized audience/pendingDELETE/TalkBack; poll→tờ hẹn thật; reseal/reverse media |
 | H — Groups/friends | Thành viên `3b71838e`: 2 active/0 invited, tên thật, không đổi vai trò | Root mở ảnh inline: không đẩy nhãn/CTA khỏi hàng; chưa chấm cả family | Invite/accept/reject/leave/last-admin, friend pending/block và empty/error |
 | I — Hai người | Chưa nhận full native pair workflow | Chưa review native đủ | Hai phiên UI, tờ hẹn/accept/promote, chọn người và các nhánh |
 | J — Moments/album/wall | Story không thay bằng chứng khoảnh khắc/album/tường | Chưa review native đủ | Media/crop/draft/retry/audience/view/album/delete, heart/comment đúng quyền |
@@ -42,7 +42,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | M — Bill | Focused native822 nhập/preview/ghi bill200.000đ, phần75.000/125.000; witness thật; runner toàn bảng vẫn đỏ | Có ảnh đã mở; chưa nhận composition/state đầy đủ | Native whole-flow/canary cùng harness, scan camera/OCR/provider, font/keyboard/errors |
 | N — Settlement/finance | Focused native822 batch75.000đ, xác nhận nhận và ledger về0; receiver confirmation không là bank evidence | Chưa nghiệm thu toàn state/layer native | Bảng đầy đủ, role/wait/conflict, share handoff và visual |
 | O — Guest ngoài Expo | Cổng riêng, không gán emulator Expo thành guest proof | Không mở browser theo yêu cầu hiện tại | Fresh guest/oracle parity; phương thức visual guest phải giữ đúng phạm vi được phép |
-| P — Community | Web lịch sử không tính native | Chưa review native đủ | Feed/topic/post/edit/comment/report/moderation/filter/cursor và lỗi |
+| P — Community | Native deeplink `c9a3f541` vào feed thật; chưa kiểm actions | Root mở baseline đầu feed; chưa rubric/reference toàn state | Feed/topic/post/edit/comment/report/moderation/filter/cursor và lỗi |
 | Q — Keeps/notifications/search | Chưa nhận đầy đủ native | Chưa review native đủ | Từng route/action/error/empty và related sheets |
 | R — Settings/account/privacy | Theme thật Sáng/Tối; device list read thật; login Ngọc lại thật; avatar crop qua settings | Root mở settings light/dark/device/profile, chưa rubric toàn family | Logout phải thu hồi đúng device còn là finding mở; remote session/revoke/privacy/block/delete-account; không xoá mọi máy để ép xanh |
 | S — Root/tab/alias | Hai native runtime có ownership/fingerprint; tab/Back/relaunch thực trong các flow đã nêu | Welcome transfer được review có giới hạn | Deep-link/alias/auth-expiry/foreground/reduced lifecycle; keyboard/nav trong toàn matrix |
@@ -59,12 +59,18 @@ phải có ảnh/trạng thái đã mở và nhận xét; motion cần clip/chu�
 
 - Welcome: [review ảnh34d57ca9](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-verdict-34d57ca9.md);
   [review CTA warm3b71838e](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-motion-3b71838e.md).
-- Story: [review3b71838e](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md).
-  Decode/contain/draft và giữ hình khi hỏi đã resolved. Còn phân cấp câu hỏi/hai
-  action và chặn header phía sau; disposition **fix**, chưa ship câu hỏi.
+- Story: [review3b71838e](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md)
+  giữ lịch sử **fix**. [Verdict passc9a3f541](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9a3f541/story-independent-verdict-c9a3f541.md)
+  mở17afterảnh và chốt **ship chỉ hai P2**: hierarchy/header isolation resolved;
+  câu hỏi13→14/16, preview/viewer14/16. Chạm header thật/Back/Keep và DELETE native
+  đã kiểm; chưa pendingDELETE/TalkBack/motion/retry/expiry/composer matrix.
 - Avatar crop `2c1189d7`: editor thật được mở; Back exit0/6,422s giữ nguyên version
   và hash ảnh640×800. Confirm exit0/13,531s đổi version, GET200 ảnh640×640.
   Root mở editor/cancel/after; không suy crop/permission/retry cho mọi media.
+- Bạn đọcNgọc `c9a3f541`: accepted friend trong danh sách nativeMinh; viewer không
+  có nút xoá, đóng đổi vòng sang đã xem,16,835s exit0; root mở hai ảnh. Avatar cắt
+  hiện trên rail và HTTPNgọc GET200 cùng hash640×640; chưa chứng minh người lạ,
+  block/revoke/expiry hoặc mọi audience.
 
 ## Cổng trước landing
 

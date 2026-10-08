@@ -795,6 +795,7 @@
   },
   "surfaces": {
     "Welcome": "34d57ca9: bìa cover + Grain vaiBia0.30, lề24, maxWidth688, nội dung min(windowWidth−48,640), Logo compact wordmark18; bốn chương, EB34/40−0.7 (30/36 dưới360dp), body17/24 coverInkSoft. Bố cục short khi heightClass short, cao sau safe area<660 hoặc round(fontScale×100)≥130: xếp dọc/cuộn, scene144dp fit cover, Nếp canonical moi96dp trái12/đáy4, paper136dp bo72 + cloth124dp bo104, gradient paperShade/paper/paperShade + grain + bongGiay1. Cảnh street trang1/3, cafe2, coast4. Chấm6/active22 coral, target48×48, «Trang n trên4»; StampButton «Rủ Đi thôi!» tilt0 rộng hết cột; CoverButton link full «Tìm hiểu thêm» / «Xem lại từ đầu». Khoá một lần mở, prefetch rồi push /login trực tiếp; artwork opacity/translateY12 theo shared decelerate, reduced pager không animate. Bằng chứng ship giới hạn ở shippedWelcome20261008",
+    "StoryViewer": "c9a3f541: cover indigo, progress/owner/age ở header, Image key=story.id/contentFit contain giữ bounds khi hỏi xoá, controls chữ dưới ảnh, caption cuộn maxHeight180dp. Modal transparent/animationType none phủ ảnh, giấy card/line/bo16/pad16/gap12/bongGiay2; lớp lề ngang16/đáy24. Title17/23 ink «Xoá story này?» tách body17/24 inkSoft hậu quả; hai action flex1/minHeight48/bo12: Giữ lại card/lineStrong/ink, Xoá warn/warn/accentInk. Header pointerEvents none/a11y hidden, page zones disabled, toolbar nền ẩn/không nhận chạm nhưng giữ bố cục. Back/Keep giữ ảnh trước DELETE; request lock/disabled/onRequestClose guard là source, pending chưa kiểm. Ngoại lệ giới hạn của viewer, không thay luật hỏi tại hàng; ship chỉ hai P2/state chụp theo shippedStory20261008",
     "Login": "RudiScreen surface=cover; CoverBand underStatusBar (compact khi bàn phím mở ở compact) bleed md/lg với Logo compact + hero «Chào bạn»; cột 560 gap 20: Field, StampButton vua «Gửi mã», divider «hoặc», outline lời mời; Google chỉ khi native có client ID hợp lệ",
     "Otp": "CoverBand underStatusBar với hero «Nhập mã 6 số»; OtpBoxes 6x 44x54 viền 1.5 (accent ô đang nhập); caption inkSoft đang kiểm/đếm ngược; lỗi body warn",
     "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112",
@@ -1482,6 +1483,82 @@
       "Không APPROVE toàn app hoặc toàn bộ trạng thái Welcome",
       "Chưa phủ iOS, tablet/cửa sổ rộng hoặc TalkBack",
       "Cơ chế bố cục cao/cửa sổ rộng và animation ghi từ source, không nâng thành bằng chứng native"
+    ]
+  },
+  "shippedStory20261008": {
+    "_": "Bàn giao documenter sau verdict c9: chỉ hai P2 và state native được chụp; giữ brand/token/history, không APPROVE toàn Story/app.",
+    "date": "2026-10-08",
+    "headCommit": "c9a3f541d0a3e0a02aae608ed66f01f447b37005",
+    "sources": [
+      "apps/mobile/src/rudi/screens/story/XemStoryScreen.tsx",
+      "apps/mobile/src/rudi/screens/story/DangStoryScreen.tsx",
+      "apps/mobile/src/rudi/theme.ts"
+    ],
+    "references": [
+      "board10-panel1-story-composer.png",
+      "board10-panel2-story-view-delete.png"
+    ],
+    "viewer": "Image key=story.id, contentFit contain giữ tỷ lệ/bounds; controls/caption nhường diện tích khi chữ lớn, câu hỏi phủ ảnh thay vì thu khung. Header progress/owner/age; caption cuộn tối đa180dp",
+    "confirmation": {
+      "layer": "React Native Modal transparent, animationType none; lề ngang16dp/đáy24dp, giấy card/line/bo16dp/pad16dp/gap12dp/bongGiay(2,dark)",
+      "hierarchy": "title đậm17/23 ink «Xoá story này?»; body17/24 inkSoft «Bạn bè sẽ không thấy story này nữa.»",
+      "actions": "hai action flex1, minHeight48dp, bo12dp; Giữ lại card/lineStrong/ink; Xoá nền và viền warn, chữ accentInk",
+      "isolation": "header pointerEvents none/a11y hidden, page zones disabled, toolbar nền giữ bố cục nhưng ẩn/không nhận chạm",
+      "safePath": "Back đóng câu hỏi trước DELETE; Keep giữ cùng ảnh. Source request lock/disabled/Back guard khi chờ không thay native paused-network evidence",
+      "systemException": "Modal và warn đặc chỉ trong Story viewer, không thay luật hỏi tại hàng hoặc dùng cho mọi destructive action"
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "chỉ hai P2/state native được chụp; header isolation resolved ở question không pending",
+      "resolved": [
+        "hierarchy title/hậu quả/action câu hỏi xoá",
+        "cách ly header nền khi hỏi xoá không pending"
+      ],
+      "scores": "question13→14/16, preview/viewer14/16; chưa APPROVE toàn Story/app",
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9a3f541/story-independent-verdict-c9a3f541.md",
+      "priorReport": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedAfterImages": 17,
+      "viewport": "Android portrait 320×640",
+      "cases": "viewer/question light và dark1.0, light font1.3/2.0, Back/Keep, publish và delete thật; không suy dark ở mọi font",
+      "functionalFlows": "light/publish60.291s, dark57.836s, font1.3 48.276s, font2.0 48.326s, delete41.066s, đều exit0/not_full_gate true",
+      "deleteState": "xoá portrait về rail, mở lại chỉ landscape/caption, portrait caption absent; không nghiệm thu toàn rail Tin nhắn",
+      "composer": "c9 current light1.0/caption/publish, initial portrait ở offset cuộn; replacement/draft sắc thuộc04f20b88 report trước, không nhận toàn chuỗi đã recapture c9",
+      "nativeApk": "b87a16f1",
+      "backend": "54b5dc0e",
+      "javascript": "c9a3f541"
+    },
+    "limits": [
+      "Pending DELETE/error/double tap/Back khi chờ chưa kiểm native",
+      "TalkBack focus/trap/restore; source gọi focus Keep không thay evidence",
+      "Motion normal/reduced/background/replay/timing chưa có clip Story",
+      "Loading/error/empty/expiry/retry-upload/friend audience chưa phủ",
+      "Composer dark/font/bàn phím/crop và replacement/draft recapture c9 chưa đủ",
+      "Tablet/iOS/long caption và dark ở mọi font chưa phủ",
+      "Plugin/detector và craft-floor thiếu; không detector clean hoặc full-native acceptance"
+    ]
+  },
+  "shippedWelcomeTransition20261008": {
+    "_": "Bằng chứng CTA→Login mới tại3b, giữ nguyên lịch sử clipf26/verdict34 và tổng15/16; không thay full motion gate.",
+    "date": "2026-10-08",
+    "headCommit": "3b71838e057c2daef6500f04a91b44edf7d20b4e",
+    "sourceContinuity": "git diff34→3b rỗng cho Welcome.tsx, CoverButton.tsx và app/_layout.tsx; không gán sửa Story cho Welcome",
+    "verdict": "ship riêng CTA→Login normal/warm đã quay; finding thiếu travel ở clip04 resolved, không cộng interaction/motion hoặc nâng tổng15/16",
+    "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-motion-3b71838e.md",
+    "evidence": {
+      "viewport": "Android emulator5560, 320×640, font1.0, normal/warm",
+      "reviewedOriginalFrames": 29,
+      "encodedDurationSeconds": 2.436411,
+      "averageFramesPerSecond": "biến thiên, trung bình khoảng11.9; không phải đo60fps/timing animation",
+      "flow": "warm16.086s/exit0; một ADB tap CTA thật, before/after đã mở",
+      "observed": "Welcome rút trái/Login vào phải với header/lời chào/input/action đã vẽ, không frame trắng/trống; Nếp/fold đi cùng bìa; native slide, không pagecurl/3D"
+    },
+    "limits": [
+      "Reduced lifecycle, Back/cancel, double tap, background/resume và cold transfer chưa phủ",
+      "iOS/timing/FPS chính xác chưa chứng minh",
+      "Không đổi provenance báo cáo34/04 hoặc clipf26, không APPROVE toàn app/full motion",
+      "Plugin/detector vẫn thiếu; không detector clean"
     ]
   }
 }

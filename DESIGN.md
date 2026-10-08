@@ -2302,6 +2302,57 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 ảo (768dp). Đây là tinh chỉnh từ mã trong hệ hiện có, không có comp mới;
 ảnh không chứng minh thiết bị thật, native iOS hay độ mượt khi chạy.
 
+### Story viewer và xác nhận xoá — bàn giao giới hạn 08/10/2026
+
+Ghi từ `screens/story/XemStoryScreen.tsx` tại
+`c9a3f541d0a3e0a02aae608ed66f01f447b37005`, giữ cover indigo và giấy hiện
+hành. Ảnh là nội dung chính: `Image key={story.id}` dùng `contentFit="contain"`
+trong khung riêng, giữ tỷ lệ và bounds khi câu hỏi mở. Đầu màn chứa progress,
+tên người đăng, tuổi story và nút đóng/xoá; controls chữ ở dưới ảnh, caption
+trong vùng cuộn cao tối đa 180dp. Chữ lớn nhường diện tích cho nhãn/caption
+nên ảnh nhỏ hơn theo tỷ lệ, không phải câu hỏi thu ảnh thành tem.
+
+| Phần xác nhận | Artifact c9 đã ship |
+|---|---|
+| Lớp native | React Native `Modal transparent`, `animationType="none"`; phủ ảnh thay vì lấy chiều cao của khung ảnh |
+| Giấy | Card bo 16dp, đệm 16dp, gap 12dp, viền 1dp `line`, `bongGiay(2, dark)`; lớp đặt cuối màn, lề ngang 16dp/đáy 24dp |
+| Thứ bậc | «Xoá story này?» dùng `title` đậm 17/23 `ink`; câu «Bạn bè sẽ không thấy story này nữa.» là `body` 17/24 `inkSoft` riêng |
+| Hai câu trả lời | Cùng `flex: 1`, cao tối thiểu 48dp, bo 12dp; «Giữ lại» nền `card`/viền `lineStrong`/chữ `ink`, «Xoá» nền và viền `warn`/chữ `accentInk` |
+| Cách ly nền | Header `pointerEvents="none"` và ẩn khỏi accessibility tree, page zones disabled; toolbar nền giữ bố cục nhưng ẩn và không nhận chạm khi hỏi |
+| Đường an toàn | Back đóng câu hỏi trước khi DELETE; «Giữ lại» trả về cùng ảnh. Source khoá request, disable hai nút và chặn đóng khi đang xoá; state DELETE chờ còn thiếu evidence native |
+
+Đây là ngoại lệ của Story viewer đối với luật hỏi tại hàng: lớp native cách
+ly controls trên ảnh, không biến Modal hoặc nền `warn` đặc thành mẫu cho
+mọi hành động phá huỷ. Không thêm Nếp vào quyết định xoá. Câu hậu quả giữ
+đúng phạm vi quyền bạn bè hiện hành; không chép «khỏi nhóm»/«không thể khôi
+phục» từ reference khi domain không bảo đảm. Source gọi focus «Giữ lại»
+khi Modal hiện, chưa thay bằng chứng TalkBack focus/trap/restore.
+
+[Verdict c9](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9a3f541/story-independent-verdict-c9a3f541.md)
+trả **`ship` chỉ hai P2: hierarchy câu hỏi và cách ly header nền đều
+resolved ở question không pending**. Question tăng **13→14/16**;
+preview/viewer **14/16** trong state đã chụp. Root/reviewer mở đủ **17 ảnh
+after** Android portrait 320×640: viewer/question light và dark 1.0, light
+font 1.3/2.0, Back/Keep, publish và xoá thật. Bản
+[review 3b](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md)
+vẫn giữ lịch sử `fix` hai P2; chuỗi composer replacement/draft sắc thuộc
+`04f20b88`, không nhận đã chạy lại toàn chuỗi ở c9. Composer c9 có ảnh/caption
+light 1.0 và publish, initial portrait còn ở offset cuộn; không suy toàn ảnh
+vừa một viewport. Reference board10-panel1/2 là đối chiếu cấu trúc, không
+chép artwork reference thành ảnh người dùng.
+
+Năm flow c9 đều exit 0: light/publish **60,291s**, dark **57,836s**, font 1.3
+**48,276s**, font 2.0 **48,326s**, delete thật **41,066s**. Xoá portrait về
+rail, mở lại còn landscape/caption, không còn caption portrait; đây là state
+đã kiểm, không nghiệm thu cả rail Tin nhắn. Runtime: JS c9, APK `b87a16f1`,
+Go `54b5dc0e`; flow có `not_full_gate: true`.
+
+Chưa phủ DELETE chờ/lỗi/bấm đôi/Back khi chờ, loading/error/empty/expiry,
+TalkBack, motion normal/reduced/background/replay, retry-upload, audience
+bạn bè, composer dark/font/bàn phím/crop và tablet/iOS/long caption.
+Dark 1.0 cộng light 1.3/2.0 không thành dark ở mọi font. Plugin/detector và
+craft-floor vẫn thiếu; không detector clean, không APPROVE toàn Story/app.
+
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
   tài liệu ghi `Card` v1 (bo 20, đệm 16, viền `line` + `cardShadow`) «không
@@ -2720,6 +2771,27 @@ Plugin/detector và craft-floor hiện thiếu, không có kết luận detector
 Phạm vi này không phải APPROVE toàn app, không phủ iOS, tablet/cửa sổ rộng,
 TalkBack hoặc toàn bộ trạng thái Welcome.
 
+### Welcome CTA → Login — bằng chứng bổ sung normal/warm 3b
+
+[Review motion 3b](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-motion-3b71838e.md)
+trả **`ship` riêng đoạn CTA→Login normal/warm đã quay**, đóng finding thiếu
+pha giữa của clip04. Source
+`3b71838e057c2daef6500f04a91b44edf7d20b4e`; diff34→3b rỗng cho Welcome,
+CoverButton và `_layout.tsx`. Không đổi provenance clipf26 hoặc verdict34
+ở mục trên, không cộng điểm interaction/motion hay nâng tổng **15/16**.
+
+Reviewer mở đủ **29 frame gốc** và ảnh before/after trên Android emulator
+5560, 320×640, font 1.0: Welcome rút sang trái, Login trượt vào từ phải với
+header, lời chào, input và action đã vẽ; không thấy frame trắng/trống, Nếp
+và fold đi cùng bìa. Đây là native slide giữa hai trang của sổ, không phải
+pagecurl/3D hoặc signature nhấc bìa lịch sử. Clip encoded **2,436411s**, tốc
+độ biến thiên trung bình khoảng **11,9fps**; không suy timing animation hoặc
+60fps từ duration/frame count. Warm flow exit 0/**16,086s**, một tap CTA thật.
+
+Phạm vi chưa phủ reduced lifecycle, Back/cancel, double tap, background/resume,
+cold transfer, iOS hoặc timing/FPS chính xác. Đoạn này không thay full motion
+gate hay APPROVE toàn app; detector vẫn thiếu.
+
 ### Signature: Con dấu rơi xuống (trạng thái thành đúng dưới ngón tay)
 Dòng FORM của hợp đồng gọi tên «một cú đóng dấu khi một trạng thái thành
 đúng»; đợt 8 là nơi nó tồn tại. Bấm «Đánh dấu đã trả» ở quyết toán: nút co
@@ -3057,7 +3129,9 @@ màn.
   `*_unavailable`, hay «Cập nhật app» cho một thứ không tìm thấy; đừng in mã,
   status hay địa chỉ.
 - **Don't** tô nền `warn`, hay vẽ hành động phá huỷ bằng nút cam đặc; đừng
-  mở hộp thoại để xác nhận xoá.
+  mở hộp thoại để xác nhận xoá. Ngoại lệ giới hạn là Story viewer c9: Modal
+  native cách ly nền và nút «Xoá» dùng `warn` đặc như mục bàn giao Story;
+  không dùng ngoại lệ đó cho hàng trên giấy.
 - **Don't** mờ nút tắt bằng opacity, hay để nút tắt không lời.
 - **Don't** đặt `Sheet` trong thân màn khi nó phải phủ header; đừng để
   `Sheet` nhận chạm trong pha mở, hay trượt một quãng cố định thay vì chiều
