@@ -50,10 +50,20 @@ appId: com.lakiet.rudi
     visible: "Quyết toán"
     timeout: 60000
 # Chưa có đợt nào: các khoản chuyển ở trên mới là đề xuất.
+- scrollUntilVisible:
+    element:
+      text: "Chưa có đợt thu nào.*"
+    direction: DOWN
+    timeout: 30000
 - extendedWaitUntil:
     visible: "Chưa có đợt thu nào.*"
     timeout: 60000
 - takeScreenshot: 29-quyet-toan-chua-co-dot
+- scrollUntilVisible:
+    element:
+      text: "Tạo đợt thu từ sổ"
+    direction: DOWN
+    timeout: 30000
 - tapOn: "Tạo đợt thu từ sổ"
 # Máy chủ gom mọi khoản chưa vào đợt: một nghĩa vụ C → D 75.000đ, chưa phát.
 - extendedWaitUntil:

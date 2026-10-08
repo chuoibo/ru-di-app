@@ -96,6 +96,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Ai dùng món nào?"
     timeout: 60000
+# The second dish stays below the table and first dish on a 320dp phone.
+- scrollUntilVisible:
+    element:
+      text: "An QA · Nuoc"
+    direction: DOWN
+    timeout: 30000
 - assertVisible: "An QA · Nuoc"
 - tapOn: "An QA · Nuoc"
 - takeScreenshot: 28-gan-mon
@@ -106,10 +112,25 @@ appId: com.lakiet.rudi
     timeout: 60000
 - assertVisible: "75.000đ"
 - assertVisible: "125.000đ"
+- scrollUntilVisible:
+    element:
+      text: "Người trả Ban QA"
+    direction: DOWN
+    timeout: 30000
 - assertVisible: "Người trả Ban QA"
 # Người trả (D, mặc định là người đang dùng máy) có huy hiệu ngay trên hàng của mình.
+- scrollUntilVisible:
+    element:
+      text: "Đã trả bill"
+    direction: UP
+    timeout: 30000
 - assertVisible: "Đã trả bill"
 - takeScreenshot: 28-ket-qua
+- scrollUntilVisible:
+    element:
+      text: "Ô tên khoản chi"
+    direction: DOWN
+    timeout: 30000
 - tapOn: "Ô tên khoản chi"
 - inputText: "Toi Xom Lao"
 - hideKeyboard
