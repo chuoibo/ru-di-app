@@ -25,6 +25,7 @@ import { useRudiSession } from "../../session";
 import { nhanCua } from "../../cai-dat/phien-cai-dat";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { RudiButton } from "../../ui";
+import { chuLon } from "../../adaptive";
 import { DauLon } from "../../ui/DauLon";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -169,7 +170,7 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
   ].join(" · ");
 
   const namVao = new Date(hoSo.created_at).getFullYear();
-  const largeText = fontScale >= 1.3;
+  const largeText = chuLon(fontScale);
   const coverWidth = Math.min(contentWidth, 248);
   const coverHeight = coverWidth * 4 / 3;
   // A short identity can sit on the cover's paper label. Longer names and

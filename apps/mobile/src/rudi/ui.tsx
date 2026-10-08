@@ -1284,7 +1284,7 @@ const styles = StyleSheet.create({
   button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   buttonFull: { width: "100%" },
   buttonCompact: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10 },
-  buttonLabel: { zIndex: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
+  buttonLabel: { zIndex: 1, flexGrow: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
   nutCoLyDoFull: { alignSelf: "stretch" },

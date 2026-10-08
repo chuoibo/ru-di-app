@@ -44,6 +44,7 @@ import { mucNguoi } from "../../nguoi/muc-nguoi";
 import { docDoiTuong, docTrangTuong, ghepTrangTuong, lamMoiDauTuong, type BaiTuong } from "../../tuong/social-v2";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { chuLon } from "../../adaptive";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { BadgeArt } from "../../ui/BadgeArt";
 import { EmptyState } from "../../ui/EmptyState";
@@ -300,7 +301,7 @@ export function HoSoNguoiScreen() {
 
   if (!phienDaDoc) return null;
 
-  const largeText = fontScale >= 1.3;
+  const largeText = chuLon(fontScale);
   const coverWidth = Math.min(contentWidth, 248);
   const coverHeight = coverWidth * 4 / 3;
   const identityOnCover = hoSo.pha === "xong" && !largeText && coverWidth >= 220 && hoSo.hoSo.display_name.length <= 28;
