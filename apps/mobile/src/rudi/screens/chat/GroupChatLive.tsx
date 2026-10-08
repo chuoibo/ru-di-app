@@ -51,6 +51,7 @@ import { docDaChan } from "../../cai-dat/quyen-rieng-tu";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
+import { nguonAnhNiemDaMo } from "../../chat/e2ee/anh-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
 import { useBanNhap } from "../../chat/useBanNhap";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
@@ -386,8 +387,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * the source carries this reader's headers rather than a bare url.
    */
   const anhTin = useCallback(
-    (tin: Tin) => nguonAnh(tin.image_url, personId, contextId),
-    [personId, contextId],
+    (tin: Tin) => lan.lan === "v2" ? nguonAnhNiemDaMo(tin.image_url) : nguonAnh(tin.image_url, personId, contextId),
+    [personId, contextId, lan.lan],
   );
 
   const tenNguoi = useCallback(

@@ -8,6 +8,7 @@
     "target": "es2022"
   },
   "include": [
+    "src/rudi/chat/e2ee/anh-niem.ts",
     "src/rudi/account.ts",
     "src/rudi/community/api.ts",
     // B7 (QA N14): the composer's topic rules held to the server's, and the
