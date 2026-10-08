@@ -323,7 +323,8 @@ const styles = StyleSheet.create({
   stickerGrain: { borderRadius: 5 },
   motCot: { flexBasis: "100%", maxWidth: "100%" },
   dauChon: { position: "absolute", top: 4, right: 4 },
-  giua: { textAlign: "center" },
+  // Measure the label inside the paper's available width, including large text.
+  giua: { alignSelf: "stretch", textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // Four envelopes since ADR-0038 §2.5: two to a row, never a lone fourth.
   phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 60, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 8, paddingTop: 14, overflow: "hidden" },
