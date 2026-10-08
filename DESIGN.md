@@ -586,7 +586,8 @@ gradient thương hiệu cũ làm giá trị của `accent` runtime.
 
 ### Named Rules
 **Luật Một Tông Dẫn.** Một màn có đúng một tông dẫn; hai tông dẫn cùng lúc là
-lỗi, không phải lựa chọn. Welcome/Login/OTP dẫn bằng cam (washi + con dấu);
+lỗi, không phải lựa chọn. Welcome/Login/OTP dẫn bằng cam (con dấu; Welcome
+thêm chỉ báo trang coral);
 Quyết toán và Tài chính dẫn bằng teal; Lịch trình AI và thẻ AI dẫn bằng tím;
 con dấu «HỢP GU» tím trên Khám phá là tông ở **thành phần**, không đổi tông
 màn.
@@ -776,8 +777,8 @@ instance.
   «Chào bạn», «Nhập mã 6 số» trong `CoverBand`.
 - **Display** (ExtraBold, 34/39, -1.1): số tiền tổng trên thẻ tông, một màn
   một lần.
-- **H1** (ExtraBold, 28/34, -0.65): tiêu đề màn. Tiêu đề trang pager Welcome
-  dùng cùng face ở 28/33.
+- **H1** (ExtraBold, 28/34, -0.65): tiêu đề màn. Tiêu đề pager Welcome tại
+  `34d57ca9` dùng cùng face ở 34/40, -0.7; cửa sổ dưới 360dp dùng 30/36.
 - **H2** (Bold, 21/27, -0.3): `SectionHeader` («Chi theo nhóm», «Các khoản
   chuyển»), tên địa điểm dẫn (`PlaceLead`), tiêu đề trạng thái rỗng.
 - **Title** (system 700, 17/23, -0.15): tiêu đề `TopBar`, tiêu đề thẻ, chữ số
@@ -845,9 +846,11 @@ lớp lại:
 | `medium` | 600 đến 839 | 2 | 24 | rail trái 104 | chỉ khi cao ≥ 480 | 960 |
 | `expanded` | ≥ 840 | 3 | 36 | rail trái 104 | có | 1200 |
 
-`heightClass = short` dưới 480dp (máy nằm ngang hoặc IME đè sheet): Welcome hạ
-wordmark xuống 72 và bỏ route; `CoverBand compact` rút vải trên dưới khi bàn
-phím mở ở compact (Login/OTP).
+`heightClass = short` dưới 480dp (máy nằm ngang hoặc IME đè sheet).
+Welcome tại `34d57ca9` còn chọn bố cục ngắn khi chiều cao sau safe area dưới
+660dp hoặc `round(fontScale × 100) ≥ 130`: chữ, cảnh và hành động xếp dọc
+trong vùng cuộn; cảnh vẫn hiện ở cao 144dp. `CoverBand compact` rút vải trên
+dưới khi bàn phím mở ở compact (Login/OTP).
 
 **Lưới đo theo vùng nội dung.** `ResponsiveRow` đo chính vùng nội dung qua
 `onLayout`, sau rail và lề; `gridFor(width, minItemWidth = 250, gap = 12,
@@ -906,8 +909,10 @@ header, mà vẫn giữ state và callback của component đã vẽ nó (trình
 cạnh bản đồ của `hanh-trinh/SoHanhTrinh.tsx`; trước đó scrim dừng ở mép trên
 thân màn và header vẫn sáng, bấm được: QA UI-041). Không có host (trang lab,
 test) thì con ở yên chỗ cũ.
-**Welcome**: lề 20, wordmark 118 (compact) / 150 (medium+), route `maxWidth`
-560, khối đáy `maxWidth` 640 ở medium+.
+**Welcome** (`34d57ca9`): lề ngang 24, cột bìa `maxWidth` 688, vùng nội dung
+`min(windowWidth - 48, 640)`, khối đáy `maxWidth` 640 ở medium+; đầu bìa là
+`Logo compact` với wordmark cao 18. Bố cục ngắn giữ Nếp canonical 96dp bên
+mép giấy và cảnh 144dp, không xoá artwork để dành chỗ cho chữ lớn.
 
 **Safe area cho thứ ghim đáy**: thanh tab `paddingBottom = max(insets.bottom,
 10)`; sheet `max(insets.bottom, 16)`; Welcome `max(insets.bottom, 16) + 6`;
@@ -1112,16 +1117,19 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
 - **Con dấu CTA (`StampButton`)**, nút chính của bề mặt thuyết phục: tô
   `brand.coral`, vành 2px mực 0.88 theo `duongVienDau`, `Grain mucIn` 0.26,
   nhãn Bricolage Bold màu `mauSang.ink` +0.4; cỡ `lon` cao tối thiểu 60, đệm
-  ngang 30, chữ 21/26, bo 16 (Welcome «Rủ Đi thôi!» nghiêng -3); cỡ `vua` cao
+  ngang 30, chữ 21/26, bo 16 (Welcome `34d57ca9` «Rủ Đi thôi!» `tilt={0}`,
+  rộng hết cột); cỡ `vua` cao
   52, đệm 24, chữ 17/22, bo 14 (Login «Gửi mã»). Không icon, không vành
-  trong, không bóng, rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
+  trong, không bóng, mặc định rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
   `loading` thay bằng spinner mực trong hàng và khoá nút; `disabled` mờ 0.55.
 - **Nút bìa (`CoverButton`)**: `outline` trong suốt, viền 1px
   `coverLineStrong` (5.19:1 sáng / 6.42:1 tối trên `cover`), bo 14, cao 50,
   đệm 18, nhãn `label` `coverInk`, icon 18, haptic `select`. `link`: không
-  viền, rộng bằng chữ, cao tối thiểu 48, đệm 12; là lựa chọn phụ **dưới** con
-  dấu (Welcome «Tìm hiểu thêm ›», ảnh `01-welcome`), vì một thanh outline kéo
-  hết cột đã lấn át con dấu nó phải theo sau.
+  viền, mặc định rộng bằng chữ, cao tối thiểu 48, đệm 12; là lựa chọn phụ
+  **dưới** con dấu. Welcome `34d57ca9` dùng `link full`: hàng rộng hết cột,
+  nhãn `flex: 1` căn giữa lấy phần còn lại bên cạnh chevron 18, giữ đủ
+  «Tìm hiểu thêm» / «Xem lại từ đầu» cả khi tăng chữ. `full` không thêm viền;
+  link ở màn khác giữ chiều rộng theo chữ khi không truyền tuỳ chọn này.
 - **Nút giấy (`RudiButton`)**: cao 52 (48 `compact`), bo 14, nhãn `label` một
   dòng, icon 20; `solid` = nền `<tone>` phẳng và nhãn `<tone>Ink` theo
   scheme (album «Thêm khoảnh khắc» accent, lịch trình «Dùng plan này» ai);
@@ -1196,8 +1204,8 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   loại không phải trạng thái.
 - **Huy hiệu demo (`DemoBadge`)**: viền `line`, chữ 10/700 `inkFaint`, icon
   `flask-outline`, bo pill; mặc định «Dữ liệu demo», trong `TopBar` rút về
-  `compactLabel` («Demo», «Nháp»); **render rỗng ở chế độ live**. Trên Welcome
-  nhãn là «Bản trải nghiệm».
+  `compactLabel` («Demo», «Nháp»); **render rỗng ở chế độ live**. Welcome
+  `34d57ca9` không dùng `DemoBadge`; «Bản trải nghiệm» là nhãn ở mốc cũ.
 
 ### Con dấu trạng thái (`Stamp`)
 Chữ `stamp` (CondensedBold 12 IN HOA +0.8), viền 2px màu tông, bo 6, đệm 8/4,
@@ -2662,16 +2670,55 @@ react-native-web tự tô núm teal, màu của tiền.
   vẽ control chết.
 
 ### Signature: Bìa mở ra trang (Welcome → Login)
-Welcome là bìa đóng (ảnh `01-welcome`): indigo tràn màn với vân vải, wordmark
-rất lớn ở phần ba trên (`coverInk`), washi cam nghiêng -2° cao 34 mang «AI đi
-chơi, chia bill thông minh» bằng mực tối, route mực 4 chặng với glyph (people
-· compass · receipt · images) và chặng đang ở tô coral chạy theo trang pager,
-pager 4 trang (tiêu đề EB 28/33, body `coverInkSoft`), chấm 7 (đang ở 20
-rộng, cam), rồi con dấu «Rủ Đi thôi!» nghiêng -3 rộng bằng chữ và liên kết
-«Tìm hiểu thêm ›» dưới nó. Bấm con dấu: bìa **nhấc** (translateY -48, mờ tới
-0.65) trong `shared` 300ms easing `accelerate`, rồi push `/login`; Login mở
-với `CoverBand` dưới status bar và con dấu «Gửi mã» cỡ `vua`, tức lời rủ có
-một ngôn ngữ ở cả hai màn. Reduce Motion: pager nhảy thẳng, bìa không nhấc.
+Welcome tại `34d57ca9` là bìa indigo tràn màn với `Grain vaiBia` 0.30,
+`Logo compact` ở đầu, bốn chương dẫn từ lời rủ tới chọn nơi, rõ phần mỗi
+người và giữ kỷ niệm. Tiêu đề ExtraBold 34/40 (30/36 dưới 360dp), body
+17/24 `coverInkSoft`. Cảnh `scene-street` ở trang 1/3, `scene-cafe` ở trang
+2 và `scene-coast` ở trang 4; chúng là illustration địa phương, không mang
+thông tin thay chữ. Chỉ báo gồm bốn chấm 6dp, chấm đang chọn dài 22dp màu
+coral, mỗi vùng chạm 48×48dp; dưới là «Trang n trên 4», con dấu «Rủ Đi
+thôi!» rộng hết cột và link đầy đủ. Link tới chương sau, trang cuối trở lại
+đầu; pager giữ cùng chương khi bề rộng đổi.
+
+Bấm con dấu khoá lần mở cho tới khi màn nhận focus lại và push `/login`
+trực tiếp; source chuẩn bị Login bằng `prefetch`, không còn pha nhấc bìa
+và chờ trước điều hướng. Artwork xuất hiện bằng opacity và translateY 12
+với `motion.timing("shared", "decelerate")`; pager không animate khi giảm
+chuyển động. Đây là mô tả cơ chế từ mã, chưa phải chứng nhận motion của
+source `34d57ca9`.
+
+### Bàn giao Welcome 08/10/2026 — phạm vi đã ship
+
+Ghi từ source `34d57ca9dbcf032bf9c8b21b41e6b059a6f4e00c`:
+`screens/Welcome.tsx`, `ui/CoverButton.tsx`, `theme.ts`, `ui/Grain.tsx` và
+`ui/art/Nep.tsx`. Concept `board02-panel1-welcome-cover.png` là reference,
+**chưa phải approved comp**; giữ Nếp canonical, không thay bằng mascot của
+concept. Bố cục xếp dọc ở 320dp/font lớn là adaptation của bìa, giấy, cảnh,
+nhân vật và hành động. Mã bố cục cao còn có cảnh cạnh cột chữ và
+`spot-memory`; verdict dưới đây không xác nhận bố cục rộng đó.
+
+| Phần bố cục ngắn | Artifact đã ship |
+|---|---|
+| Cảnh | Cao 144dp, rộng vùng nội dung, `fit="cover"`; giữ focal của cảnh trên màn ngắn |
+| Nếp | `pose="moi"`, 96dp, trái 12dp/đáy 4dp; giữ mặt, tay và chân canonical |
+| Mép giấy/vải | Giấy rộng 136dp, bo dưới phải 72dp; vải rộng 124dp, bo dưới phải 104dp; mép giấy khoảng 12dp ở đầu mở dần về chân Nếp |
+| Vật liệu | Giấy theo scheme, gradient ngang `paperShade → paper → paperShade` tại 0/0.55/1, `Grain giayTrang` 0.45, `bongGiay(1, dark)`; vải `cover` + `Grain vaiBia` 0.30 |
+| Hành động | CTA `tilt={0}`, link `full`; nhãn phụ đủ chữ, nội dung và action đi trong vùng cuộn khi font lớn |
+
+[Verdict độc lập Welcome](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-verdict-34d57ca9.md)
+chốt **15/16, `ship` chỉ cho ba finding nhãn phụ, artwork và mép giấy:
+cả ba resolved**. Reviewer đã mở 17 ảnh Android portrait 320×640: thường
+3, font 1.3 có 4, font 2.0 có 4, giảm chuyển động 3, tối 3. Ảnh của source
+này phủ trang 1/2/4, không tự nhận đã mở trang 3. Năm functional case exit 0
+(22,745s / 21,493s / 29,903s / 20,941s / 22,595s) không thay verdict thị
+giác hoặc full gate. Nền APK là `b87a16f1`, backend `54b5dc0e`, không gán
+chúng thành build `34d57ca9`; diễn biến ghi tại
+[RECOVERY-20261008.md](docs/design/nep-ui-implementation/RECOVERY-20261008.md).
+
+Clip motion chỉ thuộc `f26c3dd7`, không chứng minh motion `34d57ca9`.
+Plugin/detector và craft-floor hiện thiếu, không có kết luận detector clean.
+Phạm vi này không phải APPROVE toàn app, không phủ iOS, tablet/cửa sổ rộng,
+TalkBack hoặc toàn bộ trạng thái Welcome.
 
 ### Signature: Con dấu rơi xuống (trạng thái thành đúng dưới ngón tay)
 Dòng FORM của hợp đồng gọi tên «một cú đóng dấu khi một trạng thái thành
@@ -2737,7 +2784,8 @@ plan này», «Thêm khoảnh khắc»), không «OK»/«Tiếp». `accessibilit
 bằng động từ: «Mở {tên địa điểm}», «Mở ảnh 3», «Chọn ảnh», «Đóng chọn ảnh»,
 «Thêm ảnh», «Lưu …». Con dấu là danh từ/trạng thái ngắn IN HOA. Dữ liệu
 fixture luôn dán «Dữ liệu demo» (đầy đủ), «Demo»/«Nháp» (trong `TopBar`),
-«Bản trải nghiệm» (Welcome). Số tiền viết «1.106.250đ»; không có số nào màn
+«Bản trải nghiệm» (Welcome ở mốc cũ, không có tại `34d57ca9`). Số tiền viết
+«1.106.250đ»; không có số nào màn
 tự bịa: đếm ảnh, huy hiệu, ngày còn lại đều tính từ dữ liệu.
 
 **Luật Một Cách Viết Ngày** (01–04/10, QA UI-103, UI-104): ngày và giờ đi qua

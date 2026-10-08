@@ -732,11 +732,11 @@
     }
   },
   "kit": {
-    "StampButton": "rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng",
-    "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu (Welcome «Tìm hiểu thêm»)",
+    "StampButton": "mặc định rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; riêng Welcome 34d57ca9 tilt0 và rộng hết cột; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng",
+    "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, mặc định rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu. Welcome 34d57ca9 dùng link full: width 100%, nhãn flex 1 căn giữa lấy phần còn lại bên chevron18, giữ đủ «Tìm hiểu thêm» / «Xem lại từ đầu»; không thêm viền và không đổi link intrinsic ở màn khác",
     "CoverBand": "nền cover + Grain vaiBia 0.3, bo dưới 28, paddingTop md (+insets.top khi underStatusBar), paddingBottom lg, bleed = lề màn; compact rút vải khi bàn phím mở; back tròn 48 coverInk 0.08, PressScale 0.92 scale-only",
     "Washi": "SVG mép xé, cao 30 (40 dưới wordmark), paddingHorizontal 18, minWidth 120, tilt ±1/±2, vạch sáng card 0.35 1.5px",
-    "Wordmark": "SVG, height mặc định 28; Welcome 118 compact / 150 medium+ / 72 short; coverInk trên bìa",
+    "Wordmark": "SVG, height mặc định 28; Welcome 34d57ca9 dùng Logo compact, wordmark cao18; coverInk trên bìa",
     "RouteLine": "stroke 3, stops 2..5, glyph r16 (active r21), activeColor brand.coral + activeInk mauSang.ink, opacity 0.82 trên bìa, maxWidth 560",
     "Stamp": "viền 2 màu tông, bo 6, đệm 8/4, minHeight 26, typography.stamp; outline mặc định, ink hiếm; accessibilityLabel = nhãn, không role; nen = miếng giấy card dưới con dấu viền khi đặt trên ảnh (HỢP GU, GỢI Ý); dong = cú đóng dấu: lao 130ms Easing.in(quad) scale 1.35→1 mực 25% (roi), chạm 60ms mực 25→100% + haptic.success (muc), lún 1→0.97→1 spring.press (lun, shared value riêng); Reduce Motion gập thành tĩnh; chỉ truyền cho hàng vừa bấm (Bill «Đã trả», Outing «Đã tới», DotThuLive sau máy chủ xác nhận); ship 12 màn",
     "Money": "typography.money 21/27 EB tabular; sizes display/money/body/label/caption; countUp chỉ khi domainStateValid (moneyCountUpMs)",
@@ -794,7 +794,7 @@
     "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)"
   },
   "surfaces": {
-    "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
+    "Welcome": "34d57ca9: bìa cover + Grain vaiBia0.30, lề24, maxWidth688, nội dung min(windowWidth−48,640), Logo compact wordmark18; bốn chương, EB34/40−0.7 (30/36 dưới360dp), body17/24 coverInkSoft. Bố cục short khi heightClass short, cao sau safe area<660 hoặc round(fontScale×100)≥130: xếp dọc/cuộn, scene144dp fit cover, Nếp canonical moi96dp trái12/đáy4, paper136dp bo72 + cloth124dp bo104, gradient paperShade/paper/paperShade + grain + bongGiay1. Cảnh street trang1/3, cafe2, coast4. Chấm6/active22 coral, target48×48, «Trang n trên4»; StampButton «Rủ Đi thôi!» tilt0 rộng hết cột; CoverButton link full «Tìm hiểu thêm» / «Xem lại từ đầu». Khoá một lần mở, prefetch rồi push /login trực tiếp; artwork opacity/translateY12 theo shared decelerate, reduced pager không animate. Bằng chứng ship giới hạn ở shippedWelcome20261008",
     "Login": "RudiScreen surface=cover; CoverBand underStatusBar (compact khi bàn phím mở ở compact) bleed md/lg với Logo compact + hero «Chào bạn»; cột 560 gap 20: Field, StampButton vua «Gửi mã», divider «hoặc», outline lời mời; Google chỉ khi native có client ID hợp lệ",
     "Otp": "CoverBand underStatusBar với hero «Nhập mã 6 số»; OtpBoxes 6x 44x54 viền 1.5 (accent ô đang nhập); caption inkSoft đang kiểm/đếm ngược; lỗi body warn",
     "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112",
@@ -1423,6 +1423,65 @@
       "useGiuKhiDong",
       "LuoiNguoi hai cột ở tablet",
       "RudiTabBar tabBarHeight theo fontScale"
+    ]
+  },
+  "shippedWelcome20261008": {
+    "_": "Bàn giao documenter sau ship batch Welcome: mô tả từ artifact đã ship, giữ hệ/chương lịch sử và nguồn token/asset; không phải APPROVE toàn app.",
+    "date": "2026-10-08",
+    "headCommit": "34d57ca9dbcf032bf9c8b21b41e6b059a6f4e00c",
+    "sources": [
+      "apps/mobile/src/rudi/screens/Welcome.tsx",
+      "apps/mobile/src/rudi/ui/CoverButton.tsx",
+      "apps/mobile/src/rudi/theme.ts",
+      "apps/mobile/src/rudi/ui/Grain.tsx",
+      "apps/mobile/src/rudi/ui/art/Nep.tsx"
+    ],
+    "reference": {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/reference-mapping/publicreferencecrops/board02-panel1-welcome-cover.png",
+      "authority": "concept reference, chưa phải approved comp; giữ Nếp canonical"
+    },
+    "shortLayout": {
+      "condition": "heightClass short hoặc chiều cao sau safe area dưới660dp hoặc round(fontScale×100)≥130",
+      "flow": "chữ, cảnh, pagination và action xếp dọc trong vùng cuộn; không xoá art ở màn ngắn/font lớn",
+      "scene": "cao144dp, rộng vùng nội dung, fit cover",
+      "nep": "pose moi canonical, size96dp, left12dp, bottom4dp",
+      "fold": "paper width136dp/borderBottomRightRadius72dp; cloth width124dp/borderBottomRightRadius104dp; mép giấy khoảng12dp ở đầu mở về chân Nếp",
+      "material": "paper theo scheme + gradient ngang paperShade → paper → paperShade (0/0.55/1), Grain giayTrang0.45, bongGiay(1,dark); cloth cover + Grain vaiBia0.30",
+      "secondaryLabel": "CoverButton link full, nhãn flex1/căn giữa còn chevron18; đủ «Tìm hiểu thêm» và «Xem lại từ đầu»"
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "chỉ ba finding thị giác Welcome trên Android portrait 320×640 của 34d57ca9",
+      "rubric": "15/16",
+      "resolved": [
+        "nhãn phụ trang4",
+        "artwork thành strip/Nếp nhỏ",
+        "mép giấy/fold còn hình móc trắng"
+      ],
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-verdict-34d57ca9.md"
+    },
+    "evidence": {
+      "reviewerOpenedScreenshots": 17,
+      "viewport": "Android portrait 320×640",
+      "screenshotsByCase": {
+        "normal": 3,
+        "font130": 4,
+        "font200": 4,
+        "reduced": 3,
+        "dark": 3
+      },
+      "capturedPages": "1/2/4; không nhận đã mở trang 3 của 34d57ca9",
+      "functionalCases": "normal22.745s/font13021.493s/font20029.903s/reduced20.941s/dark22.595s, đều exit0; không thay verdict thị giác/full gate",
+      "nativeApk": "b87a16f1",
+      "backend": "54b5dc0e",
+      "recovery": "docs/design/nep-ui-implementation/RECOVERY-20261008.md"
+    },
+    "limits": [
+      "Clip motion chỉ thuộc f26c3dd7; chưa chứng minh motion 34d57ca9, timing chính xác hoặc reduced lifecycle",
+      "Plugin/detector và craft-floor hiện thiếu; không có kết luận detector clean",
+      "Không APPROVE toàn app hoặc toàn bộ trạng thái Welcome",
+      "Chưa phủ iOS, tablet/cửa sổ rộng hoặc TalkBack",
+      "Cơ chế bố cục cao/cửa sổ rộng và animation ghi từ source, không nâng thành bằng chứng native"
     ]
   }
 }
