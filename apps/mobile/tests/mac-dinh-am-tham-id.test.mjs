@@ -178,6 +178,9 @@ function sourceFiles(dir) {
 /* Ids used as ids. Each line says what the value is FOR, because "it is fine"
  * is not a reason anybody can re-check later. */
 const CHO_PHEP = new Map([
+  // Transport identity only: old callers record as the payer; the live screen
+  // supplies its signed-in recorder. Neither id is rendered as a name.
+  ["rudi/chia-bill/hoa-don.ts", ["input.actorId ?? input.payerId"]],
   // A pending sticker row carries the sticker's id because the row draws the
   // picture from it (<Sticker id={tin.than}>), exactly as the legacy queue does;
   // the empty string is a photo row, which shows its caption or «Ảnh».

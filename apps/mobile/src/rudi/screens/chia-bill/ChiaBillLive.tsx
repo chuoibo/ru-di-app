@@ -412,7 +412,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
   const ghi = (chia: ChiaBill) =>
     chay(async () => {
       const ten = occasion.trim() === "" ? "Hóa đơn của nhóm" : occasion.trim();
-      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, actorId: phien.person_id, occasion: ten, attempts: attempts.current, outingId, reviewedSplit: chia });
+      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, actorId: phien.person_id, occasion: ten, attempts: attempts.current, reviewedSplit: chia, outingId });
       setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId, acknowledged: kq.acknowledged, hang: hangKetQua(chia, roster) });
     });
 
@@ -864,7 +864,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                 <View style={styles.tenPhan}>
                   <Text style={[laToi ? typography.title : typography.body, { color: colors.ink }]}>{laToi ? "Phần của bạn" : h.ten}</Text>
                   {laToi ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{h.ten}</Text> : null}
-                  {h.id === payerId ? <Stamp dong key={payerId} label={payerId === phien.person_id ? "Bạn đã trả bill" : "Người trả · Chờ xác nhận"} style={styles.dauTra} tilt={-3} tone="split" /> : null}
+                  {h.id === payerId ? <Stamp dong key={payerId} label={payerId === phien.person_id ? "Đã trả bill" : "Người trả · Chờ xác nhận"} style={styles.dauTra} tilt={-3} tone="split" /> : null}
                 </View>
                 <Money size={laToi ? "money" : "body"} tone="split" vnd={buoc.chia.allocations[h.id] ?? 0} />
               </View>
