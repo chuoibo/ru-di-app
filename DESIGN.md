@@ -2385,6 +2385,12 @@ craft-floor vẫn thiếu; không detector clean, không APPROVE toàn Story/app
     thêm trên trần thành 92% ở 320×640, 96% ở 390×460 (UI-007, UI-040).
     `maxHeight` thay trần khi truyền; `avoidKeyboard` co trần theo khung còn
     lại trên bàn phím.
+  - **Ưu tiên quyết định trong form (`eba8678a`) là opt-in**:
+    `prioritizeFooter` mặc định `false`. Khi bật và có `footer`, tấm lấy
+    `height = panelMaxHeight`; vùng tham chiếu cuộn dùng `flexBasis: 0`,
+    `flexGrow: 1` và nhường phần cao còn lại cho editor/action ở chân.
+    CTA phải nằm ngoài vùng overflow của editor; đây không phải footer cố
+    định mới cho mọi sheet. Bằng chứng native hẹp xem bàn giao editor Nếp dưới đây.
   - **Trượt theo chiều cao của chính tấm** (đo `onLayout`, + 24), không một
     hằng 480 để lại một phần ba tấm cao trên màn (UI-013); **khép thì mờ** ở
     đoạn cuối (opacity theo `progress` 0 → 0.12 → 1), nên khung cuối trước
@@ -2459,6 +2465,96 @@ craft-floor vẫn thiếu; không detector clean, không APPROVE toàn Story/app
 - **`Washi`**: dải mép xé cao 30 (34/40 dưới wordmark), đệm ngang 18, rộng
   tối thiểu 120, tô `brand.coral`/`brand.teal`/`brand.violet` ở 0.9; con là
   chữ mực tối tĩnh. Chỉ Welcome dùng trong đợt này.
+
+### Editor Nếp ở bài Cộng đồng — bàn giao giới hạn 09/10/2026
+
+Artifact được review là `eba8678a3418271645f8332ce30261938c8a1fbc`, nguồn
+`community/PostDetail.tsx` và `ui/Sheet.tsx`. Diff hai file từ `eba8678a` tới
+HEAD `6f3f5af2` rỗng; giữ provenance JS của lượt editor, không gán ảnh cũ cho
+SHA mới. Giữ hệ giấy/mực, Bricolage ở tiêu đề, body system và Nếp canonical;
+không thêm hero/artwork cho form này.
+
+Editor dùng `Sheet avoidKeyboard prioritizeFooter` với hai vùng cuộn:
+đoạn bài/dẫn là tham chiếu nhường chiều cao; field và câu lỗi nằm trong
+`ScrollView` riêng ở footer (`minHeight` 128, `flexShrink: 1`, gap 8,
+đệm đáy 4). CTA là sibling **ngoài** vùng cuộn đó, nên «Đồng ý chia sẻ và
+gọi Nếp» hoặc «Lưu ghi chép riêng» vẫn dành được chỗ trên IME.
+`keyboardShouldPersistTaps="handled"` cho phép bấm action khi bàn phím mở.
+Nháp có nhãn «Bản nháp do Nếp viết», sửa bằng tay trước khi lưu; lời nhờ gốc
+vẫn sửa được trong vùng tham chiếu khi đã có nháp. Lý do nút tắt giữ ngay tại
+form, không biến lỗi thành một lớp khác.
+
+[Verdict editor eba8678a](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-independent-verdict-eba8678a.md)
+chốt **ship chỉ P2-NEP-EDITOR-01, resolved**. Root và reviewer đã mở toàn bộ
+17 ảnh packet; reviewer mở thêm ảnh lỗi cuối font 1.0, tổng 18 ảnh after.
+Android portrait 320×640: sáng 1.0, sáng 2.0, tối 1.0; request/draft khi IME
+mở đều thấy CTA đầy đủ và có thao tác bấm thật tới nháp/ghi chép đã lưu.
+OS font được đặt trước fresh attach; chưa có telemetry số RN về font/window.
+
+Runner sáng 1.0 **exit 1, 69.962s**: đã lưu thật, sau đó timeout vì selector
+cuối tìm «Ghi chép riêng» trong khi màn có title «Điều mình muốn giữ».
+Ảnh lỗi có ghi chép mới; không gọi runner này xanh. Sáng 2.0 **exit 0,
+41.118s** và tối 1.0 **exit 0, 53.484s** dùng đích `community-keeps`.
+Tất cả là focused native receipt `not_full_gate: true` ở SHA eba8678a,
+không thay canary/mutant hoặc cổng repo.
+
+Điểm tĩnh trong repair **9 → 12/14**; artwork/crop **N/A**, motion **N/E**.
+Không quy đổi thành /16. **P3 còn mở ở font 2.0**: autoscroll tới caret có
+thể đưa nhãn lời nhờ/nguồn nháp ra khỏi viewport và cắt nhãn/dòng đầu ở mép
+vùng nhập. Chưa có lượt cuộn lại lên đầu riêng để kiểm mọi dòng/offset;
+không nhận «không cắt chữ» hoặc toàn editor hoàn hảo.
+
+Chưa kiểm font 1.3, tối 2.0, input rất dài/error/retry/mọi đường lưu;
+TalkBack/focus trap/restore, target/contrast đo native, motion/timing/reduced/
+background lifecycle, iOS/tablet, chất lượng lời AI và privacy. Plugin/detector
+và craft-floor chính thức vẫn thiếu; không detector clean hoặc APPROVE toàn
+editor/frontend.
+
+### Community/Khám phá viewport đầu — bàn giao giới hạn 09/10/2026
+
+Artifact được review là `6f3f5af2d1ae2b32145908f2da9409b254b1535d`, nguồn
+`community/CommunityScreen.tsx`, `screens/explore/ExploreLive.tsx`,
+`screens/explore/HangDiaDiem.tsx`, `adaptive.ts` và `ui/chu.ts`.
+Giữ mockup ở vai trò concept reference và vật liệu yên của refinement hiện
+hành; không thay token, shading, canonical Nếp hoặc rải grain khắp surface.
+
+- **Community:** bài đầu đứng trước consent. Chỉ hỏi ở «Dành cho bạn» khi
+  chưa trả lời, không có topic và có bài; feed rỗng không mang câu hỏi này.
+  Consent giữ đủ phạm vi «Không đọc chat hay sổ riêng», body 15/22,
+  gap copy 3, gap toàn khối 4, đệm dọc 8 và kẻ tóc `line`.
+  Hai action là `RudiButton compact full={false} variant="ghost"` trong
+  hàng `flexWrap`, gap 4. Nhãn nhìn dùng `Để${NBSP}sau`, nhãn trợ năng
+  «Để sau» dùng khoảng trắng thường; handler vẫn `consent(false)`.
+  Không khoá width/font để giữ nhãn.
+- **Explore:** `compactLead` chỉ khi rộng dưới 600, cao dưới 700 và
+  `!chuLon(fontScale)` (helper nhận chữ lớn từ 1.28 để bao cả bước OS 1.3).
+  Nhịp khối rút về gap 12, cảnh còn cao 120 thay vì 150. Lead gọn đặt hình
+  112×144 bên trái, chữ bên phải `flex: 1`, `minWidth: 0`, đệm 12;
+  vẫn có tên hai dòng, fact và chip lý do/giá. Tim giữ control riêng trên
+  hình. Chữ lớn/cửa sổ khác giữ layout thường; chưa nhận matrix native đó.
+
+[Verdict gallery 6f3f5af2](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md)
+chốt **ship chỉ P2-01 composition viewport đầu và P2-02 «Để sau», cả hai
+resolved**. Root và reviewer mở đủ 10/10 ảnh packet, gồm fingerprint đúng
+JS. Baseline Android portrait 320×640/font 1.0 sáng/tối: Community có tác giả
+và bốn dòng body trước nav, consent sau bài đầu; Explore có tên hai dòng/fact
+đầu và artwork rõ trước nav. Dataset/địa điểm dẫn đã đổi sau lưu gu thật,
+nên đối chiếu hierarchy và vùng đọc, không yêu cầu nội dung pixel giống nhau.
+
+Community top, Explore top, consent sau bài đầu và settings scheme snapshots
+được chấm **14/14 tĩnh** ở baseline sáng/tối; interaction/motion **N/E**,
+responsive/accessibility chỉ cấu trúc nhìn thấy. Ảnh font 2.0 chỉ chứng minh
+đủ nhãn/control tại viewport đã cuộn: hai action xuống hàng riêng, không
+chồng nhau. Không nhận toàn màn font 2.0 hoặc mọi breakpoint đã đạt.
+Runner sáng **35.859s**, tối **19.539s**, font 2.0 **13.933s**, đều exit 0;
+không thay full gate. Settings ảnh Tối/Sáng chỉ chứng minh state được chụp,
+không toàn lifecycle đổi theme.
+
+Không mở rộng verdict sang search/filter/save/error/empty/feed actions,
+mọi route/layer, PostDetail/Nếp keyboard, privacy hay motion. Chưa TalkBack,
+target/contrast đo native, iOS/tablet. Plugin/detector và craft-floor vẫn
+thiếu; không detector clean, không quy /14 thành /16 và không APPROVE toàn
+Community/Explore/frontend.
 
 ### Inputs / Fields
 - **`Field`**: cao 52 (108 `multiline`), nền `card`, viền 1px `lineStrong`, bo

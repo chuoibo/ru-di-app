@@ -1560,5 +1560,116 @@
       "Không đổi provenance báo cáo34/04 hoặc clipf26, không APPROVE toàn app/full motion",
       "Plugin/detector vẫn thiếu; không detector clean"
     ]
+  },
+  "shippedNepEditor20261009": {
+    "_": "Bàn giao documenter từ artifact đã ship: chỉ P2-NEP-EDITOR-01; giữ token, lịch sử và Nếp canonical, không APPROVE toàn editor/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "eba8678a3418271645f8332ce30261938c8a1fbc",
+    "documentedAtCommit": "6f3f5af2d1ae2b32145908f2da9409b254b1535d",
+    "sourceContinuity": "git diff eba8678a..6f3f5af2 rỗng cho Sheet.tsx và PostDetail.tsx; không gán ảnh eba thành capture JS mới.",
+    "sources": [
+      "apps/mobile/src/rudi/community/PostDetail.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx"
+    ],
+    "layout": {
+      "sheet": "avoidKeyboard + prioritizeFooter; prioritizeFooter mặc định false. Khi opt-in và có footer, height = panelMaxHeight, reference scroll flexBasis 0/flexGrow 1 lấy phần cao còn lại.",
+      "editor": "Field/câu lỗi trong ScrollView riêng: flexGrow 0, flexShrink 1, minHeight 128, gap 8, paddingBottom 4; keyboardShouldPersistTaps handled. CTA là sibling ngoài overflow.",
+      "actions": "Đồng ý chia sẻ và gọi Nếp hoặc Lưu ghi chép riêng giữ chỗ trên IME; không footer cố định mới cho mọi sheet.",
+      "draft": "Nhãn Bản nháp do Nếp viết, field Sửa lại theo ý bạn; giữ lời nhờ gốc sửa được trong vùng tham chiếu. Lý do nút tắt/lỗi ở form.",
+      "identity": "Giấy/mực, Bricolage ở tiêu đề, system body, canonical Nếp; không thêm hero/artwork cho form."
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ P2-NEP-EDITOR-01 ở request/draft + IME và trạng thái đọc đã chụp trên Android portrait 320×640: sáng 1.0/2.0, tối 1.0.",
+      "resolved": [
+        "CTA gọi Nếp đầy đủ và bấm được trên IME",
+        "CTA lưu đầy đủ và bấm được trên IME",
+        "Reference nhường chiều cao cho editor/action"
+      ],
+      "staticScore": "9 → 12/14; artwork/crop N/A, motion N/E; không quy đổi thành /16 hoặc full critique/audit.",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-independent-verdict-eba8678a.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-after-review-packet.json"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedPacketPng": 17,
+      "reviewerOpenedAdditionalErrorPng": 1,
+      "fontProvenance": "OS font đặt trước fresh attach ở từng lượt, restore 1.0 trước fresh attach tiếp; chưa telemetry số RN font/window.",
+      "lightFont100": "69.962s, exit 1: gọi/nháp/lưu thật từ IME rồi timeout selector title Ghi chép riêng; title thực Điều mình muốn giữ, ảnh lỗi có ghi chép mới. Không gọi runner này xanh.",
+      "lightFont200": "41.118s, exit 0; assert/tap gọi và lưu từ IME tới community-keeps, ảnh có ghi chép mới.",
+      "darkFont100": "53.484s, exit 0; assert/tap gọi và lưu từ IME tới community-keeps, ảnh có ghi chép mới.",
+      "receiptScope": "Source/harness SHA eba8678a, not_full_gate true; không thay canary/mutant/cổng repo, saved destination không là review toàn Keeps.",
+      "nativeApk": "b87a16f1",
+      "nativeApkSha256": "34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967",
+      "backend": "54b5dc0e",
+      "javascript": "eba8678a"
+    },
+    "openQualityFinding": {
+      "priority": "P3",
+      "state": "Font 2.0, caret autoscroll",
+      "finding": "Nhãn lời nhờ/nguồn nháp có thể rời viewport, nhãn sửa và dòng đầu bị crop ở mép vùng nhập.",
+      "limit": "Chưa ghi riêng cuộn lại lên đầu để kiểm mọi dòng/offset; không nhận không cắt chữ hoặc editor hoàn hảo."
+    },
+    "limits": [
+      "Font 1.3, tối 2.0, input rất dài/error/retry và mọi đường lưu chưa phủ.",
+      "TalkBack/focus trap/restore, measured targets/contrast và numeric RN metrics chưa kiểm.",
+      "Motion/timing/reduced/background lifecycle, native iOS/tablet chưa phủ.",
+      "Không đánh giá AI quality/privacy; không full gate hoặc APPROVE toàn editor/frontend.",
+      "Plugin/detector và craft-floor chính thức thiếu; không detector clean."
+    ]
+  },
+  "shippedGallery20261009": {
+    "_": "Bàn giao documenter từ artifact 6f: chỉ hai finding viewport đầu/Để sau; giữ token, shading, lịch sử và canonical Nếp, không APPROVE toàn route/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "6f3f5af2d1ae2b32145908f2da9409b254b1535d",
+    "sources": [
+      "apps/mobile/src/rudi/community/CommunityScreen.tsx",
+      "apps/mobile/src/rudi/screens/explore/ExploreLive.tsx",
+      "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+      "apps/mobile/src/rudi/adaptive.ts",
+      "apps/mobile/src/rudi/ui/chu.ts"
+    ],
+    "authority": "Mockup là concept reference; giữ quiet material của refinement hiện hành, không rải grain khắp surface hoặc thay hệ.",
+    "community": {
+      "consentPosition": "Sau bài đầu, chỉ khi chưa trả lời, không topic, mode for_you và có bài; feed rỗng không mang câu hỏi.",
+      "consentMaterial": "Margin ngang 16, padding dọc 8, gap 4, hairline line; copy gap 3, body 15/22. Giữ phạm vi không đọc chat hay sổ riêng.",
+      "actions": "RudiButton compact/full false/ghost; row flexWrap wrap, gap 4, action maxWidth 100%/flexShrink 1, không width/font lock.",
+      "laterLabel": "Nhãn nhìn Để + NBSP + sau, accessibilityLabel Để sau với khoảng trắng thường; handler consent(false) và điều kiện unanswered giữ nguyên.",
+      "nativeObserved": "Baseline sáng/tối font 1.0 có tác giả và bốn dòng body trước nav, consent sau bài đầu, không update pill che vùng đọc trong ảnh đã mở."
+    },
+    "explore": {
+      "compactCondition": "Width < 600, height < 700 và !chuLon(fontScale); helper nhận chữ lớn từ 1.28 để bao bước OS 1.3.",
+      "shortLayout": "Gap khối 12, scene cao 120 thay vì 150; lead hình 112×144 trái, text flex 1/minWidth 0/pad 12 phải, tên hai dòng/fact/chip lý do-giá; tim là control riêng trên hình.",
+      "otherLayouts": "Chữ lớn/cửa sổ khác giữ layout thường từ source; không nâng thành native matrix đã đạt.",
+      "nativeObserved": "Baseline sáng/tối font 1.0 có tên hai dòng và fact đầu/artwork rõ trước nav; dataset/lead đổi sau lưu gu thật, so hierarchy thay vì pixel nội dung giống nhau."
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ P2-01 composition viewport đầu Community/Explore và P2-02 Để sau; cả hai resolved.",
+      "resolved": [
+        "P2-01",
+        "P2-02"
+      ],
+      "staticScore": "14/14 ở Community top, Explore top, consent sau bài đầu và settings scheme snapshots sáng/tối font 1.0; interaction/motion N/E, responsive/accessibility chỉ cấu trúc nhìn thấy.",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-after-review-packet.json"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedPng": 10,
+      "viewport": "Android portrait 320×640; baseline sáng/tối font 1.0, fingerprint đúng JS.",
+      "font200": "Chỉ xác nhận đủ Để sau và hai action xuống hàng riêng/không chồng ở viewport nhãn đã cuộn; font đặt trước fresh attach, không toàn màn font 2.0 pass.",
+      "nativeFlows": "Sáng 35.859s, tối 19.539s, font 2.0 13.933s, đều exit 0; không thay full gate.",
+      "settings": "Ảnh Tối/Sáng đúng selected state; không toàn lifecycle đổi theme.",
+      "nativeApk": "b87a16f1",
+      "nativeApkSha256": "34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967",
+      "backend": "54b5dc0e",
+      "javascript": "6f3f5af2"
+    },
+    "limits": [
+      "14/14 tĩnh không thay ngưỡng /16; font 2.0 chỉ nhãn/control tại viewport đã cuộn.",
+      "Search/filter/save/error/empty/feed actions và mọi route/layer khác chưa nhận đạt.",
+      "PostDetail/Nếp keyboard ngoài phạm vi gallery; dùng record editor riêng theo SHA eba.",
+      "Motion/privacy/action, TalkBack, measured targets/contrast, mọi breakpoint/iOS/tablet chưa phủ.",
+      "Plugin/detector và craft-floor thiếu; không detector clean, full gate hoặc APPROVE toàn Community/Explore/frontend."
+    ]
   }
 }

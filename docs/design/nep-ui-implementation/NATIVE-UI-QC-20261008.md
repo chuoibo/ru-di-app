@@ -28,9 +28,9 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | Nhóm | Chức năng native đã có bằng chứng | Thị giác đối chiếu mockup | Còn phải kiểm/hoàn thiện |
 |---|---|---|---|
 | A — Welcome/auth | Bốn chương, swipe/reset, Login; font130/200, giảm chuyển động, tối; đăng nhập fixture thật | Welcome `34d57ca9`: 15/16; ba finding nhãn/art/fold resolved; CTA→Login warm `3b71838e` có chuỗi frame được mở | Register/reset/error/keyboard toàn bộ; cold/back/cancel/background/reduced lifecycle; không suy toàn motion |
-| B — Gu/onboarding | Có baseline native và bỏ qua onboarding ở login fixture | Chưa review đủ state native đúng source cuối | Save/restore/cancel/validation, keyboard/chữ lớn và review |
-| C — Explore/destination | Màn native thật làm điểm vào các flow | Chưa nhận toàn composition/state đạt | Search/filter/save/no-result/ảnh thiếu/credit; provider one-shot thật đã nối; nhánh Explore chưa kiểm success |
-| D — Place/chọn kèo | Source và baseline có trong recovery | Chưa nhận đủ native so mockup | Chọn place/context/kèo, lỗi/empty và mọi layer |
+| B — Gu/onboarding | Save/reopen4 mục/ngân sách thật; Settings entry chọn2/3 khóa lưu, Back/cancel giữ server4; restore UI3/vua-phai, GET200 khớp | Root mở14 ảnh thao tác; chưa verdict đủ state/chữ lớn | Name/new account/keyboard, offline/retry, font matrix và review |
+| C — Explore/destination | Native `6f3f5af2`: Cafe2, tìm tên1, query lạ0; save/unsave GET200 khớp, câu hỏi provider thật ra2; đổi Hà Nội0 nơi/selected persisted/restore Đà Lạt; gallery sáng/tối có fingerprint đúng JS | Ship P2-01 viewport đầu: 14/14 tĩnh ở sáng/tối font 1.0; tên/fact đầu và artwork rõ trước nav | Ảnh thiếu/credit, offline/retry/double tap; chữ lớn/toàn state/motion và review các state mới chưa đạt |
+| D — Place/chọn kèo | Native detail/facts/activities/footer save thật; Thêm vào kèo→chooser→Back/cancel23,697s exit0 | Root mở ảnh so board01-panel3, chưa review đủ | Chưa bấm thêm/chọn/tạo kèo để nhận success; lỗi/empty/layers/font matrix |
 | E — Plan/outing/map | Baseline flow22–29 có bước outing; chưa phải ma trận đầy đủ | Chưa review đủ timeline/map/layer đúng source cuối | Reorder/pin/map provider/permission/conflict/partial creation |
 | F — Create/check-in | Tạo hub/tab thật đã được mở trên native | Chưa chấm toàn bộ sheet/check-in | Từng entry, context/audience, keyboard/location/cancel |
 | G — Chat/story | MLS hai chiều và media nhận/relaunch hai emulator; poll create/vote/tie/switch/author-close/relaunch; Story thay ảnh/draft/đăng/pause/Back/Keep/DELETE thật; Ngọc bạn đọc/seen/nonauthor | Khung media `2fc1c73f` mở ảnh so board03; Story preview/viewer/question `c9a3f541` 14/16, ship chỉ hai P2 và state đã chụp | Header/history-empty copy; motion/retry/expiry/unauthorized audience/pendingDELETE/TalkBack; poll→tờ hẹn thật; reseal/reverse media |
@@ -42,8 +42,8 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | M — Bill | Focused native822 nhập/preview/ghi bill200.000đ, phần75.000/125.000; witness thật; runner toàn bảng vẫn đỏ | Có ảnh đã mở; chưa nhận composition/state đầy đủ | Native whole-flow/canary cùng harness, scan camera/OCR/provider, font/keyboard/errors |
 | N — Settlement/finance | Focused native822 batch75.000đ, xác nhận nhận và ledger về0; receiver confirmation không là bank evidence | Chưa nghiệm thu toàn state/layer native | Bảng đầy đủ, role/wait/conflict, share handoff và visual |
 | O — Guest ngoài Expo | Cổng riêng, không gán emulator Expo thành guest proof | Không mở browser theo yêu cầu hiện tại | Fresh guest/oracle parity; phương thức visual guest phải giữ đúng phạm vi được phép |
-| P — Community | Native deeplink/feed và Nếp one-shot thật52; chưa full actions | Review52: hierarchyP2viewport đầu,13/14tĩnh; chưa /16 | Feed/topic/post/edit/comment/report/moderation/filter/cursor và lỗi |
-| Q — Keeps/notifications/search | Nếp52: explicit consent→draft thật→save; Minh1keep, Ngọclist không có ID đó; Keeps empty cuộn/bấm thật | Baseline light/dark được review tĩnh, motionN/E; editor bị IME che đang sửa | Từng route/action/error/empty và related sheets |
+| P — Community | Native deeplink/feed; gallery `6f3f5af2` sáng 35.859s/tối 19.539s/font 2.0 13.933s, đều exit 0; chưa full actions | Ship chỉ P2-01 viewport đầu và P2-02 «Để sau», resolved; baseline sáng/tối font 1.0 đạt 14/14 tĩnh, motion N/E | Font 2.0 chỉ nhãn/control ở viewport đã cuộn; feed/topic/post/edit/comment/report/moderation/filter/cursor/lỗi và toàn lifecycle còn thiếu |
+| Q — Keeps/notifications/search | Lượt 52: consent→nháp→lưu thật, own-list của Ngọc không chứa ID keep của Minh và Keeps empty cuộn/bấm; editor `eba8678a` bấm gọi/lưu trên IME; sáng 2.0 41.118s/tối 1.0 53.484s exit 0, sáng 1.0 exit 1 sau save vì selector sai | Ship chỉ P2-NEP-EDITOR-01 CTA trên IME, resolved; 9→12/14 tĩnh, artwork N/A, motion N/E | P3 font 2.0: caret autoscroll đưa nhãn khỏi viewport/crop dòng đầu; chưa kiểm mọi dòng/offset, mọi route/action/error/empty/sheet, AI quality/privacy |
 | R — Settings/account/privacy | Theme thật Sáng/Tối; device list read thật; login Ngọc lại thật; avatar crop qua settings | Root mở settings light/dark/device/profile, chưa rubric toàn family | Logout phải thu hồi đúng device còn là finding mở; remote session/revoke/privacy/block/delete-account; không xoá mọi máy để ép xanh |
 | S — Root/tab/alias | Hai native runtime có ownership/fingerprint; tab/Back/relaunch thực trong các flow đã nêu | Welcome transfer được review có giới hạn | Deep-link/alias/auth-expiry/foreground/reduced lifecycle; keyboard/nav trong toàn matrix |
 
@@ -63,6 +63,26 @@ phải có ảnh/trạng thái đã mở và nhận xét; motion cần clip/chu�
   mở17afterảnh và chốt **ship chỉ hai P2**: hierarchy/header isolation resolved;
   câu hỏi13→14/16, preview/viewer14/16. Chạm header thật/Back/Keep và DELETE native
   đã kiểm; chưa pendingDELETE/TalkBack/motion/retry/expiry/composer matrix.
+- Editor Nếp: [verdict eba8678a](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-independent-verdict-eba8678a.md)
+  chốt **ship chỉ P2-NEP-EDITOR-01**, CTA gọi/lưu trên IME resolved ở Android
+  320×640 sáng 1.0/2.0 và tối 1.0. Root/reviewer mở toàn bộ 17 ảnh packet,
+  reviewer mở thêm ảnh lỗi cuối font 1.0. Lượt sáng 1.0 **69.962s, exit 1**
+  đã lưu thật rồi timeout vì tìm title «Ghi chép riêng» thay vì «Điều mình
+  muốn giữ»; không ghi runner này xanh. Sáng 2.0/tối 1.0 dùng đích
+  `community-keeps`, đều exit 0. Điểm **9→12/14 tĩnh**, artwork/crop N/A,
+  motion N/E; P3 autoscroll/crop font 2.0 còn mở. Font đặt trước fresh
+  attach, chưa telemetry số RN. Diff `Sheet.tsx`/`PostDetail.tsx` từ eba tới
+  `6f3f5af2` rỗng, không gán ảnh eba thành capture JS mới. Chưa toàn editor,
+  Keeps, AI quality/privacy, error/retry/motion/TalkBack/font 1.3/tối 2.0.
+- Gallery: [verdict 6f3f5af2](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md)
+  chốt **ship chỉ P2-01 composition viewport đầu và P2-02 «Để sau»**,
+  cả hai resolved; root/reviewer mở 10/10 PNG, fingerprint đúng JS.
+  Community/Explore top, consent sau bài đầu và settings scheme snapshots
+  sáng/tối font 1.0 **14/14 tĩnh**, interaction/motion N/E; /14 không thay
+  ngưỡng /16. Font 2.0 chỉ nhãn/control tại viewport đã cuộn, không toàn màn
+  chữ lớn. Consent dùng RudiButton inline, NBSP ở nhãn nhìn và khoảng trắng
+  thường ở accessibilityLabel; source giữ handler/phạm vi consent. Không
+  suy TalkBack/target/contrast đo native, lifecycle theme hoặc mọi action.
 - Avatar crop `2c1189d7`: editor thật được mở; Back exit0/6,422s giữ nguyên version
   và hash ảnh640×800. Confirm exit0/13,531s đổi version, GET200 ảnh640×640.
   Root mở editor/cancel/after; không suy crop/permission/retry cho mọi media.
