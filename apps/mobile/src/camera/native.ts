@@ -37,7 +37,10 @@ const PNG_TOI_DA = 4 * 1024 * 1024;
  * where the viewfinder sits on screen. This module only needs to be able to
  * fire the shutter on whatever they mounted.
  */
-export function nativeBackend(camera: { current: CameraView | null }): PhotoBackend {
+export function nativeBackend(
+  camera: { current: CameraView | null },
+  options?: { cropSquare: true },
+): PhotoBackend {
   return {
     async capture(): Promise<TempPhoto> {
       const view = camera.current;
@@ -73,6 +76,9 @@ export function nativeBackend(camera: { current: CameraView | null }): PhotoBack
         quality: 1,
         exif: false,
         allowsMultipleSelection: false,
+        // Only avatar callers opt into the native editor. Bills and memories
+        // retain every edge of the chosen photograph.
+        ...(options?.cropSquare ? { allowsEditing: true, aspect: [1, 1] as [number, number] } : {}),
       });
       if (result.canceled) return null;
       const asset = result.assets[0];
@@ -137,6 +143,11 @@ export function nativeBackend(camera: { current: CameraView | null }): PhotoBack
  */
 export function backendThuVien(): PhotoBackend {
   return nativeBackend({ current: null });
+}
+
+/** Confirm a square crop in the system editor before returning an avatar. */
+export function backendAnhDaiDien(): PhotoBackend {
+  return nativeBackend({ current: null }, { cropSquare: true });
 }
 
 /** Bytes of the encoded image, or 0 when it cannot be established.

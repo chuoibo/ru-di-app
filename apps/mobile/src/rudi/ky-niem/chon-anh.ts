@@ -9,11 +9,12 @@
  */
 import { nenRoiDung, type GiaiDoanTaiAnh } from "../../camera/anh-nhom";
 import type { PhotoBackend, TempPhoto } from "../../camera/bill-photo";
-import { backendThuVien } from "../../camera/native";
+import { backendAnhDaiDien, backendThuVien } from "../../camera/native";
 
 export type { GiaiDoanTaiAnh, TempPhoto };
 
 let backend: PhotoBackend | null = null;
+let avatarBackend: PhotoBackend | null = null;
 function thuVien(): PhotoBackend {
   if (backend === null) backend = backendThuVien();
   return backend;
@@ -22,6 +23,12 @@ function thuVien(): PhotoBackend {
 /** `null` when the person closed the picker without choosing. The file stays until `nenVaDung` or `boAnh`. */
 export function chonAnh(): Promise<TempPhoto | null> {
   return thuVien().pick();
+}
+
+/** A cancelled native crop returns null and never starts an upload. */
+export function chonAnhDaiDien(): Promise<TempPhoto | null> {
+  if (avatarBackend === null) avatarBackend = backendAnhDaiDien();
+  return avatarBackend.pick();
 }
 
 /**

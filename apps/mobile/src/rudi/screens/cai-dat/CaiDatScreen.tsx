@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
 import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
-import { boAnh, chonAnh, nenVaDung, type TempPhoto } from "../../ky-niem/chon-anh";
+import { boAnh, chonAnhDaiDien, nenVaDung, type TempPhoto } from "../../ky-niem/chon-anh";
 import { AnhNhomError } from "../../../camera/anh-nhom";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach } from "../../nguoi/chinh-sach-tuong";
 import { docHoSoToi, type HoSoToi } from "../../../phien";
@@ -84,7 +84,7 @@ export function CaiDatScreen() {
     if (phien === null || avatarWorking.current) return;
     avatarWorking.current = true; setDangDoiAnh(true); setLoiAnh(null);
     try {
-      const chosen = retry ?? await chonAnh();
+      const chosen = retry ?? await chonAnhDaiDien();
       if (!chosen) return;
       if (pendingPhoto && pendingPhoto !== chosen) await boAnh(pendingPhoto);
       setPendingPhoto(chosen);
