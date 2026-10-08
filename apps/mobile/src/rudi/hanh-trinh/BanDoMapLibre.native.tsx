@@ -216,13 +216,15 @@ export function BanDo({
             style={{ zIndex: moc.chon ? 2 : 1 }}
             onPress={choose}
           >
-            <View
+            <Pressable
               accessible
+              testID={`map-marker-${moc.id}`}
               accessibilityLabel={chum ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : nhanMoc(moc)}
               accessibilityRole="button"
               accessibilityState={{ selected: mat.chon }}
               accessibilityActions={[{ name: "activate", label: "Chọn chặng" }]}
               onAccessibilityAction={(event) => { if (event.nativeEvent.actionName === "activate") choose(); }}
+              onPress={choose}
               // The stamp is 44dp; the slop makes the finger target 48dp+.
               hitSlop={4}
               style={styles.hopTem}
@@ -244,7 +246,7 @@ export function BanDo({
                   </View>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
           </Marker>
         );
       })}
