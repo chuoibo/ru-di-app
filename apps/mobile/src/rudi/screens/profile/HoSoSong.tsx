@@ -43,7 +43,7 @@ function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
 
-export function HoSoSong({ phien }: { phien: Phien }) {
+export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingChange?: (editing: boolean) => void }) {
   const { datPhien } = useRudiSession();
   const { colors, dark } = useRudiTheme();
   const { width, fontScale } = useWindowDimensions();
@@ -60,9 +60,14 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   // QA UI-108: Back closes the form and stays on Cá nhân; what was typed is
   // kept and comes back when the form opens again. «Huỷ» is what drops it.
   const [conNhap, setConNhap] = useState(false);
+  // The passport and its form are different pages in the same scroll view.
+  const doiSua = (editing: boolean) => {
+    setDangSua(editing);
+    onEditingChange?.(editing);
+  };
   useLuiLop(dangSua, () => {
     setConNhap(true);
-    setDangSua(false);
+    doiSua(false);
   });
 
   const nap = useCallback(async () => {
@@ -86,7 +91,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
       setCity(hoSo.city ?? "");
     }
     setLoiLuu(null);
-    setDangSua(true);
+    doiSua(true);
   };
 
   const luu = async () => {
@@ -102,7 +107,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
       // Keep the session's greeting in step with the server (QA 23/09).
       datPhien(await doiTenTrongPhien(phien, hoSo.display_name));
       setConNhap(false);
-      setDangSua(false);
+      doiSua(false);
     } catch (error) {
       setLoiLuu(loiRaChu(error));
     } finally {
@@ -147,7 +152,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
           value={city}
         />
         <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
-        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => { setConNhap(false); setDangSua(false); }} variant="ghost" />
+        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => { setConNhap(false); doiSua(false); }} variant="ghost" />
       </View>
     );
   }

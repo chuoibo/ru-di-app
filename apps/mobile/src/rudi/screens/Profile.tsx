@@ -52,6 +52,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   const { colors } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "saved">("home");
+  const [editingProfile, setEditingProfile] = useState(false);
   useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = `/people/${phien.person_id}`;
@@ -133,7 +134,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
 
   return (
-    <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
+    <RudiScreen material="quiet" bottomInset="tab" cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen">
       <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
@@ -142,7 +143,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
             reads as a second one, and on a dev client the launcher's own gear
             sits on top of it, so the corner is the worst place for it. */}
       </View>
-      <HoSoSong phien={phien} />
+      <HoSoSong phien={phien} onEditingChange={setEditingProfile} />
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
       <HanhTrinhTeaser personId={personId} />
       <View>

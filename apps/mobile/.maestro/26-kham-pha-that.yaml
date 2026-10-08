@@ -145,6 +145,11 @@ appId: com.lakiet.rudi
       text: "Chỗ hay ở Đà Lạt"
     direction: UP
     timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Bỏ lưu Tiệm Nướng Xóm Lào"
+    direction: DOWN
+    timeout: 30000
 - assertVisible: "Bỏ lưu Tiệm Nướng Xóm Lào"
 - takeScreenshot: 26-danh-muc-da-luu
 # Tìm bằng câu: Enter gửi câu lên /places/search. Máy chủ không có khoá thì thẻ
