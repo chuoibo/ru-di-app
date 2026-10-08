@@ -32,6 +32,7 @@ import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
 import { CHU_MA_HOA } from "./tom-tat";
 import { danhSach, moiTruoc } from "./so-tin";
+import { chuDongBinhChon } from "./binh-chon-v2";
 import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
 
 const NHIP_MS = 3000;
@@ -242,6 +243,20 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     [contextId, personId, daGui],
   );
 
+  const guiPhieu = useCallback(async (pollId: string, optionId: string | null) => {
+    const may = await mayCua(personId);
+    const poll = dungPhong((await may.soPhong(contextId)).ban).so.byId[pollId];
+    if (!poll?.poll || poll.deleted || poll.poll.closed ||
+        (optionId === null ? poll.authorId !== personId : !poll.poll.options.some((option) => option.id === optionId))) {
+      throw new ApiError(0, "chat_v2_poll_refused", "Bình chọn này không còn nhận thao tác đó. Mở lại cuộc trò chuyện để xem trạng thái mới.");
+    }
+    const ev = await may.gui(contextId, optionId === null
+      ? { type: "edit", message_id: pollId, body: chuDongBinhChon(poll.body!) }
+      : { type: "vote", poll_id: pollId, option_id: optionId });
+    await ve();
+    if (ev === null) throw new ApiError(0, "chat_v2_poll_pending", "Thao tác chưa được xác nhận. Xem lại bình chọn rồi thử lại khi có mạng.");
+  }, [contextId, personId, ve]);
+
   /** Opens a sealed image once: downloads the ciphertext, opens it on the device. */
   const moAnh = useCallback(
     async (media: MediaRef) => {
@@ -367,6 +382,8 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     /** Envelopes skipped because they will never open. */
     khongMo,
     taiLai: nap,
+    boPhieu: (pollId: string, optionId: string) => guiPhieu(pollId, optionId),
+    dongBinhChon: (pollId: string) => guiPhieu(pollId, null),
     gui: (body: string, traLoi: { id: string } | null = null) =>
       guiOp(traLoi === null ? { type: "text", body } : { type: "reply", reply_to: traLoi.id, body }),
     sua: (messageId: string, body: string) => guiOp({ type: "edit", message_id: messageId, body }),

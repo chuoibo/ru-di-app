@@ -68,6 +68,7 @@ function sangTinThuong(t: TinV2, contextId: string, personId: string, anhDaMo: R
     author_id: t.authorId,
     kind: t.deleted ? "deleted" : t.sticker !== null ? "sticker" : t.media?.type === "image" ? "image" : "text",
     body,
+    ...(t.poll && !t.deleted ? { poll_v2: t.poll } : {}),
     image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
     card: null,
     created_at: t.at ?? new Date(0).toISOString(),
@@ -94,4 +95,3 @@ export function sangCho(c: Cho, tinTheoId: Record<string, TinV2>): TinChoGui {
     luc: new Date(c.luc).toISOString(),
   };
 }
-

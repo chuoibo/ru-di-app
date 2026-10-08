@@ -28,6 +28,7 @@ import { typography, useRudiTheme, type RudiTone } from "../../theme";
 import { Money } from "../../ui/Money";
 import { HangChang } from "../keo/HangChang";
 import type { BinhChonSong } from "../../chat/thay-doi";
+import type { KetQuaPhieuV2 } from "../../chat/e2ee/binh-chon-v2";
 import { RudiButton } from "../../ui";
 import { hinhVanTay } from "../../art/giay";
 import { mucNguoi } from "../../nguoi/muc-nguoi";
@@ -75,6 +76,7 @@ export function TheAiView({
   tenToHen,
   banToHen,
   readOnly = false,
+  sealedPoll,
 }: {
   the: TheAi;
   contextId: string;
@@ -82,7 +84,7 @@ export function TheAiView({
   tenNguoi: (id: string | null) => string;
   /** Who the card speaks for on the poll's author line (roster name or «Bạn»). */
   tacGia: string;
-  vote?: BinhChonSong;
+  vote?: BinhChonSong | KetQuaPhieuV2;
   onOpenPlan?: () => void;
   /** Opens the group's shared sheet from a decided poll. */
   onMoToHen?: (voteId: string, goiY: string) => void;
@@ -92,6 +94,7 @@ export function TheAiView({
   tenToHen?: string | null;
   banToHen?: number | null;
   readOnly?: boolean;
+  sealedPoll?: HanhDongPhieuV2;
 }) {
   const { colors } = useRudiTheme();
   switch (the.loai) {
@@ -165,7 +168,7 @@ export function TheAiView({
       );
     }
     case "poll":
-      return <ThePoll readOnly={readOnly} the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
+      return <ThePoll sealedPoll={sealedPoll} readOnly={readOnly} the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
     case "expense_draft":
       return (
         <ToGiay nhan="Nháp chia bill từ chat" tone="split">
@@ -195,6 +198,8 @@ export function TheAiView({
   }
 }
 
+export type HanhDongPhieuV2 = { cast(optionId: string): Promise<void>; close(): Promise<void>; refresh(): Promise<void> };
+
 function ThePoll({
   the,
   contextId,
@@ -206,20 +211,22 @@ function ThePoll({
   tenToHen,
   banToHen,
   readOnly = false,
+  sealedPoll,
 }: {
   the: Extract<TheAi, { loai: "poll" }>;
   contextId: string;
   personId: string;
   tacGia: string;
-  live?: BinhChonSong;
+  live?: BinhChonSong | KetQuaPhieuV2;
   onMoToHen?: (voteId: string, goiY: string) => void;
   daCoToHen?: boolean;
   tenToHen?: string | null;
   banToHen?: number | null;
   readOnly?: boolean;
+  sealedPoll?: HanhDongPhieuV2;
 }) {
   const { colors, dark } = useRudiTheme();
-  const [ketQua, setKetQua] = useState<CuocBinhChonWire | null>(null);
+  const [ketQua, setKetQua] = useState<CuocBinhChonWire | KetQuaPhieuV2 | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangBo, setDangBo] = useState<string | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
@@ -237,6 +244,7 @@ function ThePoll({
   }, [live]);
 
   const nap = useCallback(async () => {
+    if (sealedPoll) { await sealedPoll.refresh(); return; }
     const version = ++readVersion.current;
     try {
       const response = await docBinhChon(the.vote_id, personId, contextId);
@@ -244,7 +252,7 @@ function ThePoll({
     } catch (error) {
       if (mounted.current && version === readVersion.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     }
-  }, [the.vote_id, personId, contextId]);
+  }, [the.vote_id, personId, contextId, sealedPoll]);
 
   useEffect(() => {
     if (!live) void nap();
@@ -254,8 +262,8 @@ function ThePoll({
     if (readOnly) return;
     setDangBo(optionId);
     try {
-      await boPhieu(the.vote_id, optionId, personId, contextId);
-      await nap();
+      if (sealedPoll) await sealedPoll.cast(optionId);
+      else { await boPhieu(the.vote_id, optionId, personId, contextId); await nap(); }
     } catch (error) {
       if (mounted.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
@@ -266,7 +274,11 @@ function ThePoll({
   const closePoll = async () => {
     if (readOnly) return;
     setDangBo("close");
-    try { await dongBinhChon(the.vote_id, personId, contextId); await nap(); if (mounted.current) setConfirmClose(false); }
+    try {
+      if (sealedPoll) await sealedPoll.close();
+      else { await dongBinhChon(the.vote_id, personId, contextId); await nap(); }
+      if (mounted.current) setConfirmClose(false);
+    }
     catch (error) { if (mounted.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null)); }
     finally { if (mounted.current) setDangBo(null); }
   };

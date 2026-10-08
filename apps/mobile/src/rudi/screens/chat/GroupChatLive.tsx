@@ -29,6 +29,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
+import { xemBinhChonV2 } from "../../chat/e2ee/binh-chon-v2";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -787,8 +788,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
-    const laAi = tin.kind === "ai_card";
-    const theCuaTin = docTheAi(tin.card);
+    const pollV2 = lan.lan === "v2" ? tin.poll_v2 : undefined;
+    const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, at: tin.created_at, poll: pollV2, deleted: false }, personId) : null;
+    const laAi = tin.kind === "ai_card" || pollV2 !== undefined;
+    const theCuaTin = pollV2 ? { loai: "poll" as const, vote_id: tin.id, question: pollV2.question, options: pollV2.options } : docTheAi(tin.card);
     // A poll is a member's message: it hangs from its sender like any other,
     // name above and avatar beside, and is not a run's bubble.
     const laPoll = laAi && theCuaTin.loai === "poll" && tacGiaTin(tin).loai !== "ai";
@@ -857,9 +860,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 personId={personId}
                 tenNguoi={tenNguoi}
                 tacGia={tenNguoi(tin.author_id)}
-                vote={theCuaTin.loai === "poll" ? changes.votes[theCuaTin.vote_id] : undefined}
+                vote={phieuV2 ?? (theCuaTin.loai === "poll" ? changes.votes[theCuaTin.vote_id] : undefined)}
+                sealedPoll={pollV2 ? {
+                  cast: (optionId) => v2.boPhieu(tin.id, optionId),
+                  close: () => v2.dongBinhChon(tin.id),
+                  refresh: v2.taiLai,
+                } : undefined}
                 onOpenPlan={() => moToHen(tin)}
-                onMoToHen={(voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
+                onMoToHen={pollV2 ? undefined : (voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
                 banToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ban ?? null) : null}
                 daCoToHen={theCuaTin.loai === "poll" && coToHenChoBinhChon(theCuaTin.vote_id) !== null}
                 tenToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ten || null) : null}
