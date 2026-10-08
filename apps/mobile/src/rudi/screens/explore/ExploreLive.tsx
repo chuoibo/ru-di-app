@@ -263,7 +263,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
   // A search session (a name, a question, an answer) keeps the top of the
   // screen for the results: the city's stage folds away.
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
+  const compactLead = screenWidth < 600 && screenHeight < 700 && fontScale < 1.3;
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
@@ -289,7 +290,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
 
 
   return (
-    <RudiScreen bottomInset="tab" header={dau?.()} onRefresh={nap} testID="explore-screen">
+    <RudiScreen bottomInset="tab" header={dau?.()} contentStyle={compactLead ? { gap: 12 } : undefined} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         {/* The destination is a control, not a caption: the city in ink, the
             way to change it in the invitation's coral (owner's mockup). */}
@@ -319,7 +320,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query.trim() === "" ? (
         <View style={styles.buuThiep}>
-          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={150} />
+          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 120 : 150} />
           <View pointerEvents="none" style={[styles.nhanMinhHoa, { backgroundColor: colors.card }]}>
             <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ hành trình</Text>
           </View>
@@ -473,6 +474,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             <Animated.View entering={hienRa} key={khoaKetQua} style={styles.ketQua}>
               {dan !== undefined ? (
                 <PlaceLead
+                  compact={compactLead}
                   daLuu={daLuu.includes(dan.id)}
                   dd={hienThiDiaDiem(dan)}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}

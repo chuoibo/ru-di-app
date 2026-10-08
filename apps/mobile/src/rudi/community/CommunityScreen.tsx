@@ -368,7 +368,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
       ref={list}
       data={posts}
       keyExtractor={(p) => p.id}
-      renderItem={({ item }) => daAn.has(item.id) ? (
+      renderItem={({ item, index }) => <>{daAn.has(item.id) ? (
         // The card's own place, kept: one line says what happened and how to take it back.
         <View style={[styles.daAn, { borderBottomColor: colors.line }]} testID={`community-hidden-${item.id}`}>
           <Text accessibilityLiveRegion="polite" style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Đã ẩn bài của {item.author}. Bài này không hiện trong bảng tin của bạn nữa.</Text>
@@ -376,7 +376,23 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         </View>
       ) : (
         <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void luu(item)} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
-      )}
+      )}{index === 0 ? <>
+        {/* Asked where it changes something: only «Dành cho bạn» learns from
+            what one reads, and after the first story gives it context. An empty feed carries no ask;
+            consent remains explicit before any personalised learning begins. */}
+        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? (
+          <View style={[styles.consent, { borderColor: colors.line }]}>
+            <View style={styles.consentCopy}>
+              <Text style={[typography.title, { color: colors.ink }]}>Một góc hợp với bạn</Text>
+              <Text style={[typography.body, styles.consentBody, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text>
+            </View>
+            <View style={styles.consentActions}>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
+              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, styles.laterLabel, { color: colors.ink }]}>Để sau</Text></Pressable>
+            </View>
+          </View>
+        ) : null}
+      </> : null}</>}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60, minimumViewTime: 1000 }}
       onViewableItemsChanged={viewable.current}
       initialNumToRender={5}
@@ -400,21 +416,6 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
             (finish review 03/10). */}
         {tieuDeRieng && posts.length > 0 ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
         {dau || topic ? null : oTim}
-        {/* Asked where it changes something: only «Dành cho bạn» learns from
-            what one reads, and only once there is something to read; over an
-            empty feed it was a second coral ask beside the scene's. */}
-        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? (
-          <View style={[styles.consent, { borderColor: colors.line }]}>
-            <View style={styles.consentCopy}>
-              <Text style={[typography.title, { color: colors.ink }]}>Một góc hợp với bạn</Text>
-              <Text style={[typography.body, styles.consentBody, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text>
-            </View>
-            <View style={styles.consentActions}>
-              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
-              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, styles.laterLabel, { color: colors.ink }]}>Để sau</Text></Pressable>
-            </View>
-          </View>
-        ) : null}
         {/* Said where the list is, with the way on; a failed reload keeps the cards already shown. */}
         <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bang-tin" />
       </View>}

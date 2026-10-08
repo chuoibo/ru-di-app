@@ -86,6 +86,8 @@ interface CommonProps {
   onSave: () => void;
   testID?: string;
   saving?: boolean;
+  /** A short viewport puts the name beside the artwork before the fold. */
+  compact?: boolean;
 }
 
 /**
@@ -152,7 +154,7 @@ function dauCon(dd: DiaDiemHienThi): string | null {
  * reason in the AI tone and the price, whole (`tachGia`). The heart is the
  * card's sibling, not inside its tap, so a screen reader meets two controls.
  */
-export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
+export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact = false }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
@@ -168,11 +170,12 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
   );
   return (
     <View style={[styles.theDan, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]} testID={testID}>
-      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && styles.pressed}>
+      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [compact && { flexDirection: "row", alignItems: "flex-start" }, pressed && styles.pressed]}>
+        <View style={compact ? { width: 112, flexShrink: 0 } : undefined}>
         {dd.anh === null ? (
           // No honest picture: the sketch of the KIND of place («ký hoạ trong
           // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-          <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
+          <PlaceArtwork loai={dd.loai} height={compact ? 144 : sizeClass === "compact" ? 160 : 220} />
         ) : (
           <MediaSlot
             alt={dd.name}
@@ -180,10 +183,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
             nguon={{ loai: "danh-muc", anh: dd.anh }}
             overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
             radius={0}
-            ratio={tiLe}
+            ratio={compact ? 112 / 144 : tiLe}
           />
         )}
-        <View style={styles.chuDan}>
+        </View>
+        <View style={[styles.chuDan, compact && { flex: 1, minWidth: 0, padding: 12 }]}>
           {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
           <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
           {dd.sub ? (
@@ -200,7 +204,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
           ) : null}
         </View>
       </Pressable>
-      <View style={styles.timTrenAnh}>
+      <View style={[styles.timTrenAnh, compact && { left: 8, right: undefined, top: 8 }]}>
         <IconButton
           accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
           icon={daLuu ? "heart" : "heart-outline"}

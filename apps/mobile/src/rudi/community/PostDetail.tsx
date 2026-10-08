@@ -2,7 +2,7 @@ import { ApiError, translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
@@ -139,13 +139,13 @@ export function PostDetail() {
         }); router.replace("/(tabs)/community" as never); }); }}/></> : <RudiButton label="Báo cáo bài" variant="ghost" onPress={() => { setActions(false); setReport(true); }}/>}</> : null}</Sheet>
     <Sheet open={commentsOpen} onClose={() => setCommentsOpen(false)} accessibilityLabel="Bình luận">{person && post ? <Comments initialDraft={commentDraft} onDraftChange={setCommentDraft} person={person} post={post} /> : null}</Sheet>
     <Sheet open={report} onClose={() => setReport(false)} accessibilityLabel="Báo cáo bài">{person ? <NoiDungBaoCao actorId={person} loai="post" targetId={id} onXong={() => setReport(false)} onThoi={() => setReport(false)}/> : null}</Sheet>
-    <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" footer={person && post ? <View style={{ gap: 8 }}>{draft ? draftEditor : requestEditor}<CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" /></View> : undefined}>
-      {person && post ? <>
+    <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" footer={person && post ? <ScrollView testID="community-nep-editor" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ flexGrow: 0, flexShrink: 1, width: "100%" }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>{draft ? draftEditor : requestEditor}<CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" /></ScrollView> : undefined}>
+      {person && post ? <View style={{ paddingRight: 8 }}>
         <Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text>
         <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text>
         <Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text>
         {draft ? requestEditor : null}
-      </> : null}
+      </View> : null}
     </Sheet>
   </>}>
     <View style={{ paddingHorizontal: 20 }}><TopBar title="Một câu chuyện"/><CauTaiCho cau={error} hanhDong={permanent ? undefined : { label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bai" />{permanent ? <RudiButton label="Về cộng đồng" variant="outline" onPress={() => router.replace("/(tabs)/community" as never)}/> : null}</View>
