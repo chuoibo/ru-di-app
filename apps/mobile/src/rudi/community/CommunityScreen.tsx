@@ -465,7 +465,8 @@ const styles = StyleSheet.create({
   consentBody: { fontSize: 15, lineHeight: 22 },
   consentActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
   consentAction: { maxWidth: "100%", flexShrink: 1 },
-  later: { minWidth: 48, minHeight: 48, paddingHorizontal: 14, justifyContent: "center" },
+  // A horizontal child measures the whole inline label before the row wraps.
+  later: { flexDirection: "row", alignItems: "center", minWidth: 48, minHeight: 48, paddingHorizontal: 14, justifyContent: "center" },
   xacNhan: { gap: 8 },
   // On the gutter the search field and the tabs start on; the tab row's
   // rule already sets it apart, so no space over it.
