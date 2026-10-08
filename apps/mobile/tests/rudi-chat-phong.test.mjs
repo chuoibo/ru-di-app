@@ -77,6 +77,9 @@ test("phòng rỗng co giãn, vật thể nhường chỗ và ô soạn ở đá
   assert.match(LIVE, /const ghiChatDuoc = lan\.lan === "v2" && v2\.sanSang/);
   assert.match(LIVE, /!ghiChatDuoc \? \(\s*<View[^>]*testID="chat-chi-doc"/);
   assert.match(LIVE, /Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối/);
+  assert.match(LIVE, /onPress=\{\(\) => ghiChatDuoc \? setKhay\("plan"\) : moToHen\(\)\}/, "nút tạo kèo ở kho cũ mở form thật thay vì khay bị khoá");
+  assert.match(LIVE, /<TraLoiAi\s+readOnly=\{!ghiChatDuoc\}/, "thẻ lồng trong câu trả lời AI cũng chỉ đọc");
+  assert.doesNotMatch(LIVE, /taiAnhNhom/, "ảnh chat không có nhánh upload plaintext");
 });
 
 test("lớp phòng giữ nguyên khi quay lại, và phòng hai người tự đọc lại", () => {

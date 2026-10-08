@@ -28,7 +28,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApiError, newAttempt, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -625,6 +625,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 
   /** A decided poll becomes a sheet the whole group can write on. */
   const moToHenTuBinhChon = async (voteId: string, goiY: string) => {
+    if (!ghiChatDuoc) return;
     setKhay(null);
     const existing = chat.tin.find((row) => {
       const nhap = docKhoiNhap(row.card);
@@ -678,17 +679,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     try {
       await nenVaDung(daChon, async (anh) => {
         if (!songRef.current) return;
-        if (lan.lan === "v2") {
-          // E2EE (ADR-0057 §5.2): sealed on this phone, the ciphertext
-          // uploaded, the key sent inside MLS. Never the legacy upload.
-          daToiTin = true;
-          daGui = await v2.guiAnhTuTep(anh.uri, caption === "" ? null : caption);
-          return;
-        }
-        const daTai = await taiAnhNhom(contextId, anh, personId);
-        if (!songRef.current) return;
+        // E2EE (ADR-0057 §5.2): only the v2 hook may upload chat photos.
+        // A missing or revoked crypto device must never select plaintext.
         daToiTin = true;
-        daGui = await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
+        daGui = await v2.guiAnhTuTep(anh.uri, caption === "" ? null : caption);
       });
       if (daGui === null) return;
       xoaNhapCu(draft.revision);
@@ -840,6 +834,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             ) : null}
             {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
               <TraLoiAi
+                readOnly={!ghiChatDuoc}
                 contextId={contextId}
                 onMenu={() => setMenuTin(tin)}
                 onOpenPlan={() => moToHen(tin)}
@@ -1046,11 +1041,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               {thapCuaSo || khay !== null ? null : <PaperObject name="envelope" width={180} />}
               {/* A group of one (just opened, QA UI-071) asks for friends first:
                   a plan for nobody is not the next step. */}
-              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : chiMinhToi ? "Hội mới, mới có mình bạn." : "Có hội rồi. Mở lời thôi."}</Text>
-              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : chiMinhToi ? "Mời vài người bạn vào, rồi cùng rủ nhau một buổi." : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
+              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{lan.lan === "legacy" ? "Kho chat cũ chưa có tin." : nhanRieng ? "Một lời mở đầu." : chiMinhToi ? "Hội mới, mới có mình bạn." : "Có hội rồi. Mở lời thôi."}</Text>
+              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{lan.lan === "legacy" ? "Bạn vẫn có thể tạo kèo cho một buổi cùng đi." : nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : chiMinhToi ? "Mời vài người bạn vào, rồi cùng rủ nhau một buổi." : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
               {chiMinhToi ? <RudiButton icon="person-add-outline" label="Mời bạn vào nhóm" full={false} onPress={() => router.push(`/groups/${contextId}/invite` as never)} /> : null}
               {/* Every room, a friends' pair included, can start a plan from here. */}
-              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant={chiMinhToi ? "ghost" : "outline"} full={false} onPress={() => setKhay("plan")} />
+              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant={chiMinhToi ? "ghost" : "outline"} full={false} onPress={() => ghiChatDuoc ? setKhay("plan") : moToHen()} />
             </View>
           )}
         </ScrollView>
@@ -1082,7 +1077,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                   same key with the same frozen bundle. */}
               {ai.cho.filter((cap) => cap.loi !== null).map((cap) => (
                 <HangLoiNho cau={cap.loi ?? ""} key={cap.khoa} testID="chat-loi-nho-hong" title="Rủ Đi AI chưa nhận lời nhờ">
-                  <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} />
+                  {ghiChatDuoc ? <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} /> : null}
                   <RudiButton label="Bỏ" compact full={false} variant="ghost" onPress={() => ai.boCap(cap.khoa)} />
                 </HangLoiNho>
               ))}
@@ -1120,7 +1115,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               ))}
               {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (
                 <HangLoiNho cau={chuHangLoiGoi(request).cau} dangCho={request.status !== "failed"} key={request.id} title={chuHangLoiGoi(request).tieuDe}>
-                  {request.status === "failed" && thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} lyDo={lenhSanSang(ai.capabilities, request.command ?? "plan") ? undefined : "Rủ Đi AI chưa sẵn sàng trong cuộc trò chuyện này."} onPress={() => void ai.retry(request.id)} /> : null}
+                  {ghiChatDuoc && request.status === "failed" && thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} lyDo={lenhSanSang(ai.capabilities, request.command ?? "plan") ? undefined : "Rủ Đi AI chưa sẵn sàng trong cuộc trò chuyện này."} onPress={() => void ai.retry(request.id)} /> : null}
                   {request.status === "failed" && (request.command ?? "plan") === "plan" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
                 </HangLoiNho>
               ))}
