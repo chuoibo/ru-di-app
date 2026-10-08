@@ -509,7 +509,7 @@ export function SectionHeader({
   const { colors } = useRudiTheme();
   return (
     <View style={styles.sectionHeader}>
-      <Text style={[typography.h2, { color: colors.ink }]}>{title}</Text>
+      <Text style={[typography.h2, styles.sectionTitle, { color: colors.ink }]}>{title}</Text>
       {action ? (
         <Pressable
           accessibilityRole="button"
@@ -1270,8 +1270,11 @@ const styles = StyleSheet.create({
   center: { alignSelf: "center", alignItems: "center" },
   headingSubtitle: { maxWidth: 560 },
   sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 3 },
+  // Fill the available row: native font measurement otherwise wraps short
+  // headings inside their intrinsic width even when the page has room.
+  sectionTitle: { flex: 1, minWidth: 0 },
   // A text action is still a target: 48dp tall, so a 13dp glyph is not the whole hit box.
-  sectionAction: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
+  sectionAction: { minHeight: 48, flexShrink: 0, justifyContent: "center", paddingHorizontal: 6 },
   card: { borderWidth: 1, padding: 16 },
   cardPressed: { opacity: 0.94, transform: [{ scale: 0.992 }] },
   pressed: { opacity: 0.68 },
