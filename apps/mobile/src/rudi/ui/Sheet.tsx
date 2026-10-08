@@ -29,6 +29,8 @@ export interface SheetProps {
   dauTrang?: ReactNode;
   /** Keep a form's editor/actions outside the reference content's scroll. */
   footer?: ReactNode;
+  /** Reserve the footer action before shrinking a form's scrollable reference. */
+  prioritizeFooter?: boolean;
   /** Opt-in for an editor whose panel must fit above the software keyboard. */
   avoidKeyboard?: boolean;
   /** Opt-in overflow cue for long content that must remain readable. */
@@ -66,7 +68,7 @@ const CHAN_CHAM_MS = 250;
  * filters) and be driven by state; `app/create.tsx` hosts it in a
  * transparent route. Under Reduce Motion the spring resolves instantly.
  */
-export function Sheet({ open, onClose, onBack, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, footer, avoidKeyboard = false, showsVerticalScrollIndicator = false, testID }: SheetProps) {
+export function Sheet({ open, onClose, onBack, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, footer, prioritizeFooter = false, avoidKeyboard = false, showsVerticalScrollIndicator = false, testID }: SheetProps) {
   const { colors, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
@@ -233,6 +235,7 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
 
   if (!hien) return null;
   const le = Math.max(0, (rongKhung - RONG_TOI_DA) / 2);
+  const panelMaxHeight = avoidKeyboard ? Math.min(tran, Math.max(0, caoKhung - insets.top)) : tran;
 
   // `collapsable={false}`: Fabric flattens a plain wrapper View and attaches
   // its children to the screen directly; toggling `pointerEvents` later makes
@@ -277,7 +280,8 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
             // The ceiling is the whole panel's: handle, head and content
             // together, not the scroll box alone with the handle and the
             // insets added on top (92% at 320×640, 96% at 390×460: UI-007, UI-040).
-            maxHeight: avoidKeyboard ? Math.min(tran, Math.max(0, caoKhung - insets.top)) : tran,
+            maxHeight: panelMaxHeight,
+            height: prioritizeFooter && footer ? panelMaxHeight : undefined,
             left: le,
             right: le,
             backgroundColor: colors.card,
@@ -315,7 +319,7 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
           keyboardShouldPersistTaps="handled"
           persistentScrollbar={showsVerticalScrollIndicator}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-          style={[styles.cuon, showsVerticalScrollIndicator && Platform.OS === "web" ? { scrollbarWidth: "thin", scrollbarColor: `${colors.lineStrong} ${colors.card}` } as ViewStyle : null]}
+          style={[styles.cuon, prioritizeFooter && footer ? { flexBasis: 0, flexGrow: 1 } : null, showsVerticalScrollIndicator && Platform.OS === "web" ? { scrollbarWidth: "thin", scrollbarColor: `${colors.lineStrong} ${colors.card}` } as ViewStyle : null]}
         >
           {children}
         </ScrollView>

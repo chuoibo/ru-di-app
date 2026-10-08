@@ -388,7 +388,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
             </View>
             <View style={styles.consentActions}>
               <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
-              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, styles.laterLabel, { color: colors.ink }]}>Để sau</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable>
             </View>
           </View>
         ) : null}
@@ -460,13 +460,12 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 32 },
   // 16 like the posts and Khám phá's header above, so one gutter runs down the screen.
   intro: { padding: 16, gap: 16 },
-  consent: { paddingVertical: 8, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
+  consent: { marginHorizontal: 16, paddingVertical: 8, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
   consentCopy: { gap: 3 },
   consentBody: { fontSize: 15, lineHeight: 22 },
   consentActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
   consentAction: { maxWidth: "100%", flexShrink: 1 },
-  later: { minWidth: 48, minHeight: 48, maxWidth: "100%", paddingHorizontal: 14, justifyContent: "center" },
-  laterLabel: { flexShrink: 1 },
+  later: { minWidth: 48, minHeight: 48, paddingHorizontal: 14, justifyContent: "center" },
   xacNhan: { gap: 8 },
   // On the gutter the search field and the tabs start on; the tab row's
   // rule already sets it apart, so no space over it.

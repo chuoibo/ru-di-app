@@ -56,6 +56,7 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
+import { chuLon } from "../../adaptive";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -264,7 +265,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   // A search session (a name, a question, an answer) keeps the top of the
   // screen for the results: the city's stage folds away.
   const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
-  const compactLead = screenWidth < 600 && screenHeight < 700 && fontScale < 1.3;
+  const compactLead = screenWidth < 600 && screenHeight < 700 && !chuLon(fontScale);
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
