@@ -233,7 +233,9 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
         // What the server or the source refused is said right above the
         // button that was pressed, inside the footer that never scrolls away.
         <View style={styles.chan}>
-          <CauTaiCho cau={loi} />
+          {/* A field refusal stays readable above the IME too; the focused
+              input alone does not reserve room for its helper line. */}
+          <CauTaiCho cau={loi ?? loiO?.loi ?? loiNgay?.batDau ?? loiNgay?.ketThuc ?? null} />
           {sourceMessageId ? (
             <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" lyDo={dangTao || sourceLoading ? undefined : existingId !== null ? "Tờ hẹn này đã thành kèo rồi." : sourceFailed ? "Chưa đọc được tờ hẹn này." : undefined} loading={dangTao || sourceLoading} onPress={() => void tao()} />
           ) : (
@@ -274,10 +276,14 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           value={title}
         />
         <View style={styles.hangLich}>
+          <View style={styles.ngayLich}>
           <Text style={[typography.h2, { color: colors.ink }]}>từ</Text>
           <ChonNgayLich giaTri={startsOn} nhan="Ngày đi" onChange={(v) => { setStartsOn(v); boLoi("ngay"); if (loiNgay) setLoiNgay(null); }} testID="ngay-di" />
+          </View>
+          <View style={styles.ngayLich}>
           <Text style={[typography.h2, { color: colors.ink }]}>tới</Text>
           <ChonNgayLich giaTri={endsOn} nhan="Ngày về" onChange={(v) => { setEndsOn(v); boLoi("ngay"); if (loiNgay) setLoiNgay(null); }} testID="ngay-ve" />
+          </View>
         </View>
         {loiNgay?.batDau || loiNgay?.ketThuc || loiCua("ngay") ? (
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiNgay?.batDau ?? loiNgay?.ketThuc ?? loiCua("ngay")}</Text>
@@ -381,6 +387,7 @@ const styles = StyleSheet.create({
   thiep: { borderWidth: 1, padding: 16, paddingTop: 22, gap: 12 },
   washi: { position: "absolute", top: -10, alignSelf: "center", width: 96 },
   hangLich: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10 },
+  ngayLich: { flexDirection: "row", alignItems: "center", gap: 10 },
   hangSo: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
   // 48: DESIGN's touch floor (critique, B3: the stepper sat at 44).
   nutSo: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: "center", justifyContent: "center" },

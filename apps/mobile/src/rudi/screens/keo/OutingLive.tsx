@@ -377,9 +377,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
             {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
                 written beside it on a pen line (ADR-0037 D1, plan S3). */}
-            <View style={styles.hangChang}>
+            <View style={[styles.hangChang, fontScale >= 1.8 && { flexDirection: "column", alignItems: "flex-start" }]}>
               <BanXoay co={140} nhan="Giờ chặng" oLabel="Ô giờ chặng" onChange={(p) => setGio(gioTuPhut(p))} phut={phutTuGio(gio)} testID="gio-chang" />
-              <View style={styles.flex}>
+              <View style={[styles.flex, fontScale >= 1.8 && { flex: 0, alignSelf: "stretch" }]}>
                 <ONhapMuc accessibilityLabel="Ô tên chặng" label="Chặng" onChangeText={setNhan} placeholder="Ăn tối" value={nhan} />
               </View>
             </View>

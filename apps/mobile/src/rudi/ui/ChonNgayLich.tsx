@@ -14,7 +14,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { displayFace, typography, useRudiTheme } from "../theme";
@@ -45,6 +45,7 @@ export interface ChonNgayLichProps {
 
 export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel, homNay, testID }: ChonNgayLichProps) {
   const { colors, radius } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const motion = useMotion();
   const hn = homNay ?? homNayThat();
   const ngay = docNgay(giaTri);
@@ -67,7 +68,7 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
           accessibilityRole="button"
           aria-expanded={mo}
           onPress={moLich}
-          style={({ pressed }) => [styles.la, { borderColor: colors.lineStrong, backgroundColor: colors.card, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}
+          style={({ pressed }) => [styles.la, { width: Platform.OS === "web" ? 84 : 84 * Math.max(1, fontScale), borderColor: colors.lineStrong, backgroundColor: colors.card, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}
           testID={testID ? `${testID}-la` : undefined}
         >
           <View style={[styles.bangLa, { backgroundColor: colors.accent }]}>
