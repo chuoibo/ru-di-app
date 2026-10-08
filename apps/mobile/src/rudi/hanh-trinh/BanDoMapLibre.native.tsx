@@ -7,6 +7,9 @@ import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef, type MapRef 
 import Svg, { Path } from "react-native-svg";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useNhipDau } from "../ui/useNhipDau";
+import { LenLop } from "../ui/KheLop";
+import { Sheet } from "../ui/Sheet";
+import { typography } from "../theme";
 import { TAM_MAC_DINH, chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
 
 
@@ -255,10 +258,13 @@ export function BanDo({
     <Pressable accessibilityLabel="Bản quyền dữ liệu bản đồ: OpenStreetMap, OpenFreeMap" accessibilityRole="link" hitSlop={8} onPress={() => void Linking.openURL("https://www.openstreetmap.org/copyright")} style={[styles.banQuyen, { backgroundColor: mau.giay }]}>
       <Text maxFontSizeMultiplier={1.3} style={[styles.banQuyenChu, { color: mau.netChi }]}>© OpenStreetMap · OpenFreeMap</Text>
     </Pressable>
-    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mau.vien }]}>
+    {/* A cluster's choices must escape the clipped map frame. At 320x640 its
+        second row was under the day page; the shared sheet also owns Back. */}
+    <LenLop><Sheet accessibilityLabel="Chọn điểm hẹn" open={choosing.length > 1} onClose={() => setChoosing([])} showsVerticalScrollIndicator>
+      <Text accessibilityRole="header" style={[typography.h2, { color: mau.chu, marginBottom: 12 }]}>Chọn điểm hẹn</Text>
       {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mau.chu }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
       <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mau.chu }}>Đóng</Text></Pressable>
-    </View> : null}
+    </Sheet></LenLop>
     </View>
   );
 }
@@ -306,7 +312,6 @@ function thuTuVe(mocs: BanDoProps["mocs"]): BanDoProps["mocs"] {
 
 const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 0 },
-  chooser: { position: "absolute", top: 60, left: 16, right: 16, borderWidth: 1, borderRadius: 12, padding: 8 },
   banQuyen: { position: "absolute", top: 8, right: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   banQuyenChu: { fontSize: 11, lineHeight: 14 },
   choice: { minHeight: 48, justifyContent: "center", padding: 8 },
