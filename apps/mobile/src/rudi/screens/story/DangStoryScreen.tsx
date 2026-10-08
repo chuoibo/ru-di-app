@@ -175,7 +175,7 @@ function DangStory() {
         {/* Kept after a failed story write: the photo already went up, so a
             retry posts it again instead of asking for it twice. */}
         {anh === null && anhDaTai !== null && phien !== null ? (
-          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="contain" onLoad={({ source }) => setTiLeAnh(tiLeKhung(source, 3 / 4))} source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
+          <Image key={anhDaTai} accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="contain" onLoad={({ source }) => setTiLeAnh(tiLeKhung(source, 3 / 4))} source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         {anh === null && anhDaTai === null ? (
           <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
@@ -184,7 +184,9 @@ function DangStory() {
           </Pressable>
         ) : null}
         {anh !== null ? (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
+          // A new native view starts at the new frame size. Reusing the
+          // landscape view left a portrait preview blurred until reopening.
+          <Image key={anh.uri} accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         <ONhapMuc
           accessibilityLabel="Ô chú thích"
