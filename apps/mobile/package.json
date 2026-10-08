@@ -52,7 +52,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "node tools/chep-canvaskit.mjs && expo start --web",
-    "postinstall": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs",
+    "postinstall": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs && node tools/sua-maplibre-marker.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests -path tests/e2e -prune -o -name '*.test.mjs' -print | sort)",
     "test:e2e": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test --test-concurrency=1 $(find tests/e2e -name '*.test.mjs' | sort)",

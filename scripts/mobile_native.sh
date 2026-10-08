@@ -192,6 +192,7 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$HOME/.maestro/
 command -v adb >/dev/null 2>&1 || khong_do_duoc "không có adb. Đặt ANDROID_HOME (mặc định ~/Android/Sdk)."
 command -v maestro >/dev/null 2>&1 || khong_do_duoc "không có maestro trên PATH. https://maestro.mobile.dev"
 [ -d "$APP/node_modules" ] || khong_do_duoc "apps/mobile/node_modules chưa có. Chạy 'npm ci' trong apps/mobile."
+node "$APP/tools/sua-maplibre-marker.mjs" --kiem || khong_do_duoc "bản sửa bounds marker MapLibre native chưa khớp; chạy postinstall rồi dựng lại APK."
 [ -d "$APP/$FLOWS" ] || khong_do_duoc "không thấy $APP/$FLOWS"
 
 # --- thiết bị --------------------------------------------------------------
