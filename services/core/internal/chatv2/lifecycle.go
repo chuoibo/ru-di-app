@@ -269,6 +269,13 @@ func (s *Store) EnrollDevice(ctx context.Context, actor string, digest []byte, e
 			}
 			return card, err
 		}
+		// A newly enrolled device changes every active room's expected roster.
+		// Invalidate in the enrollment transaction so no old epoch can stay
+		// writable after the new public card becomes visible.
+		if _, err := tx.Exec(ctx, `UPDATE chat_v2_conversations SET ready=false WHERE context_id IN
+			(SELECT context_id FROM memberships WHERE person_id=$1 AND state='active' AND left_at IS NULL)`, actor); err != nil {
+			return card, err
+		}
 	default:
 		return card, err
 	}

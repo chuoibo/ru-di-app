@@ -19,3 +19,12 @@ UI dùng thẻ phiếu hiện có với writer native rõ ràng: bỏ phiếu/đ
 Focused candidate: 27/27 PASS, 0 fail/skip/cancel/todo, gồm 8 ca bình chọn và hồi quy sổ/AI/khay. Typecheck exit 0; guide 62 route/hash `f14772123307` không đổi. Chưa nhận full clean-tree ở candidate, native hai người bỏ/đổi phiếu/đóng/relaunch, media, canary/mutant cuối hoặc crypto review độc lập.
 
 Full mobile tại cây sạch `6a8883c3`: **1616 ca, 1615 PASS, 1 FAIL, 0 skip/cancel/todo**, 35,076s; cây sạch trước/sau. Gate vòng import nhận dependency type-only giữa projection và view là vòng mới. Bỏ dependency ngược bằng kiểu input tối thiểu, giữ scanner/danh sách ghim nguyên bản. Focused vòng import + 8 ca poll đạt 11/11, typecheck exit 0; cần full rerun ở SHA follow-up trước khi nhận xanh. Chưa nạp candidate lên Metro hoặc nhận native poll đã đạt.
+
+
+## Bổ sung kiểm native và đăng ký thiết bị
+
+Full mobile cây sạch `04b95dd4`: **1616/1616 PASS, 0 fail/skip/cancel/todo**, 35,049s, sạch trước/sau. Metro đã nạp đúng SHA; APK nền `b87a16f1` có SHA256 `34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967`. Không nhận APK là build từ SHA JS mới.
+
+Native dựng được poll cũ và tạo poll mới qua form câu hỏi/hai lựa chọn; root đã mở ảnh. Peer mới chưa nhận Welcome: runtime Go `1b0e022f` trả `ready=true` với một member nhưng hai expected device. Đăng ký device mới không invalidates các phòng đã ready. Test PostgreSQL mới `TestNewDeviceInvalidatesReadyRoomsUntilAdded` đỏ đúng «new device left a stale room ready» trên baseline (0,778s); sửa đăng ký device mới đặt `ready=false` cho các phòng active trong cùng transaction. Đăng ký lại cùng khóa giữ idempotency, không ngắt phòng. Package chatv2 PostgreSQL thật **37/37 PASS, 0 FAIL/SKIP**, 6,926s, gồm chặn send trước Add và send được sau commit Add. Đây là candidate check, chưa phải gate cây sạch/main hoặc proof peer native bỏ phiếu.
+
+Ngoài ra, đăng xuất session peer qua API hiện chưa thu hồi chat device trên runtime Go `1b0e022f`, trái ADR-0057 §2. Thiết bị cũ đã được thu hồi riêng qua `DELETE /v2/chat/devices/{id}` (204); không nhận việc đăng xuất là PASS, không gán thao tác API thành bằng chứng UI native. Cần xử lý vòng đời thiết bị/phiên trước khi nhận toàn luồng thiết bị.
