@@ -25,7 +25,7 @@ import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, BackHandler, findNodeHandle, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, BackHandler, findNodeHandle, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
@@ -247,7 +247,7 @@ export function XemStoryScreen() {
       ) : null}
       {nhom !== null && story !== null ? (
         <View style={styles.than}>
-          <View style={styles.dau}>
+          <View style={styles.dau} pointerEvents={hoiXoa ? "none" : "auto"} accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"}>
             <View style={styles.tienDo}>
               {nhom.stories.map((s, i) => {
                 // Filled share of this segment as flex weights, not a percent
@@ -302,20 +302,32 @@ export function XemStoryScreen() {
           {story.caption ? (
             <ScrollView style={{ maxHeight: 180, flexGrow: 0 }}><Text style={[typography.body, styles.chuThich, { color: colors.coverInk }]}>{story.caption}</Text></ScrollView>
           ) : null}
-          {hoiXoa ? (
-            <View accessibilityLiveRegion="polite" style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(2, dark)]} testID="hoi-xoa-story">
-              <Text style={[typography.body, { color: colors.ink }]}>Xoá story này? Bạn bè sẽ không thấy nó nữa.</Text>
+          <Modal transparent visible={hoiXoa} animationType="none" onRequestClose={() => { if (!dangXoa) setHoiXoa(false); }} onShow={() => {
+            if (Platform.OS === "web") {
+              (nutGiu.current as unknown as HTMLElement | null)?.focus?.();
+              return;
+            }
+            const node = findNodeHandle(nutGiu.current);
+            if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
+          }}>
+            {/* The native modal isolates header and photo controls as well as
+                the page zones; the underlying photograph keeps its bounds. */}
+            <View style={styles.lopHoiXoa}>
+            <View accessibilityViewIsModal accessibilityLiveRegion="polite" style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(2, dark)]} testID="hoi-xoa-story">
+              <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Xoá story này?</Text>
+              <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn bè sẽ không thấy story này nữa.</Text>
               {deleteError ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{deleteError}</Text> : null}
               <View style={styles.hangNut}>
-                <Pressable accessibilityHint="Xoá story này? Bạn bè sẽ không thấy nó nữa." accessibilityLabel="Giữ lại" accessibilityRole="button" disabled={dangXoa} onPress={() => setHoiXoa(false)} ref={nutGiu} style={styles.nutChu}>
+                <Pressable accessibilityHint="Huỷ xoá, giữ story với bạn bè." accessibilityLabel="Giữ lại" accessibilityRole="button" disabled={dangXoa} onPress={() => setHoiXoa(false)} ref={nutGiu} style={[styles.nutChu, { borderColor: colors.lineStrong, backgroundColor: colors.card }]}>
                   <Text style={[typography.label, { color: colors.ink }]}>Giữ lại</Text>
                 </Pressable>
-                <Pressable accessibilityLabel="Xoá" accessibilityRole="button" disabled={dangXoa} onPress={() => void xoa()} style={styles.nutChu}>
-                  <Text style={[typography.label, { color: colors.warn }]}>{dangXoa ? "Đang xoá…" : "Xoá"}</Text>
+                <Pressable accessibilityLabel="Xoá" accessibilityRole="button" disabled={dangXoa} onPress={() => void xoa()} style={[styles.nutChu, { borderColor: colors.warn, backgroundColor: colors.warn }]}>
+                  <Text style={[typography.label, { color: colors.accentInk }]}>{dangXoa ? "Đang xoá…" : "Xoá"}</Text>
                 </Pressable>
               </View>
             </View>
-          ) : null}
+            </View>
+          </Modal>
         </View>
       ) : null}
     </RudiScreen>
@@ -339,7 +351,8 @@ const styles = StyleSheet.create({
   vungPhai: { right: 0, width: "65%" },
   chuThich: { paddingHorizontal: 20, paddingTop: 12, textAlign: "center" },
   // Confirmation lies over the photograph instead of shrinking its frame.
-  hopXoa: { position: "absolute", left: 16, right: 16, bottom: 24, padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },
+  lopHoiXoa: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 16, paddingBottom: 24 },
+  hopXoa: { padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },
   hangNut: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
-  nutChu: { minHeight: 48, minWidth: 88, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  nutChu: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, borderWidth: 1, borderRadius: 12 },
 });

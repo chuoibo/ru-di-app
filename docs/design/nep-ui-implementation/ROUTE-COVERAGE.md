@@ -1,5 +1,9 @@
 # Coverage route tại source triển khai
 
+**Theo dõi lượt Android ngày08/10 tại [NATIVE-UI-QC-20261008.md](./NATIVE-UI-QC-20261008.md).**
+Catalogue dưới đây giữ checkpoint lịch sử; nhãn chặn web không đại diện runtime
+native hiện tại. Chức năng và độ đẹp so mockup được ghi riêng trong ledger mới.
+
 Base `811c893fa76ab0d3f5583f18691c117c41439465`; đối chiếu 64 file `apps/mobile/app/**/*.tsx`: **62 cửa và 2 layout**, từng file có hàng riêng. Tên renderer là component/alias thực đọc từ source, không phải danh sách imports. URL được chuẩn hoá bỏ nhóm `(tabs)` và hậu tố `index`; tên layout không phải route public.
 
 “Đã triển khai” gồm route đã sửa hoặc cửa/alias kế thừa renderer, primitives và assets đã sửa. Trạng thái này không nói rằng cả 64 file routing đều có diff. “Chưa kiểm” nghĩa là chưa gắn kiểm chứng runtime cụ thể cho cửa/state này. Source/unit tests, ảnh audit cũ và pilot trước sửa/đổi fixture không tự chuyển ô kiểm thành pass. Coverage action chi tiết nằm trong [LAYER-ACTION-COVERAGE.md](./LAYER-ACTION-COVERAGE.md); các hành vi được tái dùng giữa nhiều cửa giữ source/role/state thực.
