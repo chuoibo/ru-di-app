@@ -51,7 +51,7 @@ import { docDaChan } from "../../cai-dat/quyen-rieng-tu";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
-import { nguonAnhNiemDaMo } from "../../chat/e2ee/anh-niem";
+import { khungAnhChat, nguonAnhNiemDaMo } from "../../chat/e2ee/anh-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
 import { useBanNhap } from "../../chat/useBanNhap";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
@@ -800,12 +800,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const benKia = cuaNguoi && !cuaToi;
     const benToi = cuaNguoi && cuaToi;
     const laSticker = tin.kind === "sticker";
+    const laAnh = tin.kind === "image";
     const daXoa = tin.kind === "deleted";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
     // The theme colours the sender's bubble; a taken-back row is paper again.
-    const nenBong = daXoa ? colors.card : cuaToi ? mauChat.bubble : colors.card;
-    const vienBong = daXoa ? colors.line : cuaToi ? mauChat.bubble : colors.line;
-    const mucBong = cuaToi && !daXoa ? mauChat.bubbleInk : colors.ink;
+    const nenBong = daXoa || laAnh ? colors.card : cuaToi ? mauChat.bubble : colors.card;
+    const vienBong = daXoa || laAnh ? colors.line : cuaToi ? mauChat.bubble : colors.line;
+    const mucBong = cuaToi && !daXoa && !laAnh ? mauChat.bubbleInk : colors.ink;
     const viTri = viTriTrongCum(hang, index);
     const dauChuoi = viTri === "mot" || viTri === "dau";
     const cuoiChuoi = viTri === "mot" || viTri === "cuoi";
@@ -894,7 +895,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 onAccessibilityAction={() => { if (!daXoa) setMenuTin(tin); }}
                 onLongPress={() => setMenuTin(tin)}
                 onPress={() => { if (!daXoa) setMenuTin(tin); }}
-                style={[styles.bong, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
+                style={[styles.bong, laAnh && styles.bongAnh, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
               >
                 {daXoa ? (
                   <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
@@ -907,9 +908,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                     ) : (
                       <Image
                         accessibilityLabel={tin.body ? `Ảnh: ${tin.body}` : "Ảnh trong nhóm"}
-                        contentFit="cover"
+                        contentFit="contain"
                         source={anhTin(tin)}
-                        style={[styles.anh, { borderRadius: radius.small }]}
+                        style={[styles.anh, khungAnhChat(tin.image_width, tin.image_height), { borderRadius: radius.small }]}
                       />
                     )}
                     {tin.body ? <Text style={[typography.body, BE_CHU, { color: mucBong }]}>{tin.body}</Text> : null}
@@ -1459,6 +1460,7 @@ const styles = StyleSheet.create({
   khoiPoll: { maxWidth: 560, flex: 1 },
   choChuDau: { width: 30, height: 30 },
   bong: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minWidth: 0 },
+  bongAnh: { paddingHorizontal: 6, paddingVertical: 6 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   baoMat: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" },

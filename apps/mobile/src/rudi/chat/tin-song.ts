@@ -58,6 +58,9 @@ export type Tin = {
   kind: LoaiTin;
   body: string | null;
   image_url: string | null;
+  /** Dimensions authenticated inside the native MLS image operation. */
+  image_width?: number;
+  image_height?: number;
   card: unknown | null;
   created_at: string;
   cursor: string;

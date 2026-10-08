@@ -70,6 +70,7 @@ function sangTinThuong(t: TinV2, contextId: string, personId: string, anhDaMo: R
     body,
     ...(t.poll && !t.deleted ? { poll_v2: t.poll } : {}),
     image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
+    ...(t.media?.type === "image" && !t.deleted ? { image_width: t.media.width, image_height: t.media.height } : {}),
     card: null,
     created_at: t.at ?? new Date(0).toISOString(),
     cursor: String(t.sequence),
