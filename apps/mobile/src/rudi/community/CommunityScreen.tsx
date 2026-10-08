@@ -16,6 +16,7 @@ import { useChamLaiTab } from "../ui/cham-lai-tab";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { EmptyState } from "../ui/EmptyState";
 import { Sheet } from "../ui/Sheet";
+import { NBSP } from "../ui/chu";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
 import { docGiaoDienAsync } from "../kho";
@@ -388,7 +389,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
             </View>
             <View style={styles.consentActions}>
               <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
-              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Để sau" onPress={() => void consent(false)}/>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label={`Để${NBSP}sau`} accessibilityLabel="Để sau" onPress={() => void consent(false)}/>
             </View>
           </View>
         ) : null}
