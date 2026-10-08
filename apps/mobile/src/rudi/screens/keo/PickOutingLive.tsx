@@ -172,6 +172,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
                   </Text>
                 </View>
                 <RudiButton
+                  accessibilityLabel={`Thêm vào kèo ${k.title}`}
                   compact
                   disabled={dangGhi !== null}
                   full={false}
@@ -206,7 +207,7 @@ function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi: string; t
           {nhan ? ` · ${nhan}` : ""}
         </Text>
       </View>
-      <RudiButton compact disabled={dangGhi !== null} full={false} label="Thêm vào" loading={dangGhi === k.id} lyDo={dangGhi !== null && dangGhi !== k.id ? "Đang thêm vào kèo đã chọn." : undefined} onPress={onThem} />
+      <RudiButton accessibilityLabel={`Thêm vào kèo ${k.title}`} compact disabled={dangGhi !== null} full={false} label="Thêm vào" loading={dangGhi === k.id} lyDo={dangGhi !== null && dangGhi !== k.id ? "Đang thêm vào kèo đã chọn." : undefined} onPress={onThem} />
     </View>
   );
 }

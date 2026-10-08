@@ -364,7 +364,15 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const overlay =
     trang.pha === "xong" ? (
       <>
-        <Sheet accessibilityLabel="Chặng mới" onClose={() => setMoThem(false)} open={moThem}>
+        <Sheet
+          accessibilityLabel="Chặng mới"
+          avoidKeyboard
+          showsVerticalScrollIndicator
+          prioritizeFooter
+          footer={<View style={{ paddingTop: 12 }}><StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} /></View>}
+          onClose={() => setMoThem(false)}
+          open={moThem}
+        >
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
             {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
@@ -390,7 +398,6 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </ScrollView>
             {khongKhop}
             {thongBao !== null && moThem ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-            <StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} />
           </View>
         </Sheet>
         <Sheet accessibilityLabel="Gắn địa điểm" onClose={() => setGanChoChang(null)} open={ganChoChang !== null}>
