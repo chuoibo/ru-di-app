@@ -113,6 +113,7 @@ type Buoc =
       tenKhoan: string;
       tongVnd: number;
       nguoiTraId: string;
+      acknowledged: boolean;
       /** The server's shares as they were recorded: copied onto the ledger page. */
       hang: ReturnType<typeof hangKetQua>;
     };
@@ -397,15 +398,22 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
       }
       const sig = signature(reading, rosterIds, assignment);
       const daLuu = await luuGanMonTrenMayChu(bill.id, reading, assignment, phien.person_id, ctx, attemptFor(attempts.current, `gan-mon:${bill.id}:${sig}`));
-      const chia = await chiaTrenMayChu(daLuu.id, phien.person_id, ctx, attemptFor(attempts.current, `chia:${daLuu.id}:${sig}`));
+      const chia = await chiaTrenMayChu(daLuu.id, phien.person_id, ctx, attemptFor(attempts.current, `chia:${daLuu.id}:${sig}:${payerId}`), payerId);
       setBuoc({ ten: "ket-qua", bill: daLuu, chia });
+    });
+
+  const doiNguoiTra = (bill: BillWire, nguoiTraId: string) =>
+    chay(async () => {
+      const chia = await chiaTrenMayChu(bill.id, phien.person_id, ctx, attemptFor(attempts.current, `chia:${bill.id}:${signature(reading, rosterIds, assignment)}:${nguoiTraId}`), nguoiTraId);
+      setPayerId(nguoiTraId);
+      setBuoc({ ten: "ket-qua", bill, chia });
     });
 
   const ghi = (chia: ChiaBill) =>
     chay(async () => {
       const ten = occasion.trim() === "" ? "Hóa đơn của nhóm" : occasion.trim();
-      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, occasion: ten, attempts: attempts.current, outingId });
-      setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId, hang: hangKetQua(chia, roster) });
+      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, actorId: phien.person_id, occasion: ten, attempts: attempts.current, outingId, reviewedSplit: chia });
+      setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId, acknowledged: kq.acknowledged, hang: hangKetQua(chia, roster) });
     });
 
   // One step back inside the flow. On the middle steps this is what the top
@@ -825,7 +833,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
           <SectionHeader title="Ai đã trả bill?" />
           <Inline gap={6} wrap>
             {roster.map((tv) => (
-              <Chip accessibilityLabel={`Người trả ${tv.name}`} key={tv.id} label={tv.name} onPress={() => setPayerId(tv.id)} selected={payerId === tv.id} tone="split" />
+              <Chip accessibilityLabel={`Người trả ${tv.name}`} disabled={ban} key={tv.id} label={tv.name} onPress={() => void doiNguoiTra(buoc.bill, tv.id)} selected={payerId === tv.id} tone="split" />
             ))}
           </Inline>
           <ONhapMuc accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
@@ -856,7 +864,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                 <View style={styles.tenPhan}>
                   <Text style={[laToi ? typography.title : typography.body, { color: colors.ink }]}>{laToi ? "Phần của bạn" : h.ten}</Text>
                   {laToi ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{h.ten}</Text> : null}
-                  {h.id === payerId ? <Stamp dong key={payerId} label="Đã trả bill" style={styles.dauTra} tilt={-3} tone="split" /> : null}
+                  {h.id === payerId ? <Stamp dong key={payerId} label={payerId === phien.person_id ? "Bạn đã trả bill" : "Người trả · Chờ xác nhận"} style={styles.dauTra} tilt={-3} tone="split" /> : null}
                 </View>
                 <Money size={laToi ? "money" : "body"} tone="split" vnd={buoc.chia.allocations[h.id] ?? 0} />
               </View>
@@ -912,7 +920,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
               was the last thing on the screen (B4 finish review). */}
           <Heading
             title={`Đã ghi: ${buoc.tenKhoan}`}
-            subtitle={`${dinhDangTien(buoc.tongVnd)}, ${tenCua(roster, buoc.nguoiTraId)} đã trả. Mỗi người phần của mình như đã chia; quyết toán tính lại từ sổ.`}
+            subtitle={`${dinhDangTien(buoc.tongVnd)}. ${buoc.acknowledged ? `${tenCua(roster, buoc.nguoiTraId)} đã xác nhận ứng tiền.` : `Đang chờ ${tenCua(roster, buoc.nguoiTraId)} xác nhận ứng tiền; bạn không xác nhận thay họ.`} Mỗi người phần của mình như đã chia; quyết toán tính lại từ sổ.`}
           />
           {/* The bill goes into the book: every share is copied onto a ledger
               page, and Nếp brings the stamp down on it; the seal lands on the
@@ -924,7 +932,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
               {buoc.hang.map((h) => (
                 // Names in ink, amounts teal: the ledger page reads like the
                 // strip of the step before (B4 finish review).
-                <DongSo key={h.id} nhan={h.id === buoc.nguoiTraId ? "Đã trả" : undefined} phai={h.tien} trai={h.ten} />
+                <DongSo key={h.id} nhan={h.id === buoc.nguoiTraId ? (buoc.acknowledged ? "Đã xác nhận" : "Chờ xác nhận") : undefined} phai={h.tien} trai={h.ten} />
               ))}
               <View style={styles.dauGhi}>
                 <LedgerStamp confirmedEventId={buoc.expenseVersionId} color={colors.split} textStyle={typography.stamp} />

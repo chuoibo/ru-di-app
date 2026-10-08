@@ -34,10 +34,13 @@ import {
   attemptFor,
   BASE_URL,
   docBill,
+  docChiaBill,
+  docSoDu,
   luuGanMon,
   newAttempt,
   taoBill,
 } from "../../dist-test/api.js";
+import { ghiVaoSo } from "../../dist-test/rudi/chia-bill/hoa-don.js";
 import { khoiDongNhomDemo } from "../fixtures/group-world.mjs";
 import { DEMO_PEOPLE, personById } from "../fixtures/group-world.mjs";
 import { batPhienE2E } from "./phien-e2e.mjs";
@@ -208,6 +211,31 @@ test("một tờ bill đi từ ảnh tới món mang tên người trong nhóm",
   assert.equal(docLai.assignment_state, "confirmed");
   assert.deepEqual(idsCuaMon(docLai, "mon-1"), [b.id, c.id].sort());
   assert.deepEqual(idsCuaMon(docLai, "mon-0"), [a.id, b.id, c.id].sort());
+});
+
+test("đồng lẻ trong bản chia đã xem giữ đúng người khi ghi ledger thật", async (t) => {
+  if (await skipWithoutServer(t)) return;
+  const { contextId, nguoi } = await moNhom();
+  const actor = nguoi.find((person) => person.id === NGUOI_DANG_NHAP) ?? nguoi[0];
+  const reading = {
+    lines: [{ id: "mon-le", name: "Bữa tổng hợp lẻ đồng", quantity: 1, lineTotalVnd: 100001, read: null, notes: [] }],
+    printedTotalVnd: null, needsReview: false, warnings: [],
+  };
+  const assignment = { "mon-le": nguoi.map((person) => person.id) };
+  const attempts = {};
+  const bill = await taoBill(reading, contextId, assignment, actor.id, attemptFor(attempts, "tao-bill-le"));
+  await luuGanMon(bill.id, reading, assignment, actor.id, contextId, attemptFor(attempts, "gan-bill-le"));
+  const reviewedSplit = await docChiaBill(bill.id, actor.id, contextId, attemptFor(attempts, "xem-bill-le"), actor.id);
+  const before = await docSoDu(contextId, actor.id);
+  // Reverse the visible roster to expose any use of its display order for money.
+  const result = await ghiVaoSo({ reading, assignment, roster: [...nguoi].reverse(), contextId, payerId: actor.id, actorId: actor.id, occasion: "Tổng hợp · Chốt đúng bản đã xem", attempts, reviewedSplit });
+  assert.ok(result.expenseVersionId);
+  const after = await docSoDu(contextId, actor.id);
+  for (const id of reviewedSplit.participantIds) {
+    const difference = (after.netByPerson[id] ?? 0) - (before.netByPerson[id] ?? 0);
+    const expected = (id === actor.id ? reviewedSplit.totalAmountVnd : 0) - reviewedSplit.allocations[id];
+    assert.equal(difference, expected, `ledger không khớp phần đã xem của ${id}`);
+  }
 });
 
 test("không gán được món cho người ngoài nhóm", async (t) => {

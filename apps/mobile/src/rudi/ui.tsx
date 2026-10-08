@@ -867,6 +867,7 @@ export function Chip({
   icon,
   leading,
   selected = false,
+  disabled = false,
   tone = "accent",
   onPress,
   accessibilityLabel,
@@ -878,6 +879,8 @@ export function Chip({
   /** Authored artwork in the icon's place (a `GuGlyph`), so a taxonomy is drawn with one pen everywhere. */
   leading?: ReactNode;
   selected?: boolean;
+  /** Block pointer and keyboard changes while the server recalculates the choice. */
+  disabled?: boolean;
   tone?: RudiTone;
   onPress?: () => void;
   /** When the same label appears on several rows, say which row this one is. */
@@ -921,7 +924,9 @@ export function Chip({
   return (
     <PressScale
       accessibilityLabel={accessibilityLabel}
-      {...(vaiTab ? tabState(selected) : vaiRadio ? toggleState("radio", selected, onPress) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
+      {...(vaiTab ? tabState(selected) : vaiRadio ? toggleState("radio", selected, disabled ? undefined : onPress) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
+      aria-disabled={disabled}
+      disabled={disabled}
       onPress={onPress}
       pressedScale={0.96}
       style={[
