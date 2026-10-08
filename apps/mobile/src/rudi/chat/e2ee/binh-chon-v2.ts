@@ -1,5 +1,4 @@
 /** Polls interpreted only after MLS authenticated and decrypted the message. */
-import type { TinV2 } from "./so-tin";
 
 /** Display state from this device's sealed log, distinct from legacy API receipts. */
 export type KetQuaPhieuV2 = {
@@ -42,7 +41,7 @@ export function chuDongBinhChon(body: string): string {
 }
 
 /** A view of the device's sealed record, never a response from /votes. */
-export function xemBinhChonV2(t: Pick<TinV2, "id" | "authorId" | "at" | "poll" | "deleted">, personId: string): KetQuaPhieuV2 | null {
+export function xemBinhChonV2(t: { id: string; authorId: string; poll?: BinhChonV2; deleted: boolean }, personId: string): KetQuaPhieuV2 | null {
   const poll = t.poll;
   if (!poll || t.deleted) return null;
   const counts = new Map(poll.options.map((option) => [option.id, 0]));

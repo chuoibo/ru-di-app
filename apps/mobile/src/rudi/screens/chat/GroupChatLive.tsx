@@ -789,7 +789,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
     const pollV2 = lan.lan === "v2" ? tin.poll_v2 : undefined;
-    const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, at: tin.created_at, poll: pollV2, deleted: false }, personId) : null;
+    const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, poll: pollV2, deleted: false }, personId) : null;
     const laAi = tin.kind === "ai_card" || pollV2 !== undefined;
     const theCuaTin = pollV2 ? { loai: "poll" as const, vote_id: tin.id, question: pollV2.question, options: pollV2.options } : docTheAi(tin.card);
     // A poll is a member's message: it hangs from its sender like any other,
