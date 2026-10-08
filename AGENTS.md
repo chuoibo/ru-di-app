@@ -117,6 +117,18 @@ from the ledger. Propose an ADR before changing these invariants.
 
 ## Testing Guidelines
 
+### Cổng chất lượng thị giác UI — quyết định người dùng 08/10/2026
+
+UI chỉ đạt khi vừa hoạt động đúng, vừa đẹp tương xứng với mockup được bàn giao.
+Audit không được dừng ở «xài được», assertion PASS hoặc unit test xanh.
+Mở ảnh chụp thật từ source đang kiểm và đối chiếu mockup ở màn/trạng thái/kích
+thước tương ứng: bố cục, artwork, typography, màu, khoảng cách, thứ bậc và độ
+hoàn thiện. Kiểm chuyển động trên app thật; ảnh tĩnh không chứng minh motion.
+Ghi riêng kết quả chức năng và kết quả thị giác. Màn còn lệch, kém đẹp hoặc chưa
+đối chiếu phải sửa/chụp lại hoặc giữ trạng thái chưa đạt; không nhận APPROVE
+toàn frontend chỉ vì app chạy được. Trong nhiệm vụ hiện tại, người dùng yêu
+cầu audit app trong Android emulator, không mở bản web để thay bằng chứng native.
+
 Pytest files and functions use `test_*.py` and `test_*`. Add tests beside the affected layer and extend allocator golden JSON vectors. Persistence changes require the live suite in `docs/testing/postgres-repository.md`; fake-repository tests alone are insufficient. No numeric coverage threshold is configured, so cover each changed behavior and regression.
 
 ## Commit & Pull Request Guidelines
