@@ -200,6 +200,11 @@ export function BanDo({
         const mat = chum ? mocChum(group.map((id) => mocs.find((m) => m.id === id)!).filter(Boolean)) : moc;
         const tem = hinhTem(mat, mau);
         const neo = chuNeo(mat.neo);
+        const choose = () => {
+          vuaMoc.current = Date.now();
+          if (chum) setChoosing(group);
+          else { setChoosing([]); onChonMoc(moc.id); }
+        };
         return (
           <Marker
             anchor="center"
@@ -209,15 +214,15 @@ export function BanDo({
             // Two stops can share a pixel; the chosen one must be the one on
             // top. Child order alone does not decide that for native markers.
             style={{ zIndex: moc.chon ? 2 : 1 }}
-            onPress={() => {
-              vuaMoc.current = Date.now();
-              if (chum) setChoosing(group);
-              else { setChoosing([]); onChonMoc(moc.id); }
-            }}
+            onPress={choose}
           >
             <View
+              accessible
               accessibilityLabel={chum ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : nhanMoc(moc)}
               accessibilityRole="button"
+              accessibilityState={{ selected: mat.chon }}
+              accessibilityActions={[{ name: "activate", label: "Chọn chặng" }]}
+              onAccessibilityAction={(event) => { if (event.nativeEvent.actionName === "activate") choose(); }}
               // The stamp is 44dp; the slop makes the finger target 48dp+.
               hitSlop={4}
               style={styles.hopTem}
