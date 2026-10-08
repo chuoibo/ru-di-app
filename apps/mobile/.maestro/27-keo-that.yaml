@@ -30,6 +30,11 @@ appId: com.lakiet.rudi
 - tapOn: "Ô tên kèo"
 - inputText: "Keo QA"
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Ô ngân sách một người"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Ô ngân sách một người"
 - inputText: "200000"
 - hideKeyboard

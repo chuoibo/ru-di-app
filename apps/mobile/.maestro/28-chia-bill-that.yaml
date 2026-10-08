@@ -43,6 +43,11 @@ appId: com.lakiet.rudi
 - tapOn: "Ô tiền món 1"
 - inputText: "150000"
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Thêm món"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Thêm món"
 - extendedWaitUntil:
     visible: "Ô tên món 2"
@@ -112,7 +117,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đã ghi: Toi Xom Lao"
     timeout: 60000
-- assertVisible: "200.000đ, Ban QA đã trả.*"
+- assertVisible: "200.000đ. Ban QA đã xác nhận ứng tiền.*"
 - takeScreenshot: 28-da-ghi
 - tapOn: "Xem quyết toán"
 # Quyết toán sống đọc /contexts/{ctx}/balances: C chuyển cho D 75.000đ.

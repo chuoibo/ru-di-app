@@ -78,6 +78,11 @@ appId: com.lakiet.rudi
     visible: "Đã gửi lời mời tới .*"
     timeout: 60000
 - takeScreenshot: 24-da-moi
+- scrollUntilVisible:
+    element:
+      text: "Về nhóm"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Về nhóm"
 - extendedWaitUntil:
     visible: "1 đang ở trong nhóm, 1 đang được mời."

@@ -44,6 +44,11 @@ appId: com.lakiet.rudi
     direction: UP
     timeout: 30000
 - tapOn: "Cafe"
+- scrollUntilVisible:
+    element:
+      text: "[0-9]+ kết quả"
+    direction: UP
+    timeout: 30000
 # Con số là của danh mục đang phục vụ: 3 trên stack seed, hàng chục trên stack
 # đã nhập OpenStreetMap. Flow gác việc BỘ LỌC CÓ CẮN (số kết quả ít hơn tổng,
 # và chỗ thuộc danh mục khác biến mất), không gác con số.
@@ -54,6 +59,11 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Tiệm Nướng Xóm Lào"
 - takeScreenshot: 26-loc-cafe
 - tapOn: "Xóa lọc"
+- scrollUntilVisible:
+    element:
+      text: "Chỗ hay ở Đà Lạt"
+    direction: UP
+    timeout: 30000
 - extendedWaitUntil:
     visible: "Chỗ hay ở Đà Lạt"
     timeout: 30000
@@ -62,6 +72,11 @@ appId: com.lakiet.rudi
 # Chỗ được tìm phải nằm ở ĐIỂM ĐẾN ĐANG PHỤC VỤ. «Quán Ốc Dì Bé» của bộ seed
 # nằm ở TP.HCM — trước M10 route trả cả mười hai dòng bất kể thành phố nên flow
 # tìm thấy nó ở Đà Lạt, và đó chính là cái sai M10 sửa.
+- scrollUntilVisible:
+    element:
+      text: "Ô tìm địa điểm"
+    direction: UP
+    timeout: 30000
 - tapOn: "Ô tìm địa điểm"
 - inputText: "lung chung"
 - hideKeyboard
