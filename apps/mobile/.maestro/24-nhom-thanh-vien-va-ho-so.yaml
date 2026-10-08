@@ -109,8 +109,18 @@ appId: com.lakiet.rudi
 - assertNotVisible: ".*Team Đà Lạt.*"
 - assertNotVisible: "12 huy hiệu đã mở khóa"
 # Hồ sơ sống (đợt chuyển mình 06/09) in một dòng sự thật «0 bạn bè · 1 nhóm · …» thay ô stat.
+- scrollUntilVisible:
+    element:
+      text: ".*1 nhóm.*"
+    direction: DOWN
+    timeout: 20000
 - assertVisible: ".*1 nhóm.*"
 - takeScreenshot: 24-ho-so-that
+- scrollUntilVisible:
+    element:
+      text: "Chỉnh hồ sơ"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Chỉnh hồ sơ"
 - extendedWaitUntil:
     visible: "Lưu hồ sơ"

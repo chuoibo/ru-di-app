@@ -94,6 +94,11 @@ appId: com.lakiet.rudi
     direction: DOWN
     timeout: 30000
 - tapOn: "Mở Tiệm Nướng Xóm Lào"
+- scrollUntilVisible:
+    element:
+      text: "Chỉ đường"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "Chỉ đường"
     timeout: 60000

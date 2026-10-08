@@ -40,13 +40,28 @@ appId: com.lakiet.rudi
 - hideKeyboard
 - takeScreenshot: 27-tao-keo
 - tapOn: "Tạo kèo"
+- scrollUntilVisible:
+    element:
+      text: "Chưa có chặng nào"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "Chưa có chặng nào"
     timeout: 60000
 - assertVisible: "Keo QA"
+- scrollUntilVisible:
+    element:
+      text: "200.000đ"
+    direction: UP
+    timeout: 20000
 - assertVisible: "200.000đ"
 - takeScreenshot: 27-keo-moi
 # Thêm một chặng có địa điểm trong danh mục.
+- scrollUntilVisible:
+    element:
+      text: "Thêm chặng"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Thêm chặng"
 - extendedWaitUntil:
     visible: "Ô tên chặng"
@@ -62,13 +77,28 @@ appId: com.lakiet.rudi
 - tapOn: "Tiệm Nướng Xóm Lào"
 - tapOn: "Thêm chặng"
 # Chi tiết kèo: tiêu đề mục là «1 chặng»; danh sách kèo (dưới) in «một người · 1 chặng».
+- scrollUntilVisible:
+    element:
+      text: "1 chặng"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "1 chặng"
     timeout: 60000
 - assertVisible: "An toi"
 - assertVisible: "Tiệm Nướng Xóm Lào"
+- scrollUntilVisible:
+    element:
+      text: "Chưa ai tới"
+    direction: DOWN
+    timeout: 20000
 - assertVisible: "Chưa ai tới"
 - takeScreenshot: 27-co-chang
+- scrollUntilVisible:
+    element:
+      text: "Tôi đã tới"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Tôi đã tới"
 - extendedWaitUntil:
     visible: "1 đã tới · bạn"
@@ -88,6 +118,11 @@ appId: com.lakiet.rudi
 - assertVisible: "một người · 1 chặng"
 - takeScreenshot: 27-danh-sach-keo
 - tapOn: "Mở kèo Keo QA"
+- scrollUntilVisible:
+    element:
+      text: "1 đã tới · bạn"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "1 đã tới · bạn"
     timeout: 60000
@@ -101,6 +136,11 @@ appId: com.lakiet.rudi
 - tapOn:
     text: "Chặng An toi"
     selected: true
+- scrollUntilVisible:
+    element:
+      text: "Chỉ đường"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "Chỉ đường"
     timeout: 60000
@@ -112,6 +152,11 @@ appId: com.lakiet.rudi
 - assertVisible: "Keo QA"
 - takeScreenshot: 27-chon-keo
 - tapOn: "Thêm vào"
+- scrollUntilVisible:
+    element:
+      text: "2 chặng"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "2 chặng"
     timeout: 60000
