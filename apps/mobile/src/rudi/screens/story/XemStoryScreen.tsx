@@ -25,7 +25,7 @@ import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, findNodeHandle, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, BackHandler, findNodeHandle, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
@@ -42,7 +42,7 @@ import {
   xoaStory,
   type NhomStoryWire,
 } from "../../story/story";
-import { typography, useRudiTheme } from "../../theme";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
@@ -67,7 +67,7 @@ export function XemStoryScreen() {
   // selection the rail made, never a label, and an array param is not one.
   let authorId = "";
   if (typeof personId === "string") authorId = personId;
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { reduced } = useMotion();
   // A story fills the screen edge to edge, and its «next» tap zone runs to
   // the right edge: there is no margin here for Nếp to live in, so it makes room.
@@ -86,6 +86,14 @@ export function XemStoryScreen() {
   const deleteLock = useRef(false);
   const [hoiXoa, setHoiXoa] = useState(false);
   const [dangXoa, setDangXoa] = useState(false);
+  useEffect(() => {
+    if (!hoiXoa || !active || Platform.OS !== "android") return;
+    const back = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!dangXoa) setHoiXoa(false);
+      return true;
+    });
+    return () => back.remove();
+  }, [hoiXoa, active, dangXoa]);
   // The clock has run out on the last story: the bar stays full, nothing moves.
   const [het, setHet] = useState(false);
   const daBao = useRef<Set<string>>(new Set());
@@ -271,6 +279,7 @@ export function XemStoryScreen() {
           </View>
           <View style={styles.khungAnh}>
             <Image
+              key={story.id}
               accessibilityLabel="Ảnh story"
               contentFit="contain"
               source={nguonAnhBai(story.image_url, toi)}
@@ -281,20 +290,20 @@ export function XemStoryScreen() {
             {/* Two tap halves, each a button (QA UI-101): without a role the
                 web gave a labelled div and screen readers no button. Asleep
                 while the delete question is open: its answer comes first. */}
-            <Pressable accessibilityLabel="Story trước" accessibilityRole="button" disabled={hoiXoa || chiSo === 0} onPress={lui} style={[styles.vungCham, styles.vungTrai]} />
-            <Pressable accessibilityLabel="Story tiếp theo" accessibilityRole="button" disabled={hoiXoa || chiSo + 1 >= nhom.stories.length} onPress={() => tiep(true)} style={[styles.vungCham, styles.vungPhai]} />
+            <Pressable accessibilityLabel="Story trước" accessibilityRole="button" accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} disabled={hoiXoa || chiSo === 0} onPress={lui} style={[styles.vungCham, styles.vungTrai]} />
+            <Pressable accessibilityLabel="Story tiếp theo" accessibilityRole="button" accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} disabled={hoiXoa || chiSo + 1 >= nhom.stories.length} onPress={() => tiep(true)} style={[styles.vungCham, styles.vungPhai]} />
           </View>
           {imageError ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.coverInk, padding: 16 }]}>Chưa tải được ảnh này. Bạn có thể xem story khác hoặc đóng để thử lại.</Text> : null}
-          <View style={[styles.hangNut, { paddingHorizontal: 16, flexWrap: "wrap" }]}>
-            {chiSo > 0 ? <RudiButton label="Story trước" variant="outline" full={false} disabled={hoiXoa} lyDo={hoiXoa ? "Chọn giữ lại hoặc xoá story trước khi đổi trang." : undefined} onPress={lui} /> : null}
+          <View accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} pointerEvents={hoiXoa ? "none" : "auto"} style={[styles.hangNut, { paddingHorizontal: 16, flexWrap: "wrap", opacity: hoiXoa ? 0 : 1 }]}>
+            {chiSo > 0 ? <RudiButton label="Story trước" variant="outline" full={false} onPress={lui} /> : null}
             {!reduced ? <RudiButton label={paused ? "Tiếp tục xem" : "Tạm dừng"} variant="outline" full={false} onPress={() => setPaused((value) => !value)} /> : null}
-            {chiSo + 1 < nhom.stories.length ? <RudiButton label="Story tiếp theo" variant="outline" full={false} disabled={hoiXoa} lyDo={hoiXoa ? "Chọn giữ lại hoặc xoá story trước khi đổi trang." : undefined} onPress={() => tiep(true)} /> : null}
+            {chiSo + 1 < nhom.stories.length ? <RudiButton label="Story tiếp theo" variant="outline" full={false} onPress={() => tiep(true)} /> : null}
           </View>
           {story.caption ? (
             <ScrollView style={{ maxHeight: 180, flexGrow: 0 }}><Text style={[typography.body, styles.chuThich, { color: colors.coverInk }]}>{story.caption}</Text></ScrollView>
           ) : null}
           {hoiXoa ? (
-            <View accessibilityLiveRegion="polite" style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }]} testID="hoi-xoa-story">
+            <View accessibilityLiveRegion="polite" style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(2, dark)]} testID="hoi-xoa-story">
               <Text style={[typography.body, { color: colors.ink }]}>Xoá story này? Bạn bè sẽ không thấy nó nữa.</Text>
               {deleteError ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{deleteError}</Text> : null}
               <View style={styles.hangNut}>
@@ -329,7 +338,8 @@ const styles = StyleSheet.create({
   vungTrai: { left: 0, width: "35%" },
   vungPhai: { right: 0, width: "65%" },
   chuThich: { paddingHorizontal: 20, paddingTop: 12, textAlign: "center" },
-  hopXoa: { margin: 16, padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },
+  // Confirmation lies over the photograph instead of shrinking its frame.
+  hopXoa: { position: "absolute", left: 16, right: 16, bottom: 24, padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },
   hangNut: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
   nutChu: { minHeight: 48, minWidth: 88, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
 });
