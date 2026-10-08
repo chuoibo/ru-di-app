@@ -10,6 +10,8 @@ export interface CoverButtonProps {
   icon?: keyof typeof Ionicons.glyphMap;
   disabled?: boolean;
   loading?: boolean;
+  /** Fill the available line; useful when a chapter changes its action label. */
+  full?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
   /** `link`: no border, as wide as its words; the quiet second choice under a stamp. */
@@ -22,7 +24,7 @@ export interface CoverButtonProps {
  * ≥ 3:1 against the cover in both schemes (services/api/tests/web/
  * test_contrast_floor.py reads it out of this file). Label in `coverInk`.
  */
-export function CoverButton({ label, onPress, icon, disabled, loading, variant = "outline", style, testID }: CoverButtonProps) {
+export function CoverButton({ label, onPress, icon, disabled, loading, full = false, variant = "outline", style, testID }: CoverButtonProps) {
   const { colors } = useRudiTheme();
   // `link`: under the stamp on the cover, a full-width outlined bar outranked
   // the seal it was meant to follow (finish review, 2026-09-06). A link is as
@@ -37,10 +39,10 @@ export function CoverButton({ label, onPress, icon, disabled, loading, variant =
       haptic="select"
       onPress={onPress}
       testID={testID}
-      style={[styles.quiet, link && styles.link, { borderColor: colors.coverLineStrong, opacity: disabled ? 0.55 : 1 }, style]}
+      style={[styles.quiet, link && styles.link, full && styles.full, { borderColor: colors.coverLineStrong, opacity: disabled ? 0.55 : 1 }, style]}
     >
       <View style={styles.row}>
-        <Text style={[typography.label, { color: colors.coverInk }]}>{label}</Text>
+        <Text style={[typography.label, full && styles.fullLabel, { color: colors.coverInk }]}>{label}</Text>
         {icon ? <Ionicons color={colors.coverInk} name={icon} size={18} /> : null}
       </View>
     </PressScale>
@@ -50,5 +52,7 @@ export function CoverButton({ label, onPress, icon, disabled, loading, variant =
 const styles = StyleSheet.create({
   quiet: { minHeight: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 18, justifyContent: "center" },
   link: { borderWidth: 0, alignSelf: "center", minHeight: 48, paddingHorizontal: 12 },
+  full: { width: "100%" },
+  fullLabel: { flex: 1, textAlign: "center" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
 });

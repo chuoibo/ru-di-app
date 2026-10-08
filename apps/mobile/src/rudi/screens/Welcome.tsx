@@ -138,7 +138,7 @@ export function WelcomeScreen() {
           showsVerticalScrollIndicator={false}
           style={styles.flex}
         >
-          <View style={styles.identity}>
+          <View style={[styles.identity, short && styles.identityShort]}>
             <Logo compact ink={colors.coverInk} />
           </View>
           <View style={[styles.hero, { minHeight: heroHeight }]}>
@@ -186,18 +186,18 @@ export function WelcomeScreen() {
             </View>
             {short ? (
               <Animated.View pointerEvents="none" style={[styles.shortArt, { width: contentWidth }, routeStyle]} testID="welcome-compact-art">
-                <AssetIllustration name={scene} width={contentWidth} height={112} fit="cover" />
-                <Svg width={96} height={112} style={styles.pageTurn} accessible={false}>
-                  {/* repo-guard: allow=long-number reason=synthetic-paper-fold-svg-coordinates */}
-                  <Path d="M0 0 L64 0 C88 32 76 80 40 112 L0 112 Z" fill={colors.cover} />
-                  {/* repo-guard: allow=long-number reason=synthetic-paper-fold-svg-coordinates */}
-                  <Path d="M64 0 C88 32 76 80 40 112 L52 112 C88 80 100 32 76 0 Z" fill={colors.paper} />
-                </Svg>
-                <Nep pose="moi" size={76} style={styles.shortNep} />
+                <AssetIllustration name={scene} width={contentWidth} height={144} fit="cover" />
+                <View style={[styles.shortPaper, { backgroundColor: colors.paper }]}>
+                  <Grain material="giayTrang" opacity={0.45} />
+                </View>
+                <View style={[styles.shortCloth, { backgroundColor: colors.cover }]}>
+                  <Grain material="vaiBia" opacity={0.3} />
+                </View>
+                <Nep pose="moi" size={96} style={styles.shortNep} />
               </Animated.View>
             ) : null}
           </View>
-          <View style={[styles.bottom, !compact && styles.bottomWide]}>
+          <View style={[styles.bottom, !compact && styles.bottomWide, short && styles.bottomShort]}>
             {/* The pager's own indicator: the current page is a short coral bar, the
                 same coral as the route's active stop, so the two say one thing. */}
             <View style={styles.dots} role="group" accessibilityLabel="Chọn trang giới thiệu">
@@ -213,7 +213,7 @@ export function WelcomeScreen() {
                 ><View style={[styles.dot, { backgroundColor: index === page ? brand.coral : lopPhu.trang(0.38) }, index === page && styles.dotActive]} /></PressScale>
               ))}
             </View>
-            <Text accessibilityLiveRegion="polite" aria-live="polite" style={[typography.caption, styles.progress, { color: colors.coverInkSoft }]}>Trang {page + 1} trên {WELCOME_PAGES.length}</Text>
+            <Text accessibilityLiveRegion="polite" aria-live="polite" style={[typography.caption, styles.progress, short && styles.progressShort, { color: colors.coverInkSoft }]}>Trang {page + 1} trên {WELCOME_PAGES.length}</Text>
             <View style={styles.actions}>
               <StampButton label="Rủ Đi thôi!" onPress={openCover} testID="welcome-cta" tilt={0} style={styles.openButton} />
               <CoverButton
@@ -221,7 +221,7 @@ export function WelcomeScreen() {
                 label={page < WELCOME_PAGES.length - 1 ? "Tìm hiểu thêm" : "Xem lại từ đầu"}
                 onPress={learnMore}
                 variant="link"
-                style={styles.learnMoreButton}
+                full
               />
               {DAU_VAN_CAY ? (
                 // Native gate anchor (NEO 2b): the harness inlines a per-run value and
@@ -243,16 +243,20 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   cover: { flexGrow: 1, paddingHorizontal: 24, width: "100%", maxWidth: 688, alignSelf: "center" },
   identity: { alignItems: "flex-start", paddingTop: 12, zIndex: 1 },
+  identityShort: { paddingTop: 8 },
   hero: { position: "relative", flexGrow: 1 },
   coverArt: { position: "absolute", top: -72, right: -24, overflow: "hidden" },
   pageTurn: { position: "absolute", left: 0, top: 0 },
   chapter: { paddingTop: 56 },
   chapterNarrow: { paddingTop: 40 },
-  chapterShort: { paddingTop: 24, paddingBottom: 8 },
-  shortArt: { height: 112, overflow: "hidden" },
-  shortNep: { position: "absolute", left: 4, bottom: 0 },
+  chapterShort: { paddingTop: 16, paddingBottom: 4 },
+  shortArt: { height: 144, overflow: "hidden" },
+  shortPaper: { position: "absolute", left: 0, top: 0, bottom: 0, width: 144, borderBottomRightRadius: 72, overflow: "hidden" },
+  shortCloth: { position: "absolute", left: 0, top: 0, bottom: 0, width: 96, borderBottomRightRadius: 84, overflow: "hidden" },
+  shortNep: { position: "absolute", left: 12, bottom: 4 },
   memory: { marginTop: 28, transform: [{ rotate: "-5deg" }] },
   bottom: { gap: 4, paddingTop: 8, zIndex: 1 },
+  bottomShort: { paddingTop: 0 },
   bottomWide: { alignSelf: "center", width: "100%", maxWidth: 640 },
   page: { paddingRight: 8 },
   pageTitle: { fontFamily: displayFace.extraBold, fontSize: 34, lineHeight: 40, letterSpacing: -0.7 },
@@ -261,10 +265,10 @@ const styles = StyleSheet.create({
   dots: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   dotTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   progress: { textAlign: "center", marginTop: -10, marginBottom: 12 },
+  progressShort: { marginBottom: 4 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   dotActive: { width: 22, borderRadius: 3 },
   actions: { gap: 8 },
   openButton: { alignSelf: "stretch", width: "100%" },
-  learnMoreButton: { width: "100%" },
   dauVanCay: { textAlign: "center", paddingTop: 4 },
 });
