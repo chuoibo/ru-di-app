@@ -71,9 +71,12 @@ test("phòng rỗng co giãn, vật thể nhường chỗ và ô soạn ở đá
   assert.match(doc("rudi", "screens", "chat", "SoHen.tsx"), /tools: \{[^}]*flexShrink: 1, minHeight: 0/, "khay co lại thay vì đẩy ô soạn ra ngoài");
   assert.match(LIVE, /label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\}/);
   assert.match(LIVE, /const v2 = useTinNhanV2\(contextId, personId, lan\.lan !== "v2"\)/);
-  assert.match(LIVE, /const cu = useTinNhan\(contextId, personId, lan\.lan !== "legacy"\)/);
+  assert.match(LIVE, /const cu = useTinNhan\(contextId, personId, lan\.lan !== "legacy", true\)/, "kho cũ vẫn đọc đúng lane, mọi writer legacy đóng");
   assert.match(LIVE, /lan\.lan === "v2" \? hopLanV2\(cu, v2\) : lan\.lan === "legacy" \? cu : khoaLan\(cu, lan\.lan === "dang-xet"\)/);
   assert.doesNotMatch(LIVE, /archiveReadOnly/, "mỗi phòng phải giữ làn thực, không ép mọi chat thành kho chỉ đọc");
+  assert.match(LIVE, /const ghiChatDuoc = lan\.lan === "v2" && v2\.sanSang/);
+  assert.match(LIVE, /!ghiChatDuoc \? \(\s*<View[^>]*testID="chat-chi-doc"/);
+  assert.match(LIVE, /Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối/);
 });
 
 test("lớp phòng giữ nguyên khi quay lại, và phòng hai người tự đọc lại", () => {

@@ -174,7 +174,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const lan = useLanChat(contextId, personId);
   // Neither lane acts until the room's lane is established (fail closed).
   const v2 = useTinNhanV2(contextId, personId, lan.lan !== "v2");
-  const cu = useTinNhan(contextId, personId, lan.lan !== "legacy");
+  const cu = useTinNhan(contextId, personId, lan.lan !== "legacy", true);
+  const ghiChatDuoc = lan.lan === "v2" && v2.sanSang;
   const chat = useMemo(
     () => (lan.lan === "v2" ? hopLanV2(cu, v2) : lan.lan === "legacy" ? cu : khoaLan(cu, lan.lan === "dang-xet")),
     [lan, cu, v2],
@@ -569,6 +570,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   };
 
   const gui = async (command?: string): Promise<boolean> => {
+    if (!ghiChatDuoc) return false;
     const body = (command ?? nhap).trim();
     if (!body || guiRef.current) return false;
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
@@ -646,6 +648,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * is in the composer rides along as the caption -- one message, not two.
    */
   const guiAnh = async () => {
+    if (!ghiChatDuoc) return;
     if (guiAnhRef.current || guiRef.current) return;
     guiAnhRef.current = true;
     let daChon = null;
@@ -712,6 +715,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * vanishing behind a notice that does not say which picture was lost (F32).
    */
   const guiStickerChon = async (id: string) => {
+    if (!ghiChatDuoc) return;
     setKhaySticker(false);
     const tra = traLoi;
     // The queued row carries the quoted message from here on, so the composer
@@ -846,6 +850,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               />
             ) : laAi ? (
               <TheAiView
+                readOnly={!ghiChatDuoc}
                 the={theCuaTin}
                 contextId={contextId}
                 personId={personId}
@@ -911,6 +916,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             {chips.map((r) => (
               <Pressable
                 accessibilityLabel={`${r.count} ${glyphPhanUng(r.kind)}`}
+                disabled={!ghiChatDuoc}
+                accessibilityState={{ disabled: !ghiChatDuoc }}
                 hitSlop={8}
                 key={r.kind}
                 onPress={() => void phanUng(tin, r.kind)}
@@ -968,7 +975,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         <View style={styles.baoMat}>
           <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
           {lan.lan === "v2" ? <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text> : null}
-          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text> : null}
+          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối</Text> : null}
           {lan.lan === "dang-xet" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm tra mã hoá</Text> : null}
           {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
           {lan.lan === "khong-ro" ? (
@@ -1258,7 +1265,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
@@ -1268,7 +1275,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
         onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
-      {!khongNhanTin && nhacDangGo !== null ? (
+      {!khongNhanTin && ghiChatDuoc && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
           <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
@@ -1284,6 +1291,15 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             </Text>
           ) : null}
           {toiDaChan ? <RudiButton compact full={false} label="Xem danh sách đã chặn" onPress={() => router.push("/settings/da-chan" as never)} variant="ghost" /> : null}
+        </View>
+      ) : !ghiChatDuoc ? (
+        <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md, marginBottom: Math.max(insets.bottom, 10) }]} testID="chat-chi-doc">
+          <Text style={[typography.body, { color: colors.ink }]}>
+            {lan.lan === "legacy" ? "Kho chat cũ chỉ đọc." : "Chưa sẵn sàng nhắn tin mã hoá."}
+          </Text>
+          <Text style={[typography.note, { color: colors.inkSoft }]}>
+            {lan.lan === "legacy" ? "Tin mới cần phòng mã hoá đầu cuối trên bản ứng dụng hỗ trợ. Tin cũ vẫn đọc được ở trên." : "Chỉ gửi được khi máy này thiết lập mã hoá đầu cuối cho phòng."}
+          </Text>
         </View>
       ) : (
         <View
@@ -1338,9 +1354,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           />
         </View>
       )}
-      <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker && ghiChatDuoc} />
       <TamXemBoiCanh goi={goiChip} haiNguoi={nhanRieng} onClose={() => setXemBoiCanh(false)} open={xemBoiCanh && !khongNhanTin && nhacDangGo !== null} />
       <MenuTin
+        readOnly={!ghiChatDuoc}
         cuaToi={menuTin !== null && menuTin.author_id === personId}
         onClose={() => setMenuTin(null)}
         onPhanUng={(tin, kind) => void phanUng(tin, kind)}

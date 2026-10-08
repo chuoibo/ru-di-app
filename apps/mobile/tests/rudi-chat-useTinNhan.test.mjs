@@ -76,20 +76,20 @@ function batFetch() {
 const cuaNhom = (daGoi, ctx, method) => daGoi.filter((g) => g.url.includes(`/contexts/${ctx}/`) && (method === undefined || g.method === method));
 
 let ketQua;
-function Probe({ contextId, personId, tatLan = false }) {
-  ketQua = useTinNhan(contextId, personId, tatLan);
+function Probe({ contextId, personId, tatLan = false, chiDoc = false }) {
+  ketQua = useTinNhan(contextId, personId, tatLan, chiDoc);
   return null;
 }
-async function dung(contextId, personId = P1, tatLan = false) {
+async function dung(contextId, personId = P1, tatLan = false, chiDoc = false) {
   let root;
   await act(async () => {
-    root = TestRenderer.create(React.createElement(Probe, { contextId, personId, tatLan }));
+    root = TestRenderer.create(React.createElement(Probe, { contextId, personId, tatLan, chiDoc }));
   });
   return root;
 }
-async function doi(root, contextId, personId = P1, tatLan = false) {
+async function doi(root, contextId, personId = P1, tatLan = false, chiDoc = false) {
   await act(async () => {
-    root.update(React.createElement(Probe, { contextId, personId, tatLan }));
+    root.update(React.createElement(Probe, { contextId, personId, tatLan, chiDoc }));
   });
 }
 async function tra(g, body, status) {
@@ -267,13 +267,13 @@ test("F42: đổi nhóm khi màn đang focus không PUT read-mark của B bằng
 });
 
 
-async function voiForeground(chay) {
+async function voiForeground(chay, chiDoc = false) {
   const moTaCu = Object.getOwnPropertyDescriptor(AppState, "currentState");
   const addCu = AppState.addEventListener;
   CAU_HINH.focus = true;
   Object.defineProperty(AppState, "currentState", { configurable: true, get: () => "active" });
   AppState.addEventListener = () => ({ remove() {} });
-  const root = await dung(A);
+  const root = await dung(A, P1, false, chiDoc);
   try { await chay(root); }
   finally {
     await bo(root);
@@ -562,4 +562,69 @@ test("tắt làn legacy dừng read marker cho tin đã có trong viewport", asy
     AppState.addEventListener = originalListener;
     CAU_HINH.focus = false;
   }
+});
+
+test("kho cũ đọc được lịch sử nhưng mọi writer và read marker đều đóng", async () => {
+  const calls = batFetch();
+  const parkedFetch = globalThis.fetch;
+  // A forbidden writer must fail an assertion, not leave the test hanging.
+  globalThis.fetch = (url, init) => {
+    const pending = parkedFetch(url, init);
+    if ((init?.method ?? "GET") !== "GET") calls.at(-1).resolve({ ...tin(A, "forbidden"), intent: null }, 201);
+    return pending;
+  };
+  await voiForeground(async () => {
+    for (const call of [...calls]) await tra(call, trang(A, "cu"));
+    assert.deepEqual(ids(), ["a-cu"], "chỉ đọc không được che lịch sử");
+    const before = calls.length;
+    const refuses = [
+      () => ketQua.gui("A synthetic draft"),
+      () => ketQua.guiAnhMoi("https://synthetic.invalid/image.png", "A caption"),
+      () => ketQua.guiSticker("cho-ti"),
+      () => ketQua.thuLaiMot("old-key"),
+      () => ketQua.xoaTin("a-cu"),
+      () => ketQua.doiPhanUng("a-cu", "heart", false),
+      () => ketQua.doiPhanUng("a-cu", "heart", true),
+    ];
+    for (const write of refuses) {
+      await act(async () => {
+        await assert.rejects(write, (error) => error.code === "chat_legacy_read_only");
+      });
+    }
+    await act(async () => { ketQua.danhDauHienThi(["a-cu"]); });
+    assert.equal(calls.length, before, "chỉ đọc không được phát bất kỳ HTTP writer nào");
+    assert.deepEqual(ids(), ["a-cu"]);
+    assert.deepEqual(ketQua.hangCho, [], "không đưa bản nháp plaintext vào hàng chờ");
+  }, true);
+});
+
+test("callback giữ từ trước khi kho thành chỉ đọc không thể ghi hoặc thử lại", async () => {
+  const calls = batFetch();
+  const root = await dung(A);
+  try {
+    await tra(calls[0], trang(A, "cu"));
+    const oldSend = ketQua.guiSticker;
+    const oldRetry = ketQua.thuLaiMot;
+    const oldDelete = ketQua.xoaTin;
+    let sent;
+    await act(async () => { sent = oldSend("cho-ti"); });
+    await act(async () => { calls[1].resolve(LOI_MAY_CHU, 500); await sent.catch(() => undefined); });
+    const key = ketQua.hangCho[0].attempt.key;
+    await doi(root, A, P1, false, true);
+    const parkedFetch = globalThis.fetch;
+    globalThis.fetch = (url, init) => {
+      const pending = parkedFetch(url, init);
+      if ((init?.method ?? "GET") !== "GET") calls.at(-1).resolve({ ...tin(A, "forbidden"), intent: null }, 201);
+      return pending;
+    };
+    const before = calls.length;
+    for (const write of [() => oldSend("cho-ti"), () => oldRetry(key), () => oldDelete("a-cu")]) {
+      await act(async () => {
+        await assert.rejects(write, (error) => error.code === "chat_legacy_read_only");
+      });
+    }
+    assert.equal(calls.length, before, "callback cũ phải đọc quyền ghi hiện tại");
+    assert.equal(ketQua.hangCho[0].trangThai, "that-bai", "thử lại bị đóng không đổi hàng chờ thành đang gửi");
+    assert.deepEqual(ids(), ["a-cu"]);
+  } finally { await bo(root); }
 });
