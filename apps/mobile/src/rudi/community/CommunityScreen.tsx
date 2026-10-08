@@ -388,7 +388,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
             </View>
             <View style={styles.consentActions}>
               <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
-              <Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Để sau" onPress={() => void consent(false)}/>
             </View>
           </View>
         ) : null}
@@ -465,8 +465,6 @@ const styles = StyleSheet.create({
   consentBody: { fontSize: 15, lineHeight: 22 },
   consentActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
   consentAction: { maxWidth: "100%", flexShrink: 1 },
-  // A horizontal child measures the whole inline label before the row wraps.
-  later: { flexDirection: "row", alignItems: "center", minWidth: 48, minHeight: 48, paddingHorizontal: 14, justifyContent: "center" },
   xacNhan: { gap: 8 },
   // On the gutter the search field and the tabs start on; the tab row's
   // rule already sets it apart, so no space over it.
