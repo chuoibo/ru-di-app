@@ -29,7 +29,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 |---|---|---|---|
 | A — Welcome/auth | Bốn chương, swipe/reset, Login; font130/200, giảm chuyển động, tối; đăng nhập fixture thật | Welcome `34d57ca9`: 15/16; ba finding nhãn/art/fold resolved; CTA→Login warm `3b71838e` có chuỗi frame được mở | Register/reset/error/keyboard toàn bộ; cold/back/cancel/background/reduced lifecycle; không suy toàn motion |
 | B — Gu/onboarding | Có baseline native và bỏ qua onboarding ở login fixture | Chưa review đủ state native đúng source cuối | Save/restore/cancel/validation, keyboard/chữ lớn và review |
-| C — Explore/destination | Màn native thật làm điểm vào các flow | Chưa nhận toàn composition/state đạt | Search/filter/save/no-result/ảnh thiếu/credit; provider AI thật chưa cấu hình |
+| C — Explore/destination | Màn native thật làm điểm vào các flow | Chưa nhận toàn composition/state đạt | Search/filter/save/no-result/ảnh thiếu/credit; provider one-shot thật đã nối; nhánh Explore chưa kiểm success |
 | D — Place/chọn kèo | Source và baseline có trong recovery | Chưa nhận đủ native so mockup | Chọn place/context/kèo, lỗi/empty và mọi layer |
 | E — Plan/outing/map | Baseline flow22–29 có bước outing; chưa phải ma trận đầy đủ | Chưa review đủ timeline/map/layer đúng source cuối | Reorder/pin/map provider/permission/conflict/partial creation |
 | F — Create/check-in | Tạo hub/tab thật đã được mở trên native | Chưa chấm toàn bộ sheet/check-in | Từng entry, context/audience, keyboard/location/cancel |
@@ -42,13 +42,12 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | M — Bill | Focused native822 nhập/preview/ghi bill200.000đ, phần75.000/125.000; witness thật; runner toàn bảng vẫn đỏ | Có ảnh đã mở; chưa nhận composition/state đầy đủ | Native whole-flow/canary cùng harness, scan camera/OCR/provider, font/keyboard/errors |
 | N — Settlement/finance | Focused native822 batch75.000đ, xác nhận nhận và ledger về0; receiver confirmation không là bank evidence | Chưa nghiệm thu toàn state/layer native | Bảng đầy đủ, role/wait/conflict, share handoff và visual |
 | O — Guest ngoài Expo | Cổng riêng, không gán emulator Expo thành guest proof | Không mở browser theo yêu cầu hiện tại | Fresh guest/oracle parity; phương thức visual guest phải giữ đúng phạm vi được phép |
-| P — Community | Native deeplink `c9a3f541` vào feed thật; chưa kiểm actions | Root mở baseline đầu feed; chưa rubric/reference toàn state | Feed/topic/post/edit/comment/report/moderation/filter/cursor và lỗi |
-| Q — Keeps/notifications/search | Chưa nhận đầy đủ native | Chưa review native đủ | Từng route/action/error/empty và related sheets |
+| P — Community | Native deeplink/feed và Nếp one-shot thật52; chưa full actions | Review52: hierarchyP2viewport đầu,13/14tĩnh; chưa /16 | Feed/topic/post/edit/comment/report/moderation/filter/cursor và lỗi |
+| Q — Keeps/notifications/search | Nếp52: explicit consent→draft thật→save; Minh1keep, Ngọclist không có ID đó; Keeps empty cuộn/bấm thật | Baseline light/dark được review tĩnh, motionN/E; editor bị IME che đang sửa | Từng route/action/error/empty và related sheets |
 | R — Settings/account/privacy | Theme thật Sáng/Tối; device list read thật; login Ngọc lại thật; avatar crop qua settings | Root mở settings light/dark/device/profile, chưa rubric toàn family | Logout phải thu hồi đúng device còn là finding mở; remote session/revoke/privacy/block/delete-account; không xoá mọi máy để ép xanh |
 | S — Root/tab/alias | Hai native runtime có ownership/fingerprint; tab/Back/relaunch thực trong các flow đã nêu | Welcome transfer được review có giới hạn | Deep-link/alias/auth-expiry/foreground/reduced lifecycle; keyboard/nav trong toàn matrix |
 
-Không cộng các route đã mở thành số state/action đã đạt. Provider chưa có cấu hình
-không thay bằng response giả. iOS, phần cứng thật và review crypto độc lập vẫn là
+Không cộng các route đã mở thành số state/action đã đạt. Provider one-shot thật đã nối sau52b6ba1d; không thay nhánh chưa kiểm bằng response giả. iOS, phần cứng thật và review crypto độc lập vẫn là
 cổng riêng, không suy từ emulator hoặc focused unit.
 
 ## Đối chiếu cụ thể

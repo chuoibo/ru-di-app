@@ -95,6 +95,21 @@ export function PostDetail() {
     finally {
         working.current = false; setBusy(false);
     } };
+    // The shared excerpt scrolls; the active editor stays above the IME.
+    // A generated draft keeps the original request editable in the reference
+    // area, so asking again never silently replaces the person's input.
+    const requestEditor = <>
+      <Field testID="community-nep-request" label="Bạn muốn Nếp giúp gì?" value={request} onChangeText={setRequest} editable={!busy} multiline placeholder="Viết một lời ngắn để giữ khoảnh khắc này…" />
+      <RudiButton label={busy ? "Nếp đang viết…" : "Đồng ý chia sẻ và gọi Nếp"} disabled={busy || !request.trim()} lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined} onPress={() => void goiNep()} />
+    </>;
+    const draftEditor = <>
+      <Text style={[typography.caption, { color: colors.ai }]}>Bản nháp do Nếp viết</Text>
+      <Field testID="community-nep-draft" label="Sửa lại theo ý bạn" value={draft} editable={!busy} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline />
+      <RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void act(async () => {
+        await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/keeps", { actorId: person!, method: "POST", attempt: newAttempt(), body: { logical_id: keepAttempt.current, post_id: id, body: draft, ai_generated: true } });
+        setNep(false); router.push("/community/keeps" as never);
+      })} />
+    </>;
     return <RudiScreen material="quiet" cot="doc" padded={false} testID="community-post-detail" overlay={<>
     <Sheet open={actions} onClose={() => { setActions(false); setConfirmDelete(false); }} accessibilityLabel="Quản lý bài">{post && person ? <><Text style={[typography.h2, { color: colors.ink }]}>Giữ lại câu chuyện</Text>{/* A refused management step is said in this sheet, where the press was. */}<CauTaiCho cau={actions ? error : null} /><RudiButton label={post.saved ? "Bỏ lưu bài" : "Lưu bài"} onPress={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); setActions(false); })}/>{post.author_id === person ? <>{!post.diary ? <RudiButton label="Sửa bài" variant="outline" onPress={() => { setActions(false); router.push({ pathname: "/community/new", params: { edit: id } } as never); }}/> : null}<RudiButton label="Cất lại cho bạn bè" variant="outline" onPress={() => void act(async () => { await translatedAsActor(COMMUNITY_ERRORS, `/v2/community/posts/${id}/audience`, {
             actorId: person,
@@ -124,7 +139,14 @@ export function PostDetail() {
         }); router.replace("/(tabs)/community" as never); }); }}/></> : <RudiButton label="Báo cáo bài" variant="ghost" onPress={() => { setActions(false); setReport(true); }}/>}</> : null}</Sheet>
     <Sheet open={commentsOpen} onClose={() => setCommentsOpen(false)} accessibilityLabel="Bình luận">{person && post ? <Comments initialDraft={commentDraft} onDraftChange={setCommentDraft} person={person} post={post} /> : null}</Sheet>
     <Sheet open={report} onClose={() => setReport(false)} accessibilityLabel="Báo cáo bài">{person ? <NoiDungBaoCao actorId={person} loai="post" targetId={id} onXong={() => setReport(false)} onThoi={() => setReport(false)}/> : null}</Sheet>
-    <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp">{person && post ? <><Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text><Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text><Field label="Bạn muốn Nếp giúp gì?" value={request} onChangeText={setRequest} multiline placeholder="Viết một lời ngắn để giữ khoảnh khắc này…"/><RudiButton label={busy ? "Nếp đang viết…" : "Đồng ý chia sẻ và gọi Nếp"} disabled={busy || !request.trim()} lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined} onPress={() => void goiNep()}/><CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" />{draft ? <><Text style={[typography.caption, { color: colors.ai }]}>Bản nháp do Nếp viết</Text><Field label="Sửa lại theo ý bạn" value={draft} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline/><RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void act(async () => { await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/keeps", { actorId: person, method: "POST", attempt: newAttempt(), body: { logical_id: keepAttempt.current, post_id: id, body: draft, ai_generated: true } }); setNep(false); router.push("/community/keeps" as never); })} /></> : null}</> : null}</Sheet>
+    <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" footer={person && post ? <View style={{ gap: 8 }}>{draft ? draftEditor : requestEditor}<CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" /></View> : undefined}>
+      {person && post ? <>
+        <Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text>
+        <Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text>
+        {draft ? requestEditor : null}
+      </> : null}
+    </Sheet>
   </>}>
     <View style={{ paddingHorizontal: 20 }}><TopBar title="Một câu chuyện"/><CauTaiCho cau={error} hanhDong={permanent ? undefined : { label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bai" />{permanent ? <RudiButton label="Về cộng đồng" variant="outline" onPress={() => router.replace("/(tabs)/community" as never)}/> : null}</View>
     {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={() => setCommentsOpen(true)} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{!commentsOpen ? <Comments initialDraft={commentDraft} onDraftChange={setCommentDraft} person={person} post={post} expanded/> : null}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
