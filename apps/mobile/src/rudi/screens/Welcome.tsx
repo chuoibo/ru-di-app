@@ -221,6 +221,7 @@ export function WelcomeScreen() {
                 label={page < WELCOME_PAGES.length - 1 ? "Tìm hiểu thêm" : "Xem lại từ đầu"}
                 onPress={learnMore}
                 variant="link"
+                style={styles.learnMoreButton}
               />
               {DAU_VAN_CAY ? (
                 // Native gate anchor (NEO 2b): the harness inlines a per-run value and
@@ -264,5 +265,6 @@ const styles = StyleSheet.create({
   dotActive: { width: 22, borderRadius: 3 },
   actions: { gap: 8 },
   openButton: { alignSelf: "stretch", width: "100%" },
+  learnMoreButton: { width: "100%" },
   dauVanCay: { textAlign: "center", paddingTop: 4 },
 });
