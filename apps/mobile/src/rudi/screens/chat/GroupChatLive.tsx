@@ -479,6 +479,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // past 30% of a short window; then it scrolls inside itself.
   const caoOToiDa = Math.min(4 * DONG_O + 2 * DEM_O, Math.max(CAO_O + DONG_O, Math.round(caoCuaSo * 0.3)));
   const oNhapRef = useRef<TextInput>(null);
+  useEffect(() => {
+    if (khay !== null) {
+      oNhapRef.current?.blur();
+      Keyboard.dismiss();
+    }
+  }, [khay]);
   // Web only: a textarea neither grows with its text nor starts at one row
   // (react-native-web leaves `rows` unset, and the browser draws two). Measure
   // the text at no height, then give the box exactly that, between one line
@@ -1296,7 +1302,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             {lan.lan === "legacy" ? "Tin mới cần phòng mã hoá đầu cuối trên bản ứng dụng hỗ trợ. Tin cũ vẫn đọc được ở trên." : "Chỉ gửi được khi máy này thiết lập mã hoá đầu cuối cho phòng."}
           </Text>
         </View>
-      ) : (
+      ) : khay === "poll" ? null : (
         <View
           style={[
             styles.soan,

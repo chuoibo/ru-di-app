@@ -207,20 +207,21 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
-      {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
-        <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
-        <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
-      </View> : panel === "poll" && hasDraft ? <View style={styles.draftRow}>
-        <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{restored.poll ? "Đã khôi phục bản nháp" : ""}</Text>
-        <RudiButton label="Bỏ bản nháp" tone="warn" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
-      </View> : null}
       <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, {
         // The cap holds the grid and the photo note under it; when a short
         // window squeezes the tray it may shrink, but never below one whole
         // row of tools, so a tile is never cut in half.
         maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung + caoGhiChu : null),
-        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : 0,
+        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : panel === "poll" ? Math.min(100 * fontScale, tranKhay(height, null)) : 0,
       }]}>
+        {/* Draft actions scroll with the fields instead of taking their space above the keyboard. */}
+        {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
+          <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
+        </View> : panel === "poll" && hasDraft ? <View style={styles.draftRow}>
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{restored.poll ? "Đã khôi phục bản nháp" : ""}</Text>
+          <RudiButton label="Bỏ bản nháp" tone="warn" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
+        </View> : null}
         {panel === "tools" ? (
           // One row while every tool still holds its widest word, else balanced
           // rows of equal tools (`boCucKhay`): five never wrap 4 + 1 (lab 28/09).
@@ -246,7 +247,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
                 it meant re-reading every box (reviewer C4, heuristic 9). */}
             {fieldErrors?.question ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.question}</Text> : null}
             {draft.choices.map((choice, index) => <View key={index} style={styles.o}>
-              <ONhapMuc label={`Lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
+              <ONhapMuc label={`Lựa chọn ${index + 1}`} accessibilityLabel={`Ô lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
               {fieldErrors?.choices[index] ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.choices[index]}</Text> : null}
             </View>)}
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
