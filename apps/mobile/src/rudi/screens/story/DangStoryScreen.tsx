@@ -17,6 +17,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { attemptFor, type Attempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
 import { boNhapDang, docNhapDang, ghiNhapDang, khoaNhapDang } from "../../ky-niem/nhap-dang";
+import { tiLeKhung } from "../../ky-niem/ti-le";
 import { nguonAnhBai, taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
@@ -55,6 +56,7 @@ function DangStory() {
   const [nhapCu] = useState(() => docNhapDang(khoaNhap));
   const [anh, setAnh] = useState<TempPhoto | null>(nhapCu?.anh ?? null);
   const [anhDaTai, setAnhDaTai] = useState<string | null>(nhapCu?.anhDaTai ?? null);
+  const [tiLeAnh, setTiLeAnh] = useState(() => tiLeKhung(nhapCu?.anh, 3 / 4));
   const attempts = useRef<Record<string, Attempt>>({});
   const [chuThich, setChuThich] = useState(nhapCu?.chu ?? "");
   const [conNhapCu, setConNhapCu] = useState(nhapCu !== null);
@@ -68,6 +70,7 @@ function DangStory() {
     if (anh !== null) void boAnh(anh);
     setAnh(null);
     setAnhDaTai(null);
+    setTiLeAnh(3 / 4);
     setChuThich("");
     setConNhapCu(false);
     boNhapDang(khoaNhap);
@@ -85,6 +88,7 @@ function DangStory() {
       if (daChon === null) return;
       if (anh !== null) await boAnh(anh);
       setAnhDaTai(null);
+      setTiLeAnh(tiLeKhung(daChon, 3 / 4));
       setAnh(daChon);
     } catch (error) {
       setLoi(loiRaChu(error));
@@ -96,6 +100,7 @@ function DangStory() {
     if (anh !== null) await boAnh(anh);
     setAnh(null);
     setAnhDaTai(null);
+    setTiLeAnh(3 / 4);
   };
 
   const guiDuoc = phien !== null && (anh !== null || anhDaTai !== null) && chuThich.length <= TRAN_CHU_THICH && !dangGui;
@@ -112,6 +117,7 @@ function DangStory() {
         const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
         imageUrl = daTai.url;
         setAnhDaTai(daTai.url);
+        setTiLeAnh(tiLeKhung(daTai, 3 / 4));
         ghiNhapDang(khoaNhap, { anh: null, chu: chuThich, anhDaTai: daTai.url });
         uploadFinished = true;
         setAnh(null);
@@ -169,7 +175,7 @@ function DangStory() {
         {/* Kept after a failed story write: the photo already went up, so a
             retry posts it again instead of asking for it twice. */}
         {anh === null && anhDaTai !== null && phien !== null ? (
-          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="cover" source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={styles.anhXem} />
+          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="contain" onLoad={({ source }) => setTiLeAnh(tiLeKhung(source, 3 / 4))} source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         {anh === null && anhDaTai === null ? (
           <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
@@ -178,7 +184,7 @@ function DangStory() {
           </Pressable>
         ) : null}
         {anh !== null ? (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={styles.anhXem} />
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         <ONhapMuc
           accessibilityLabel="Ô chú thích"
@@ -213,7 +219,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   // A polaroid: even sides, the deep margin under the picture for the words.
   polaroid: { gap: 12, padding: 12, paddingBottom: 18, borderWidth: 1, borderRadius: 3, alignSelf: "center", width: "100%", maxWidth: 420 },
-  anhXem: { width: "100%", aspectRatio: 3 / 4 },
+  anhXem: { width: "100%" },
   anhTrong: { width: "100%", aspectRatio: 3 / 4, alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed" },
   dongCuoi: { flexDirection: "row", alignItems: "center", gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

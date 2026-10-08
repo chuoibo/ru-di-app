@@ -1,5 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type NativeScrollEvent,
@@ -19,7 +20,7 @@ import Svg, { Path } from "react-native-svg";
 import { AssetIllustration } from "../asset-pack/react-native/AssetIllustration";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { giuState } from "../../ui/a11y";
-import { displayFace, lopPhu, typography, useRudiTheme } from "../theme";
+import { bongGiay, displayFace, lopPhu, typography, useRudiTheme } from "../theme";
 import { CoverButton } from "../ui/CoverButton";
 import { Nep } from "../ui/art/Nep";
 import { Grain } from "../ui/Grain";
@@ -187,7 +188,14 @@ export function WelcomeScreen() {
             {short ? (
               <Animated.View pointerEvents="none" style={[styles.shortArt, { width: contentWidth }, routeStyle]} testID="welcome-compact-art">
                 <AssetIllustration name={scene} width={contentWidth} height={144} fit="cover" />
-                <View style={[styles.shortPaper, { backgroundColor: colors.paper }]}>
+                <View style={[styles.shortPaper, { backgroundColor: colors.paper }, bongGiay(1, dark)]}>
+                  <LinearGradient
+                    colors={[colors.paperShade, colors.paper, colors.paperShade]}
+                    locations={[0, 0.55, 1]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
                   <Grain material="giayTrang" opacity={0.45} />
                 </View>
                 <View style={[styles.shortCloth, { backgroundColor: colors.cover }]}>
@@ -251,8 +259,8 @@ const styles = StyleSheet.create({
   chapterNarrow: { paddingTop: 40 },
   chapterShort: { paddingTop: 16, paddingBottom: 4 },
   shortArt: { height: 144, overflow: "hidden" },
-  shortPaper: { position: "absolute", left: 0, top: 0, bottom: 0, width: 144, borderBottomRightRadius: 72, overflow: "hidden" },
-  shortCloth: { position: "absolute", left: 0, top: 0, bottom: 0, width: 96, borderBottomRightRadius: 84, overflow: "hidden" },
+  shortPaper: { position: "absolute", left: 0, top: 0, bottom: 0, width: 136, borderBottomRightRadius: 72, overflow: "hidden" },
+  shortCloth: { position: "absolute", left: 0, top: 0, bottom: 0, width: 124, borderBottomRightRadius: 104, overflow: "hidden" },
   shortNep: { position: "absolute", left: 12, bottom: 4 },
   memory: { marginTop: 28, transform: [{ rotate: "-5deg" }] },
   bottom: { gap: 4, paddingTop: 8, zIndex: 1 },
