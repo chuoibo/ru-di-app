@@ -653,7 +653,7 @@ export function RudiButton({
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
       {!loading && icon ? <RudiIcon color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
-      <Text style={[typography.label, styles.buttonLabel, { color: foreground }]}>
+      <Text style={[typography.label, styles.buttonLabel, full && styles.buttonLabelFull, { color: foreground }]}>
         {label}
       </Text>
     </>
@@ -1284,7 +1284,8 @@ const styles = StyleSheet.create({
   button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   buttonFull: { width: "100%" },
   buttonCompact: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10 },
-  buttonLabel: { zIndex: 1, flexGrow: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
+  buttonLabel: { zIndex: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
+  buttonLabelFull: { flexGrow: 1 },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
   nutCoLyDoFull: { alignSelf: "stretch" },
