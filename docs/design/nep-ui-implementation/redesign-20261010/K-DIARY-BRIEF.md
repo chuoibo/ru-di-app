@@ -29,3 +29,8 @@ cover tools đủ ngang khi chữ lớn. Ô nhập chung tính rule/chiều cao 
 scale thực. Reader giữ một số trang chính; hint biên còn cho trợ năng, sửa ở
 header và quản lý sổ mở tại chỗ. Cần chụp lại sáu profile và regression ô nhập
 chung; chưa coi source đã sửa là verdict resolved.
+
+Verdict b76: ba finding resolved; riêng đường kẻ ở chữ200 còn partial do
+baseline native không theo pitch đã giả định. Bản tiếp bỏ interior rules khi
+effective font scale từ1.25, giữ bottom control/focus rule và vùng nhập co giãn.
+Phải chụp lại editor và shared caption130/200; không tự đóng finding từ code.

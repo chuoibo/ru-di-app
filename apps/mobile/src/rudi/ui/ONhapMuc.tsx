@@ -87,7 +87,9 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
   const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao });
   const mauGach = coLoi ? colors.warn : dangNhap ? colors.accent : colors.lineStrong;
   const placeholderNha = !multiline && placeholder !== undefined;
-  const soDongKe = multiline ? Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3))) - 1 : 0;
+  // Android's multiline baseline does not follow the scaled paper-rule pitch.
+  // Large text keeps only the control rule so decoration cannot cross glyphs.
+  const soDongKe = multiline && scale < 1.25 ? Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3))) - 1 : 0;
   return (
     <View style={[styles.khoi, khungStyle]}>
       {label ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{label}</Text> : null}
