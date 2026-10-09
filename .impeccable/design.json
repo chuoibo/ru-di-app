@@ -785,13 +785,14 @@
     "ThuGapBa": "motif thư gấp ba: tờ 5 đỉnh góc cắt, vạt giay viền mực, hai vết bong ở 1/3 và 2/3, không coral",
     "CauTaiCho": "ui/CauTaiCho.tsx: câu lỗi tại chỗ ngón tay; nơi gọi đặt ngay dưới control thất bại hoặc trong footer trên nút dính đáy; icon alert-circle-outline 18 + body, warn; hanhDong tuỳ chọn («Thử lại», «Nhập tay») label ink gạch chân cao 48; co=nho: icon 15, note, caption, đích 48 trả chiều cao; role alert + aria-live polite; FadeIn standard, ngay khi Reduce Motion; web scrollIntoView nearest nếu ngoài cửa sổ; cau null không vẽ; lỗi tải lại không thay dữ liệu đã hiện; không toast, không modal",
     "CauLoiTheoMa": "src/cau-loi-theo-ma.ts + thongDiepNguoiDoc (src/api.ts): câu tiếng Việt của máy chủ đi thẳng; status 0 → LOI_KHONG_NOI_DUOC «Kiểm tra mạng»; bảng riêng của màn; cauTheoMa(code): câu riêng rồi theo hình (*_not_found, *_wrong_state/*_already_*, *_conflict, *_expired, *_unavailable «đang tạm ngưng», *_too_large); chỉ sau đó mới đoán theo status; không in mã/status/địa chỉ; laTuChoiVinhVien (not_found, wrong_state, already, expired, membership_required, direct_message_unavailable, 403/404/410) → không «Thử lại»",
-    "ONhapMuc": "ui/ONhapMuc.tsx: không hộp, một gạch dưới: 1dp lineStrong nghỉ, 2dp accent khi viết (chỉ báo focus, vòng trình duyệt tắt), 2dp warn khi sai, dp thêm lấy từ đệm dưới 4; ô một dòng minHeight 48; chữ body (co lon: h2); placeholder inkFaint kit vẽ; helper note inkSoft; error caption warn thay helper, đọc polite; multiline kẻ dòng, cuộn quá 8 dòng",
+    "ONhapMuc": "ui/ONhapMuc.tsx: không hộp, một gạch dưới: 1dp lineStrong nghỉ, 2dp accent khi viết (chỉ báo focus, vòng trình duyệt tắt), 2dp warn khi sai, dp thêm lấy từ đệm dưới 4; ô một dòng minHeight 48; chữ body (co lon: h2); placeholder inkFaint kit vẽ; helper note inkSoft; error caption warn thay helper, đọc polite. Multiline dùng chiều cao dòng × scale hiệu dụng: 1 nếu allowFontScaling=false; nếu không lấy fontScale cửa sổ và giới hạn bởi maxFontSizeMultiplier khi giá trị ≥1. Chiều cao tối thiểu theo số dòng yêu cầu trong 2–8, tối đa 8 dòng rồi cuộn. Nét kẻ bên trong chỉ khi scale<1.25; từ 1.25 bỏ trang trí, giữ gạch control/focus/error dưới vì baseline Android không khớp nhịp giả định. K tại 5cab chỉ nghiệm thu finding 2 và regression caption đã chụp.",
     "ChonNgayLich": "ui/ChonNgayLich.tsx: lá lịch xé (số Bricolage 34/40) hoặc gõ dd/mm/yyyy; tháng mở tại chỗ, bảy cột ô 44 (ngoại lệ sàn 48), thứ Hai trước, hôm nay có vòng, ngày chọn tô; mỗi ngày đọc đủ thứ/ngày/tháng/năm",
     "LuoiNguoi": "ui/LuoiNguoi.tsx: danh sách người có hành động; một cột, kẻ tóc line từ cột chữ (lề 52); hai cột khi chính danh sách chứa được 2×280 (gridFor(rong,280,16,2)), mỗi ô kẻ tóc dưới, hàng nhận luoi=true để đặt hành động dưới tên; đo onLayout, không đọc cửa sổ (QA UI-081)",
     "useLuiLop": "ui/useLuiLop.ts: lớp màn tự vẽ (bảng Cá nhân, bước hai xoá tài khoản, hồ sơ sống) đăng ký Back cứng Android + Back trình duyệt (lui-web.ts, chạy trước router) trong lúc mo; Back đóng lớp, không rời màn (QA UI-108, UI-110)",
     "useGiuKhiDong": "ui/giu-khi-dong.ts: mở thì giá trị đi thẳng, khép thì giữ giá trị lần cuối còn mở, để thân sheet đang khép không vẽ lại theo state vừa đóng nó (QA UI-084)",
     "NgayViet": "src/rudi/ngay-viet.ts, viết tay không Intl: ngayVN «28/09/2026»; gioNgayVN «10:07 · 28/09» (năm khi khác năm nay); khoangNgayChuyen «28 - 29/09», «30/09 - 02/10»; thangNamVN «Tháng 9, 2026»; chuỗi lạ trả rỗng",
-    "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)"
+    "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)",
+    "SoBia": "ui/SoBia.tsx: bìa vải cover, gáy tối/thun coral/nhãn giấy; fitContent chỉ khi không mo: width 100%, nhãn quyết định chiều cao trong luồng, paddingVertical 24, không đo nhãn rồi hồi tiếp. Bìa có mo giữ hình học cố định và choLatBia; không lấy nhánh bìa đóng làm chuẩn motion."
   },
   "surfaces": {
     "Welcome": "34d57ca9: bìa cover + Grain vaiBia0.30, lề24, maxWidth688, nội dung min(windowWidth−48,640), Logo compact wordmark18; bốn chương, EB34/40−0.7 (30/36 dưới360dp), body17/24 coverInkSoft. Bố cục short khi heightClass short, cao sau safe area<660 hoặc round(fontScale×100)≥130: xếp dọc/cuộn, scene144dp fit cover, Nếp canonical moi96dp trái12/đáy4, paper136dp bo72 + cloth124dp bo104, gradient paperShade/paper/paperShade + grain + bongGiay1. Cảnh street trang1/3, cafe2, coast4. Chấm6/active22 coral, target48×48, «Trang n trên4»; StampButton «Rủ Đi thôi!» tilt0 rộng hết cột; CoverButton link full «Tìm hiểu thêm» / «Xem lại từ đầu». Khoá một lần mở, prefetch rồi push /login trực tiếp; artwork opacity/translateY12 theo shared decelerate, reduced pager không animate. Bằng chứng ship giới hạn ở shippedWelcome20261008",
@@ -809,7 +810,8 @@
     "Plan": "TopBar wordmark + tiêu đề nhóm + ngày; Photo dẫn 16:10 với DemoBadge; Money display + avatar + Stamp nhịp kèo; chip ngày; h2 ngày + IconButton AI; HangChang anh={…} ở chặng có địa điểm có ảnh (chặng tự in ghi công)",
     "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet",
     "Personalization": "TopBar back + «Bỏ qua»; Heading «Cho Rủ Đi biết gu của bạn» không phụ đề; lưới ô gu (GuGlyph 40 + label + vòng chọn, cao 64, bo 14, viền lineStrong; chọn = accentSoft + viền accent + check) minItemWidth round(150 × max(1, fontScale)) gap 12; câu đếm caption ink khi chưa đủ, note inkSoft khi đủ; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng» + chip pill; RudiButton; câu lưu trữ note inkFaint giữa",
-    "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton"
+    "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton",
+    "Diary": "K tại 5cab: BookView tối đa 560dp, bìa đóng fitContent tối đa 420dp; ảnh bìa 4:3/compact 16:9, trang đơn 4:3/collage hai cột 3:4, nền paperShade và khung tỷ lệ trước khi ảnh tải hoặc báo lỗi. Preview giữ bìa/các trang; DiaryScreen paged có tên h2/lời mở note và một trang, chỉ một pager khi nhiều trang, mũi tên 48dp/counter wrap/hint biên, sửa quiet ở header, Quản lý sổ mặc định thu gọn. EndingScreen chỉ sửa trang đang chọn trên TrangSo gồm pager/tên/chuyện/ảnh/toolbar icon 48dp có tên trợ năng; tên multiline, công cụ bìa wrap và thành cột toàn ngang từ fontScale 1.25; draft trong document khi chuyển trang. Token/world/seed c8e88116 không đổi; phạm vi bằng chứng ở shippedKDiary20261010."
   },
   "implementationCheckpoint": {
     "date": "2026-09-06",
@@ -981,6 +983,11 @@
         "name": "Luật Một Cách Viết Ngày",
         "section": "components",
         "body": "Ngày giờ đi qua ngay-viet.ts, viết tay, không Intl/toLocaleDateString: «28/09/2026», «10:07 · 28/09», «28 - 29/09», «Tháng 9, 2026»."
+      },
+      {
+        "name": "Luật Nét Kẻ Nhường Chữ",
+        "body": "Nét kẻ trang trí của ô multiline phải nhường chữ và dấu tiếng Việt. Từ scale hiệu dụng (1.25), `ONhapMuc` bỏ các nét bên trong, giữ gạch ranh giới/focus dưới vùng nhập; không ép baseline native khớp một nhịp trang trí bằng phép tính line-height.",
+        "section": "components"
       }
     ],
     "notCanonized": [
@@ -1984,6 +1991,80 @@
       "Loading/error/offline/retry đầy đủ của từng surface",
       "Audit rộng A–S và nghiệm thu toàn app",
       "Full strict và điều kiện landingmain"
+    ]
+  },
+  "shippedKDiary20261010": {
+    "_": "Tinh chỉnh K trong hệ v3 hiện hành; chỉ bốn finding của fresh-k-review và regression cụ thể, không nghiệm thu họ màn. Giữ cấu trúc sidecar cũ và token mirror để tương thích script.",
+    "date": "2026-10-10",
+    "headCommit": "5cab4701199a4ab9332fc20e28c0f0e3d67ddf89",
+    "authority": {
+      "product": "PRODUCT.md",
+      "direction": ".impeccable/surfaces/diary.md",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/K-DIARY-BRIEF.md",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage; không token hoặc raster mới."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/diary/BookView.tsx",
+      "apps/mobile/src/rudi/diary/EndingScreen.tsx",
+      "apps/mobile/src/rudi/diary/DiaryScreen.tsx",
+      "apps/mobile/src/rudi/ui/SoBia.tsx",
+      "apps/mobile/src/rudi/ui/ONhapMuc.tsx",
+      "apps/mobile/src/rudi/ui.tsx"
+    ],
+    "verdict": {
+      "b76": {
+        "source": "b76f616d45b263feae63ecd717254d6ae60af145",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b76f616d/fresh-k-verdict.md",
+        "resolved": [
+          "finding 1: chữ/font lớn",
+          "finding 3: một pager và hierarchy reader",
+          "finding 4: nhóm trang editor"
+        ],
+        "finding2": "partial tại b76, chưa khớp baseline native"
+      },
+      "5cab": {
+        "source": "5cab4701199a4ab9332fc20e28c0f0e3d67ddf89",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5cab4701/fresh-k-rule-verdict.md",
+        "disposition": "ship",
+        "scope": "Chỉ finding 2 và regression ONhapMuc hẹp; 16 capture bắt buộc, không mở lại finding 1/3/4.",
+        "resolved": "Bỏ nét kẻ bên trong tại scale hiệu dụng ≥1.25; giữ gạch control/focus dưới, vùng nhập scale và nội dung."
+      }
+    },
+    "documenter": {
+      "method": "Đọc source và hai verdict; mở bốn mẫu native có sẵn, không vận hành emulator/gate/detector.",
+      "openedNativeCaptures": [
+        {
+          "source": "b76f616d",
+          "name": "k-after-light100-editor-page-one"
+        },
+        {
+          "source": "b76f616d",
+          "name": "k-after-light100-reader-page-one"
+        },
+        {
+          "source": "5cab4701",
+          "name": "k-rule-dark200-editor-page-two"
+        },
+        {
+          "source": "5cab4701",
+          "name": "shared-field-dark200-moment-caption"
+        }
+      ],
+      "observed": "Mẫu b76 có tờ sửa cùng nhóm và một pager reader; mẫu 5cab không còn nét kẻ bên trong xuyên chữ/dấu, gạch dưới còn rõ. Viewport cuộn không phải full top."
+    },
+    "limits": [
+      "Android 320×640, light/dark font 1.0/1.3/2.0 chỉ trong bốn finding và regression đã nêu; không full K/story/moment/A–S hoặc toàn app.",
+      "Bằng chứng chức năng/quyền xem/motion ở b76 giữ SHA b76, không đổi nhãn thành 5cab.",
+      "Không tablet/iOS, AA/TalkBack, blanket motion/performance, tổng /16, full gate hoặc landing main.",
+      "Detector report là regex TSX 5 targets ở b76 và 1 target ở 5cab; không native geometry/contrast."
+    ],
+    "notCanonized": [
+      "Baseline Android không theo pitch giả định là lỗi đã xử lý, không luật kẻ xuyên chữ.",
+      "Toolbar icon là công cụ ngữ cảnh trang K, không giấy phép thay mọi nhãn hành động bằng icon.",
+      "Mockup K chưa duyệt không đặt world/raster mới; không thêm tranh để che form.",
+      "Bốn finding resolved không chứng nhận họ màn; drift cũ ngoài scope giữ nguyên."
     ]
   }
 }

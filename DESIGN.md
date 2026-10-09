@@ -2273,18 +2273,29 @@ kia.
 - **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
 
-### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật 02/10/2026)
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật K 10/10/2026)
 
 Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
 `DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
 `c8e88116` trong DESIGN.md, `theme.ts` và kit hiện hành, không có bộ token mới.
 
 - Sổ chuyến đi dùng bìa vải `SoBia`, nhãn nền `card` chứa ảnh trên, lời dưới.
-  Bìa căn giữa, rộng tối đa (420dp), cao theo nhãn đo được cộng (48dp).
-  Tiêu đề `h1` (bản gọn `h2`), lời mở `body`; ảnh bìa tỉ lệ 4:3, bản gọn 16:9.
+  Bìa đóng dùng `fitContent`: rộng hết cột, tối đa (420dp), nội dung nhãn quyết
+  định chiều cao trong luồng với đệm dọc (24dp) mỗi phía; không đo chiều cao
+  nhãn rồi hồi tiếp vào bìa. Đây là nhánh bìa đóng, không đổi hình học bìa có
+  chuyển động mở. Tiêu đề `h1` (bản gọn `h2`), lời mở `body`, được xuống dòng.
+  Ảnh bìa tỉ lệ 4:3, bản gọn 16:9; ảnh trang đơn 4:3, collage hai cột 3:4.
+  Khung tỷ lệ và nền `paperShade` có ngay trước khi ảnh tải; ảnh lỗi giữ khung
+  cùng câu báo tại ảnh, không làm co vùng đọc.
   Trang đọc dùng `TrangSo tone="accent" ke={false}`: giấy có lề, không kẻ ngang,
-  tiêu đề `h2`, số trang `caption`; collage hai cột theo bề rộng đo được.
-  Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+  tiêu đề `h2`. Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+- `DiaryScreen` đọc một trang đang chọn qua `BookView paged`: tên sổ `h2` và
+  lời mở `note` ở trên trang, thay bìa ở chế độ đọc có trang. Khi có nhiều
+  trang, chỉ một pager dưới trang ghi «Trang n / tổng» bằng `caption`, hai
+  mũi tên (48×48dp) giữ bề ngang; counter được wrap. Biên đầu/cuối dùng viền
+  đứt và hint trợ năng, không lặp câu biên hay số trang trên giấy. Sổ một
+  trang không hiện pager. Bản xem trước chưa lưu vẫn dùng bìa và các trang;
+  không áp bố cục paged cho `BookView compact` trên tường.
 - Khoảnh khắc dùng ảnh dán `KhungAnh` nghiêng (-1°), ảnh tỉ lệ 3:2 và
   `Washi` nghiêng (-2°); tiêu đề `h2`, lời phụ `note`. Tường xếp một cột
   ảnh/bìa qua `BookView compact`, ẩn các trang bên trong; khoảnh khắc có
@@ -2301,10 +2312,17 @@ kia.
   «Bắt đầu»/«Ngày về» nếu nhiều ngày; không dùng `RouteLine` trang trí.
   Chỉ khi `can_end` mới hiện bộ chọn loại và hành động khép; trạng thái chờ
   có lời dẫn theo ngày/quyền và lối «Về cuộc hẹn».
-- Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
-  nút «Xem như người đọc» đổi về bản xem trước. Lựa chọn «Chỉ mình tôi»/
-  «Công khai» nằm cuối phần xem trước hoặc sau các trường sửa, trong đoạn
-  có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
+- Header nhỏ có icon đổi «Sửa theo cách mình nhớ»/«Xem như người đọc».
+  Khi sửa, ẩn bản xem trước; tên sổ và lời mở ở vùng chung, rồi chỉ một trang
+  đang sửa nằm trên `TrangSo`: pager (hoặc «Trang 1» khi chỉ có một trang),
+  tên trang, chuyện của trang, ảnh đang chọn và toolbar cùng một tờ. Toolbar
+  cuối trang dùng icon (48×48dp) cho ảnh, đưa trang lên trước và bỏ trang,
+  có tên trợ năng theo việc/trang và đếm ảnh; không nhân thành form của mọi
+  trang. Chuyển trang giữ bản nháp trong `document` của phiên đang mở.
+  Tên sổ/tên trang dùng ô multiline ít nhất hai dòng; công cụ bìa được wrap,
+  chuyển thành cột toàn ngang từ font scale (1.25), để nhãn được đọc đủ.
+  Lựa chọn «Chỉ mình tôi»/«Công khai» nằm cuối phần xem trước hoặc sau các
+  trường sửa, trong đoạn có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
   giữ trong footer cùng lỗi lưu `CauTaiCho`; `footerInset={insets.bottom}`
   và `avoidKeyboard` dành chỗ cho vùng an toàn và bàn phím.
 - Ô nhập dùng `ONhapMuc`; lúc đang lưu, trường sửa không cho nhập và các
@@ -2312,10 +2330,12 @@ kia.
   gửi để bấm nhanh không tạo request trùng. Lưu thất bại giữ bản đang soạn;
   lỗi nằm cạnh hành động lưu, chỉ lỗi có thể thử lại mới có «Thử lại».
 - Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
-  `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
+  `checked`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
   `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
-- Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Nút «Cất về riêng
-  tư», «Sửa theo cách mình nhớ», «Tự xếp trang, không gửi AI» gọi đúng hành động.
+- Trình đọc đặt icon sửa yên ở header cho chủ sổ; «Quản lý sổ» mặc định
+  thu gọn ở dưới vùng đọc, mở tại chỗ mới hiện gửi cộng đồng, cất riêng tư
+  và xoá. Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Các hành
+  động quyền xem và «Tự xếp trang, không gửi AI» giữ nghĩa đang có.
   Nhãn «Có Nếp giúp viết» nói nguồn hỗ trợ, không bảo đảm lời AI đúng.
   Sau dựng/lưu, khối sổ dịch nhẹ và trở về vị trí qua `useMotion`, theo
   thiết lập giảm chuyển động; không suy thành hiệu ứng lật bìa.
@@ -2336,6 +2356,29 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 điện thoại (411dp), màn ảo (320dp, chữ 1.3, tối, giảm chuyển động) và tablet
 ảo (768dp). Đây là tinh chỉnh từ mã trong hệ hiện có, không có comp mới;
 ảnh không chứng minh thiết bị thật, native iOS hay độ mượt khi chạy.
+
+**Phạm vi K 10/10, source `5cab4701199a4ab9332fc20e28c0f0e3d67ddf89`.**
+Các quy tắc K trên đối chiếu `BookView`, `EndingScreen`, `DiaryScreen`,
+`SoBia` và `ONhapMuc`; hướng đi ở
+[K-DIARY-BRIEF](docs/design/nep-ui-implementation/redesign-20261010/K-DIARY-BRIEF.md).
+Không đổi world/seed `c8e88116`, token hay thêm raster trang trí.
+[Verdict b76](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b76f616d/fresh-k-verdict.md)
+đóng finding 1/3/4 về chữ, hierarchy reader và nhóm trang sửa; finding 2
+chưa đóng ở b76 vì nét kẻ vẫn xuyên glyph ở chữ lớn.
+[Verdict 5cab](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5cab4701/fresh-k-rule-verdict.md)
+đóng riêng finding 2 sau khi mở (16) capture editor/shared caption bắt buộc,
+không thấy regression mới trong phạm vi đó. Không đổi nhãn bằng chứng b76
+về chức năng, quyền xem hay motion thành 5cab.
+
+Lượt documenter đọc hai report và mở bốn mẫu native có sẵn: b76 editor-page-one
+và reader-page-one light100; 5cab editor-page-two và moment-caption dark200.
+Hai mẫu dark200 giữ chữ/dấu không bị nét kẻ nội thất cắt, gạch dưới còn rõ;
+hai mẫu b76 cho thấy tờ sửa chung nhóm và một pager reader. Mẫu cuộn chỉ
+chứng minh viewport của nó. Không vận hành emulator hoặc chạy lại gate.
+Verdict chỉ gồm bốn finding và regression cụ thể trên Android (320×640),
+light/dark ở font (1.0/1.3/2.0); không phải full K, toàn story/moment,
+toàn app, /16, tablet/iOS, TalkBack, contrast hay blanket motion. Detector
+đã báo trong report là regex TSX, không đo geometry/contrast native.
 
 ### Story viewer và xác nhận xoá — bàn giao giới hạn 08/10/2026
 
@@ -2656,6 +2699,12 @@ Các dòng trước ghi «craft-floor thiếu» được giữ như lịch sử 
 bởi ghi chú này; không tiếp tục kết luận bản reference không tồn tại.
 
 ### Inputs / Fields
+
+**Luật Nét Kẻ Nhường Chữ.** Nét kẻ trang trí của ô multiline phải nhường
+chữ và dấu tiếng Việt. Từ scale hiệu dụng (1.25), `ONhapMuc` bỏ các nét
+bên trong, giữ gạch ranh giới/focus dưới vùng nhập; không ép baseline native
+khớp một nhịp trang trí bằng phép tính line-height.
+
 - **`Field`**: cao 52 (108 `multiline`), nền `card`, viền 1px `lineStrong`, bo
   14, chữ `body`, placeholder `inkFaint`, nhãn `label` `ink` phía trên, icon
   dẫn 20 `inkFaint`. **`SearchField`** cùng khung, bo pill, placeholder «Tìm
@@ -2678,8 +2727,14 @@ bởi ghi chú này; không tiếp tục kết luận bản reference không t�
   UI-001 đo 44; 4dp thêm cũng lấy từ khe chữ–gạch nên hàng không đổi cao).
   Chữ `body`; `co="lon"` viết giá trị bằng `h2` (tên trên bìa, số trên hoá đơn).
   Placeholder `inkFaint` do kit vẽ một dòng; tên trợ năng là nhãn hoặc placeholder;
-  `helper` là `note inkSoft`; `error` (`caption warn`) thay dòng `helper` và được đọc lịch sự; `multiline` kẻ dòng mờ dưới
-  mỗi dòng chữ, quá 8 dòng thì cuộn. `oRef` để form bị từ chối đặt con trỏ
+  `helper` là `note inkSoft`; `error` (`caption warn`) thay dòng `helper` và được đọc lịch sự.
+  Vùng `multiline` lấy chiều cao dòng chữ nhân scale hiệu dụng: (1) nếu tắt
+  font scaling, nếu không lấy font scale cửa sổ và giới hạn bởi
+  `maxFontSizeMultiplier` khi giá trị từ (1) trở lên. Chiều cao tối thiểu theo số dòng yêu cầu
+  trong (2–8), tối đa tám dòng đã scale rồi cuộn. Chỉ khi scale dưới (1.25)
+  mới có nét kẻ trang trí `line` theo nhịp đó; từ (1.25) bỏ nét bên trong
+  theo Luật Nét Kẻ Nhường Chữ. Gạch control/focus/error dưới vẫn giữ nguyên.
+  `oRef` để form bị từ chối đặt con trỏ
   vào đúng chỗ cần sửa. `Field` có hộp chỉ còn ở màn chưa làm lại.
 - **`ChonNgayLich`**: một lá lịch xé (số ngày Bricolage 34/40) hoặc gõ tay
   `dd/mm/yyyy`; tháng mở **tại chỗ** dưới lá (sheet trong trang cuộn sẽ nổi
@@ -3419,6 +3474,13 @@ quyền merge vào main từ các số trên.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**K 10/10:** không biến giả định baseline Android thành luật kẻ dòng, hoặc
+việc bỏ nét trang trí ở chữ lớn thành lý do thu font/khóa chiều cao. Toolbar
+icon chỉ là công cụ ngữ cảnh của trang sửa K, không thay luật nhãn chữ cho
+mọi hành động của hệ. Bốn finding đã đóng không thành nghiệm thu toàn K hay
+toàn app; phạm vi chưa kiểm giữ mở. Không tạo world/raster mới từ mockup K
+chưa duyệt, và không dùng regex TSX làm chứng nhận geometry/contrast native.
 
 **Chín bề mặt 10/10, candidate 797:** không phong thánh điểm 5/10 cũ thành
 ngưỡng chấp nhận, verdict fix d9 thành ship 797, số 24/24 thành pass toàn app,

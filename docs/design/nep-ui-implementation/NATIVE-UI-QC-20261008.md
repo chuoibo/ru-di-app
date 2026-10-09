@@ -40,7 +40,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | H — Groups/friends | Thành viên `3b71838e`: 2 active/0 invited, tên thật, không đổi vai trò | Root mở ảnh inline: không đẩy nhãn/CTA khỏi hàng; chưa chấm cả family | Invite/accept/reject/leave/last-admin, friend pending/block và empty/error |
 | I — Hai người | Chưa nhận full native pair workflow | Chưa review native đủ | Hai phiên UI, tờ hẹn/accept/promote, chọn người và các nhánh |
 | J — Moments/album/wall | Story không thay bằng chứng khoảnh khắc/album/tường | Chưa review native đủ | Media/crop/draft/retry/audience/view/album/delete, heart/comment đúng quyền |
-| K — Ending/diary | Nativea409 khép outing QC riêng, hai ảnh tổng hợp được phép, tự xếp/lưu private; ownGET200/other404. Native797 mở lại preview và reader | Root mở preview/page/controls/reader; clip a409 có khả năng co bìa/nhảy chiều cao/flash, chưa sửa hoặc chấm motionPASS | AI/public/paging/quyền media, lỗi/retry, layout/font/theme và transition sau sửa |
+| K — Ending/diary | b76: sáu profile, thêm/sửa/đổi thứ tự/chuyển/bỏ trang rồi lưu; no-op revision4→4 giữ document. Công khai4→5 rồi riêng tư5→6; other book/published photo200→404, ảnh gốc other luôn404 | Ba finding resolved tại b76; finding đường kẻ resolved tại5cab sau16 ảnh editor/shared caption130/200. Bìa tự giãn, một pager và nhóm soạn trang; review chỉ bốn finding | AI/consent/provider/quota/error/retry/photo-failure, mọi lifecycle/motion, TalkBack/contrast, tablet/iOS; chưa nghiệm thu toàn K |
 | L — Profile/people | Profile edit/keyboard/cancel; avatar picker/upload/cancel thật; crop native `2c1189d7` cancel/confirm và server640×640 | Root mở profile/editor/after; chưa rubric đủ own/other/pending/blocked | Avatar error/retry/permission, propagation giữa máy; people/achievements; chữ lớn và states |
 | M — Bill | Focused native822 nhập/preview/ghi bill200.000đ, phần75.000/125.000; witness thật; runner toàn bảng vẫn đỏ | Có ảnh đã mở; chưa nhận composition/state đầy đủ | Native whole-flow/canary cùng harness, scan camera/OCR/provider, font/keyboard/errors |
 | N — Settlement/finance | Focused native822 batch75.000đ, xác nhận nhận và ledger về0; receiver confirmation không là bank evidence | Chưa nghiệm thu toàn state/layer native | Bảng đầy đủ, role/wait/conflict, share handoff và visual |
@@ -250,3 +250,53 @@ K797 preview→reader có một runner29,603s đỏ do selector cũ «Sửa lờ
 ảnh»; source dùng «Sửa theo cách mình nhớ». Resume đúng exit0/7,674s.
 Root đã mở bốn PNG preview top/page/controls và reader private. Không
 đổi red thành xanh, không nhận toàn K hoặc public/AI/second-page đã kiểm.
+
+## K — hoàn thiện vùng soạn/đọc sổ, c9 → b76 → 5cab
+
+Bản c9 bỏ vòng đo chiều cao hồi tiếp và width1; bìa kín tự giãn, ảnh có ratio
+ngay từ placeholder. Bản b76 gom pager/trường/ảnh/công cụ48dp vào trang đang
+sửa, chỉ một pager khi đọc; sửa ở header, quản lý sổ mở tại chỗ. Tên sổ và
+công cụ xuống dòng theo chữ lớn. Reviewer c9 mở31 required và bốn sheet bổ
+sung motion ảnh; verdict b76 mở39 required + bốn sheet ảnh: ba
+finding resolved, đường kẻ chữ200 vẫn partial. Bản5cab bỏ interior rules ở
+effective scale≥1.25, giữ bottom/focus rule. Reviewer mở16 after được map
+trước/sau và chốt **ship chỉ finding2**; ba finding1/3/4 giữ resolved tại b76.
+Không cộng tổng /16 hoặc suy ra đã nghiệm thu toàn K/A–S.
+
+Evidence riêng theo SHA dưới runtime ngoài repo đã nêu:
+
+- [Review c9](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9c08be7/fresh-k-review.md>) — bốn finding, disposition fix.
+- [Verdict b76](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b76f616d/fresh-k-verdict.md>) — ba resolved, một partial.
+- [Verdict5cab](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5cab4701/fresh-k-rule-verdict.md>) — finding2 resolved, không có regression mới trong16 ảnh.
+
+Native b76: sáu profile sáng/tối × font1.0/1.3/2.0,6/6 exit0,261,735s;
+functional69,254s exit0, nháp qua chuyển trang còn nguyên, bỏ trang thử rồi
+lưu no-op revision4→4/document/private nguyên. Hai flow5cab shared caption
+130/200 exit0/121,935s; bốn editor profile exit0/88,025s. Root mở cả16 ảnh
+đối chứng cuối. Không relabel ảnh hoặc witness b76 thành5cab.
+
+Chu kỳ quyền b76 thao tác qua native: công khai27,150s và riêng tư23,695s,
+đều exit0. Owner/Ngọc đọc book và published photo200 khi public; sau private
+Ngọc book404 và previously-public photo404, owner200. Original personal photo
+owner200/Ngọc404 ở cả hai trạng thái. Revision4→5→6, hai trang/document gốc
+giữ nguyên. Chỉ hai ảnh chữ tổng hợp được phép; fixture kết thúc private.
+
+Motion b76: manual compose0ảnh normal16/reduced9 frame; edit→preview2ảnh
+normal56/reduced11 frame. Root và reviewer mở các contact sheet; vùng ảnh
+placeholder→decoded giữ geometry trong lần light100 này. Clip variable-rate,
+không chứng minh60fps, save/AI/lật trang hoặc mọi tải ảnh. Các setting motion
+được phục hồi. FFmpeg báo duplicate DTS ở reduced compose; số frame decode
+vẫn khớp ffprobe9/9, không giấu warning.
+
+Clean exact5cab: typecheck/guide/build/compile/fixup/Go-guide/tree exit0;
+Node214 file **1608/1608**,0fail/skip/cancel/todo,34,807s. Tree5106 file;
+Go-guide0,236s. Năm browser test bị loại rõ trong receipt do chỉ kiểm native,
+không gọi đây là full npm/strict32. Identity8/8; canary và hai mutant mỗi
+7/8 đúng predicted-red,0skip, cùng SHA5cab, chỉ contract chọn ảnh/nháp bất biến.
+Detector5cab chỉ TSX regex một file0/[]; không đo geometry/contrast native.
+
+Các lần harness đỏ vẫn giữ: c9 off-fold/IME và kỳ vọng revision sai;
+b76 mutation r0 thiếu topology packages/shared; privacy r0 assert nhãn preview
+sau khi đã chuyển editor. Chúng không thành PASS hồi tố; bản r1/r2 có receipt
+riêng. Hồ sơ chi tiết ở RECOVERY. Runtime JS5cab/APK2f20/Go9a có SHA độc lập.
+AI/error/retry, full lifecycle/accessibility, toàn A–S và landing main còn mở.
