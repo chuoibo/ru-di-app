@@ -35,6 +35,7 @@ import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { ThanhNganSach } from "../../ui/ThanhNganSach";
+import { docNganSach } from "../../keo/ngan-sach-keo";
 import { StampButton } from "../../ui/StampButton";
 import { TheVe } from "../../ui/TheVe";
 import { Washi } from "../../ui/Washi";
@@ -49,10 +50,8 @@ import { laPair } from "../../nhan-rieng/nhan-rieng";
 
 /** What the digits typed mean in đồng, or nothing while they are not a whole number. */
 function tienDaGo(chu: string): string | null {
-  const t = chu.trim();
-  if (!/^[0-9]+$/.test(t)) return null;
-  const amount = Number(t);
-  return Number.isSafeInteger(amount) ? dinhDangTienVnd(amount) : null;
+  const amount = docNganSach(chu);
+  return amount === null ? null : dinhDangTienVnd(amount);
 }
 
 function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: boolean } {
@@ -296,7 +295,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiCua("so-nguoi")}</Text>
         ) : null}
         {nhom.soNguoi && !nhom.haiNguoi ? <ChuThichLe icon="people-outline">{nhom.ten} hiện có {nhom.soNguoi} người; bớt đi nếu chỉ một phần đi.</ChuThichLe> : null}
-        <Text style={[typography.h2, { color: colors.ink }]}>mỗi người khoảng</Text>
+        <Text style={[typography.title, { color: colors.ink }]}>Ngân sách mỗi người</Text>
         <ThanhNganSach value={nganSach} disabled={dangTao} onChange={(v) => { setNganSach(v); boLoi("ngan-sach"); }} />
         {/* «ví dụ …», not a bare «250000»: a bare number on the line read as
             a budget already written in (QA UI-034). */}

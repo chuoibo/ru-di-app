@@ -13,7 +13,8 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { chuLon } from "../../adaptive";
 
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
@@ -52,14 +53,15 @@ function tenNhom(phien: Phien): string {
 function DauLich({ iso, lon = false, mo = false }: { iso: string; lon?: boolean; mo?: boolean }) {
   const { colors } = useRudiTheme();
   const dau = dauLich(iso);
+  const large = chuLon(useWindowDimensions().fontScale);
   const muc = mo ? colors.inkFaint : colors.ink;
   return (
-    <View style={[styles.dauLich, lon && styles.dauLichLon]}>
+    <View style={[styles.dauLich, lon && styles.dauLichLon, large && styles.dauLichLarge]}>
       <Text style={[lon ? styles.ngayLon : styles.ngay, { color: muc }]}>{dau?.ngay ?? "?"}</Text>
       {/* «Th 10» in the stamp face, as the date leaves of «Kèo mới» print it:
           «tháng 10» wrapped onto two lines at 320 and touched the perforation
           (B3 finish review). */}
-      <Text numberOfLines={1} style={[typography.stamp, { color: mo ? colors.inkFaint : colors.inkSoft }]}>{dau ? dau.thang.replace(/^tháng /, "Th ") : ""}</Text>
+      <Text style={[typography.stamp, { color: mo ? colors.inkFaint : colors.inkSoft }]}>{dau ? dau.thang.replace(/^tháng /, "Th ") : ""}</Text>
     </View>
   );
 }
@@ -67,33 +69,24 @@ function DauLich({ iso, lon = false, mo = false }: { iso: string; lon?: boolean;
 /** The next outing as its ticket (ADR-0037 D1, plan S4): the day torn off as the stub. */
 function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: () => void }) {
   const { colors } = useRudiTheme();
+  const large = chuLon(useWindowDimensions().fontScale);
   const nhip = nhipKeo(keo.starts_on, keo.ends_on, today);
   const nhan = nhanNhip(nhip);
+  const stub = <><DauLich iso={keo.starts_on} lon /><Text style={[typography.caption, { color: colors.inkSoft }]}>{keo.headcount} người</Text></>;
+  const content = <>
+    {nhan ? <Stamp label={nhan} tilt={-2} tone={nhip.kieu === "dang-dien-ra" || nhip.kieu === "hom-nay" ? "split" : "ink"} /> : null}
+    <Text style={[typography.h2, { color: colors.ink }]}>{keo.title}</Text>
+    <Text style={[typography.body, { color: colors.inkSoft }]}>{nhanKhoangNgay(keo.starts_on, keo.ends_on)}</Text>
+    {keo.stops[0] ? <Text style={[typography.label, { color: colors.ink }]}>{keo.stops[0].at} · {keo.stops[0].label}</Text> : null}
+    {keo.stops.length > 0 ? <RouteLine color={colors.inkSoft} height={24} stops={Math.min(5, keo.stops.length)} width={120} /> : null}
+    <View style={styles.tienRow}>
+      {keo.budget_per_person_vnd > 0 ? <Money size="label" vnd={keo.budget_per_person_vnd} numberOfLines={0} style={styles.tienWhole} /> : null}
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>{keo.budget_per_person_vnd > 0 ? "một người · " : ""}{cauSoChang(keo.stops.length)}</Text>
+    </View>
+  </>;
   return (
     <Pressable accessibilityLabel={`Mở kèo ${keo.title}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && styles.bam}>
-      <TheVe
-        cao={1}
-        cuong={
-          <>
-            <DauLich iso={keo.starts_on} lon />
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{keo.headcount} người</Text>
-          </>
-        }
-        testID="keo-dan"
-      >
-        {nhan ? <Stamp label={nhan} tilt={-2} tone={nhip.kieu === "dang-dien-ra" || nhip.kieu === "hom-nay" ? "split" : "ink"} /> : null}
-        <Text style={[typography.h2, { color: colors.ink }]}>{keo.title}</Text>
-        <Text style={[typography.body, { color: colors.inkSoft }]}>{nhanKhoangNgay(keo.starts_on, keo.ends_on)}</Text>
-        {keo.stops[0] ? <Text style={[typography.label, { color: colors.ink }]}>{keo.stops[0].at} · {keo.stops[0].label}</Text> : null}
-        {keo.stops.length > 0 ? <RouteLine color={colors.inkSoft} height={24} stops={Math.min(5, keo.stops.length)} width={120} /> : null}
-        <View style={styles.tienRow}>
-          {keo.budget_per_person_vnd > 0 ? <Money size="label" vnd={keo.budget_per_person_vnd} /> : null}
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            {keo.budget_per_person_vnd > 0 ? "một người · " : ""}
-            {cauSoChang(keo.stops.length)}
-          </Text>
-        </View>
-      </TheVe>
+      {large ? <CuongPhieu testID="keo-dan"><View style={styles.stubLarge}>{stub}</View>{content}</CuongPhieu> : <TheVe cao={1} cuong={stub} testID="keo-dan">{content}</TheVe>}
     </Pressable>
   );
 }
@@ -109,21 +102,23 @@ function theoCum(cum: (string | null)[]): string {
 /** A later outing as a smaller ticket; a past one as the stub that is left of it. */
 function HangKeo({ keo, today, mo = false, voi, onOpen }: { keo: BuoiDi; today: string; mo?: boolean; voi?: string; onOpen: () => void }) {
   const { colors } = useRudiTheme();
+  const large = chuLon(useWindowDimensions().fontScale);
   const nhan = nhanNhip(nhipKeo(keo.starts_on, keo.ends_on, today));
+  const facts = [voi ? `với ${voi}` : null, nhanKhoangNgay(keo.starts_on, keo.ends_on), voi ? null : `${keo.headcount} người`, cauSoChang(keo.stops.length), nhan || null];
   const chu = (
-    <View style={styles.hangChu}>
-      <Text numberOfLines={2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
+    <View style={[styles.hangChu, large && styles.hangChuLarge]}>
+      <Text numberOfLines={large ? undefined : 2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
       {/* Breaks only between «·» groups, never inside one. On one line,
           «12 chặng · Còn 27 ngày» -- the reason to open the ticket -- was what
           got cut (QA UI-044); three lines hold the longest at 320 dp. */}
-      <Text numberOfLines={3} style={[typography.caption, { color: colors.inkSoft }]}>
-        {theoCum([voi ? `với ${voi}` : null, nhanKhoangNgay(keo.starts_on, keo.ends_on), voi ? null : `${keo.headcount} người`, cauSoChang(keo.stops.length), nhan || null])}
+      <Text numberOfLines={large ? undefined : 3} style={[typography.caption, { color: colors.inkSoft }]}>
+        {large ? facts.filter(Boolean).join(" · ") : theoCum(facts)}
       </Text>
     </View>
   );
   return (
     <Pressable accessibilityLabel={`Mở kèo ${keo.title}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.hangVe, pressed && styles.bam]}>
-      {mo ? (
+      {large ? <CuongPhieu><DauLich iso={keo.starts_on} mo={mo} />{chu}</CuongPhieu> : mo ? (
         <CuongPhieu>
           <View style={styles.hang}>
             <DauLich iso={keo.starts_on} mo />
@@ -216,7 +211,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
       <RudiScreen bottomInset="tab" onRefresh={nap} testID="plan-screen">
         <View style={styles.dau}>
           <View style={styles.flex}><Heading title="Lên plan" subtitle="Gom hội mình lại, rồi dành một ngày cho nhau." /></View>
-          <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
+          <IconButton accessibilityLabel="Tạo mới" icon="add" onPress={() => router.push("/create?tu=plan")} quiet />
         </View>
         <HenCuaHaiBan phien={phien} today={today} />
         <EmptyState kind="first-use" title="Gom hội mình trước" body="Chọn một nhóm trong Tin nhắn, rồi cùng nhau tạo lời hẹn. Những kèo của hai bạn vẫn hiện ở đây." illustration={<AssetIllustration name="spot-map" width={180} height={140} resolution="small" />} action={{ label: "Tới Tin nhắn", onPress: () => router.push("/(tabs)/messages" as never) }} />
@@ -286,10 +281,14 @@ const styles = StyleSheet.create({
   tienRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },
   dauLich: { width: 52, alignItems: "center", paddingTop: 2 },
   dauLichLon: { width: 64 },
+  dauLichLarge: { width: "100%", flexDirection: "row", justifyContent: "flex-start", gap: 10, alignItems: "baseline" },
+  stubLarge: { gap: 4 },
+  tienWhole: { maxWidth: "100%", flexShrink: 1 },
   ngay: { fontFamily: displayFace.extraBold, fontSize: 24, lineHeight: 28, fontVariant: ["tabular-nums"] },
   ngayLon: { fontFamily: displayFace.extraBold, fontSize: 36, lineHeight: 40, letterSpacing: -1, fontVariant: ["tabular-nums"] },
   hangVe: { marginBottom: 10 },
   hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   hangChu: { flex: 1, gap: 3 },
+  hangChuLarge: { flex: 0 },
   bam: { opacity: 0.7 },
 });

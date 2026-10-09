@@ -82,7 +82,8 @@ appId: com.lakiet.rudi
 # With the community rollout on, «Đăng bài mới» opens the community composer
 # in wall mode: «Riêng tư · Bạn bè» is preselected and the post skips review.
 - extendedWaitUntil:
-    visible: "Hôm nay có gì đáng nhớ?"
+    visible:
+      id: "community-body"
     timeout: 30000
 - tapOn:
     id: "community-body"
@@ -118,7 +119,8 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Đăng bài mới"
 - extendedWaitUntil:
-    visible: "Hôm nay có gì đáng nhớ?"
+    visible:
+      id: "community-body"
     timeout: 30000
 - tapOn:
     id: "community-body"

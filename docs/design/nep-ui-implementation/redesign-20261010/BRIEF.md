@@ -53,3 +53,17 @@ Mỗi feature: hierarchy, typography, spacing/alignment, trạng thái, thao tá
 keyboard, chữ1.0/1.3/2.0, light/dark. Ảnh tĩnh không chứng minh motion hay TalkBack.
 Mức đẹp phải được review độc lập theo rubric của audit A–S; test xanh chỉ là
 bằng chứng kỹ thuật. Không chấm PASS toàn app hoặc landing main khi còn cổng mở.
+
+## Review candidate đầu và lượt sửa
+
+Fresh review native candidate `d9c06bf4` trả **fix**. Reviewer mở 34 ảnh
+native cùng chín ảnh lỗi và reference; không cộng điểm /16 vì state/motion/
+TalkBack còn thiếu. Cần sửa tiêu đề/back, lý do và nhãn ảnh Explore, nhánh
+Plan chưa chọn nhóm, vé ở chữ lớn và trạng thái tiền ngoài thang kéo.
+
+Lượt sửa giữ form hồ sơ mounted để không mất bản nháp, đưa header và nút
+lưu ra vùng cố định, dùng chữ Huỷ rõ nghĩa; giảm khoảng viết trên màn thấp.
+Explore đưa facts/giá trước lý do đầy đủ, chuyển ảnh và chữ thành một cột
+khi chữ lớn. Vé Plan và khay Tạo cũng đổi bố cục theo chữ; exact VND dùng
+parser tiền chung, hiện đơn vị đồng và chú thích ngoài thang kéo. Đây vẫn
+là candidate chờ ảnh after cùng profile và verdict, chưa phải nghiệm thu.

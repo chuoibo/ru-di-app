@@ -18,7 +18,8 @@ import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatVnd } from "../../../../../packages/shared/money.mjs";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
@@ -30,7 +31,9 @@ import type { Phien } from "../../phien";
 import { CuaDangNhap } from "../ui/CuaDangNhap";
 import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
-import { HoSoSong } from "./profile/HoSoSong";
+import { HoSoSong, type ProfileEditorControls } from "./profile/HoSoSong";
+import { tabBarHeight } from "../adaptive";
+import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
 import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../ui";
 import { useLuiLop } from "../ui/useLuiLop";
@@ -52,7 +55,12 @@ function ProfileSong({ phien }: { phien: Phien }) {
   const { colors } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "saved">("home");
-  const [editingProfile, setEditingProfile] = useState(false);
+  const [editor, setEditor] = useState<ProfileEditorControls | null>(null);
+  const editingProfile = editor !== null;
+  const dangLuuHoSo = editor?.busy ?? false;
+  const { fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { rail } = useAdaptiveLayout();
   useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = `/people/${phien.person_id}`;
@@ -134,7 +142,10 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
 
   return (
-    <RudiScreen material="quiet" bottomInset="tab" cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen">
+    <RudiScreen material="quiet" bottomInset={editingProfile ? 16 : "tab"} cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen"
+      header={editor ? <TopBar title="Chỉnh hồ sơ" onBack={editor.back} right={<RudiButton compact full={false} label="Huỷ" disabled={dangLuuHoSo} onPress={editor.cancel} variant="ghost" />} /> : undefined}
+      footer={editor ? <RudiButton label="Lưu hồ sơ" disabled={dangLuuHoSo} loading={dangLuuHoSo} onPress={editor.save} /> : undefined}
+      footerInset={insets.bottom + (rail ? 12 : tabBarHeight(fontScale) + 24)}>
       {!editingProfile ? <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
@@ -143,7 +154,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
             reads as a second one, and on a dev client the launcher's own gear
             sits on top of it, so the corner is the worst place for it. */}
       </View> : null}
-      <HoSoSong phien={phien} onEditingChange={setEditingProfile} />
+      <HoSoSong phien={phien} onEditorChange={setEditor} />
       {!editingProfile ? <>
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
       <HanhTrinhTeaser personId={personId} />

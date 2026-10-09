@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { docNganSach, dichNganSach, nganSachTuViTri } from "../dist-test/rudi/keo/ngan-sach-keo.js";
+import { MAX_AMOUNT_VND } from "../../../packages/shared/money.mjs";
 
 test("thanh ngân sách: vuốt hai mép, giữa và ngoài track vẫn ra số đồng nguyên", () => {
   assert.equal(nganSachTuViTri(0, 288), 0);
@@ -16,9 +17,13 @@ test("thanh ngân sách: vuốt hai mép, giữa và ngoài track vẫn ra số 
 test("nhập chính xác không bị thanh giới hạn 2 triệu làm tròn hoặc cắt", () => {
   assert.equal(docNganSach("3250123"), 3250123);
   assert.equal(docNganSach("0"), 0);
-  for (const text of ["", "-1", "1.5", "1e6", String(Number.MAX_SAFE_INTEGER + 1)]) assert.equal(docNganSach(text), null);
+  assert.equal(docNganSach("250.000"), 250000);
+  assert.equal(docNganSach("3 250 123"), 3250123);
+  assert.equal(docNganSach("1.5"), 15);
+  for (const text of ["", "-1", "1e6", String(Number.MAX_SAFE_INTEGER + 1), String(MAX_AMOUNT_VND + 1)]) assert.equal(docNganSach(text), null);
   assert.equal(dichNganSach(3250123, 1), 3275123);
   assert.equal(dichNganSach(3250123, -1), 3225123);
   assert.equal(dichNganSach(0, -1), 0);
   assert.equal(dichNganSach(2000000, 1), 2000000);
+  assert.equal(dichNganSach(MAX_AMOUNT_VND, 1), MAX_AMOUNT_VND);
 });

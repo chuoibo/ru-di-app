@@ -86,7 +86,7 @@ interface CommonProps {
   onSave: () => void;
   testID?: string;
   saving?: boolean;
-  /** A short viewport puts the name beside the artwork before the fold. */
+  /** Retained for existing callers; phone leads now use the full media width. */
   compact?: boolean;
 }
 
@@ -130,13 +130,13 @@ export function PlaceArtwork({ loai, width, height = 180 }: { loai?: string; wid
  * ellipsis here would hide the one fact the row exists to show (finish
  * review 11/09). The spark is decoration and stays out of the a11y tree.
  */
-function LyDo({ text, dong = 2 }: { text: string; dong?: number }) {
+function LyDo({ text, dong }: { text: string; dong?: number }) {
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   return (
     <Inline gap={5}>
       <Ionicons color={colors.ai} importantForAccessibility="no" name="sparkles" size={13} />
-      <Text numberOfLines={chuLon(fontScale) ? dong + 1 : dong} style={[typography.label, styles.flex1, { color: colors.ai }]}>{text}</Text>
+      <Text numberOfLines={dong === undefined ? undefined : chuLon(fontScale) ? dong + 1 : dong} style={[typography.label, styles.flex1, { color: colors.ai }]}>{text}</Text>
     </Inline>
   );
 }
@@ -244,21 +244,20 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
-        <View style={styles.rowMain}>
+        <View style={[styles.rowMain, chuLonHon && styles.rowMainLarge]}>
         {ve.source !== null ? (
-          <View style={[styles.thumb, { borderRadius: radius.small }]}>
+          <View style={[styles.thumb, chuLonHon && styles.thumbLarge, { borderRadius: radius.small }]}>
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
-          <PlaceArtwork loai={dd.loai} width={88} height={88} />
+          <PlaceArtwork loai={dd.loai} width={chuLonHon ? undefined : 88} height={chuLonHon ? 132 : 88} />
         )}
-        <View style={styles.rowText}>
+        <View style={[styles.rowText, chuLonHon && styles.rowTextLarge]}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
           <View style={styles.rowTen}>
-            <Text numberOfLines={2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
+            <Text style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
             {dauCon(dd) && !chuLonHon ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
           </View>
-          {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
           {dd.sub ? <Text style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
@@ -277,8 +276,9 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
         </View>
         </View>
         {cuoiFact ? <Text style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</Text> : null}
+        {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
       </Pressable>
-      <View style={styles.rowHeart}>
+      <View style={[styles.rowHeart, chuLonHon && styles.rowHeartLarge]}>
       <IconButton
         accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
         icon={daLuu ? "heart" : "heart-outline"}
@@ -423,8 +423,6 @@ const styles = StyleSheet.create({
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
   leadGonDau: { alignSelf: "flex-start" },
-  leadGonDauHang: { flexDirection: "row", alignItems: "flex-start" },
-  leadGonDuoi: { gap: 6, padding: 14, paddingTop: 0 },
   timOnMedia: { position: "absolute", right: 6, top: 6 },
   dauUngVien: { alignSelf: "flex-start", marginBottom: 4 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -443,9 +441,13 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.86 },
   row: { paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   rowMain: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  rowMainLarge: { flexDirection: "column" },
   rowHeart: { position: "absolute", top: 20, left: 36 },
+  rowHeartLarge: { left: undefined, right: 10, top: 24 },
   rowPrice: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   rowPress: { gap: 10, minHeight: 88 },
   thumb: { width: 88, height: 88, overflow: "hidden", flexShrink: 0 },
+  thumbLarge: { width: "100%", height: 132 },
   rowText: { flex: 1, gap: 4, minWidth: 0 },
+  rowTextLarge: { flex: 0, alignSelf: "stretch" },
 });

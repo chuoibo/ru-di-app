@@ -376,6 +376,7 @@ export function TopBar({
           <IconButton
             accessibilityLabel="Quay lại"
             icon="chevron-back"
+            glyphOffsetX={-7}
             onPress={luiVe}
             quiet
           />
@@ -719,6 +720,7 @@ export function IconButton({
   disabled = false,
   tone = "accent",
   tron = false,
+  glyphOffsetX = 0,
 }: {
   icon: IconName;
   assetIcon?: AssetIconName;
@@ -738,6 +740,8 @@ export function IconButton({
   loading?: boolean;
   disabled?: boolean;
   tone?: RudiTone;
+  /** Optical alignment of the drawn glyph, without moving its 48dp target. */
+  glyphOffsetX?: number;
 }) {
   const { colors } = useRudiTheme();
   // ADR-0038 §2.2: a primary icon with nothing to act on yet (send, with the
@@ -780,7 +784,7 @@ export function IconButton({
         tron && styles.iconButtonTron,
       ]}
     >
-      {loading ? <ActivityIndicator color={glyph} size="small" /> : <RudiIcon assetIcon={assetIcon} assetSize={24} color={glyph} name={icon} size={22} />}
+      {loading ? <ActivityIndicator color={glyph} size="small" /> : <View pointerEvents="none" style={glyphOffsetX ? { transform: [{ translateX: glyphOffsetX }] } : undefined}><RudiIcon assetIcon={assetIcon} assetSize={24} color={glyph} name={icon} size={22} /></View>}
     </PressScale>
   );
 }
@@ -1264,7 +1268,7 @@ const styles = StyleSheet.create({
   topBarSideInnerRight: { alignItems: "center", alignSelf: "flex-end", flexDirection: "row", gap: 4 },
   topBarRight: { alignItems: "flex-end" },
   topBarTitleWrap: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
-  topBarTitle: { textAlign: "center" },
+  topBarTitle: { textAlign: "center", width: "100%" },
   doChu: { position: "absolute", left: 0, top: 0, opacity: 0 },
   logoRow: { flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 9 },
   logoMark: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-4deg" }] },

@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { chuLon } from "../adaptive";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 import { PaperObject, type PaperName } from "../asset-pack/react-native/PaperObject";
@@ -59,6 +60,7 @@ function BillShareIllustration() {
 export function CreateSheet() {
   const router = useRouter();
   const { colors, dark } = useRudiTheme();
+  const singleColumn = chuLon(useWindowDimensions().fontScale);
   const palette = usePaperPalette();
   const { phien } = useRudiSession();
   const [open, setOpen] = useState(true);
@@ -94,7 +96,7 @@ export function CreateSheet() {
                 key={action.title}
                 onPress={() => router.replace(action.href as never)}
                 pressedScale={0.985}
-                style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(1, dark)]}
+                style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, singleColumn && styles.vatMotCot, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(1, dark)]}
               >
                 <View style={[styles.object, { backgroundColor: colors.ground, transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }]}>
                   {action.vat === "hoa-don" ? <BillShareIllustration /> : <PaperObject name={VAT_GIAY[action.vat]} palette={{ ...palette, paper: colors.card, shade: colors.lineStrong }} width={i === 0 ? 88 : 64} />}
@@ -102,9 +104,9 @@ export function CreateSheet() {
                     <RudiIcon color={colors.inkSoft} name="calendar-outline" size={24} />
                   </View> : null}
                 </View>
-                <View style={i === 0 ? styles.chuDan : styles.chuNho}>
-                  <Text style={[typography.title, i === 0 ? null : styles.giua, { color: colors.ink }]}>{action.title}</Text>
-                  {action.detail ? <Text style={[typography.note, i === 0 ? null : styles.giua, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
+                <View style={i === 0 || singleColumn ? styles.chuDan : styles.chuNho}>
+                  <Text style={[typography.title, i === 0 || singleColumn ? null : styles.giua, { color: colors.ink }]}>{action.title}</Text>
+                  {action.detail ? <Text style={[typography.note, i === 0 || singleColumn ? null : styles.giua, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
                 </View>
               </PressScale>
             ))}
@@ -128,6 +130,7 @@ const styles = StyleSheet.create({
   vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 112 },
   // Two a row: each takes half the desk less half the gap.
   vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 132 },
+  vatMotCot: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 104 },
   chuDan: { flex: 1, gap: 2 },
   chuNho: { gap: 2, alignSelf: "stretch" },
   giua: { textAlign: "center" },

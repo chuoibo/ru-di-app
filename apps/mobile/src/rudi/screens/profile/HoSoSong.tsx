@@ -16,15 +16,15 @@
  * page too, with the error next to the field it is about.
  */
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { Keyboard, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { nhanCua } from "../../cai-dat/phien-cai-dat";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
-import { Field, IconButton, RudiButton, TopBar } from "../../ui";
+import { Field, RudiButton } from "../../ui";
 import { chuLon } from "../../adaptive";
 import { DauLon } from "../../ui/DauLon";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -43,7 +43,9 @@ function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
 
-export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingChange?: (editing: boolean) => void }) {
+export type ProfileEditorControls = { busy: boolean; save: () => void; back: () => void; cancel: () => void };
+
+export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChange: (controls: ProfileEditorControls | null) => void }) {
   const { datPhien } = useRudiSession();
   const { colors, dark } = useRudiTheme();
   const { width, fontScale } = useWindowDimensions();
@@ -63,9 +65,10 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
   // The passport and its form are different pages in the same scroll view.
   const doiSua = (editing: boolean) => {
     setDangSua(editing);
-    onEditingChange?.(editing);
+    if (!editing) Keyboard.dismiss();
   };
   useLuiLop(dangSua, () => {
+    if (saving.current) return;
     setConNhap(true);
     doiSua(false);
   });
@@ -115,6 +118,18 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
     }
   };
 
+  // The parent owns the fixed app bar/footer; this mounted form owns its draft.
+  // Explicit draft dependencies keep the callbacks current without a render loop.
+  useLayoutEffect(() => {
+    onEditorChange(dangSua ? {
+      busy: dangLuu,
+      save: () => void luu(),
+      back: () => { if (!saving.current) { setConNhap(true); doiSua(false); } },
+      cancel: () => { if (!saving.current) { setConNhap(false); doiSua(false); } },
+    } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onEditorChange, dangSua, dangLuu, ten, bio, city, phien, datPhien]);
+
   if (trang.pha === "dang-doc") {
     return (
       <SkeletonGroup>
@@ -128,18 +143,15 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
   const { hoSo } = trang;
 
   if (dangSua) {
-    const giuBanSua = () => { if (!saving.current) { setConNhap(true); doiSua(false); } };
-    const huyBanSua = () => { setConNhap(false); doiSua(false); };
     return (
       <View style={styles.form}>
-        <TopBar title="Chỉnh hồ sơ" onBack={giuBanSua} right={<IconButton accessibilityLabel="Huỷ" icon="close" disabled={dangLuu} onPress={huyBanSua} quiet />} />
         <View style={styles.editIdentity}>
           <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.editAvatar}>
             <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={64} ring />
             <View style={[styles.editCamera, { backgroundColor: colors.card, borderColor: colors.line }]}><RudiIcon name="camera-outline" color={colors.ink} size={16} /></View>
           </Pressable>
           <View style={styles.editIdentityText}>
-            <Text style={[typography.h2, { color: colors.ink }]}>Một chút về bạn</Text>
+            <Text style={[typography.title, { color: colors.ink }]}>Một chút về bạn</Text>
             <Text style={[typography.note, { color: colors.inkSoft }]}>Tên, vài lời giới thiệu và nơi bạn hay ở.</Text>
           </View>
         </View>
@@ -169,7 +181,6 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
           placeholder="Nơi bạn hay ở"
           value={city}
         />
-        <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
       </View>
     );
   }

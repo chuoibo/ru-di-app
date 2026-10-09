@@ -108,7 +108,8 @@ appId: com.lakiet.rudi
 - tapOn: "Đăng bài mới"
 # The community composer (wall mode) is the composer while the rollout is on.
 - extendedWaitUntil:
-    visible: "Hôm nay có gì đáng nhớ?"
+    visible:
+      id: "community-body"
     timeout: 30000
 - assertVisible: "Thêm ảnh hoặc video"
 - takeScreenshot: 42-dang-bai-co-anh
