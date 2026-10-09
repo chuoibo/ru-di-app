@@ -1781,5 +1781,209 @@
       "Thiếu quality-bar card/platform-reference/clip motion độc lập; không full critique/audit hoặc full gate.",
       "Ship nhãn có giới hạn không cho phép landingmain khi gate repo còn thiếu; không main merge/push trong lượt documenter."
     ]
+  },
+  "candidateNineNative20261010": {
+    "_": "Hồ sơ candidate từ source797 và ảnh Android đã mở; chưa verdict ship sau sửa. Giữ nguyên các token mirror, cấu trúc tương thích script và phạm vi shipped lịch sử, không thay bằng full-app pass.",
+    "date": "2026-10-10",
+    "headCommit": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+    "status": "candidate; fresh review sau sửa đang chờ; audit A–S/toàn app còn mở",
+    "authority": {
+      "product": "PRODUCT.md",
+      "direction": "docs/design/nep-ui-implementation/redesign-20261010/BRIEF.md",
+      "reference": "docs/design/nep-ui-implementation/redesign-20261010/core-layout-reference-v1.png",
+      "referenceStatus": "Chỉ phản biện cấu trúc, chưa comp duyệt, không bắt buộc raster/seed/căn tính mới.",
+      "identity": "Rủ Đi; Nếp canonical; giấy/mực/coral/Bricolage giữ nguyên; token không đổi.",
+      "userQualityBar": "App trước khoảng5/10; từng trang phải đẹp và hoạt động đúng, native Android là bằng chứng của lượt này."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/ui.tsx",
+      "apps/mobile/src/rudi/screens/Profile.tsx",
+      "apps/mobile/src/rudi/screens/profile/HoSoSong.tsx",
+      "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+      "apps/mobile/src/rudi/screens/keo/PlanLive.tsx",
+      "apps/mobile/src/rudi/screens/keo/CreateOutingLive.tsx",
+      "apps/mobile/src/rudi/ui/ThanhNganSach.tsx",
+      "apps/mobile/src/rudi/screens/groups/Conversations.tsx",
+      "apps/mobile/src/rudi/community/Composer.tsx",
+      "apps/mobile/src/rudi/community/MediaPicker.tsx",
+      "apps/mobile/src/rudi/screens/Create.tsx"
+    ],
+    "layout": {
+      "header": "TopBar minHeight52, marginHorizontal−12, back glyphOffsetX−7 trong target48; title17/23 tối đa2dòng; slot cân bằng chỉ khi title đủ ngang, không thu font.",
+      "profile": "Component form mounted giữ nháp; header Back/Huỷ và footer Lưu ở ngoài scroll; fields200/500/120; Back giữ nháp trong mounted session, Huỷ bỏ nháp. Footer phone24 khi đóng IME/8 khi mở, không cộng lần nữa chiều cao tab đã ở normal flow. Không token mới hoặc bảo đảm process death.",
+      "explore": "Phone một trục lead rồi hàng; lead compact16:9, artwork160 cao; phụ đề wrap, facts rồi chip lý do/giá theo source. Hàng88×88/top-aligned/gap14/pad dọc16; facts→giá toàn ngang→lý do đầy đủ. chuLon>=1.28 đổi ảnh132cao/toàn ngang và chữ dọc; nhãn Minh hoạ dưới trái/tim trên phải.",
+      "plan": "Plus quiet ở cả nhánh có/chưa nhóm. Empty có nhóm CTA Tạo kèo; chưa nhóm Tới Tin nhắn. Chữ lớn dùng CuongPhieu dọc, ngày/tháng cùng hàng, tên/facts wrap. Hai ảnh native visible-final chưa nhóm light100 đã mở thấy empty và khay Tạo sau chạm plus header; ADB riêng, không Maestro pass.",
+      "create": "BillShareIllustration SVG76×72 có receipt răng cưa/dòng món-tổng/nhánh hai phần, theme token; chuLon chuyển một cột. Nếp canonical; không raster mới.",
+      "budget": "Một giá trị nguyên đồng cho thanh0–2triệu/bước25.000 và exact entry chung parser. Target56/thumb28/presetmin48. Vượt thang giữ số, câu Ngoài thang kéo0–2triệu và thumb vạch; source adjustable/actions chưa thay TalkBack/haptic native.",
+      "inbox": "Heading/plus nhỏ/search Tìm người hoặc nhóm/xoá search; lọc tên từ danh sách đang đọc, giữ story/lời mời/E2EE. Ảnh không tự chứng minh search/crypto.",
+      "back": "Dùng TopBar; target48/glyph theo gutter/title nhường ngang; không nhân offset chevron cho mọi icon.",
+      "composer": "Header/author44/người đọc gọn, canvas5000/counter, minHeight112–240 theo cửa sổ/max420/lineHeight26; ảnh-video ghost compact, chủ đề/tag tại chỗ; lời duyệt/lỗi/CTA trong footer trên IME."
+    },
+    "evidence": {
+      "root": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-797a3f52",
+      "readOnlyReview": "Documenter đọc source/kết quả và mở ảnh có sẵn; không chạy UI/browser/server/detector hay matrix.",
+      "matrix": {
+        "file": "after-matrix-results.json",
+        "sourceAndHarness": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "flows": 24,
+        "exit0": 24,
+        "elapsedSeconds": 714.665,
+        "families": [
+          "social",
+          "places",
+          "budget",
+          "budget-exact"
+        ],
+        "schemes": [
+          "light",
+          "dark"
+        ],
+        "fontScales": [
+          1,
+          1.3,
+          2
+        ],
+        "scope": "Chức năng của flows đã chạy, không verdict thị giác/full gate."
+      },
+      "restore": {
+        "file": "after-matrix-restore.json",
+        "fontRestored": true,
+        "viewport": "320×640"
+      },
+      "profileR2": {
+        "files": [
+          "profile-functional-result-r2.json",
+          "supp-profile-draft-save-r2.result.json"
+        ],
+        "exit": 0,
+        "elapsedSeconds": 53.785,
+        "observed": [
+          "Back giữ nháp",
+          "Huỷ bỏ nháp",
+          "Native save quay lại hồ sơ",
+          "Server giữ display_name/bio/city/avatar_url"
+        ],
+        "limits": "Không đưa fixture values vào hệ; không claim process death hoặc mọi lỗi mạng."
+      },
+      "largeSupplement": {
+        "file": "supp-large-rows-tabs-budget.result.json",
+        "exit": 0,
+        "elapsedSeconds": 43.672,
+        "communitySelected": "Chỉ tab đã chọn và skeleton đang tải, chưa feed hoàn tất."
+      },
+      "openedNativeCaptureNames": [
+        "after-light100-profile-edit",
+        "after-light100-profile-keyboard",
+        "after-light100-explore-lead",
+        "after-light100-explore-rows",
+        "after-light100-create-tray",
+        "after-dark100-composer-writing",
+        "after-dark100-inbox",
+        "after-light200-composer-empty",
+        "after-light200-plan-header",
+        "after-dark200-explore-rows",
+        "supp-large-row-price-reason",
+        "supp-large-next-row",
+        "supp-large-community-selected",
+        "supp-large-exact-outside-scale",
+        "no-group-plan-light100-visible-final.png",
+        "no-group-create-from-header-plus-visible-final.png"
+      ],
+      "runtime": {
+        "file": "runtime-provenance.json",
+        "javascript": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "apkBuildCheckpoint": "2f20a30179d0e21a1f4b3244dfbd685b5bade7e9",
+        "apkSha256": "963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514",
+        "apiSource": "9a6d69563a503860774f291f22b4806082b970a6",
+        "apiContinuity": "git diff9a..797 services/core rỗng; thay đổi JS, không rebuild APK/API797."
+      },
+      "technical": {
+        "file": "clean-checks.json",
+        "exactCleanSha": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "checksExit0": [
+          "typecheck",
+          "guide",
+          "build-check",
+          "compile",
+          "fixup",
+          "go-guide",
+          "repo-tree"
+        ],
+        "nodeFiles": 214,
+        "nodePass": 1608,
+        "nodeTotal": 1608,
+        "nodeSkipped": 0,
+        "browserDriversExcluded": [
+          "che-chu-lo-to-cha.test.mjs",
+          "che-chu.test.mjs",
+          "rudi-nep-web.test.mjs",
+          "rudi-opening-web.test.mjs",
+          "rudi-welcome-web.test.mjs"
+        ],
+        "scope": "Không full strict32/full gate; không native pixel geometry/contrast detector.",
+        "tsxRegex": {
+          "file": "final-tsx-detector.json",
+          "log": "final-tsx-detector.log",
+          "source": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+          "exit": 0,
+          "result": [],
+          "elapsedSeconds": 0.04,
+          "targets": 9,
+          "targetBytesEqualCommittedSha": true,
+          "scope": "Chỉ regex TSX; không geometry/contrast native. Documenter đọc kết quả, không chạy detector."
+        }
+      },
+      "openedNativeCaptureCount": 16,
+      "noGroupVisibleFinal": {
+        "source": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "serial": "emulator-5562",
+        "fontScale": 1,
+        "scheme": "light",
+        "files": [
+          "no-group-visible-window-receipt.json",
+          "no-group-native-adb-visible-final.result.json"
+        ],
+        "window": {
+          "visible": true,
+          "emulatorPid": 888644,
+          "sdkLauncher": true,
+          "observedTitle": "Android Emulator - rudi-nep-no-group-20261010:5562"
+        },
+        "session": "Tài khoản tổng hợp không có nhóm kiểm bằng HTTP login; native UI login và session được giữ.",
+        "observed": [
+          "Empty Gom hội mình trước và CTA Tới Tin nhắn",
+          "Plus nhỏ header chạm theo XML bounds thực [256,32][304,80] mở khay Tạo thật"
+        ],
+        "driver": "ADB XML/input/screencap; không browser, không Maestro pass; không cộng matrix24/24.",
+        "excluded": "Maestro transport failures, thiếu reverse mapping và headless captures trước không phải visual acceptance; chỉ hai ảnh visible-final bổ sung này.",
+        "otherDevices": "Primary5558/peer5560 không bị thay đổi bởi lượt bổ sung."
+      }
+    },
+    "priorReview": {
+      "source": "d9c06bf4",
+      "disposition": "fix",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d9c06bf4/fresh-nine-screens-review.md",
+      "finalDisposition": "Đang chờ review sau sửa797; không thừa hưởng ship/điểm của các record cũ."
+    },
+    "notCanonized": [
+      "Composer override disabled nền line/viền solid lệch primitive ADR-0038; chưa đo native, không mẫu disabled mới.",
+      "Metadata/story label inbox rút ngắn ở chữ lớn chờ review; không quy tắc cắt dữ kiện.",
+      "Harness assertion failures cũ không phải app-pass hoặc chính sách layout.",
+      "TSX regex[] không phải geometry/contrast native.",
+      "24/24 không total-app acceptance,14/16,strict32 hoặc landingmain.",
+      "Legacy sidecar mirror/lịch sử giữ để tương thích script; không tái diễn giải thành chứng nhận hệ hiện tại.",
+      "No-group chỉ hai ảnh cửa sổ thật visible-final; headless/transport failures không thành bằng chứng thị giác hoặc Maestro pass."
+    ],
+    "pending": [
+      "Fresh verdict sau sửa797",
+      "Native nhánh chưa nhóm ngoài light100 chưa phủ; ADB bổ sung không thay matrix mọi cấu hình.",
+      "Native detector geometry/contrast",
+      "TalkBack/focus/target",
+      "Motion normal/reduced/lifecycle",
+      "Tablet/iOS",
+      "Loading/error/offline/retry đầy đủ của từng surface",
+      "Audit rộng A–S và nghiệm thu toàn app",
+      "Full strict và điều kiện landingmain"
+    ]
   }
 }

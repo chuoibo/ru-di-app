@@ -40,7 +40,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | H — Groups/friends | Thành viên `3b71838e`: 2 active/0 invited, tên thật, không đổi vai trò | Root mở ảnh inline: không đẩy nhãn/CTA khỏi hàng; chưa chấm cả family | Invite/accept/reject/leave/last-admin, friend pending/block và empty/error |
 | I — Hai người | Chưa nhận full native pair workflow | Chưa review native đủ | Hai phiên UI, tờ hẹn/accept/promote, chọn người và các nhánh |
 | J — Moments/album/wall | Story không thay bằng chứng khoảnh khắc/album/tường | Chưa review native đủ | Media/crop/draft/retry/audience/view/album/delete, heart/comment đúng quyền |
-| K — Ending/diary | Bằng chứng web lịch sử không tính native | Chưa review native đủ | Ending→reader→post, draft/error/layout/privacy và provider thật |
+| K — Ending/diary | Nativea409 khép outing QC riêng, hai ảnh tổng hợp được phép, tự xếp/lưu private; ownGET200/other404. Native797 mở lại preview và reader | Root mở preview/page/controls/reader; clip a409 có khả năng co bìa/nhảy chiều cao/flash, chưa sửa hoặc chấm motionPASS | AI/public/paging/quyền media, lỗi/retry, layout/font/theme và transition sau sửa |
 | L — Profile/people | Profile edit/keyboard/cancel; avatar picker/upload/cancel thật; crop native `2c1189d7` cancel/confirm và server640×640 | Root mở profile/editor/after; chưa rubric đủ own/other/pending/blocked | Avatar error/retry/permission, propagation giữa máy; people/achievements; chữ lớn và states |
 | M — Bill | Focused native822 nhập/preview/ghi bill200.000đ, phần75.000/125.000; witness thật; runner toàn bảng vẫn đỏ | Có ảnh đã mở; chưa nhận composition/state đầy đủ | Native whole-flow/canary cùng harness, scan camera/OCR/provider, font/keyboard/errors |
 | N — Settlement/finance | Focused native822 batch75.000đ, xác nhận nhận và ledger về0; receiver confirmation không là bank evidence | Chưa nghiệm thu toàn state/layer native | Bảng đầy đủ, role/wait/conflict, share handoff và visual |
@@ -205,3 +205,48 @@ TalkBack, measured native contrast/targets, wide/iOS vẫn chưa nhận thêm.
 Đính chính worker: MOBILE_INPROC_WORKER=0 chỉ chặn chatassist, không chặn
 diary.Run/community.Run khởi động riêng với prod PostgreSQL. Audit K phải
 quan sát job thật, không coi worker0 là bằng chứng job không thể chạy.
+
+## Đợt thiết kế lại chín vùng — 10/10, source797
+
+Yêu cầu độ đẹp áp dụng lại từng màn/feature; đánh giá5/10 của chủ sản phẩm
+không bị thay bằng các verdict scoped cũ. Reference ImageGen mới chỉ để
+phản biện bố cục, không phải comp được duyệt hoặc ảnh app. Batchd9 nhận
+**fix**: title/back, facts/giá và lý do Explore, nhãn ảnh chữ lớn, plus ở
+nhánh chưa có nhóm, vé Plan200, exact ngoài thang kéo và documenter.
+Batch9a sửa code; native phát hiện footer profile dư112px vì đếm tab hai
+lần. Runner9a dừng có kiểm soát/exit130 và font restored, không tính PASS.
+Source797 chỉ sửa footer dư đó; tab nằm trong normal flow.
+
+| Evidence exact797 | Kết quả đã có |
+|---|---|
+| Clean typecheck/guide/build/compile/fixup | 0;7,238/1,385/16,051/2,826/0,036s |
+| Node subset214files, loại5browserdrivers | 1608/1608,0fail/skip/cancel/todo;34,652s |
+| Go guide / tree guard | 0;0,252/32,924s; clean trước/sau từng bước |
+| Pure-helper identity/canary/hai mutants | 3/3 identity; cả ba variant đỏ đúng test dự đoán, copy compiled ngoài repo |
+| Primary5558, sáng/tối × font100/130/200 | 24/24flow0;714,665s; sáu drag theo XML thật; font restored1.0 |
+| Profile draft/Back/Huỷ/Save | r2 exit0/53,785s; GET giữ name/bio/city/avatar; hai red harness trước vẫn giữ |
+| Explore200 facts/giá/reason, tab, exact note | supplement exit0/43,672s; Cộng đồng selected capture đang loading |
+
+Runtime: JS797, APK2f20a301 giữ nguyên (JS-only), API9a với Go diff rỗng
+đến797. Ảnh320×640 primary native; root đã mở mẫu100/130/200 sáng/tối và
+supplement, không nhận đã xem mọi capture. Giá exact3.250.123đ giữ nguyên;
+note ngoài0–2triệu nằm trên slider. Vé200 đọc đủ ngày/tháng và metadata;
+nhãn Minh hoạ/heart không chồng, giá/reason đầy đủ sau cuộn. Đây chưa là
+full rubric responsive/a11y, native contrast/targets hoặc TalkBack.
+
+Documenter fresh đã đọc build và mở14ảnh, cập nhật DESIGN/sidecar scoped797;
+giữ token và lịch sử. Sau bổ sung hai ảnh no-group visible-final, documenter
+đã mở16ảnh. Reviewer verdict pass mở28required+9optional, cả bảy finding
+resolved, không thấy hồi quy batch trong mẫu; **ship chỉ bảy finding** ở
+`fresh-verdict-pass.md`, không phải chín surface/toàn app. Full npm test/strict32,
+landingmain, motion toàn state, tablet/iOS và coverage A–S vẫn mở. Không
+quy 24/24 hoặc TSX regex0finding thành14/16 hoặc frontend hoàn tất.
+Evidence ngoài repo: `native-audit-797a3f52/{clean-checks.json,
+after-matrix-results.json,after-matrix-restore.json,mutation-evidence/,
+profile-functional-result-r2.json,root-opened-images.json}` dưới runtime
+riêng đã ghi ở các mục trước.
+
+K797 preview→reader có một runner29,603s đỏ do selector cũ «Sửa lời và
+ảnh»; source dùng «Sửa theo cách mình nhớ». Resume đúng exit0/7,674s.
+Root đã mở bốn PNG preview top/page/controls và reader private. Không
+đổi red thành xanh, không nhận toàn K hoặc public/AI/second-page đã kiểm.

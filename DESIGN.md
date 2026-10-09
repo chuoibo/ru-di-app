@@ -358,6 +358,23 @@ phẩm đúng».
 
 ## Overview
 
+**Cập nhật có phạm vi 10/10/2026, candidate native `797a3f52`.** Chủ sản phẩm
+đánh giá hình thức app trước lượt này khoảng 5/10 và yêu cầu đẹp ở từng trang,
+không chỉ dùng được. Bản ghi này đọc source
+`797a3f52d77919adcfa86ed639e17b01476a8f2d` và mở ảnh Android sau sửa; chỉ cập
+nhật chín bề mặt được nêu trong
+[BRIEF](docs/design/nep-ui-implementation/redesign-20261010/BRIEF.md).
+Giấy, mực, coral, Bricolage và Nếp canonical giữ nguyên; không đổi bảng token
+hay căn tính Rủ Đi. Ảnh `core-layout-reference-v1.png` là tham chiếu phản biện
+cấu trúc, chưa phải comp được duyệt, không đặt nghĩa vụ raster, seed hoặc
+nhận diện mới. Các verdict Welcome, Story, editor Nếp, Gallery và Gu bên dưới
+giữ nguyên SHA và phạm vi lịch sử của chúng.
+
+Các mô tả source mới trong mục «Chín bề mặt native» thắng mô tả bố cục cũ của
+đúng những thành phần được gọi tên; chúng chưa phải chuẩn thị giác đã nghiệm
+thu cho toàn hệ. Fresh review trước ở `d9c06bf4` trả **fix**; verdict sau sửa
+797 còn chờ. Audit rộng A–S và nghiệm thu toàn app vẫn mở.
+
 ## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
 Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
@@ -831,6 +848,24 @@ Chữ in hoa duy nhất của hệ là mực con dấu (`typography.stamp`), và
 đề, không có nhãn trên đầu.
 
 ## Layout
+
+**Header/form ở candidate 797 (10/10).** `TopBar` giữ target icon 48dp,
+`minHeight` 52dp; hàng header mở vào gutter 12dp mỗi bên và chevron dịch
+−7dp trong target, để nét back thẳng lề nội dung. Hai slot hai bên cân bằng
+khi tiêu đề đủ ngang; nếu không, mỗi bên lấy bề rộng tự nhiên tối thiểu 52dp
+để dành chỗ cho chữ. Tiêu đề dùng `title`, tối đa hai dòng, không thu font.
+Ảnh `after-light100-profile-edit` đã mở có «Chỉnh hồ sơ» một dòng. Đây không
+phải tuyên bố đo native toàn bộ target, geometry hoặc contrast.
+
+`RudiScreen avoidKeyboard` ở form hồ sơ/soạn bài giữ header và footer ngoài
+vùng cuộn; source đo viewport form sau resize để đưa ô đang focus vào vùng
+nhìn thấy. Ảnh hồ sơ nhập thành phố đã mở có field và nút Lưu trên IME.
+Footer hồ sơ trên phone dùng đệm 24dp khi đóng bàn phím, 8dp khi mở; thanh tab
+đã chiếm chiều cao trong normal flow. Sửa 797 bỏ phần cộng lại chiều cao tab
+vào footer từng tạo khoảng trống ở 9a. Con số 24dp thuộc bố cục hồ sơ này,
+không phải token mới hay công thức safe-area cho mọi màn. Large text dùng
+`chuLon(fontScale)` từ 1.28 để bao bước Android 1.3; những đổi cột cụ thể nằm
+trong mục chín bề mặt, không thay ba size class lịch sử.
 
 Lưới 4pt, thang khoảng cách sáu bước `xs` 6 · `sm` 10 · `md` 16 · `lg` 24 ·
 `xl` 36 · `xxl` 48; không thêm bước thứ bảy. Nhịp giữa khối trong
@@ -3100,6 +3135,90 @@ riêng mang tên của hàng; tay cầm sheet ẩn khỏi trình đọc, lối r
 «Đóng bảng»; Back (cứng, trình duyệt, Esc) đóng lớp trên cùng trước khi rời
 màn.
 
+### Chín bề mặt native — candidate 797, ghi 10/10/2026
+
+**Phạm vi và nguồn.** Đây là hồ sơ build sau lượt sửa review `d9c06bf4`, chưa
+có verdict ship sau sửa. Đọc `ui.tsx`, `screens/Profile.tsx`,
+`screens/profile/HoSoSong.tsx`, `screens/explore/HangDiaDiem.tsx`,
+`screens/keo/PlanLive.tsx`, `screens/keo/CreateOutingLive.tsx`,
+`ui/ThanhNganSach.tsx`, `screens/groups/Conversations.tsx`,
+`community/Composer.tsx`, `community/MediaPicker.tsx` và `screens/Create.tsx`
+(đường dẫn tương đối dưới `apps/mobile/src/rudi/`). Route viết bài hiện dùng
+`community/Composer.tsx`, không có `screens/community/New.tsx`; hàng địa điểm
+ở `screens/explore/`, MediaPicker ở `community/`.
+
+| Bề mặt | Điều có trong source 797 và mẫu native đã mở |
+|---|---|
+| Sửa hồ sơ | Form riêng cùng component mounted giữ bản sửa; header «Chỉnh hồ sơ»/«Huỷ» và footer «Lưu hồ sơ» cố định, cụm avatar 64/đổi ảnh + lời dẫn gọn, gap form 20. Tên tối đa 200, giới thiệu 500 có counter, thành phố 120. Back giữ bản nháp trong phiên mounted; Huỷ bỏ bản nháp; không khẳng định lưu qua process death. Source giữ lỗi và khóa gửi khi đang lưu. |
+| Khám phá | Phone đi một trục lead rồi hàng để so; source lead dùng ảnh 16:9 compact/21:9 rộng, artwork minh hoạ cao 160dp ở phone, tên `h2`, phụ đề wrap, facts rồi hai chip lý do/giá như source. Ảnh minh hoạ có nhãn rõ, không giả ảnh địa điểm; không nhập người, số liệu hay online status từ reference. Đây cập nhật dạng source, không khôi phục lead ngang 112 của mốc 3bb. |
+| Hàng địa điểm | Ở chữ thường, thumbnail 88×88 và cột chữ top-aligned, gap 14; đệm dọc 16, hairline dưới. Thứ tự: tên/mô tả/facts → giá kèm đơn vị dùng toàn bề ngang → lý do AI đọc hết, không `numberOfLines` trên lời giải thích hàng. Từ `chuLon`, ảnh rộng toàn cột/cao 132dp, chữ xuống dưới, tim ở góc phải ảnh; nhãn Minh hoạ nằm dưới bên trái. Mẫu supplement 200 đã mở thấy đủ giá 200.000–250.000đ mỗi người và câu so ngân sách 175k, rồi hàng tiếp; không coi một viewport cuộn là toàn danh sách. |
+| Lên plan | Plus nhỏ `IconButton quiet` ở header cho cả nhánh có nhóm và `contextId===null`. Empty state có nhóm vẫn có CTA «Tạo kèo»; chưa nhóm dẫn «Tới Tin nhắn». Chữ lớn chuyển vé/cuống sang luồng dọc; ngày và tháng cùng hàng, tên/facts được wrap. Ảnh plan-header 200 có ngày 11/TH10 và dữ kiện vé đủ. Hai ảnh visible-final light100 của thiết bị 5562 đã mở thấy empty chưa nhóm và khay Tạo sau chạm plus header; bằng chứng ADB có phạm vi ghi riêng bên dưới. |
+| Khay Tạo | `BillShareIllustration` là SVG native 76×72: giấy biên lai mép răng cưa, tiêu đề coral, dòng món/tổng và đường chia ra hai phần. Đọc token light/dark, không raster mới; Nếp canonical và các vật lịch/ảnh/thư giữ world. Ở chữ lớn, các lựa chọn chuyển một cột ngang hình/chữ thay vì hai ô hẹp. Đây cấu trúc có trong source, ảnh đã mở chỉ trực tiếp chứng minh khay light100. |
+| Ngân sách | `ThanhNganSach` cùng trường nhập chính xác chia sẻ một giá trị nguyên đồng. Thanh 0–2 triệu, bước 25.000đ, target cao 56dp, thumb 28dp, mức nhanh 200 nghìn/500 nghìn/1 triệu minHeight 48. Exact entry dùng parser tiền chung; vượt thang vẫn giữ số, hiện ngay câu «Ngoài thang kéo 0–2 triệu. Giữ nguyên số bạn nhập.» và thumb đổi chấm thành vạch. Supplement200 đã mở giữ 3.250.123đ với câu giải thích; endpoint không được hiểu thành giá trị đã clamp. Role adjustable/actions có trong source; chưa nghiệm thu TalkBack hoặc haptic bằng ảnh. |
+| Tin nhắn | Heading + plus nhỏ tạo nhóm, search «Tìm người hoặc nhóm» và xoá search; danh sách lọc tên người/nhóm từ dữ liệu đang đọc. Giữ story rail, lời mời và đường E2EE. Ảnh dark100 đã mở chứng minh hierarchy title/search/hội thoại; không chứng minh trọn search hoặc crypto từ ảnh. |
+| Back/header | Cùng primitive TopBar và quy tắc nhường ngang cho title được ghi ở Layout; không sửa bằng cách thu font hay target. Có thể wrap khi chữ lớn. Không biến offset của chevron thành offset cho mọi icon. |
+| Viết bài | Header gọn, avatar 44 + tên/người đọc ở đầu; canvas viết là vùng chính, giới hạn 5000 có counter; minHeight theo chiều cao cửa sổ trong 112–240dp, maxHeight 420 và lineHeight 26. Công cụ ảnh/video là ghost compact; chủ đề/tag mở tại chỗ. Footer giữ lời duyệt công khai, lỗi và CTA trên IME. Ảnh dark100-writing và light200-empty đã mở có canvas/counter/footer tương ứng; công cụ dưới fold cuộn tới được theo cấu trúc, ảnh tĩnh không tự chứng minh thao tác đó. |
+
+**Bằng chứng chức năng khác bằng chứng thị giác.** Bó evidence ngoài repo:
+[/native-audit-797a3f52/](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-797a3f52/).
+`after-matrix-results.json` ghi 24/24 flow exit0, tổng 714.665s: social,
+places, budget, budget-exact × light/dark × font 1.0/1.3/2.0, source và harness
+đều 797. `after-matrix-restore.json` ghi font đã phục hồi, viewport 320×640.
+Lượt documenter chỉ đọc kết quả có sẵn và mở mẫu ảnh, không chạy lại matrix.
+
+`profile-functional-result-r2.json` và `supp-profile-draft-save-r2.result.json`
+ghi Back giữ nháp, Huỷ bỏ nháp, native save quay lại hồ sơ và server giữ
+`display_name`, `bio`, `city`, `avatar_url`; flow r2 exit 0/53.785s. Đây là
+bằng chứng chức năng riêng của hồ sơ; không đưa giá trị fixture vào hệ thiết
+kế, không gọi các lỗi assertion ở lượt harness trước là chính sách bố cục.
+Supplement chữ 200 `supp-large-rows-tabs-budget.result.json` exit 0/43.672s.
+Ảnh `supp-large-community-selected` chỉ cho thấy tab Cộng đồng đã chọn và
+skeleton đang tải; không chứng minh feed đã tải, empty hoặc error đã đạt.
+
+**Nhận diện runtime.** `runtime-provenance.json` ghi JS 797 từ tree sạch,
+APK vẫn ở checkpoint `2f20a30179d0e21a1f4b3244dfbd685b5bade7e9`, SHA-256
+`963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514`.
+API chạy source `9a6d69563a503860774f291f22b4806082b970a6`;
+`services/core` không đổi từ 9a đến 797. Không gọi APK/API là bản rebuild 797;
+đây là thay đổi JS. Documenter không mở web, điều khiển UI hoặc khởi động server.
+
+**Mẫu đã mở.** `captures/**/takeScreenshot/`: light100 profile-edit,
+profile-keyboard, explore-lead, explore-rows, create-tray; dark100
+composer-writing/inbox; light200 composer-empty/plan-header; dark200
+explore-rows; supplement row-price-reason, next-row, community-selected,
+exact-outside-scale. Bổ sung đã mở hai ảnh ngoài thư mục captures:
+`no-group-plan-light100-visible-final.png` và
+`no-group-create-from-header-plus-visible-final.png`; tổng cộng 16 ảnh native
+được lượt documenter mở. Các ảnh có tên after là viewport/state của flow tương
+ứng, không phải chứng nhận cả route. Reference cấu trúc cũng đã mở riêng,
+không dùng nó làm ảnh after.
+
+**Bổ sung Plan chưa nhóm, chỉ light100.** Ảnh visible-final đầu có title,
+plus nhỏ, bản đồ, empty «Gom hội mình trước» và CTA «Tới Tin nhắn»; ảnh sau
+có khay Tạo thật với lời dẫn chọn hội ở bước tiếp theo. Phiên tổng hợp không
+có nhóm đã đăng nhập bằng UI native và giữ session; kiểm HTTP login xác nhận
+không có nhóm. `no-group-native-adb-visible-final.result.json` ghi chạm
+«Tạo mới» theo bounds XML thực `[256,32][304,80]` và mở sheet.
+`no-group-visible-window-receipt.json` ghi thiết bị 5562 có cửa sổ thật,
+pid 888644, chạy SDK launcher. Đây là ADB XML/input/screencap, không phải
+Maestro pass, không cộng vào matrix 24/24. Các lỗi transport Maestro, thiếu
+reverse mapping và capture headless trước vẫn ngoài nghiệm thu thị giác;
+chỉ hai ảnh visible-final này là bằng chứng bổ sung được ghi ở đây. Thiết
+bị chính 5558 và peer 5560 không bị thay đổi bởi lượt bổ sung này.
+
+**Cổng kỹ thuật có giới hạn.** `clean-checks.json` ghi đúng SHA 797,
+clean_before/after đều true: typecheck, guide, build-check, compile, fixup,
+Go guide và repo-tree exit0; Node subset 214 file, 1608/1608 pass, 0 skip.
+Năm driver browser bị loại có tên trong record: `che-chu-lo-to-cha`,
+`che-chu`, `rudi-nep-web`, `rudi-opening-web`, `rudi-welcome-web`.
+Đây không phải full strict 32, full gate hay merge main.
+`final-tsx-detector.json`/log ghi quét chín file TSX ở source 797,
+exit 0/`[]`/0.040s và byte khớp commit 797. Detector này chỉ là regex TSX,
+không phải phép đo geometry/contrast native; lượt documenter chỉ đọc kết quả. Motion, TalkBack, tablet,
+iOS, state tải/lỗi/offline/retry toàn bộ và verdict thị giác mới vẫn chưa
+được hồ sơ này chứng minh; không có điểm 14/16, total-app acceptance hoặc
+quyền merge vào main từ các số trên.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -3300,6 +3419,18 @@ màn.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**Chín bề mặt 10/10, candidate 797:** không phong thánh điểm 5/10 cũ thành
+ngưỡng chấp nhận, verdict fix d9 thành ship 797, số 24/24 thành pass toàn app,
+hoặc screenshot Cộng đồng đang tải thành feed đã đạt. Hai ảnh Plan chưa nhóm
+visible-final chỉ chứng minh light100 và chạm plus mở khay; không dùng capture
+headless, lỗi transport hoặc log regex TSX để tuyên bố native matrix/geometry
+đã đạt. Source Composer còn override nút tắt bằng nền
+`line`/viền solid thay disabled primitive ADR-0038; đây là drift cục bộ,
+không thành mẫu disabled mới, và chưa có đo contrast native cho biến thể.
+Metadata/story label inbox rút ngắn ở chữ lớn vẫn là điểm cần review theo
+ngữ cảnh, không phải giấy phép cắt dữ kiện. Các nợ cũ ngoài chín bề mặt giữ
+nguyên; không dọn source hoặc tạo quy tắc để hợp thức lỗi trong lượt tài liệu.
 
 **Giới hạn lượt 27/09:** theo
 [biên bản native](docs/testing/so-ky-niem-native.md), Pixel 6 Android đã build
