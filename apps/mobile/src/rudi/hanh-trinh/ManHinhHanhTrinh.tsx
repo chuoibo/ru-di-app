@@ -178,7 +178,11 @@ export function ManHinhHanhTrinh({
   }, [selectedActivityId]);
   // Reveal the selected card after layout, without changing the fold state.
   useEffect(() => {
-    if (!selectedActivityId || collapsed) return;
+    if (collapsed) {
+      trang.current?.scrollTo({ y: 0, animated: false });
+      return;
+    }
+    if (!selectedActivityId) return;
     trang.current?.scrollTo({ y: nativePhone ? bodyTop : 0, animated: false });
   }, [selectedActivityId, nativePhone, bodyTop, collapsed]);
   // An empty day has nothing to fold away from: the fold row is not drawn

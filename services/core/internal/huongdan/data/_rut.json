@@ -1021,6 +1021,8 @@
       ],
       "man": "outings/[id]",
       "nhan": [
+        "/ cả kèo",
+        "/ người",
         "Bản mới:",
         "Bản mới: …",
         "Bỏ thứ tự nháp",
@@ -1040,6 +1042,7 @@
         "Kèo",
         "Lưu thứ tự",
         "Lời hẹn đang chờ chặng đầu",
+        "Ngân sách dự kiến",
         "Thành viên nhóm",
         "Thêm chặng",
         "Thêm khoảnh khắc ở đây",
@@ -1049,9 +1052,6 @@
         "Tải bản mới để đối chiếu",
         "Tải lại địa điểm",
         "Xếp theo giờ hẹn",
-        "dự kiến cả kèo,",
-        "dự kiến cả kèo, … người",
-        "dự kiến một người",
         "người",
         "«Tôi đã tới» là bạn tự đánh dấu cho hội; không gửi vị trí GPS hay ảnh.",
         "Ô tên chặng",
@@ -1104,9 +1104,8 @@
         "Mở Khám phá",
         "Thêm vào",
         "Thêm vào kèo",
-        "Tạo kèo",
-        "với",
-        "với … · … …"
+        "Thêm vào kèo …",
+        "Tạo kèo"
       ],
       "tep": [
         "app/outings/chon.tsx",
@@ -2006,6 +2005,7 @@
       "di_toi": [],
       "man": "stories/[personId]",
       "nhan": [
+        "Bạn bè sẽ không thấy story này nữa.",
         "Chưa mở được story",
         "Chưa tải được ảnh này. Bạn có thể xem story khác hoặc đóng để thử lại.",
         "Giữ lại",
@@ -2016,7 +2016,7 @@
         "Tạm dừng",
         "Xoá",
         "Xoá story",
-        "Xoá story này? Bạn bè sẽ không thấy nó nữa.",
+        "Xoá story này?",
         "Đang mở story…",
         "Đóng story",
         "Ảnh story"

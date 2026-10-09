@@ -495,11 +495,11 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>Ngân sách dự kiến</Text>
                 <View style={styles.oTien}>
                   <Money vnd={trang.keo.budget_per_person_vnd} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>/ người</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft, flexGrow: 1, minWidth: 80 * fontScale }]}>/ người</Text>
                 </View>
                 <View style={styles.oTien}>
                   <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>/ cả kèo</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft, flexGrow: 1, minWidth: 80 * fontScale }]}>/ cả kèo</Text>
                 </View>
               </View>
             ) : (

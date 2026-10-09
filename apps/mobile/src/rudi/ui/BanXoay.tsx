@@ -47,6 +47,9 @@ export function BanXoay({
   const { fontScale } = useWindowDimensions();
   // The small dial's centre is only 50dp across; HH:mm needs its own line.
   const timeBelow = co < 180 || fontScale >= 1.3;
+  // In the compact side-by-side sheet the keyboard can hide the dial's foot.
+  // A column at large text keeps its value next to the field below instead.
+  const timeAbove = co < 180 && fontScale < 1.8;
   const [nac, setNac] = useState(() => nacGio(phut ?? 18 * 60));
   const [go, setGo] = useState(false);
   const [chuGo, setChuGo] = useState("");
@@ -84,6 +87,7 @@ export function BanXoay({
   return (
     <View style={styles.khoi} testID={testID}>
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhan}</Text>
+      {timeAbove ? <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text> : null}
       <GestureDetector gesture={keo}>
         <View
           accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
@@ -121,7 +125,7 @@ export function BanXoay({
       </GestureDetector>
       {/* Large numerals have their own line instead of being clipped by the
           fixed centre of the dial. The selected time keeps the user's scale. */}
-      {timeBelow ? <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text> : null}
+      {timeBelow && !timeAbove ? <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text> : null}
       {go ? (
         <ONhapMuc
           accessibilityLabel={oLabel ?? nhan}

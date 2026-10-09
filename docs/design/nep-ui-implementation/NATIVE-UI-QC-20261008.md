@@ -122,6 +122,15 @@ Candidate sửa sáu finding mới qua typecheck và55/55 focused; chưa có
 native after/verdict pass. Chi tiết và giới hạn ở RECOVERY-20261008.md,
 evidence ngoài repo `native-audit-9007c3bb/finish-review/`.
 
+Checkpoint5569633c sau đó có fingerprint đúng,6/6 matrix và6/6 bổ sung exit0;
+root mở60+24PNG. Verdict sáu finding: F1/F3/F5/F6 resolved, F2/F4 partial,
+disposition fix. Nhãn / người mất chữ và HH:mm bị cắt với IME; đầu trang gấp
+bị cắt dù state đã giữ đúng. Candidate tiếp sửa đúng ba điểm và rút lại hai
+file hướng dẫn stale, qua86/86 focused+guide và Go guide; chưa có native
+after/verdict cho batch tiếp. Chi tiết receipts/giới hạn ở RECOVERY; không
+gộp green thao tác thành green thị giác. Clean Node556 vẫn ghi1602/1605,
+ba red được giữ nguyên, không nhận là full npm test hoặc strict gate.
+
 Main chưa nhận batch này. Full mobile sạch gần nhất `2fc1c73f`:1620/1620,
 0fail/skip/cancel/todo; không gán cho sửa sau đó. Runtime plugin/detector
 không tìm thấy, `imp preflight` exit127; không ghi detector clean.
