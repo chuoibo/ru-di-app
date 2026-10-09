@@ -18,7 +18,7 @@ import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatVnd } from "../../../../../packages/shared/money.mjs";
@@ -32,7 +32,6 @@ import { CuaDangNhap } from "../ui/CuaDangNhap";
 import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong, type ProfileEditorControls } from "./profile/HoSoSong";
-import { tabBarHeight } from "../adaptive";
 import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
 import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../ui";
@@ -58,7 +57,6 @@ function ProfileSong({ phien }: { phien: Phien }) {
   const [editor, setEditor] = useState<ProfileEditorControls | null>(null);
   const editingProfile = editor !== null;
   const dangLuuHoSo = editor?.busy ?? false;
-  const { fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { rail } = useAdaptiveLayout();
   useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
@@ -145,7 +143,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
     <RudiScreen material="quiet" bottomInset={editingProfile ? 16 : "tab"} cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen"
       header={editor ? <TopBar title="Chỉnh hồ sơ" onBack={editor.back} right={<RudiButton compact full={false} label="Huỷ" disabled={dangLuuHoSo} onPress={editor.cancel} variant="ghost" />} /> : undefined}
       footer={editor ? <RudiButton label="Lưu hồ sơ" disabled={dangLuuHoSo} loading={dangLuuHoSo} onPress={editor.save} /> : undefined}
-      footerInset={insets.bottom + (rail ? 12 : tabBarHeight(fontScale) + 24)}>
+      footerInset={rail ? insets.bottom + 12 : 24}>
       {!editingProfile ? <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
