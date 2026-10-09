@@ -63,7 +63,7 @@ appId: com.lakiet.rudi
 # membership `invited`. Không bịa id, không đặt tên thay ai.
 - tapOn: "Mời bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Gửi một lời rủ"
+    visible: "Bạn muốn rủ ai?"
     timeout: 30000
 - tapOn: "Tên tài khoản của người nhận"
 - inputText: "${TK_D}"

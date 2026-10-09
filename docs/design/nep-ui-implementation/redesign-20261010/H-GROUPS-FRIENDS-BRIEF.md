@@ -41,3 +41,10 @@ thiết bị +12dp, IME mở vẫn do shell chừa8dp. Không sửa vòng lặp 
 Clean exact-a202: typecheck7,873s xanh, guide1,388s đỏ vì bản đồ hướng dẫn
 tự sinh cũ. Regenerate đúng tool, không sửa test hoặc bỏ bước. Capture/check
 candidate kế tiếp và finish-review vẫn đang chờ; toàn H chưa nghiệm thu.
+
+Clean af37: Node214 file1607/1608, fail1 vì flow24 còn đợi heading
+"Gửi một lời rủ" đã đổi; sửa flow thành "Bạn muốn rủ ai?", không đổi corpus
+hay miễn test. Matrix af37 sáng100/tối100 xanh, sáng130 dừng ở transport
+"device not connected" khi máy5562 vừa boot. Giữ nguyên log/capture đỏ,
+chạy lại sau khi cả hai thiết bị ổn định. Máy5562 giữ userdata fixture_n5g;
+attach ban đầu dùng nhầm scheme exp+rudi, sửa về rudi như helper chuẩn.
