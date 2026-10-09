@@ -16,7 +16,7 @@
  */
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { chonNhom, docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
@@ -26,8 +26,9 @@ import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiScreen, TopBar } from "../../ui";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
-import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
-import { Grain } from "../../ui/Grain";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
+import { CauTaiCho } from "../../ui/CauTaiCho";
+import { SoBia } from "../../ui/SoBia";
 import { StampButton } from "../../ui/StampButton";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
@@ -36,7 +37,6 @@ type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string }
 export function GroupNewScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  const { width, fontScale } = useWindowDimensions();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
@@ -77,47 +77,45 @@ export function GroupNewScreen() {
 
   const dangMo = trang.pha === "dang-mo";
 
-  // A new notebook on the table (ADR-0037 D1, plan S3): its cloth cover, and
-  // the group's name written on the label pasted on the front.
-  const nhanTrenBia = fontScale < 1.3 && width >= 360;
-  const rongBia = Math.max(140, Math.min(nhanTrenBia ? 300 : 180, width - 56));
   const nhapTen = (
     <ONhapMuc
       accessibilityLabel="Tên nhóm mới"
       label="Tên trên bìa sổ"
+      co="lon"
       editable={!dangMo}
       maxLength={200}
       onChangeText={setTen}
       onSubmitEditing={() => void mo()}
+      multiline
+      numberOfLines={2}
+      submitBehavior="blurAndSubmit"
       placeholder="Hội cà phê cuối tuần"
       returnKeyType="done"
       value={ten}
     />
   );
   return (
-    <RudiScreen material="quiet" avoidKeyboard contentStyle={styles.screen} testID="group-new-screen">
-      <TopBar title="Nhóm mới" />
-      <Heading title="Đặt tên cho hội" subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau." />
-      <View style={[styles.bia, { width: rongBia, height: Math.round(rongBia / 0.75) }]}>
-        <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}>
-          <AssetIllustration name="decor-cover" width={rongBia} height={Math.round(rongBia / 0.75)} />
-        </View>
-        {nhanTrenBia ? (
-          <View style={[styles.nhan, { left: rongBia * 0.12, top: rongBia * 0.57, width: rongBia * 0.7, backgroundColor: colors.card, borderColor: colors.paperShade }]}>
-            <Grain material="giayTrang" opacity={0.32} />
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="group-new-screen"
+      header={<TopBar title="Nhóm mới" />}
+      footer={<View style={styles.footer}>
+        <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
+        <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} style={styles.mo} />
+      </View>}
+    >
+      <Heading title="Đặt tên cho hội" subtitle="Mời bạn bè sau khi mở nhóm." />
+      <SoBia ten={[]} fitContent nhan={
+          <View style={[styles.nhan, { backgroundColor: colors.card, borderColor: colors.paperShade }]}>
             {nhapTen}
+            <View style={[styles.nguoiMo, { borderTopColor: colors.line }]}>
+              <AvatarNguoi personId={phien.person_id} name="Bạn" size={32} />
+              <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Bạn là quản trị đầu tiên.</Text>
+            </View>
           </View>
-        ) : null}
-      </View>
-      {nhanTrenBia ? null : nhapTen}
-      {trang.pha === "hong" ? (
-        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-      ) : null}
-      <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} style={styles.mo} />
+      } />
       {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
           Linh» here because nothing pointed them at the direct conversation,
           where the two-person notebook lives. */}
-      <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")}>
+      <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")} style={styles.duongRieng}>
         <ChuThichLe icon="people-outline">
           Muốn rủ riêng một người? Hai bạn có thể cùng đồng ý mở sổ hai người.{" "}
           <Text style={{ color: colors.ink, textDecorationLine: "underline" }}>Thêm bạn</Text>
@@ -128,9 +126,11 @@ export function GroupNewScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20, maxWidth: 560 },
-  bia: { alignSelf: "center" },
-  nhan: { position: "absolute", borderWidth: 1, paddingHorizontal: 12, paddingVertical: 14, transform: [{ rotate: "-2deg" }] },
+  screen: { gap: 24, maxWidth: 560 },
+  nhan: { borderWidth: 1, padding: 16, minHeight: 208, justifyContent: "space-between", gap: 24 },
+  nguoiMo: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  flex: { flex: 1, minWidth: 0 },
+  footer: { gap: 8 },
+  duongRieng: { minHeight: 48, justifyContent: "center" },
   mo: { alignSelf: "stretch" },
-  giua: { textAlign: "center" },
 });

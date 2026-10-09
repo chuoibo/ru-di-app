@@ -23,6 +23,7 @@ export function HangNguoi({
   duoi,
   onPress,
   personId,
+  inlineAction = false,
 }: {
   ten: string;
   phu: string;
@@ -30,9 +31,11 @@ export function HangNguoi({
   onPress?: () => void;
   /** A friend's id draws their photograph; absent (a stranger's request) stays initials. */
   personId?: string;
+  /** A single icon action keeps its own 48dp beside the person at any width. */
+  inlineAction?: boolean;
 }) {
   const { width, fontScale } = useWindowDimensions();
-  const compactWidth = width < 380 || fontScale > 1.3;
+  const compactWidth = !inlineAction && (width < 380 || fontScale > 1.3);
   const { colors, dark } = useRudiTheme();
   const nguoi = (
     <>

@@ -29,8 +29,7 @@ import { useRudiSession } from "../../session";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ChuThichLe } from "../../ui/ChuThichLe";
-import { StampButton } from "../../ui/StampButton";
-import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, IconButton, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { LuoiNguoi } from "../../ui/LuoiNguoi";
 import { ErrorState } from "../../ui/ErrorState";
@@ -130,10 +129,12 @@ export function GroupMembersScreen() {
   return (
     // A list of people is read, not stretched: the reading column on a tablet
     // keeps each action beside its name (QA UI-081: 487–679px apart).
-    <RudiScreen material="quiet" cot="doc" testID="group-members-screen">
-      <TopBar title={tenNhom} />
+    <RudiScreen material="quiet" cot="doc" bottomInset={16} testID="group-members-screen"
+      header={<TopBar title="Thành viên" right={conSong.some((member) => member.person_id === phien.person_id && member.state === "active" && member.role === "admin")
+        ? <IconButton quiet icon="person-add-outline" accessibilityLabel="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} /> : undefined} />}
+    >
       <Heading
-        title="Thành viên"
+        title={tenNhom}
         subtitle={
           trang.pha === "xong"
             ? `${conSong.filter((tv) => tv.state === "active").length} đang ở trong nhóm, ${conSong.filter((tv) => tv.state === "invited").length} đang được mời.`
@@ -142,10 +143,6 @@ export function GroupMembersScreen() {
               : "Đang đọc danh sách thành viên…"
         }
       />
-      <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
-        <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
-        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
-      </View>
       {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -227,7 +224,10 @@ export function GroupMembersScreen() {
           {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
         </View>
       ) : null}
-      {conSong.some((member) => member.person_id === phien.person_id && member.state === "active" && member.role === "admin") ? <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} /> : null}
+      <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
+        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
+      </View>
       {/* Consent, said where the invitation starts: a margin note, still read. */}
       <ChuThichLe icon="mail-open-outline">
         Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.

@@ -13,7 +13,6 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { useCallback, useRef, useState, type ReactElement } from "react";
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { ganDanhSachNhom } from "../../../phien";
@@ -27,7 +26,7 @@ import {
 } from "../../../screens/ca-nhan/ban-be";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
+import { IconButton, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -56,9 +55,6 @@ function DanhSach({ hang }: { hang: ReactElement[] }) {
 
 export function FriendsScreen() {
   const router = useRouter();
-  // The pinned footer must clear the gesture bar: the screen shell only pads
-  // top/left/right, so the bottom inset is this screen's to add.
-  const { bottom: menDuoi } = useSafeAreaInsets();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   // Cá nhân links here with `?muc=da-nhan` when requests are waiting, so the
   // person lands on them instead of on an empty «Đã là bạn» tab (QA 23/09).
@@ -144,42 +140,33 @@ export function FriendsScreen() {
   return (
     <RudiScreen
       material="quiet"
-      footer={
-        <RudiButton
-          icon="person-add-outline"
-          label="Thêm bạn bằng tên tài khoản"
-          onPress={() => router.push("/friends/add")}
-        />
-      }
-      footerInset={14 + menDuoi}
+      header={<TopBar title="Bạn bè" right={<IconButton quiet icon="person-add-outline" accessibilityLabel="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} />} />}
+      bottomInset={16}
       // The reading column on a tablet keeps «Nhắn tin» beside the name (QA UI-081).
       cot="doc"
       testID="friends-screen"
     >
-      <TopBar title="Bạn bè" />
       <Segmented items={MUC} onSelect={setMuc} selected={muc} />
       {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? <HangNguoiCho /> : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách bạn" /> : null}
       {trang.pha === "xong" && muc === 0 ? (
         trang.du.ban.length === 0 ? (
-          <EmptyState body="Thêm bạn bằng tên tài khoản. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" illustration={<PaperObject name="photo-stack" width={180} />} title="Chưa có bạn nào" />
+          <EmptyState body="Thêm bạn bằng tên tài khoản. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" illustration={<PaperObject name="photo-stack" width={112} />} title="Chưa có bạn nào" />
         ) : (
           <DanhSach
             hang={trang.du.ban.map((b) => (
               <View key={b.person_id}>
               <HangNguoi
+                inlineAction
                 duoi={
-                  <RudiButton
+                  <IconButton
                     accessibilityLabel={`Nhắn tin cho ${b.display_name}`}
-                    compact
                     disabled={dangNhan !== null}
-                    full={false}
                     icon="chatbubble-outline"
-                    label="Nhắn tin"
+                    quiet
                     loading={dangNhan === b.person_id}
                     onPress={() => void nhanTin(b)}
-                    variant="soft"
                   />
                 }
                 onPress={() => router.push(`/people/${b.person_id}`)}
@@ -195,7 +182,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 1 ? (
         trang.du.daNhan.length === 0 ? (
-          <EmptyState body="Khi ai đó gửi lời mời kết bạn, nó hiện ở đây." kind="first-use" layout="inline" illustration={<PaperObject name="envelope" width={180} />} title="Không có lời mời nào đang chờ" />
+          <EmptyState body="Khi ai đó gửi lời mời kết bạn, nó hiện ở đây." kind="first-use" layout="inline" illustration={<PaperObject name="envelope" width={112} />} title="Không có lời mời nào đang chờ" />
         ) : (
           <DanhSach
             hang={trang.du.daNhan.map((lm) => (
@@ -232,7 +219,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 2 ? (
         trang.du.daGui.length === 0 ? (
-          <EmptyState body="Lời mời bạn gửi và đang chờ trả lời hiện ở đây." kind="first-use" layout="inline" illustration={<PaperObject name="envelope" width={180} />} title="Bạn chưa gửi lời mời nào" />
+          <EmptyState body="Lời mời bạn gửi và đang chờ trả lời hiện ở đây." kind="first-use" layout="inline" illustration={<PaperObject name="envelope" width={112} />} title="Bạn chưa gửi lời mời nào" />
         ) : (
           <DanhSach
             hang={trang.du.daGui.map((lm) => (

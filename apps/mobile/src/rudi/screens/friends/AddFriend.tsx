@@ -16,6 +16,7 @@ import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { Washi } from "../../ui/Washi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { luiVeVe } from "../../lui-ve";
 
 type Trang =
@@ -86,17 +87,24 @@ export function AddFriendScreen() {
   if (trang.pha === "da-gui") {
     const nguoi = trang.nguoi;
     return (
-      <RudiScreen material="quiet" testID="add-friend-screen">
-        <TopBar title="Thêm bạn" />
+      <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} testID="add-friend-screen"
+        header={<TopBar title="Thêm bạn" />}
+        footer={<RudiButton label="Về danh sách bạn" onPress={() => luiVeVe(router as never, "/friends")} />}
+      >
         <Heading
-          title={`Đã gửi lời mời tới ${tenThat(nguoi.display_name) ?? tenTaiKhoan(nguoi, username)}`}
-          subtitle="Lời mời đang chờ người ấy đồng ý. Chưa có kết nối bạn bè mới cho đến lúc đó."
+          title="Lời mời đã gửi"
+          subtitle="Chờ bạn ấy đồng ý để kết nối."
         />
         <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
-          <HinhNhan name={tenThat(nguoi.display_name) ?? "?"} personId={nguoi.person_id} size={56} />
-          <AnimatedEnvelope eventKey={trang.eventId} width={210} />
+          <View style={styles.nguoi}>
+            <HinhNhan name={tenThat(nguoi.display_name) ?? "?"} personId={nguoi.person_id} size={48} />
+            <View style={styles.flex}>
+              <Text style={[typography.title, { color: colors.ink }]}>{tenThat(nguoi.display_name) ?? "Người chưa đặt tên"}</Text>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenTaiKhoan(nguoi, username)}</Text>
+            </View>
+          </View>
+          <View style={styles.art} pointerEvents="none" accessible={false}><AnimatedEnvelope eventKey={trang.eventId} width={104} /></View>
         </View>
-        <RudiButton label="Về danh sách bạn" onPress={() => luiVeVe(router as never, "/friends")} />
       </RudiScreen>
     );
   }
@@ -104,11 +112,17 @@ export function AddFriendScreen() {
   const nguoi = "nguoi" in trang ? trang.nguoi : undefined;
   const ban = trang.pha === "dang-tim" || trang.pha === "dang-gui";
   return (
-    <RudiScreen material="quiet" contentStyle={styles.screen} testID="add-friend-screen">
-      <TopBar title="Thêm bạn" />
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="add-friend-screen"
+      header={<TopBar title="Thêm bạn" />}
+      footer={<View style={styles.footer}>
+        <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
+        {nguoi ? <StampButton disabled={ban} label="Gửi lời mời" loading={trang.pha === "dang-gui"} onPress={() => void gui(nguoi)} size="vua" tilt={-1} />
+          : <RudiButton disabled={ban} icon="search-outline" label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />}
+      </View>}
+    >
       <Heading
-        title="Gửi một lời kết bạn"
-        subtitle="Nhập tên tài khoản của bạn ấy, ví dụ @ten_cua_ban. Người dùng có thể tắt cho phép tìm kiếm."
+        title="Tìm một người bạn"
+        subtitle="Nhập tên tài khoản để tìm đúng người."
       />
       {/* A calling card: the username written on it, and, once found, the
           person standing on it in their own ink (ADR-0037 D1, D6). */}
@@ -135,6 +149,7 @@ export function AddFriendScreen() {
           autoComplete="username"
           editable={!ban}
           autoCapitalize="none"
+          autoCorrect={false}
           label="Tên tài khoản"
           onChangeText={(t) => {
             setUsername(t);
@@ -142,24 +157,21 @@ export function AddFriendScreen() {
           }}
           placeholder="Tên tài khoản của bạn ấy"
           textContentType="username"
+          returnKeyType="search"
+          onSubmitEditing={() => void tim()}
           value={username}
         />
       </View>
-      {nguoi ? (
-        <StampButton disabled={ban} label="Gửi lời mời" loading={trang.pha === "dang-gui"} onPress={() => void gui(nguoi)} size="vua" tilt={-1} />
-      ) : (
-        <RudiButton disabled={ban} label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />
-      )}
-      {trang.pha === "hong" ? (
-        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-      ) : null}
+      <Text style={[typography.note, { color: colors.inkSoft }]}>Chỉ tài khoản cho phép tìm kiếm mới hiện ở đây. Lời mời cần được bạn ấy đồng ý.</Text>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20, maxWidth: 560 },
-  flex: { flex: 1 },
+  screen: { gap: 24, maxWidth: 560 },
+  flex: { flex: 1, minWidth: 0 },
+  footer: { gap: 8 },
+  art: { alignSelf: "center" },
   danhThiep: { borderWidth: 1, borderRadius: 6, padding: 16, paddingTop: 22, gap: 14, alignItems: "stretch" },
   washi: { position: "absolute", top: -10, left: 20, width: 72 },
   nguoi: { flexDirection: "row", alignItems: "center", gap: 14 },

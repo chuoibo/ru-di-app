@@ -15,6 +15,7 @@ import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 
 export function GroupInviteScreen() {
   const router = useRouter();
@@ -64,10 +65,22 @@ export function GroupInviteScreen() {
     finally { lock.current = false; setBusy(null); }
   };
   return (
-    <RudiScreen material="quiet" contentStyle={styles.screen} testID="group-invite-screen">
-      <TopBar title="Mời vào nhóm" />
-      <Heading title={sentId ? "Lời mời đã gửi" : "Gửi một lời rủ"} subtitle="Người nhận cần đồng ý để trở thành thành viên." />
-      <View style={styles.art} pointerEvents="none" accessible={false}><AnimatedEnvelope eventKey={sentId} width={230} /></View>
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="group-invite-screen"
+      header={<TopBar title="Mời vào nhóm" />}
+      footer={<View style={styles.footer}>
+        <CauTaiCho cau={error} />
+        <RudiButton
+          label={sentId ? "Về nhóm" : recipient ? "Gửi lời mời" : "Tìm người nhận"}
+          accessibilityLabel={sentId ? "Về nhóm" : recipient ? `Gửi lời mời tới ${recipientName}` : "Tìm người nhận"}
+          icon={sentId ? "arrow-back-outline" : recipient ? "paper-plane-outline" : "search-outline"}
+          loading={busy !== null}
+          disabled={busy !== null || (!sentId && !recipient && !username.trim())}
+          lyDo={!sentId && !recipient && !username.trim() ? "Nhập tên tài khoản của bạn ấy trước." : undefined}
+          onPress={() => { if (sentId) router.back(); else if (recipient) void invite(); else void lookup(); }}
+        />
+      </View>}
+    >
+      <Heading title={sentId ? "Lời mời đã gửi" : "Bạn muốn rủ ai?"} />
       <View style={[styles.letter, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="thu-moi-nhom">
         {groupName ? <Text style={[typography.title, { color: colors.ink }]}>{groupName}</Text> : null}
         {recipient ? (
@@ -79,11 +92,13 @@ export function GroupInviteScreen() {
             </View>
           </View>
         ) : null}
-        {!sentId ? <ONhapMuc label="Tên tài khoản của người nhận" placeholder="@ten_cua_ban" autoCapitalize="none" autoCorrect={false} value={username} editable={busy === null} onChangeText={(value) => { setUsername(value); setRecipient(null); setError(null); }} returnKeyType="search" onSubmitEditing={() => void lookup()} /> : <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>Đã gửi lời mời tới {recipientName}. Lời mời chưa phải là xác nhận tham gia.</Text>}
+        {!sentId ? <ONhapMuc label="Tên tài khoản của người nhận" placeholder="@ten_cua_ban" autoCapitalize="none" autoCorrect={false} value={username} editable={busy === null} onChangeText={(value) => { setUsername(value); setRecipient(null); setError(null); }} returnKeyType="search" onSubmitEditing={() => void lookup()} /> : <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>Đã gửi lời mời tới {recipientName}. Người ấy cần đồng ý để trở thành thành viên.</Text>}
       </View>
-      {error ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{error}</Text> : null}
-      {sentId ? <><RudiButton label="Mời thêm người" onPress={() => { setSentId(null); setRecipient(null); setUsername(""); setError(null); attempt.current = null; }} /><RudiButton label="Về nhóm" variant="outline" onPress={() => router.back()} /></> : recipient ? <RudiButton label={`Gửi lời mời tới ${recipientName}`} loading={busy === "send"} disabled={busy !== null} onPress={() => void invite()} /> : <RudiButton label="Tìm người nhận" loading={busy === "lookup"} disabled={busy !== null || !username.trim()} lyDo={!username.trim() ? "Nhập tên tài khoản của bạn ấy trước." : undefined} onPress={() => void lookup()} />}
+      {sentId ? <>
+        <View style={styles.art} pointerEvents="none" accessible={false}><AnimatedEnvelope eventKey={sentId} width={104} /></View>
+        <RudiButton compact full={false} label="Mời thêm người" variant="ghost" onPress={() => { setSentId(null); setRecipient(null); setUsername(""); setError(null); attempt.current = null; }} />
+      </> : <Text style={[typography.note, { color: colors.inkSoft }]}>Người nhận tự quyết định tham gia. Gửi lời mời chưa đưa bạn ấy vào nhóm.</Text>}
     </RudiScreen>
   );
 }
-const styles = StyleSheet.create({ screen: { gap: 18, maxWidth: 560 }, art: { alignSelf: "center" }, letter: { padding: 16, borderWidth: 1, borderRadius: 3, gap: 12 }, recipient: { flexDirection: "row", alignItems: "center", gap: 12 }, flex: { flex: 1, minWidth: 0 } });
+const styles = StyleSheet.create({ screen: { gap: 24, maxWidth: 560 }, art: { alignSelf: "center" }, letter: { padding: 20, borderWidth: 1, borderRadius: 3, gap: 24 }, recipient: { flexDirection: "row", alignItems: "center", gap: 12 }, flex: { flex: 1, minWidth: 0 }, footer: { gap: 8 } });
