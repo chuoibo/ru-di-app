@@ -168,41 +168,51 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
       <Text style={[typography.label, styles.chuChipDan, { color: mau }]}>{text}</Text>
     </View>
   );
+  const chips = dd.lyDo || gia ? (
+    <View style={styles.hangChipDan}>
+      {dd.lyDo ? chip(colors.ai, colors.aiSoft, "sparkles", dd.lyDo) : null}
+      {gia ? chip(colors.inkSoft, colors.ground, "pricetag-outline", gia) : null}
+    </View>
+  ) : null;
   return (
     <View style={[styles.theDan, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]} testID={testID}>
-      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [compact && { flexDirection: "row", alignItems: "flex-start" }, pressed && styles.pressed]}>
-        <View style={compact ? { width: 112, flexShrink: 0 } : undefined}>
-        {dd.anh === null ? (
-          // No honest picture: the sketch of the KIND of place («ký hoạ trong
-          // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-          <PlaceArtwork loai={dd.loai} height={compact ? 144 : sizeClass === "compact" ? 160 : 220} />
-        ) : (
-          <MediaSlot
-            alt={dd.name}
-            fallback={<PlaceArtwork loai={dd.loai} height={180} />}
-            nguon={{ loai: "danh-muc", anh: dd.anh }}
-            overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
-            radius={0}
-            ratio={compact ? 112 / 144 : tiLe}
-          />
-        )}
+      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [pressed && styles.pressed]}>
+        <View style={compact ? styles.leadGonDauHang : undefined}>
+          <View style={compact ? { width: 112, flexShrink: 0 } : undefined}>
+            {dd.anh === null ? (
+              // No honest picture: the sketch of the KIND of place («ký hoạ trong
+              // sổ», review 11/09 A1), never a 16:10 frame of nothing.
+              <PlaceArtwork loai={dd.loai} height={compact ? 112 : sizeClass === "compact" ? 160 : 220} />
+            ) : (
+              <MediaSlot
+                alt={dd.name}
+                fallback={<PlaceArtwork loai={dd.loai} height={compact ? 112 : 180} />}
+                nguon={{ loai: "danh-muc", anh: dd.anh }}
+                overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
+                radius={0}
+                ratio={compact ? 1 : tiLe}
+              />
+            )}
+          </View>
+          <View style={[styles.chuDan, compact && { flex: 1, minWidth: 0, padding: 12 }]}>
+            {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
+            <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
+            {dd.sub ? (
+              <Text style={[typography.body, { color: colors.inkSoft }]}>
+                {dd.sub}
+              </Text>
+            ) : null}
+            {!compact ? <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} /> : null}
+            {!compact ? chips : null}
+          </View>
         </View>
-        <View style={[styles.chuDan, compact && { flex: 1, minWidth: 0, padding: 12 }]}>
-          {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
-          <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
-          {dd.sub ? (
-            <Text style={[typography.body, { color: colors.inkSoft }]}>
-              {dd.sub}
-            </Text>
-          ) : null}
-          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
-          {dd.lyDo || gia ? (
-            <View style={styles.hangChipDan}>
-              {dd.lyDo ? chip(colors.ai, colors.aiSoft, "sparkles", dd.lyDo) : null}
-              {gia ? chip(colors.inkSoft, colors.ground, "pricetag-outline", gia) : null}
-            </View>
-          ) : null}
-        </View>
+        {compact ? (
+          // Long live reasons and prices use the card's width, not the image's neighbour.
+          <View style={styles.leadGonDuoi}>
+            <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
+            {chips}
+          </View>
+        ) : null}
       </Pressable>
       <View style={[styles.timTrenAnh, compact && { left: 8, right: undefined, top: 8 }]}>
         <IconButton
@@ -415,6 +425,8 @@ const styles = StyleSheet.create({
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
   leadGonDau: { alignSelf: "flex-start" },
+  leadGonDauHang: { flexDirection: "row", alignItems: "flex-start" },
+  leadGonDuoi: { gap: 6, padding: 14, paddingTop: 0 },
   timOnMedia: { position: "absolute", right: 6, top: 6 },
   dauUngVien: { alignSelf: "flex-start", marginBottom: 4 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },

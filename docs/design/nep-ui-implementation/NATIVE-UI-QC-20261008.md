@@ -140,3 +140,47 @@ Craft-floor có và đã được đọc tại
 identity/canary/ít nhất hai mutant độc lập cùng harness, fresh guest parity,
 state/native matrix và Impeccable finish phù hợp tập capture cuối. Không mở web
 hoặc chạy benchmark/load để thay những phần thiếu.
+
+## Bằng chứng tiếp nối36f1c5ad
+
+E/F đã có after cùng Android320×640 sáng/tối × font1.0/1.3/2.0:
+6matrix+6bổ sung đều exit0, root mở60+24PNG; fold owned-retry
+24,597s exit0 và bốn ảnh, fingerprint27,782s exit0 và hai ảnh. Giữ
+startup fold red2,668s/exit1 riêng, chưa đủ bằng chứng gán lỗi sản phẩm.
+[Verdict fresh36](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-36f1c5ad/finish-review/verdict.md)
+chốt **ship chỉ scored fixes**: F2/F4/R2 resolved, F1/F3/F5/F6 reconfirmed;
+không chấm lại /16, motion/TalkBack/iOS hoặc toàn E/F/app. Documenter
+fresh trả No changes, sáu nhóm token mirror khớp. Chi tiết số ở RECOVERY.
+
+Clean exact36: Node subset1605/1605,0fail/skip/cancel/todo,18,441s;
+typecheck7,048s, build artifact14,973s, compile/fixup2,635/0,036s đều0,
+tree sạch trước/sau. Năm browser-launch files bị loại trước run; static
+export tạo prerequisite cho contract, không mở web và không thay visual
+native. Không phải full npm test/strict32. Go guide0/wall0,283s và build
+core0/2,408s. Owned API QC53559 đã dùng embedded guide36, health200;
+không thay domain/schema hoặc stack audit khác.
+
+Toolkit hiện hành đã hoạt động: plugin4.4.0/engine cache0.1.9;
+E/F sáu TSX0finding/0,042s, C/D năm TSX0finding/0,030s. Đây là **regex
+source TSX**, không đo contrast/geometry native. Các wrapper127 lịch sử
+vẫn giữ; ghi chú unavailable phía trên mô tả thời điểm cũ.
+
+Root mở24ảnh profile390/430/900 sáng/tối font1.0; sáu flow exit0 và
+size/font restored320×640/1.0. Đây chỉ coverage loaded/transient đã chụp,
+chưa full rubric mọi profile. Root đính chính đọc nhầm form390: heading
+đã đủ; direct VIEW390 dark cũng đúng đầu trang, không focus input; chưa
+có bug giữ cuộn. Dấu đen nhỏ mép Map430 chưa triage, không gọi cả profile
+visual PASS.
+
+C/D loaded hiện có70PNG đã mở ở100/130/200 sáng/tối, gồm Explore top,
+lead/compare, destination selected/other rows, place/footer/final action,
+chooser không submit.6flow chính+4supplement exit0; hai red harness vẫn
+giữ và có ảnh/triage riêng. Fresh finish packet đang review, chưa có điểm
+đẹp mới. Chưa credit error/offline/motion/TalkBack/wide C/D hoặc mọi action.
+Full app A–S và cổng landing ở các bảng phía trên vẫn mở.
+
+Fresh review C/D36 đã trả **fix** sau50primary+3reference: một finding
+C/D–01 về cân khối ảnh/chữ, reason/price compact100. Candidate sửa
+riêng PlaceLead, qua69/69focused, typecheck và guide freshness; chưa
+credit after/verdict pass hoặc điểm đẹp mới. Không sửa theo screenshot
+mang tên lead-facts100 nhưng thực tế là compare, hoặc theo hai red harness.
