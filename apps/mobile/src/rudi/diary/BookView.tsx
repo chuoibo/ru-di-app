@@ -48,7 +48,7 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
         </View>)}
       </View>
       {page.text ? <Text style={[typography.body, { color: colors.inkSoft, lineHeight: 28 }]}>{page.text}</Text> : null}
-      <Text style={[typography.caption, { color: colors.inkFaint, alignSelf: "flex-end" }]}>{i + 1} / {document.pages.length}</Text>
+      {!paged ? <Text style={[typography.caption, { color: colors.inkFaint, alignSelf: "flex-end" }]}>{i + 1} / {document.pages.length}</Text> : null}
     </TrangSo> : null) : null}
     {!compact && paged ? <BookPageNavigation pageIndex={pageIndex} count={document.pages.length} onPageChange={setPageIndex} /> : null}
   </View>;
@@ -67,7 +67,7 @@ export function BookPageNavigation({ pageIndex, count, onPageChange, disabled = 
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.pageCounter, { color: colors.inkSoft }]}>Trang {pageIndex + 1} / {count}</Text>
         <BookPageButton direction="next" disabled={disabled || lastPage} reason={disabled || lastPage ? pageReason : undefined} onPress={() => onPageChange(Math.min(count - 1, pageIndex + 1))} />
       </View>
-      {pageReason ? <Text style={[typography.caption, styles.pageReason, { color: colors.inkSoft }]}>{pageReason}</Text> : null}
+      {disabled ? <Text style={[typography.caption, styles.pageReason, { color: colors.inkSoft }]}>{pageReason}</Text> : null}
     </View>;
 }
 

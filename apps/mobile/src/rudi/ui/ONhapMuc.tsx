@@ -22,7 +22,7 @@
  * every line of text, the last one being the control's own rule.
  */
 import { useState, type ReactNode, type Ref } from "react";
-import { Platform, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
 import { KHONG_VIEN_WEB } from "./khong-vien-web";
@@ -74,12 +74,17 @@ export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }:
 
 export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const [goDuoc, setGoDuoc] = useState("");
   const [dangNhap, setDangNhap] = useState(false);
   const rong = (inputProps.value ?? goDuoc) === "";
   const coLoi = typeof error === "string" && error !== "";
   const chu = co === "lon" ? typography.h2 : typography.body;
-  const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao: chu.lineHeight });
+  // Native text scales its line height; the paper rules and writing area must
+  // use the same geometry, including an explicit per-field scaling limit.
+  const scale = inputProps.allowFontScaling === false ? 1 : Math.min(fontScale, (inputProps.maxFontSizeMultiplier ?? 0) >= 1 ? inputProps.maxFontSizeMultiplier! : Infinity);
+  const dongCao = chu.lineHeight * scale;
+  const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao });
   const mauGach = coLoi ? colors.warn : dangNhap ? colors.accent : colors.lineStrong;
   const placeholderNha = !multiline && placeholder !== undefined;
   const soDongKe = multiline ? Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3))) - 1 : 0;
@@ -94,7 +99,7 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
             // height but the last, which is the control's own rule.
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}>
               {Array.from({ length: soDongKe }, (_, i) => (
-                <View key={i} style={[styles.dongKe, { top: (i + 1) * chu.lineHeight - 1, backgroundColor: colors.line }]} />
+                <View key={i} style={[styles.dongKe, { top: (i + 1) * dongCao - 1, backgroundColor: colors.line }]} />
               ))}
             </View>
           ) : null}

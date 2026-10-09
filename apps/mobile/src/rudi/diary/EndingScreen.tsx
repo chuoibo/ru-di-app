@@ -2,7 +2,7 @@ import { AssetIllustration } from "../ui/AssetIllustration";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { newAttempt, taiAnhCaNhanLen } from "../../api";
@@ -32,6 +32,8 @@ const failureID: Record<FailureSite, string> = { load: "diary-load-error", close
 
 export function EndingScreen({ person, outing }: { person: string; outing: string }) {
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  const largeText = fontScale >= 1.25;
   const router = useRouter(); const { colors } = useRudiTheme(); const motion = useMotion();
   const [ending, setEnding] = useState<Ending | null>(null); const [kind, setKind] = useState<DiaryKind>("moment");
   const [source, setSource] = useState<DiarySource | null>(null); const [selected, setSelected] = useState<string[]>([]);
@@ -188,24 +190,26 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
       {document.ai_generated ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Nếp giúp xếp ảnh và viết lời từ phần bạn chia sẻ. Bạn là người giữ lời cuối.</Text> : null}
       {phase === "saved" ? <><RudiButton label="Về tường nhà mình" onPress={() => router.replace(`/people/${person}` as never)} /><RudiButton label="Mở lại cuốn sổ" variant="outline" onPress={() => setPhase("editing")} /></> : <>
         {edit ? <View style={styles.section} pointerEvents={busy ? "none" : "auto"}>
-          <ONhapMuc testID="diary-title-input" label="Tên cuốn sổ" editable={!busy} value={document.title} maxLength={200} onChangeText={(title) => setDocument({ ...document, title })} />
+          <ONhapMuc testID="diary-title-input" label="Tên cuốn sổ" editable={!busy} multiline numberOfLines={2} value={document.title} maxLength={200} onChangeText={(title) => setDocument({ ...document, title })} />
           <ONhapMuc label="Lời mở" editable={!busy} value={document.subtitle} maxLength={500} multiline onChangeText={(subtitle) => setDocument({ ...document, subtitle })} />
-          <View style={styles.tools}>
-            <RudiButton label="Thay ảnh bìa" icon="image-outline" compact full={false} variant="ghost" onPress={() => setPickTarget("cover")} />
-            <RudiButton label="Thêm ảnh từ máy" icon="add" compact full={false} variant="ghost" loading={busy} onPress={() => void upload()} />
+          <View style={[styles.tools, largeText && styles.toolsLarge]}>
+            <RudiButton label="Thay ảnh bìa" icon="image-outline" compact full={largeText} variant="ghost" onPress={() => setPickTarget("cover")} />
+            <RudiButton label="Thêm ảnh từ máy" icon="add" compact full={largeText} variant="ghost" loading={busy} onPress={() => void upload()} />
           </View>
           {actionError("upload")}
-          {currentPage ? <View key={pageIndex} style={[styles.editPage, { borderColor: colors.line }]}>
+          {currentPage ? <TrangSo key={pageIndex} tone="accent" ke={false} style={styles.editPage}>
             {document.pages.length === 1 ? <Text style={[typography.h2, { color: colors.ink }]}>Trang 1</Text> : <BookPageNavigation pageIndex={pageIndex} count={document.pages.length} disabled={busy} onPageChange={setEditPage} />}
-            <ONhapMuc label="Tên trang" editable={!busy} value={currentPage.heading} maxLength={200} onChangeText={(heading) => setDocument({ ...document, pages: document.pages.map((p, j) => j === pageIndex ? { ...p, heading } : p) })} />
+            <ONhapMuc label="Tên trang" editable={!busy} multiline numberOfLines={2} value={currentPage.heading} maxLength={200} onChangeText={(heading) => setDocument({ ...document, pages: document.pages.map((p, j) => j === pageIndex ? { ...p, heading } : p) })} />
             <ONhapMuc label="Chuyện của trang" editable={!busy} value={currentPage.text} multiline maxLength={2000} onChangeText={(text) => setDocument({ ...document, pages: document.pages.map((p, j) => j === pageIndex ? { ...p, text } : p) })} />
             {currentPage.photo_ids.length ? <View style={styles.pagePhotos}>{currentPage.photo_ids.map((id) => <Image key={id} accessibilityLabel={`Ảnh đang chọn cho trang ${pageIndex + 1}`} source={photo(id)} cachePolicy="none" contentFit="cover" style={[styles.editPhoto, { backgroundColor: colors.paperShade }]} />)}</View> : null}
-            <View style={styles.tools}>
-              <RudiButton label={`Ảnh trang · ${currentPage.photo_ids.length}/4`} accessibilityLabel={`Thay ảnh trang ${pageIndex + 1}`} icon="image-outline" compact full={false} variant="ghost" onPress={() => setPickTarget(pageIndex)} />
-              {pageIndex > 0 ? <RudiButton label="Đưa lên trước" accessibilityLabel={`Đưa trang ${pageIndex + 1} lên trước`} compact full={false} variant="ghost" onPress={() => { setDocument(movePage(document, pageIndex, pageIndex - 1)); setEditPage(pageIndex - 1); }} /> : null}
-              <RudiButton label="Bỏ trang này" tone="warn" compact full={false} variant="ghost" disabled={document.pages.length === 1} lyDo={document.pages.length === 1 ? "Giữ ít nhất một trang trong sổ." : undefined} onPress={() => { setDocument({ ...document, pages: document.pages.filter((_, j) => j !== pageIndex) }); setEditPage(Math.min(pageIndex, document.pages.length - 2)); }} />
+            <View style={styles.pageTools}>
+              <IconButton icon="image-outline" quiet accessibilityLabel={`Thay ảnh trang ${pageIndex + 1}`} onPress={() => setPickTarget(pageIndex)} />
+              <Text style={[typography.caption, styles.photoCount, { color: colors.inkSoft }]}>{currentPage.photo_ids.length}/4 ảnh</Text>
+              {pageIndex > 0 ? <IconButton icon="arrow-up" quiet accessibilityLabel={`Đưa trang ${pageIndex + 1} lên trước`} onPress={() => { setDocument(movePage(document, pageIndex, pageIndex - 1)); setEditPage(pageIndex - 1); }} /> : null}
+              <IconButton icon="trash-outline" quiet accessibilityLabel="Bỏ trang này" disabled={document.pages.length === 1} onPress={() => { setDocument({ ...document, pages: document.pages.filter((_, j) => j !== pageIndex) }); setEditPage(Math.min(pageIndex, document.pages.length - 2)); }} />
             </View>
-          </View> : null}
+            {document.pages.length === 1 ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Giữ ít nhất một trang trong sổ.</Text> : null}
+          </TrangSo> : null}
           <RudiButton label="Thêm một trang viết" icon="add" compact variant="outline" disabled={document.pages.length >= 24} lyDo={document.pages.length >= 24 ? "Cuốn sổ đã đủ 24 trang." : undefined} onPress={() => { setEditPage(document.pages.length); setDocument({ ...document, pages: [...document.pages, { layout: "note", heading: "", text: "", photo_ids: [] }] }); }} />
         </View> : null}
         {keepControls}
@@ -215,4 +219,4 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
     </Animated.View> : null}
   </RudiScreen>;
 }
-const styles = StyleSheet.create({ section: { gap: 20, paddingBottom: 24, width: "100%", maxWidth: 560, alignSelf: "center" }, invitation: { gap: 20 }, decision: { gap: 16 }, dates: { flexDirection: "row", flexWrap: "wrap", gap: 20, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth }, date: { minWidth: 120, flex: 1, gap: 4 }, saveAction: { gap: 12, paddingVertical: 12 }, saveSection: { gap: 16, paddingTop: 24, borderTopWidth: StyleSheet.hairlineWidth }, grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 }, tile: { width: "47%", gap: 5, padding: 4 }, thumb: { width: "100%", aspectRatio: 1 }, editPage: { gap: 16, paddingTop: 20, borderTopWidth: StyleSheet.hairlineWidth }, tools: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, pagePhotos: { flexDirection: "row", gap: 8 }, editPhoto: { flex: 1, aspectRatio: 3 / 4, maxWidth: 112 } });
+const styles = StyleSheet.create({ section: { gap: 20, paddingBottom: 24, width: "100%", maxWidth: 560, alignSelf: "center" }, invitation: { gap: 20 }, decision: { gap: 16 }, dates: { flexDirection: "row", flexWrap: "wrap", gap: 20, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth }, date: { minWidth: 120, flex: 1, gap: 4 }, saveAction: { gap: 12, paddingVertical: 12 }, saveSection: { gap: 16, paddingTop: 24, borderTopWidth: StyleSheet.hairlineWidth }, grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 }, tile: { width: "47%", gap: 5, padding: 4 }, thumb: { width: "100%", aspectRatio: 1 }, editPage: { gap: 16, paddingTop: 16, paddingBottom: 16 }, tools: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, toolsLarge: { flexDirection: "column" }, pageTools: { flexDirection: "row", alignItems: "center", gap: 8 }, photoCount: { flex: 1, minWidth: 0 }, pagePhotos: { flexDirection: "row", gap: 8 }, editPhoto: { flex: 1, aspectRatio: 3 / 4, maxWidth: 112 } });
