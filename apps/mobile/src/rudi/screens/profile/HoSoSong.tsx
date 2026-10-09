@@ -24,10 +24,9 @@ import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } fr
 import { useRudiSession } from "../../session";
 import { nhanCua } from "../../cai-dat/phien-cai-dat";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
-import { RudiButton } from "../../ui";
+import { Field, IconButton, RudiButton, TopBar } from "../../ui";
 import { chuLon } from "../../adaptive";
 import { DauLon } from "../../ui/DauLon";
-import { ONhapMuc } from "../../ui/ONhapMuc";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { RudiIcon } from "../../ui/RudiIcon";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -129,31 +128,48 @@ export function HoSoSong({ phien, onEditingChange }: { phien: Phien; onEditingCh
   const { hoSo } = trang;
 
   if (dangSua) {
+    const giuBanSua = () => { if (!saving.current) { setConNhap(true); doiSua(false); } };
+    const huyBanSua = () => { setConNhap(false); doiSua(false); };
     return (
       <View style={styles.form}>
-        <Text style={[typography.h2, { color: colors.ink }]}>Chỉnh hồ sơ</Text>
-        {/* Edited on the passport page itself: its lines are pen lines. */}
-        <ONhapMuc accessibilityLabel="Ô tên hiển thị" label="Tên" maxLength={200} onChangeText={setTen} value={ten} />
-        {loiLuu ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiLuu}</Text> : null}
-        <ONhapMuc
+        <TopBar title="Chỉnh hồ sơ" onBack={giuBanSua} right={<IconButton accessibilityLabel="Huỷ" icon="close" disabled={dangLuu} onPress={huyBanSua} quiet />} />
+        <View style={styles.editIdentity}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.editAvatar}>
+            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={64} ring />
+            <View style={[styles.editCamera, { backgroundColor: colors.card, borderColor: colors.line }]}><RudiIcon name="camera-outline" color={colors.ink} size={16} /></View>
+          </Pressable>
+          <View style={styles.editIdentityText}>
+            <Text style={[typography.h2, { color: colors.ink }]}>Một chút về bạn</Text>
+            <Text style={[typography.note, { color: colors.inkSoft }]}>Tên, vài lời giới thiệu và nơi bạn hay ở.</Text>
+          </View>
+        </View>
+        <Field accessibilityLabel="Ô tên hiển thị" label="Tên hiển thị" icon="person-outline" maxLength={200} editable={!dangLuu} onChangeText={setTen} value={ten} error={loiLuu} />
+        <View style={styles.editBio}>
+        <Field
           accessibilityLabel="Ô giới thiệu"
           label="Giới thiệu"
           maxLength={500}
           multiline
+          numberOfLines={3}
+          editable={!dangLuu}
+          style={{ minHeight: 56 }}
           onChangeText={setBio}
-          placeholder="Vài chữ về bạn"
+          placeholder="Bạn thích đi đâu, làm gì?"
           value={bio}
         />
-        <ONhapMuc
+        <Text style={[typography.note, styles.editCounter, { color: colors.inkSoft }]}>{bio.length}/500</Text>
+        </View>
+        <Field
           accessibilityLabel="Ô thành phố"
           label="Thành phố"
+          icon="location-outline"
           maxLength={120}
+          editable={!dangLuu}
           onChangeText={setCity}
-          placeholder="Bạn hay ở đâu"
+          placeholder="Nơi bạn hay ở"
           value={city}
         />
         <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
-        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => { setConNhap(false); doiSua(false); }} variant="ghost" />
       </View>
     );
   }
@@ -254,7 +270,13 @@ const styles = StyleSheet.create({
   hangDauLonChu: { flexDirection: "column", alignItems: "flex-start" },
   phien: { flexGrow: 1, flexShrink: 1, flexBasis: 180, minWidth: 180 },
   phienLonChu: { flexBasis: "auto", alignSelf: "stretch" },
-  form: { gap: 12 },
+  form: { gap: 20 },
+  editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
+  editIdentityText: { flex: 1, minWidth: 0, gap: 4 },
+  editAvatar: { width: 68, height: 76, justifyContent: "center" },
+  editCamera: { position: "absolute", right: 0, bottom: 0, width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  editBio: { gap: 4 },
+  editCounter: { textAlign: "right", fontVariant: ["tabular-nums"] },
   dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 16 },
   dauLonChu: { flexDirection: "column", alignItems: "flex-start" },
   dauChu: { flexGrow: 1, flexShrink: 1, flexBasis: 180, minWidth: 180, gap: 4 },

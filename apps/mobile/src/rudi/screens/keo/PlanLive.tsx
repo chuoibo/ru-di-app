@@ -26,7 +26,7 @@ import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { chiaKeo, dauLich, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { displayFace, typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton, RudiScreen, SectionHeader } from "../../ui";
+import { Heading, IconButton, RudiButton, RudiScreen, SectionHeader } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
@@ -234,9 +234,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
         <View style={styles.flex}>
           <Heading title="Lên plan" subtitle={`Những lời hẹn của ${tenNhom(phien)}`} />
         </View>
-        {/* The stamp opens the tray from every tab; on this one creating is
-            the job, so it also has a labelled door in the header (B3). */}
-        <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
+        <IconButton accessibilityLabel="Tạo mới" icon="add" onPress={() => router.push("/create?tu=plan")} quiet />
       </View>
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
@@ -282,7 +280,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   khung: { gap: 12 },
   tienRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },

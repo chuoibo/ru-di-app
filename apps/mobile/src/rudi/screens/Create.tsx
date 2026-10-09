@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 import { PaperObject, type PaperName } from "../asset-pack/react-native/PaperObject";
 import { usePaperPalette } from "../asset-pack/react-native/usePaperPalette";
@@ -33,6 +34,18 @@ export const ACTIONS: ViecTao[] = [
 /** Objects lie on the desk a little askew, the same way every time. */
 const NGHIENG = [-3, 2, -2, 3, -1];
 const VAT_GIAY: Record<ViecTao["vat"], PaperName> = { lich: "ticket", "hoa-don": "receipt", "anh-in": "photo-stack", polaroid: "postcard", "thu-gap": "envelope", "bai-viet": "document", sticker: "note", "phieu-bau": "document" };
+
+/** A readable receipt splits into two shares; no floating arrow on a blank page. */
+function BillShareIllustration() {
+  const { colors } = useRudiTheme();
+  return <Svg width={76} height={72} viewBox="0 0 76 72" accessible={false} aria-hidden>
+    <Path d="M18 4H56V45L52 42L48 45L44 42L40 45L36 42L32 45L28 42L24 45L18 42Z" fill={colors.card} stroke={colors.lineStrong} strokeWidth={1.5} strokeLinejoin="round" />
+    <Rect x={25} y={11} width={23} height={5} rx={1} fill={colors.accent} />
+    <Path d="M25 23H36M43 23H49M25 29H38M43 29H49M25 35H49" stroke={colors.inkSoft} strokeWidth={1.5} strokeLinecap="round" />
+    <Path d="M38 46V50M38 50H18V56M38 50H58V56" fill="none" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    {[18, 58].map((x) => <Circle key={x} cx={x} cy={63} r={7} fill={colors.accentSoft} stroke={colors.accent} strokeWidth={1.5} />)}
+  </Svg>;
+}
 
 /**
  * Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route.
@@ -81,12 +94,12 @@ export function CreateSheet() {
                 key={action.title}
                 onPress={() => router.replace(action.href as never)}
                 pressedScale={0.985}
-                style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}
+                style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.line }, bongGiay(1, dark)]}
               >
                 <View style={[styles.object, { backgroundColor: colors.ground, transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }]}>
-                  <PaperObject name={VAT_GIAY[action.vat]} palette={{ ...palette, paper: colors.card, shade: colors.lineStrong }} width={i === 0 ? 104 : 88} />
-                  {action.vat === "lich" || action.vat === "hoa-don" ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.objectMark, action.vat === "lich" && styles.ticketMark]}>
-                    <RudiIcon assetIcon={action.vat === "hoa-don" ? "split" : undefined} color={colors.inkSoft} name={action.vat === "lich" ? "calendar-outline" : "receipt-outline"} size={28} />
+                  {action.vat === "hoa-don" ? <BillShareIllustration /> : <PaperObject name={VAT_GIAY[action.vat]} palette={{ ...palette, paper: colors.card, shade: colors.lineStrong }} width={i === 0 ? 88 : 64} />}
+                  {action.vat === "lich" ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.objectMark, styles.ticketMark]}>
+                    <RudiIcon color={colors.inkSoft} name="calendar-outline" size={24} />
                   </View> : null}
                 </View>
                 <View style={i === 0 ? styles.chuDan : styles.chuNho}>
@@ -111,10 +124,10 @@ const styles = StyleSheet.create({
   objectMark: { alignItems: "center", justifyContent: "center" },
   ticketMark: { paddingLeft: 20 },
   ban: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  vat: { borderWidth: 1, borderRadius: 8, padding: 12 },
+  vat: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 12 },
   vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 112 },
   // Two a row: each takes half the desk less half the gap.
-  vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 156 },
+  vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 132 },
   chuDan: { flex: 1, gap: 2 },
   chuNho: { gap: 2, alignSelf: "stretch" },
   giua: { textAlign: "center" },

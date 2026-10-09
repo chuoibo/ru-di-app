@@ -2,7 +2,7 @@
  * Tạo kèo on a real session (M4): title, dates, headcount, budget a person,
  * validated by App B's `kiemTraTaoBuoiDi` and written with one Attempt.
  * Dates default to today; headcount defaults to the group's size (a real
- * number, not an invented one); the budget is the person's to type.
+ * number, not an invented one); budget is chosen on a stepped bar or typed exactly.
  *
  * ## An invitation, not a form to file (UI v2, đợt 4)
  *
@@ -34,7 +34,7 @@ import { ChonNgayLich } from "../../ui/ChonNgayLich";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
-import { PressScale } from "../../ui/PressScale";
+import { ThanhNganSach } from "../../ui/ThanhNganSach";
 import { StampButton } from "../../ui/StampButton";
 import { TheVe } from "../../ui/TheVe";
 import { Washi } from "../../ui/Washi";
@@ -45,15 +45,7 @@ import type { ChangGui } from "../../../screens/len-plan/buoi-di";
 import { docKeoTuChat, taoKeoTuChat } from "../../chat/ai-invocations";
 import { HangChang } from "./HangChang";
 import { ngayKieuViet, ngayVeISO } from "../../chat/to-hen-chung";
-import { toggleState } from "../../../ui/a11y";
 import { laPair } from "../../nhan-rieng/nhan-rieng";
-
-const MUC_NGAN_SACH = [
-  { nhan: "200 nghìn", dong: 200000 },
-  { nhan: "300 nghìn", dong: 300000 },
-  { nhan: "500 nghìn", dong: 500000 },
-  { nhan: "1 triệu", dong: 1000000 },
-] as const;
 
 /** What the digits typed mean in đồng, or nothing while they are not a whole number. */
 function tienDaGo(chu: string): string | null {
@@ -305,30 +297,10 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
         ) : null}
         {nhom.soNguoi && !nhom.haiNguoi ? <ChuThichLe icon="people-outline">{nhom.ten} hiện có {nhom.soNguoi} người; bớt đi nếu chỉ một phần đi.</ChuThichLe> : null}
         <Text style={[typography.h2, { color: colors.ink }]}>mỗi người khoảng</Text>
-        {/* Four envelopes, thin to thick, or the amount typed. */}
-        <View style={styles.hangPhongBi}>
-          {MUC_NGAN_SACH.map((m, i) => {
-            const chon = nganSach === String(m.dong);
-            return (
-              <PressScale
-                accessibilityLabel={m.nhan}
-                {...toggleState("radio", chon, () => { setNganSach(String(m.dong)); boLoi("ngan-sach"); })}
-                haptic="select"
-                key={m.dong}
-                onPress={() => { setNganSach(String(m.dong)); boLoi("ngan-sach"); }}
-                style={[styles.phongBi, Math.round(fontScale * 100) >= 130 && styles.motCot, { backgroundColor: chon ? colors.accentSoft : colors.paper, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }]}
-              >
-                <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
-                <View style={[styles.dayPhongBi, { height: 2 + i * 2, backgroundColor: colors.lineStrong }]} />
-                <Text style={[typography.label, styles.giua, { color: colors.ink }]}>{m.nhan}</Text>
-                {chon ? <Ionicons name="checkmark-circle" size={18} color={colors.accent} style={styles.dauChon} /> : null}
-              </PressScale>
-            );
-          })}
-        </View>
+        <ThanhNganSach value={nganSach} disabled={dangTao} onChange={(v) => { setNganSach(v); boLoi("ngan-sach"); }} />
         {/* «ví dụ …», not a bare «250000»: a bare number on the line read as
             a budget already written in (QA UI-034). */}
-        <ONhapMuc accessibilityLabel="Ô ngân sách một người" error={loiCua("ngan-sach")} keyboardType="number-pad" label="hoặc gõ số đồng" oRef={oNganSach} onChangeText={(t) => { setNganSach(t); boLoi("ngan-sach"); }} placeholder="ví dụ 250.000" value={nganSach} />
+        <ONhapMuc accessibilityLabel="Ô ngân sách một người" error={loiCua("ngan-sach")} keyboardType="number-pad" label="Hoặc nhập số chính xác" oRef={oNganSach} onChangeText={(t) => { setNganSach(t); boLoi("ngan-sach"); }} placeholder="ví dụ 250.000" value={nganSach} />
         {tien !== null ? <ChuThichLe icon="wallet-outline">{`= ${tien} một người, số tham chiếu chứ không phải mức trần.`}</ChuThichLe> : null}
       </View>
       {xemTruoc ? (

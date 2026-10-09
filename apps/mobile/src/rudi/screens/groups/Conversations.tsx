@@ -32,7 +32,8 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
 import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton, RudiScreen } from "../../ui";
+import { Heading, IconButton, RudiButton, RudiScreen, SearchField } from "../../ui";
+import { khopTenCuocTroChuyen } from "../../nhom/tim-cuoc-tro-chuyen";
 import { EmptyState } from "../../ui/EmptyState";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { CauTaiCho } from "../../ui/CauTaiCho";
@@ -70,6 +71,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     return () => { conMo.current = false; };
   }, []);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  const [query, setQuery] = useState("");
   const actionLock = useRef(false);
   const [readError, setReadError] = useState<string | null>(null);
   const [dangBam, setDangBam] = useState<string | null>(null);
@@ -189,17 +191,17 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     }
   };
 
+  const matching = trang.pha === "xong" ? loiMoiTruoc(trang.nhom).filter((nhom) => khopTenCuocTroChuyen(tenCuocTroChuyen(nhom), query)) : [];
+
   return (
     <RudiScreen material="quiet" cot="doc" bottomInset="tab" onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" subtitle="Nhóm của bạn" />
+          <Heading title="Tin nhắn" />
         </View>
-        {/* Not in the top-right corner: on the development build the
-            dev-launcher's floating gear covers it. A compact button beside the
-            title is reachable on the build we test on. */}
-        <RudiButton compact full={false} icon="add" label="Tạo nhóm" onPress={() => router.push("/groups/new")} variant="outline" />
+        <IconButton accessibilityLabel="Tạo nhóm" icon="add" onPress={() => router.push("/groups/new")} quiet />
       </View>
+      <SearchField accessibilityLabel="Tìm cuộc trò chuyện" placeholder="Tìm người hoặc nhóm" value={query} onChangeText={setQuery} autoCorrect={false} trailing={query ? <IconButton accessibilityLabel="Xoá tìm kiếm" icon="close" onPress={() => setQuery("")} quiet /> : undefined} />
       {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
       <StoryRail personId={phien.person_id} />
       {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
@@ -221,12 +223,17 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
           title="Chưa có nhóm nào"
         />
       ) : null}
+      {trang.pha === "xong" && trang.nhom.length > 0 && matching.length === 0 ? <View style={styles.khongTimThay}>
+        <Text style={[typography.title, { color: colors.ink }]}>Chưa tìm thấy cuộc trò chuyện</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Thử tên khác hoặc xoá tìm kiếm để xem tất cả.</Text>
+        <RudiButton compact full={false} label="Xoá tìm kiếm" variant="ghost" onPress={() => setQuery("")} />
+      </View> : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <RudiButton icon="person-add-outline" label="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} variant="ghost" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>
-          {loiMoiTruoc(trang.nhom).map((nhom) => {
+          {matching.map((nhom) => {
             const duocMoi = nhom.my_state === "invited";
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
@@ -347,8 +354,9 @@ const styles = StyleSheet.create({
   gay: { width: 34, height: 48, borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", overflow: "hidden", paddingLeft: 4 },
   gayBanLe: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
   gayNhan: { position: "absolute", bottom: 7, left: 10, right: 5, height: 4, borderRadius: 1 },
-  flex: { flexGrow: 1, flexBasis: 180 },
-  dau: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  flex: { flex: 1, minWidth: 0 },
+  dau: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  khongTimThay: { gap: 8, paddingVertical: 24 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   // Answers start under the text column (avatar 44 + gap 12).

@@ -388,10 +388,14 @@ func TestBoVangKhongSua(t *testing.T) {
 // 0.01 regression budget: duongVang MRR 0.9124 -> 0.9122, accentless unchanged
 // at 0.9865; off-screen recall 0.9565 -> 0.9783 and MRR 0.7647 -> 0.7861.
 // The two-person and model-query sets are unchanged. Golden bytes stay frozen.
+// Native redesign 10/10 replaces the budget envelopes and profile name label.
+// Honest manuals preserve every recall@5 group; only these MRR groups improve:
+// overall 0.9122 -> 0.9133 and accented 0.8972 -> 0.8996. Retrieval code and
+// all four frozen query corpora stay unchanged.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9122"},
-		"co_dau":    {"0.9405", "0.8972"},
+		"":          {"0.9505", "0.9133"},
+		"co_dau":    {"0.9405", "0.8996"},
 		"khong_dau": {"1.0000", "0.9865"},
 		"teen":      {"0.8333", "0.7354"},
 	},

@@ -135,15 +135,16 @@ function ProfileSong({ phien }: { phien: Phien }) {
 
   return (
     <RudiScreen material="quiet" bottomInset="tab" cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen">
-      <View style={styles.profileTop}>
+      {!editingProfile ? <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
         </View>
         {/* One door to Settings, and it is the row below. A gear in this corner
             reads as a second one, and on a dev client the launcher's own gear
             sits on top of it, so the corner is the worst place for it. */}
-      </View>
+      </View> : null}
       <HoSoSong phien={phien} onEditingChange={setEditingProfile} />
+      {!editingProfile ? <>
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
       <HanhTrinhTeaser personId={personId} />
       <View>
@@ -224,6 +225,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
           />
         </View>
       </View>
+      </> : null}
     </RudiScreen>
   );
 }

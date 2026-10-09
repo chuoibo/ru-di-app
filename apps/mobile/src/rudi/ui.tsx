@@ -803,7 +803,7 @@ export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) 
   return <FieldCore {...props} leading={icon ? <RudiIcon color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
 };
 
-export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & { oRef?: FieldCoreProps["oRef"] }) {
+export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & Pick<FieldCoreProps, "oRef" | "trailing">) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 
@@ -1253,7 +1253,9 @@ const styles = StyleSheet.create({
   // `width: 100%` so the column fills up to its `maxWidth`; centred without it,
   // the column shrank to whatever its widest child happened to be.
   tabletInner: { alignSelf: "center", width: "100%", maxWidth: 960, paddingTop: 22 },
-  topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  // The glyph aligns with the content gutter; its 48dp target extends into
+  // the gutter rather than adding another 12dp of visible indentation.
+  topBar: { minHeight: 52, marginHorizontal: -12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   // Sides are at least the 48dp target wide and always equal (see TopBar), so
   // the title is centred on the screen even next to a badge.
   topBarSide: { minWidth: 52, flexShrink: 0, alignItems: "flex-start" },

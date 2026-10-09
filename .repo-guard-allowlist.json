@@ -2052,6 +2052,14 @@
         "vn-phone"
       ],
       "reason": "Lockfile của cầu C ABI, sao từ packages/chat-crypto/Cargo.lock (đã ghim ở trên) rồi cargo chỉ thêm đúng gói rudi-chat-crypto-ffi; mọi phiên bản và checksum khác giữ nguyên. Hai dòng bị vn-phone bắt là trường `checksum = \"<64 hex>\"` của autocfg 1.5.1 và regex-syntax 0.8.11, như lock gốc; đã kiểm bằng máy 05/10. Không có dữ liệu người tham gia. Sinh lại lockfile là phải ghim lại và xem lại."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261010/core-layout-reference-v1.png",
+      "sha256": "a41cb6765750d43fd05d9e859df23e701cbfadb6f6f22146b64077f7d6cde1ff",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mockup ImageGen tổng hợp 4 màn để phản biện bố cục native theo yêu cầu chủ sản phẩm 10/10/2026. Root và fresh reviewer redesign_reference_safety_review đã mở ảnh trực tiếp, đọc BRIEF và kiểm độc lập nội dung/metadata; không ảnh người thật tải lên, dữ liệu tham gia hay credential. Counter/dữ liệu giả trong comp không dùng làm product truth. Chưa approved comp/PASS app. Pin đúng artifact reference v1; thay byte phải review lại."
     }
   ]
 }

@@ -154,12 +154,12 @@ function dauCon(dd: DiaDiemHienThi): string | null {
  * reason in the AI tone and the price, whole (`tachGia`). The heart is the
  * card's sibling, not inside its tap, so a screen reader meets two controls.
  */
-export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact = false }: CommonProps) {
+export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
   // is a screenful of photograph before the first name, so the frame widens.
-  const tiLe = sizeClass === "compact" ? 16 / 10 : 21 / 9;
+  const tiLe = sizeClass === "compact" ? 16 / 9 : 21 / 9;
   const { gia } = tachGia(dd.facts);
   const dau = dauCon(dd);
   const chip = (mau: string, nen: string, icon: IconName, text: string) => (
@@ -177,24 +177,24 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
   return (
     <View style={[styles.theDan, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [pressed && styles.pressed]}>
-        <View style={compact ? styles.leadGonDauHang : undefined}>
-          <View style={compact ? { width: 112, flexShrink: 0 } : undefined}>
+        <View>
+          <View>
             {dd.anh === null ? (
               // No honest picture: the sketch of the KIND of place («ký hoạ trong
               // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-              <PlaceArtwork loai={dd.loai} height={compact ? 112 : sizeClass === "compact" ? 160 : 220} />
+              <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
             ) : (
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork loai={dd.loai} height={compact ? 112 : 180} />}
+                fallback={<PlaceArtwork loai={dd.loai} height={180} />}
                 nguon={{ loai: "danh-muc", anh: dd.anh }}
                 overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
                 radius={0}
-                ratio={compact ? 1 : tiLe}
+                ratio={tiLe}
               />
             )}
           </View>
-          <View style={[styles.chuDan, compact && { flex: 1, minWidth: 0, padding: 12 }]}>
+          <View style={styles.chuDan}>
             {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
             <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
             {dd.sub ? (
@@ -202,19 +202,12 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
                 {dd.sub}
               </Text>
             ) : null}
-            {!compact ? <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} /> : null}
-            {!compact ? chips : null}
-          </View>
-        </View>
-        {compact ? (
-          // Long live reasons and prices use the card's width, not the image's neighbour.
-          <View style={styles.leadGonDuoi}>
             <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
             {chips}
           </View>
-        ) : null}
+        </View>
       </Pressable>
-      <View style={[styles.timTrenAnh, compact && { left: 8, right: undefined, top: 8 }]}>
+      <View style={styles.timTrenAnh}>
         <IconButton
           accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
           icon={daLuu ? "heart" : "heart-outline"}
@@ -251,12 +244,13 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
+        <View style={styles.rowMain}>
         {ve.source !== null ? (
           <View style={[styles.thumb, { borderRadius: radius.small }]}>
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
-          <PlaceArtwork loai={dd.loai} width={72} height={64} />
+          <PlaceArtwork loai={dd.loai} width={88} height={88} />
         )}
         <View style={styles.rowText}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
@@ -265,13 +259,12 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
             {dauCon(dd) && !chuLonHon ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
           </View>
           {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
-          {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
+          {dd.sub ? <Text style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
-          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} soDong={2} />
+          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkSoft} />
           {/* The price band is never cut: it wraps when it must («200.000đ –
               250.000đ mỗi n…» at 1.3, QA 23/09; 9 rows in 10 at 390, UI-021). */}
-          {cuoiFact ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           {dauCon(dd) && chuLonHon ? <Stamp label={dauCon(dd) as string} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
@@ -282,16 +275,20 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
             <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text>
           ) : null}
         </View>
+        </View>
+        {cuoiFact ? <Text style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</Text> : null}
       </Pressable>
+      <View style={styles.rowHeart}>
       <IconButton
         accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
         icon={daLuu ? "heart" : "heart-outline"}
         onPress={onSave}
         disabled={saving}
         loading={saving}
-        quiet
+        tron
         selected={daLuu}
       />
+      </View>
     </View>
   );
 }
@@ -327,12 +324,13 @@ export function PlaceCompare({
   testID?: string;
 }) {
   const { colors } = useRudiTheme();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width } = useWindowDimensions();
   // Two columns compare across; once the text is big enough that a half-width
   // column cannot hold a name and a price whole, the two stack and compare
   // down the same fields in the same order (review 08/09 F04).
   const xepDoc = chuLon(fontScale);
   const { sizeClass } = useAdaptiveLayout();
+  if (width < 600 || xepDoc) return <View testID={testID}>{items.map((dd) => <PlaceRow key={dd.id} dd={dd} daLuu={daLuu(dd.id)} onOpen={() => onOpen(dd.id)} onSave={() => onSave(dd.id)} saving={saving?.(dd.id)} />)}</View>;
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -342,7 +340,7 @@ export function PlaceCompare({
         const { gia: cuoiFact } = tachGia(dd.facts);
         const chu = (
           <>
-            <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
+            <Text numberOfLines={2} style={[typography.title, { minHeight: typography.title.lineHeight * 2, color: colors.ink }]}>{dd.name}</Text>
             {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
             <DongSuThat facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={2} />
@@ -443,8 +441,11 @@ const styles = StyleSheet.create({
   timTrenAnh: { position: "absolute", top: 10, right: 10 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   pressed: { opacity: 0.86 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  rowPress: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
-  thumb: { width: 56, height: 56, overflow: "hidden", flexShrink: 0 },
-  rowText: { flex: 1, gap: 2, minWidth: 0 },
+  row: { paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  rowMain: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  rowHeart: { position: "absolute", top: 20, left: 36 },
+  rowPrice: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  rowPress: { gap: 10, minHeight: 88 },
+  thumb: { width: 88, height: 88, overflow: "hidden", flexShrink: 0 },
+  rowText: { flex: 1, gap: 4, minWidth: 0 },
 });
