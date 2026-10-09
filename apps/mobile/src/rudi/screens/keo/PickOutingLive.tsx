@@ -10,7 +10,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -45,7 +45,6 @@ function loiRaChu(error: unknown): string {
 export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const params = useLocalSearchParams<{ place?: string }>();
-  const { colors } = useRudiTheme();
   const placeId = thamSoChuoi(params.place);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangGhi, setDangGhi] = useState<string | null>(null);
@@ -155,55 +154,31 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
             <HangKeo dangGhi={dangGhi} k={k} key={k.id} onThem={() => void them(k, trang.ten)} today={today} voi={voi} />
           ))}
           {trang.hen.length > 0 && trang.keo.length > 0 ? <SectionHeader title="Kèo của nhóm" /> : null}
-          {trang.keo.map((k) => {
-            const dau = dauLich(k.starts_on);
-            const nhan = nhanNhip(nhipKeo(k.starts_on, k.ends_on, today));
-            return (
-              <View key={k.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
-                <View style={styles.dauLich}>
-                  <Text style={[styles.ngay, { color: colors.ink }]}>{dau?.ngay ?? "?"}</Text>
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>{dau?.thang ?? ""}</Text>
-                </View>
-                <View style={styles.hangChu}>
-                  <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                    {nhanKhoangNgay(k.starts_on, k.ends_on)} · {cauSoChang(k.stops.length)}
-                    {nhan ? ` · ${nhan}` : ""}
-                  </Text>
-                </View>
-                <RudiButton
-                  accessibilityLabel={`Thêm vào kèo ${k.title}`}
-                  compact
-                  disabled={dangGhi !== null}
-                  full={false}
-                  label="Thêm vào"
-                  loading={dangGhi === k.id}
-                  lyDo={dangGhi !== null && dangGhi !== k.id ? "Đang thêm vào kèo đã chọn." : undefined}
-                  onPress={() => void them(k, trang.ten)}
-                />
-              </View>
-            );
-          })}
+          {trang.keo.map((k) => (
+            <HangKeo dangGhi={dangGhi} k={k} key={k.id} onThem={() => void them(k, trang.ten)} today={today} />
+          ))}
         </>
       ) : null}
     </RudiScreen>
   );
 }
 
-function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi: string; today: string; dangGhi: string | null; onThem: () => void }) {
+function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi?: string; today: string; dangGhi: string | null; onThem: () => void }) {
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const stacked = fontScale >= 1.2;
   const dau = dauLich(k.starts_on);
   const nhan = nhanNhip(nhipKeo(k.starts_on, k.ends_on, today));
   return (
-    <View style={[styles.hang, { borderBottomColor: colors.line }]}>
-      <View style={styles.dauLich}>
+    <View style={[styles.hang, { borderBottomColor: colors.line }, stacked && styles.hangDoc]}>
+      <View style={[styles.dauLich, stacked && styles.dauLichDong]}>
         <Text style={[styles.ngay, { color: colors.ink }]}>{dau?.ngay ?? "?"}</Text>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>{dau?.thang ?? ""}</Text>
       </View>
-      <View style={styles.hangChu}>
-        <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
+      <View style={[styles.hangChu, stacked && { flex: 0, minWidth: 0 }]}>
+        <Text numberOfLines={stacked ? undefined : 2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          với {voi} · {cauSoChang(k.stops.length)}
+          {voi ? `với ${voi}` : nhanKhoangNgay(k.starts_on, k.ends_on)} · {cauSoChang(k.stops.length)}
           {nhan ? ` · ${nhan}` : ""}
         </Text>
       </View>
@@ -214,7 +189,9 @@ function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi: string; t
 
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangDoc: { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" },
   dauLich: { width: 48, alignItems: "center" },
+  dauLichDong: { width: "auto", flexDirection: "row", alignSelf: "flex-start", columnGap: 8 },
   ngay: { fontFamily: displayFace.extraBold, fontSize: 24, lineHeight: 28, fontVariant: ["tabular-nums"] },
   hangChu: { flex: 1, minWidth: 100, gap: 3 },
 });

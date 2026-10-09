@@ -13,8 +13,11 @@ Không đổi nhãn ảnh/capture lịch sử thành source mới.
 ## Nguồn và giới hạn
 
 Hai emulator riêng `5558`/`5560`, 320×640 portrait, native Rust/JNI thật; tài khoản và
-ảnh hoàn toàn tổng hợp. APK build cây sạch `b87a16f1`, SHA256
+ảnh hoàn toàn tổng hợp. Primary5558 đã cài APK build cây sạch `2f20a301`, SHA256
+`963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514`;
+peer5560 vẫn APK `b87a16f1`, SHA256
 `34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967`.
+Không gán APK mới hoặc JS9007 của primary cho peer chưa cập nhật.
 Go runtime `54b5dc0e`; JS có fingerprint riêng theo từng lượt. APK/Go không được
 gán thành build của SHA JS. Không đụng audit dài đang được bảo vệ.
 
@@ -109,6 +112,15 @@ phải có ảnh/trạng thái đã mở và nhận xét; motion cần clip/chu�
   block/revoke/expiry hoặc mọi audience.
 
 ## Cổng trước landing
+
+E/F checkpoint9007 có6/6 flow matrix và6/6 receipt bổ sung exit0; root mở
+60+24PNG. Reviewer fresh-context vẫn trả **fix**,9/14 ở bảy trục tĩnh,
+motionN/E: hierarchy/fade, overview, form IME, giờ, picker và thu gọn.
+Diagnostic thu gọn44,672s exit1 giữ nguyên. Hai lượt đỏ khác là giả định
+harness sai selected/checked và cluster/card, không gọi lỗi sản phẩm.
+Candidate sửa sáu finding mới qua typecheck và55/55 focused; chưa có
+native after/verdict pass. Chi tiết và giới hạn ở RECOVERY-20261008.md,
+evidence ngoài repo `native-audit-9007c3bb/finish-review/`.
 
 Main chưa nhận batch này. Full mobile sạch gần nhất `2fc1c73f`:1620/1620,
 0fail/skip/cancel/todo; không gán cho sửa sau đó. Runtime plugin/detector

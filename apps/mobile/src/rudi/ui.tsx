@@ -45,6 +45,8 @@ type ScreenProps = {
   testID?: string;
   /** Only opt in when this screen owns the composer; live chat owns its own IME. */
   avoidKeyboard?: boolean;
+  /** Clearance below a focused input, including an inline validation message. */
+  focusBottomInset?: number;
   scrollEnabled?: boolean;
   /** Pull-to-refresh on a live list: the same read the screen does on focus, so stale data has a way out. */
   onRefresh?: () => Promise<void>;
@@ -92,6 +94,7 @@ export function RudiScreen({
   material = "journal",
   testID,
   avoidKeyboard = false,
+  focusBottomInset = 16,
   scrollEnabled = true,
   overlay,
   keepEnd = false,
@@ -110,6 +113,8 @@ export function RudiScreen({
   const keyboardReveal = useRef(false);
   const keyboardInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput> | null>(null);
   const keyboardFrame = useRef<number | null>(null);
+  const focusBottom = useRef(focusBottomInset);
+  focusBottom.current = focusBottomInset;
   // The footer remains available above the IME; reveal the focused field
   // after the scroll viewport has resized so the two never overlap.
   const revealFocusedField = () => {
@@ -126,7 +131,7 @@ export function RudiScreen({
         viewport.measureInWindow((_x, top, _width, height) => {
           input.measureInWindow((_inputX, inputTop, _inputWidth, inputHeight) => {
             if (!keyboardVisible.current || TextInput.State.currentlyFocusedInput() !== input) return;
-            const bottomDelta = inputTop + inputHeight + 16 - (top + height);
+            const bottomDelta = inputTop + inputHeight + focusBottom.current - (top + height);
             const topDelta = inputTop - top - 16;
             const delta = bottomDelta > 0 ? bottomDelta : topDelta < 0 ? topDelta : 0;
             if (delta !== 0) cuon.current?.scrollTo({ y: Math.max(0, cuonY.value + delta), animated: false });

@@ -227,15 +227,17 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
     <RudiScreen
       material="quiet"
       avoidKeyboard
+      focusBottomInset={16 + (loiO ? typography.caption.lineHeight * fontScale + 4 : 0)}
+      header={<TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />}
       bottomInset={Math.max(insets.bottom, 16) + 40}
       contentStyle={styles.screen}
       footer={
         // What the server or the source refused is said right above the
         // button that was pressed, inside the footer that never scrolls away.
         <View style={styles.chan}>
-          {/* A field refusal stays readable above the IME too; the focused
-              input alone does not reserve room for its helper line. */}
-          <CauTaiCho cau={loi ?? loiO?.loi ?? loiNgay?.batDau ?? loiNgay?.ketThuc ?? null} />
+          {/* Name and budget errors stay with their focused fields; their
+              measured clearance includes the helper above the IME. */}
+          <CauTaiCho cau={loi ?? (loiO?.o === "so-nguoi" || loiO?.o === "ngay" ? loiO.loi : null) ?? loiNgay?.batDau ?? loiNgay?.ketThuc ?? null} />
           {sourceMessageId ? (
             <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" lyDo={dangTao || sourceLoading ? undefined : existingId !== null ? "Tờ hẹn này đã thành kèo rồi." : sourceFailed ? "Chưa đọc được tờ hẹn này." : undefined} loading={dangTao || sourceLoading} onPress={() => void tao()} />
           ) : (
@@ -247,7 +249,6 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
       footerInset={Math.max(insets.bottom, 12) + 4}
       testID="create-outing-screen"
     >
-      <TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />
       <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><View>
         <PaperObject name="ticket" width={72} palette={{ ...palette, shade: colors.lineStrong }} />
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", paddingLeft: 16 }]}><RudiIcon color={colors.inkSoft} name="calendar-outline" size={20} /></View>

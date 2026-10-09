@@ -377,9 +377,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
             {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
                 written beside it on a pen line (ADR-0037 D1, plan S3). */}
-            <View style={[styles.hangChang, fontScale >= 1.8 && { flexDirection: "column", alignItems: "flex-start" }]}>
+            <View style={[styles.hangChang, fontScale >= 1.8 && { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", width: "100%" }]}>
               <BanXoay co={140} nhan="Giờ chặng" oLabel="Ô giờ chặng" onChange={(p) => setGio(gioTuPhut(p))} phut={phutTuGio(gio)} testID="gio-chang" />
-              <View style={[styles.flex, fontScale >= 1.8 && { flex: 0, alignSelf: "stretch" }]}>
+              <View style={[styles.flex, fontScale >= 1.8 && { flex: 0, width: "100%" }]}>
                 <ONhapMuc accessibilityLabel="Ô tên chặng" label="Chặng" onChangeText={setNhan} placeholder="Ăn tối" value={nhan} />
               </View>
             </View>
@@ -477,15 +477,13 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
                 <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} />
               </View>
-            ) : (
-              <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
-            )}
+            ) : null}
             <Text style={[typography.body, { color: colors.inkSoft }]}>
               {nhanKhoangNgay(trang.keo.starts_on, trang.keo.ends_on)} · {trang.keo.headcount} người
               {nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay())) ? ` · ${nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()))}` : ""}
             </Text>
-            {/* Two sums, side by side while the window allows, one under the other
-                when it does not. Neither is ever shrunk to fit. */}
+            {/* One estimate group; each amount keeps its full size and its
+                own label wraps below when the window needs more room. */}
             {/* Both sums are the plan's estimate, not the bill: «dự kiến» says so
                 beside each, since «Chia bill buổi này» sits right under them
                 (B11 critique; the create form already calls it «số tham chiếu»). */}
@@ -494,36 +492,19 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 said as such; the two sums appear only when there is one. */}
             {trang.keo.budget_per_person_vnd > 0 ? (
               <View style={styles.tien}>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>Ngân sách dự kiến</Text>
                 <View style={styles.oTien}>
                   <Money vnd={trang.keo.budget_per_person_vnd} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến một người</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>/ người</Text>
                 </View>
                 <View style={styles.oTien}>
                   <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến cả kèo, {trang.keo.headcount} người</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>/ cả kèo</Text>
                 </View>
               </View>
             ) : (
               <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa đặt ngân sách cho buổi này.</Text>
             )}
-            {/* The bill of this outing belongs to the outing's own context --
-                a pair's plan is split in the pair, never in whichever group
-                happens to be current (QA 23/09). */}
-            {/* A blank receipt to tear off: the bill of this evening starts here
-                (ADR-0037 D1, plan S4). */}
-            <PressScale
-              accessibilityLabel="Chia bill buổi này"
-              accessibilityRole="button"
-              onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
-              style={styles.nutHoaDon}
-            >
-              <HoaDonGiay>
-                <View style={styles.hoaDonChu}>
-                  <Ionicons color={colors.split} name="receipt-outline" size={20} />
-                  <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
-                </View>
-              </HoaDonGiay>
-            </PressScale>
           </View>
           <SectionHeader
             action={draft ? undefined : moThem ? "Đóng" : "Thêm chặng"}
@@ -535,7 +516,6 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
           {trang.keo.stops.length > 0 ? (
             <View style={styles.danhSach}>
               <Text style={[typography.caption, { color: colors.inkSoft }]}>«Tôi đã tới» là bạn tự đánh dấu cho hội; không gửi vị trí GPS hay ảnh.</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>Giữ tay nắm bên phải rồi kéo để đổi thứ tự. Giờ hẹn không đổi khi bạn đổi thứ tự.</Text>
               <ReorderList items={draft?.stops ?? trang.keo.stops} itemKey={(stop) => stop.id} label={(stop) => stop.label}
                 disabled={dangGhi || moThem || ganChoChang !== null} onDragging={setDragging}
                 onChange={(stops) => setDraft({ stops, revision: draft?.revision ?? trang.keo.timeline_revision })}
@@ -587,6 +567,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                     />
                   );
                 }} />
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>Giữ tay nắm bên phải rồi kéo để đổi thứ tự. Giờ hẹn không đổi khi bạn đổi thứ tự.</Text>
               {draft ? <View style={styles.form}>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>Thứ tự nháp · chưa lưu lên nhóm</Text>
                 {draft.revision !== trang.keo.timeline_revision ? <>
@@ -608,6 +589,24 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
           ) : (
             <EmptyState kind="first-use" layout="inline" title="Lời hẹn đang chờ chặng đầu" body="Đặt một giờ và một nơi muốn ghé. Bạn cũng có thể mở địa điểm ở Khám phá rồi thêm vào kèo." illustration={<AssetIllustration name="spot-map" width={168} height={128} resolution="small" />} action={{ label: "Thêm chặng", onPress: moThemChang }} />
           )}
+          {/* The bill of this outing belongs to the outing's own context --
+              a pair's plan is split in the pair, never in whichever group
+              happens to be current (QA 23/09). */}
+          {/* A blank receipt to tear off: the bill of this evening starts here
+              (ADR-0037 D1, plan S4). */}
+          <PressScale
+            accessibilityLabel="Chia bill buổi này"
+            accessibilityRole="button"
+            onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
+            style={styles.nutHoaDon}
+          >
+            <HoaDonGiay>
+              <View style={styles.hoaDonChu}>
+                <Ionicons color={colors.split} name="receipt-outline" size={20} />
+                <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
+              </View>
+            </HoaDonGiay>
+          </PressScale>
         </ScrollView>
       ) : null}
     </RudiScreen>
@@ -629,8 +628,8 @@ const styles = StyleSheet.create({
   dauMan: { gap: 8, paddingBottom: 8 },
   khung: { gap: 14 },
   dau: { gap: 8 },
-  tien: { flexDirection: "row", flexWrap: "wrap", gap: 24, marginTop: 4 },
-  oTien: { gap: 2, minWidth: 140 },
+  tien: { gap: 4, marginTop: 4 },
+  oTien: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 10, rowGap: 2 },
   khay: { gap: 12, paddingBottom: 4 },
   form: { gap: 12 },
   danhSach: { paddingVertical: 4, gap: 10 },

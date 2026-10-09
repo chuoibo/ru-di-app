@@ -45,7 +45,8 @@ export function BanXoay({
   const { colors } = useRudiTheme();
   const motion = useMotion();
   const { fontScale } = useWindowDimensions();
-  const timeBelow = fontScale >= 1.8;
+  // The small dial's centre is only 50dp across; HH:mm needs its own line.
+  const timeBelow = co < 180 || fontScale >= 1.3;
   const [nac, setNac] = useState(() => nacGio(phut ?? 18 * 60));
   const [go, setGo] = useState(false);
   const [chuGo, setChuGo] = useState("");
