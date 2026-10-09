@@ -1638,9 +1638,19 @@
     },
     "explore": {
       "compactCondition": "Width < 600, height < 700 và !chuLon(fontScale); helper nhận chữ lớn từ 1.28 để bao bước OS 1.3.",
-      "shortLayout": "Gap khối 12, scene cao 120 thay vì 150; lead hình 112×144 trái, text flex 1/minWidth 0/pad 12 phải, tên hai dòng/fact/chip lý do-giá; tim là control riêng trên hình.",
+      "shortLayout": "Từ 3bb47ef84bf294a242fbcc5f8910ceeb02478ca0: gap khối 12, scene cao 120 thay vì 150; đầu lead hình vuông 112×112 trái, tên hai dòng/phụ đề flex 1/minWidth 0/pad 12 phải; hai dòng sự thật và chip lý do/giá xuống dưới dùng toàn chiều rộng thẻ, leadGonDuoi gap 6/pad 14/pad trên 0; tim là control riêng trên hình.",
       "otherLayouts": "Chữ lớn/cửa sổ khác giữ layout thường từ source; không nâng thành native matrix đã đạt.",
-      "nativeObserved": "Baseline sáng/tối font 1.0 có tên hai dòng và fact đầu/artwork rõ trước nav; dataset/lead đổi sau lưu gu thật, so hierarchy thay vì pixel nội dung giống nhau."
+      "nativeObserved": "Baseline sáng/tối font 1.0 có tên hai dòng và fact đầu/artwork rõ trước nav; dataset/lead đổi sau lưu gu thật, so hierarchy thay vì pixel nội dung giống nhau.",
+      "compactCorrection": {
+        "headCommit": "3bb47ef84bf294a242fbcc5f8910ceeb02478ca0",
+        "source": "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+        "verdict": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict.md",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict-packet.json",
+        "rootInspection": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/root-inspection.json",
+        "documenterOpened": "Tám PNG: top/lead sáng và tối 1.0, lead sáng và tối 1.3, lead-lower sáng 2.0 và lead-tail tối 2.0.",
+        "observed": "Ảnh 1.0 có facts/lý do dài/giá dùng chiều rộng thẻ; ảnh đại diện 1.3/2.0 giữ ảnh ngang toàn chiều rộng, tail tối 2.0 hiện đủ giá kèm đơn vị sau cuộn.",
+        "scope": "Ship chỉ C/D–01, resolved; đối chiếu hình học tại các vùng đã chụp, không nhận toàn surface/app, detector native, tương phản/target đo native, motion hoặc iOS."
+      }
     },
     "verdict": {
       "disposition": "ship",

@@ -2528,10 +2528,23 @@ hành; không thay token, shading, canonical Nếp hoặc rải grain khắp sur
   Không khoá width/font để giữ nhãn.
 - **Explore:** `compactLead` chỉ khi rộng dưới 600, cao dưới 700 và
   `!chuLon(fontScale)` (helper nhận chữ lớn từ 1.28 để bao cả bước OS 1.3).
-  Nhịp khối rút về gap 12, cảnh còn cao 120 thay vì 150. Lead gọn đặt hình
-  112×144 bên trái, chữ bên phải `flex: 1`, `minWidth: 0`, đệm 12;
-  vẫn có tên hai dòng, fact và chip lý do/giá. Tim giữ control riêng trên
-  hình. Chữ lớn/cửa sổ khác giữ layout thường; chưa nhận matrix native đó.
+  Nhịp khối rút về gap 12, cảnh còn cao 120 thay vì 150. Từ artifact
+  `3bb47ef84bf294a242fbcc5f8910ceeb02478ca0`, đầu lead gọn đặt hình vuông
+  112×112 bên trái, tên hai dòng/phụ đề bên phải `flex: 1`, `minWidth: 0`,
+  đệm 12. Hai dòng sự thật và chip lý do/giá xuống dưới, dùng toàn chiều
+  rộng thẻ (`leadGonDuoi`: gap 6, đệm 14, đệm trên 0). Tim giữ control riêng
+  trên hình. Nhánh chữ lớn/cửa sổ khác vẫn dùng layout thường.
+
+[Verdict compact 3bb47ef8](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict.md)
+chốt **ship chỉ C/D–01, resolved**, từ `screens/explore/HangDiaDiem.tsx`.
+Documenter mở trực tiếp tám PNG trong
+[packet](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict-packet.json):
+top/lead sáng và tối 1.0, lead sáng và tối 1.3, lead-lower sáng 2.0 và
+lead-tail tối 2.0. Ảnh 1.0 cho thấy facts, lý do dài và giá dùng chiều rộng
+thẻ; ảnh đại diện 1.3/2.0 vẫn có ảnh ngang toàn chiều rộng, và tail tối 2.0
+hiện đủ giá kèm đơn vị sau cuộn. Đây là đối chiếu hình học tại các vùng đã
+chụp, không nhận toàn surface/app, detector native, tương phản/target đo
+native, motion hoặc iOS.
 
 [Verdict gallery 6f3f5af2](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md)
 chốt **ship chỉ P2-01 composition viewport đầu và P2-02 «Để sau», cả hai

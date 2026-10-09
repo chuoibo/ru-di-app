@@ -184,3 +184,24 @@ C/D–01 về cân khối ảnh/chữ, reason/price compact100. Candidate sửa
 riêng PlaceLead, qua69/69focused, typecheck và guide freshness; chưa
 credit after/verdict pass hoặc điểm đẹp mới. Không sửa theo screenshot
 mang tên lead-facts100 nhưng thực tế là compare, hoặc theo hai red harness.
+
+## Bằng chứng tiếp nối3bb47ef8
+
+C/D–01 đã **resolved, ship chỉ finding đã chấm**: reviewer tự mở24after
+và18before. Sáu flow sáng/tối × font100/130/200 tại320×640 exit0,
+18,240/21,944/18,240/18,541/18,390/18,239s; root mở24PNG. Facts/reason/
+price compact đọc đủ bề ngang; tail200 đủ giá/đơn vị sau cuộn. D detail
+không recapture ở3bb; không có /16 mới, không nghiệm thu toàn C/D/app.
+[Verdict3bb](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict.md).
+
+Clean exact3bb focused69/69,0fail/skip/cancel/todo,0,239s;
+typecheck7,258s, guide1,295s, compile/fixup2,537/0,051s exit0, cây sạch
+trước/sau. Hai fingerprint red39,216/94,536s giữ nguyên do sai chuỗi/điểm
+vào harness; fresh attach cùng flow đúng exit0/26,699s. Documenter cập
+nhật compact112×112 và vùng facts đủ ngang sau khi mở tám PNG, giữ token.
+Đây chưa là strict32/full npm test hoặc cổng landing. Các state, motion,
+TalkBack, measured native contrast/targets, wide/iOS vẫn chưa nhận thêm.
+
+Đính chính worker: MOBILE_INPROC_WORKER=0 chỉ chặn chatassist, không chặn
+diary.Run/community.Run khởi động riêng với prod PostgreSQL. Audit K phải
+quan sát job thật, không coi worker0 là bằng chứng job không thể chạy.
