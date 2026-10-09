@@ -16,9 +16,11 @@ import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { CauTaiCho } from "../../ui/CauTaiCho";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function GroupInviteScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
@@ -65,7 +67,7 @@ export function GroupInviteScreen() {
     finally { lock.current = false; setBusy(null); }
   };
   return (
-    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="group-invite-screen"
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="group-invite-screen"
       header={<TopBar title="Mời vào nhóm" />}
       footer={<View style={styles.footer}>
         <CauTaiCho cau={error} />

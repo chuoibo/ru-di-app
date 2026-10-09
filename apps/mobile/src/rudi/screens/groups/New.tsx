@@ -17,6 +17,7 @@
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { chonNhom, docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
@@ -36,6 +37,7 @@ type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string }
 
 export function GroupNewScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors } = useRudiTheme();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
@@ -95,7 +97,7 @@ export function GroupNewScreen() {
     />
   );
   return (
-    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="group-new-screen"
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="group-new-screen"
       header={<TopBar title="Nhóm mới" />}
       footer={<View style={styles.footer}>
         <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />

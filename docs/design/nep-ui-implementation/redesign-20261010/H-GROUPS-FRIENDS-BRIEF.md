@@ -33,3 +33,11 @@ QC cần: sáng/tối ×100/130/200, IME trên/dưới, tên dài; lookup invali
 not-found/found, gửi pending/duplicate; tạo nhóm/đọc membership, invite/accept/
 reject/role/last-admin/leave theo route thật; error/retry/double tap, back.
 Không gán review phần form/list thành nghiệm thu toàn H hoặc A–S.
+
+Candidate a202: sáu flow Android sáng/tối ×100/130/200 exit0, 54 PNG;
+root mở 9 ảnh sáng100 và 5 contact sheet đủ45 ảnh còn lại. First-pass
+thấy footer ba form sát gesture bar khi IME đóng; lượt sửa thêm inset
+thiết bị +12dp, IME mở vẫn do shell chừa8dp. Không sửa vòng lặp thẩm mỹ.
+Clean exact-a202: typecheck7,873s xanh, guide1,388s đỏ vì bản đồ hướng dẫn
+tự sinh cũ. Regenerate đúng tool, không sửa test hoặc bỏ bước. Capture/check
+candidate kế tiếp và finish-review vẫn đang chờ; toàn H chưa nghiệm thu.

@@ -17,6 +17,7 @@ import { StampButton } from "../../ui/StampButton";
 import { Washi } from "../../ui/Washi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { CauTaiCho } from "../../ui/CauTaiCho";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { luiVeVe } from "../../lui-ve";
 
 type Trang =
@@ -32,6 +33,7 @@ const tenTaiKhoan = (nguoi: NguoiTimDuoc, daGo: string) => `@${nguoi.username ??
 
 export function AddFriendScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [username, setUsername] = useState("");
@@ -87,7 +89,7 @@ export function AddFriendScreen() {
   if (trang.pha === "da-gui") {
     const nguoi = trang.nguoi;
     return (
-      <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} testID="add-friend-screen"
+      <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} testID="add-friend-screen"
         header={<TopBar title="Thêm bạn" />}
         footer={<RudiButton label="Về danh sách bạn" onPress={() => luiVeVe(router as never, "/friends")} />}
       >
@@ -112,7 +114,7 @@ export function AddFriendScreen() {
   const nguoi = "nguoi" in trang ? trang.nguoi : undefined;
   const ban = trang.pha === "dang-tim" || trang.pha === "dang-gui";
   return (
-    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={12} contentStyle={styles.screen} testID="add-friend-screen"
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="add-friend-screen"
       header={<TopBar title="Thêm bạn" />}
       footer={<View style={styles.footer}>
         <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />

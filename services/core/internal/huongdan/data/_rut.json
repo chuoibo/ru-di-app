@@ -433,7 +433,6 @@
         "Chưa có bạn nào",
         "Chưa đọc được danh sách bạn",
         "Không có lời mời nào đang chờ",
-        "Nhắn tin",
         "Nhắn tin cho …",
         "Thêm bạn bằng tên tài khoản",
         "Từ chối",
@@ -449,15 +448,16 @@
       "di_toi": [],
       "man": "friends/add",
       "nhan": [
+        "Chỉ tài khoản cho phép tìm kiếm mới hiện ở đây. Lời mời cần được bạn ấy đồng ý.",
         "Gửi lời mời",
-        "Gửi một lời kết bạn",
+        "Lời mời đã gửi",
         "Người nhận lời mời",
         "Thêm bạn",
         "Tên tài khoản",
         "Tên tài khoản của bạn ấy",
         "Tìm",
-        "Về danh sách bạn",
-        "Đã gửi lời mời tới …"
+        "Tìm một người bạn",
+        "Về danh sách bạn"
       ],
       "tep": [
         "app/friends/add.tsx",
@@ -600,18 +600,20 @@
       ],
       "man": "groups/[id]/invite",
       "nhan": [
-        ". Lời mời chưa phải là xác nhận tham gia.",
+        ". Người ấy cần đồng ý để trở thành thành viên.",
         "@ten_cua_ban",
+        "Bạn muốn rủ ai?",
+        "Gửi lời mời",
         "Gửi lời mời tới …",
-        "Gửi một lời rủ",
         "Lời mời đã gửi",
         "Mời thêm người",
         "Mời vào nhóm",
+        "Người nhận tự quyết định tham gia. Gửi lời mời chưa đưa bạn ấy vào nhóm.",
         "Tên tài khoản của người nhận",
         "Tìm người nhận",
         "Về nhóm",
         "Đã gửi lời mời tới",
-        "Đã gửi lời mời tới …. Lời mời chưa phải là xác nhận tham gia."
+        "Đã gửi lời mời tới …. Người ấy cần đồng ý để trở thành thành viên."
       ],
       "tep": [
         "app/groups/[id]/invite.tsx",
@@ -828,6 +830,7 @@
       ],
       "man": "groups/new",
       "nhan": [
+        "Bạn là quản trị đầu tiên.",
         "Hội cà phê cuối tuần",
         "Muốn rủ riêng một người? Hai bạn có thể cùng đồng ý mở sổ hai người.",
         "Mở nhóm",
