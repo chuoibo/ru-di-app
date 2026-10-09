@@ -17,13 +17,7 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
   const { colors } = useRudiTheme();
   const [pageIndex, setPageIndex] = useState(0);
   useEffect(() => { setPageIndex(0); }, [document]);
-  const [width, setWidth] = useState(0);
-  const [coverHeight, setCoverHeight] = useState(240);
-  const coverWidth = Math.max(1, Math.min(width, 420));
-  const firstPage = pageIndex === 0;
-  const lastPage = pageIndex >= document.pages.length - 1;
-  const pageReason = firstPage ? "Bạn đang ở trang đầu tiên." : lastPage ? "Bạn đang ở trang cuối cùng." : undefined;
-  return <View style={styles.book} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+  return <View style={styles.book}>
     {paged && !compact && document.pages.length > 0 ? <View style={styles.readingTitle}>
       <Text style={[typography.h2, { color: colors.ink }]}>{document.title}</Text>
       {document.subtitle ? <Text style={[typography.note, { color: colors.inkSoft }]}>{document.subtitle}</Text> : null}
@@ -32,8 +26,8 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
       {document.cover_id ? <KhungAnh tilt={-1}><BookPhoto accessibilityLabel={`Ảnh khoảnh khắc ${document.title}`} source={photo(document.cover_id)} contentFit="cover" cachePolicy="none" style={styles.momentPhoto} /></KhungAnh> : null}
       <Text style={[typography.h2, { color: colors.ink }]}>{document.title}</Text>
       {document.subtitle ? <Text style={[typography.note, { color: colors.inkSoft }]}>{document.subtitle}</Text> : null}
-    </View> : <SoBia ten={[]} rong={coverWidth} cao={coverHeight + 48} style={styles.cover} nhan={
-      <View onLayout={(event) => setCoverHeight(Math.ceil(event.nativeEvent.layout.height))} style={[styles.coverLabel, { backgroundColor: colors.card }]}>
+    </View> : <SoBia ten={[]} fitContent style={styles.cover} nhan={
+      <View style={[styles.coverLabel, { backgroundColor: colors.card }]}>
         {document.cover_id ? <BookPhoto accessibilityLabel={`Ảnh bìa ${document.title}`} source={photo(document.cover_id)} contentFit="cover" cachePolicy="none" style={[styles.coverPhoto, compact && styles.compactPhoto]} /> : null}
         <View style={styles.coverWords}>
           <Text style={[compact ? typography.h2 : typography.h1, { color: colors.ink }]}>{document.title}</Text>
@@ -43,23 +37,38 @@ export function BookView({ document, photo, compact = false, kind = "trip", page
     } />}
     {!compact ? document.pages.map((page, i) => !paged || i === pageIndex ? <TrangSo key={i} tone="accent" ke={false} style={styles.page}>
       {page.heading ? <Text style={[typography.h2, { color: colors.ink }]}>{tenTrang(page.heading)}</Text> : null}
-      <View style={page.layout === "collage" ? styles.collage : styles.single}>
-        {page.photo_ids.map((id) => <View key={id} style={page.layout === "collage" ? { width: Math.max(0, (width - 66) / 2), height: Math.max(0, (width - 66) / 2) * 4 / 3 } : styles.pagePhoto}>
+      <View style={styles.single}>
+        {page.layout === "collage" ? Array.from({ length: Math.ceil(page.photo_ids.length / 2) }, (_, row) => <View key={row} style={styles.collage}>
+          {page.photo_ids.slice(row * 2, row * 2 + 2).map((id) => <View key={id} style={styles.collagePhoto}>
+            <BookPhoto accessibilityLabel={`Ảnh trang ${i + 1}`} source={photo(id)} contentFit="cover" cachePolicy="none" style={StyleSheet.absoluteFill} />
+          </View>)}
+          {row * 2 + 1 >= page.photo_ids.length ? <View style={styles.collagePhoto} /> : null}
+        </View>) : page.photo_ids.map((id) => <View key={id} style={styles.pagePhoto}>
           <BookPhoto accessibilityLabel={`Ảnh trang ${i + 1}`} source={photo(id)} contentFit="cover" cachePolicy="none" style={StyleSheet.absoluteFill} />
         </View>)}
       </View>
       {page.text ? <Text style={[typography.body, { color: colors.inkSoft, lineHeight: 28 }]}>{page.text}</Text> : null}
       <Text style={[typography.caption, { color: colors.inkFaint, alignSelf: "flex-end" }]}>{i + 1} / {document.pages.length}</Text>
     </TrangSo> : null) : null}
-    {!compact && paged && document.pages.length > 1 ? <View style={styles.navigation}>
+    {!compact && paged ? <BookPageNavigation pageIndex={pageIndex} count={document.pages.length} onPageChange={setPageIndex} /> : null}
+  </View>;
+}
+
+/** The editor and reader share page position, boundaries and 48dp controls. */
+export function BookPageNavigation({ pageIndex, count, onPageChange, disabled = false }: { pageIndex: number; count: number; onPageChange: (index: number) => void; disabled?: boolean }) {
+  const { colors } = useRudiTheme();
+  if (count <= 1) return null;
+  const firstPage = pageIndex === 0;
+  const lastPage = pageIndex >= count - 1;
+  const pageReason = disabled ? "Đợi thao tác hiện tại hoàn tất nhé." : firstPage ? "Bạn đang ở trang đầu tiên." : lastPage ? "Bạn đang ở trang cuối cùng." : undefined;
+  return <View style={styles.navigation}>
       <View style={styles.pageControls}>
-        <BookPageButton direction="previous" disabled={firstPage} reason={firstPage ? pageReason : undefined} onPress={() => setPageIndex((i) => Math.max(0, i - 1))} />
-        <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.pageCounter, { color: colors.inkSoft }]}>Trang {pageIndex + 1} / {document.pages.length}</Text>
-        <BookPageButton direction="next" disabled={lastPage} reason={lastPage ? pageReason : undefined} onPress={() => setPageIndex((i) => Math.min(document.pages.length - 1, i + 1))} />
+        <BookPageButton direction="previous" disabled={disabled || firstPage} reason={disabled || firstPage ? pageReason : undefined} onPress={() => onPageChange(Math.max(0, pageIndex - 1))} />
+        <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.pageCounter, { color: colors.inkSoft }]}>Trang {pageIndex + 1} / {count}</Text>
+        <BookPageButton direction="next" disabled={disabled || lastPage} reason={disabled || lastPage ? pageReason : undefined} onPress={() => onPageChange(Math.min(count - 1, pageIndex + 1))} />
       </View>
       {pageReason ? <Text style={[typography.caption, styles.pageReason, { color: colors.inkSoft }]}>{pageReason}</Text> : null}
-    </View> : null}
-  </View>;
+    </View>;
 }
 
 /** Keep the reading controls fixed while the counter and boundary reason wrap. */
@@ -84,7 +93,7 @@ function BookPhoto(props: React.ComponentProps<typeof Image>) {
   const [failed, setFailed] = useState(false);
   useEffect(() => { setFailed(false); }, [props.source]);
   if (failed || !props.source) return <View style={[props.style, { alignItems: "center", justifyContent: "center", backgroundColor: colors.paperShade, padding: 16 }]}><Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh chưa mở được. Nội dung cuốn sổ vẫn còn.</Text></View>;
-  return <Image {...props} onError={() => setFailed(true)}/>;
+  return <Image {...props} style={[{ backgroundColor: colors.paperShade }, props.style]} onError={() => setFailed(true)}/>;
 }
 const styles = StyleSheet.create({
   readingTitle: { gap: 8 },
@@ -93,10 +102,10 @@ const styles = StyleSheet.create({
   pageButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   pageCounter: { flex: 1, minWidth: 0, textAlign: "center" },
   pageReason: { textAlign: "center" },
-  book: { gap: 28, width: "100%", maxWidth: 560, alignSelf: "center" }, cover: { alignSelf: "center" }, coverLabel: { padding: 8, gap: 8 }, coverPhoto: { width: "100%", aspectRatio: 4 / 3 },
+  book: { gap: 28, width: "100%", maxWidth: 560, alignSelf: "center" }, cover: { maxWidth: 420, alignSelf: "center" }, coverLabel: { padding: 8, gap: 8 }, coverPhoto: { width: "100%", aspectRatio: 4 / 3 },
   compactPhoto: { aspectRatio: 16 / 9 },
   coverWords: { padding: 8, gap: 12 }, page: { gap: 16, paddingBottom: 24 },
-  collage: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, single: { gap: 8 }, pagePhoto: { width: "100%", aspectRatio: 4 / 3 },
+  collage: { flexDirection: "row", gap: 8 }, collagePhoto: { flex: 1, aspectRatio: 3 / 4 }, single: { gap: 8 }, pagePhoto: { width: "100%", aspectRatio: 4 / 3 },
   moment: { gap: 16, paddingTop: 10, paddingHorizontal: 8, paddingBottom: 12 },
   tape: { alignSelf: "center", marginBottom: -22, zIndex: 1 },
   momentPhoto: { width: "100%", aspectRatio: 3 / 2 },
