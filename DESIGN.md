@@ -375,6 +375,13 @@ Các mô tả source mới trong mục «Chín bề mặt native» thắng mô t
 thu cho toàn hệ. Fresh review trước ở `d9c06bf4` trả **fix**; verdict sau sửa
 797 còn chờ. Audit rộng A–S và nghiệm thu toàn app vẫn mở.
 
+**Bàn giao I1 tại `7dcacedf` (10/10).** Bảy finding về chọn người/cùng mở
+sổ đã đóng: F1/F2/F3/F4/F6/F7 giữ verdict và ảnh `62c1a73b`; F5 nhận verdict
+**ship** sau 24 viewport mới tại `7dcacedf`. Hợp đồng hẹp nằm trong Typography,
+Layout và Components bên dưới, kế thừa seed `c8e88116` và FORM của
+[I1 brief](docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md).
+Không mở rộng kết quả này thành nghiệm thu toàn I, I2 hoặc A–S.
+
 ## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
 Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
@@ -848,7 +855,31 @@ Chữ in hoa duy nhất của hệ là mực con dấu (`typography.stamp`), và
 được ký ở **chân** («Rủ Đi AI gợi ý» 13sp tím + sparkles 15), câu hỏi là tiêu
 đề, không có nhãn trên đầu.
 
+**I1 — chữ ký phải đọc được (`ChuKy`).** Giao kèo bật `wrapName` và
+`showStatus`: vai trò `caption inkSoft` đứng trên, tên Bricolage ExtraBold
+(20/26sp) không nghiêng giả, hoặc câu chờ `note inkSoft`, rồi nét ký/nét đứt
+và chữ «Đã ký»/«Chưa ký». Tên và câu chờ không giới hạn một dòng; hai phần
+ký giữ vai trò riêng dù xếp dọc. Nét vẽ chỉ trang trí, trạng thái đồng thuận
+phải có chữ. Hai prop này là lựa chọn của caller giao kèo, không đổi cách
+hiển thị mặc định của mọi `ChuKy`.
+
 ## Layout
+
+**I1 — người trước, cảnh sau (`7dcacedf`).** Picker giữ cột form (560dp),
+người thành hàng ngang có hình nhân, tên tự xuống hàng và chevron; thêm bạn
+là icon quiet (48dp) ở header. Trang chưa mở sổ giữ cột đọc (640dp): hai tên
+`h2` cùng mực `ink`, chữ «và» và lời mở `body inkSoft`, tất cả theo trục trái.
+Cảnh bìa/Nếp hỗ trợ phía sau cụm người, không lặp tên trong nhãn bìa nhỏ.
+Từ rộng 600dp và font dưới 1.3, cụm người và cảnh thành hai vùng cạnh nhau;
+ở chữ lớn trở lại một cột. Phone giữ cửa vào giao kèo ở footer ngoài vùng
+cuộn, `footerInset = max(insets.bottom, 12)`; màn rộng đặt nó sau cụm mở sổ.
+
+`BacDongY` dùng chung cho Lập sổ/Một đôi: thân giao kèo cuộn riêng, footer
+giữ phản hồi/lỗi, con dấu và «Để sau» theo đúng thứ tự đọc. Sheet giữ đệm
+dưới `max(insets.bottom, 16)` của kit, không kéo tấm lên hết trần chỉ để đặt
+hai lựa chọn. Quyền rồi giới hạn xếp dọc khi rộng dưới 600dp hoặc font từ
+1.3; cột dọc stretch hết bề ngang, bỏ flex-basis của cột ngang để không co
+mất phần chữ. Đây là hợp đồng của I1, không áp hình học này cho mọi sheet.
 
 **Header/form ở candidate 797 (10/10).** `TopBar` giữ target icon 48dp,
 `minHeight` 52dp; hàng header mở vào gutter 12dp mỗi bên và chevron dịch
@@ -1158,6 +1189,12 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   52, đệm 24, chữ 17/22, bo 14 (Login «Gửi mã»). Không icon, không vành
   trong, không bóng, mặc định rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
   `loading` thay bằng spinner mực trong hàng và khoá nút; `disabled` mờ 0.55.
+  **I1 tại `7dcacedf`:** `wrapLabel` là opt-in cho con dấu bị giới hạn bề
+  ngang: caller chặn `maxWidth: "100%"`, nhãn `flexShrink: 1` căn giữa,
+  thân thêm đệm dọc (12dp) để tự cao theo chữ hệ thống. Giữ cỡ chữ và mặt
+  dấu; không biến mọi con dấu thành thanh toàn ngang. «Để sau» và «Chọn loại
+  sổ» dùng `label inkSoft` trên target tối thiểu (48dp), nhãn stretch trong
+  chính target để đủ chữ; không tạo điểm coral thứ hai.
 - **Nút bìa (`CoverButton`)**: `outline` trong suốt, viền 1px
   `coverLineStrong` (5.19:1 sáng / 6.42:1 tối trên `cover`), bo 14, cao 50,
   đệm 18, nhãn `label` `coverInk`, icon 18, haptic `select`. `link`: không
@@ -2024,6 +2061,51 @@ Node (1608/1608) và repo-tree (5107); regex TSX `[]` không chứng minh full
 gate, geometry, contrast hay chất lượng thị giác. H/A–S, motion, TalkBack,
 iOS, 390/430dp, phần cứng expanded độc lập, expanded chữ lớn/IME,
 network/retry/lifecycle và phần chưa chụp vẫn mở.
+
+### Chọn người và cùng mở sổ — I1, bàn giao giới hạn 10/10/2026
+
+Nguồn là `ChonNguoi`, `KhongGianGiay`, `DongYBac`, `ChuKy`, `StampButton`
+và ánh xạ trạng thái sổ tại `7dcacedf164f1a84192be62392c6dbfa4148174e`.
+Giữ giấy/mực/bìa vải/coral/Bricolage và Nếp canonical; mockup06 là tham chiếu
+phản biện, chưa phải comp được duyệt. Thẩm quyền hướng hiện tại là Creative
+North Star trong file này và [I1 brief](docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md),
+không phải contract lịch sử đã rời `_layout.tsx`.
+
+- **Chọn người rồi mới giao kèo.** Hàng picker giữ hình nhân (46dp), tên,
+  chevron và kẻ tóc; không lưới thẻ 2+1 hay caption lặp dưới mọi tên. Trang
+  chưa mở cho hai tên dẫn mắt, bìa đóng nhỏ mang nhãn «Hai/mình». Grain giấy
+  sáng/vải tối vẫn là chất liệu journal hiện có.
+- **Hiểu quyền trước khi ký.** `TrangSo ke={false}` chứa «Cho phép» rồi
+  «Không kéo theo», sau đó hai phần ký cách cụm quyền (24dp), cuối cùng
+  «Im lặng không phải đồng ý». Người đề nghị thấy câu chờ có tên người kia;
+  người nhận có «Xem lời đề nghị» trên trang và «Đồng ý» trong giao kèo.
+  Phản hồi proposal và lỗi ở footer để còn đọc được khi body ở đầu quyền.
+  Vai trò/tên/câu chờ/trạng thái ký đi theo Typography; nét vẽ không giả
+  chữ ký tay và một bên ký chưa mở sổ.
+- **Mặt sổ theo response.** UI đọc trạng thái sổ từ provider/ánh xạ hiện có,
+  không tự mở sau cú bấm. Mở sổ không tự bật Một đôi hoặc quyền đọc chat;
+  giao kèo Một đôi nói AI chỉ nhận phần người dùng chọn và xác nhận gửi.
+  Back/«Để sau» đóng lớp, không cấp quyền. Bằng chứng proposal/cancel/receiver
+  grant và M6 mở thật thuộc `62c1a73b`, chỉ `lap_so`; không reset hay diễn lại
+  cặp active để gắn nhãn bằng chứng mới.
+- **Sau mở, một hành động dẫn.** «Rủ hội mình đi chơi» là con dấu có thể
+  wrap; «Chọn loại sổ» là dòng mực phụ căn trái, cả parent và nhãn stretch
+  trong cột, `minHeight` (48dp), đệm dọc (12dp). Nhãn đọc trọn trên một dòng
+  ở các ảnh 100/200 đã mở; đây không phải luật cấm wrap ở mọi cỡ cửa sổ.
+  Cảnh M6 cho bìa (140dp) và Nếp wrap theo khoảng trống, dấu «Sổ đã/mở» có
+  hai dòng có chủ ý. Ảnh tĩnh không xác nhận chất lượng chuyển động.
+
+Fresh verdict `62c1a73b` chấm bảy finding: sáu resolved, F5 partial do nhãn
+phụ bị co. Verdict `7dcacedf` đóng F5 và regression hẹp trên 3 contact/24
+viewport Android mới, hai phía sáng/tối font100/200; sáu finding còn lại giữ
+nguồn ảnh62. Documenter mở đủ ba contact mới và hai contact62 (entry dark200,
+recipient từ lời đề nghị tới mở sổ), không chạy runtime hoặc detector.
+Exact clean7d có 9 kiểm tra xanh, Node (1608/1608), repo-tree (5108);
+identity (12/12), canary (10/12), hai mutant (11/12, 10/12) đỏ đúng dự đoán.
+Đây là subset kỹ thuật; regex TSX `[]` chỉ quét source, không đo contrast
+native. APK giữ checkpoint độc lập `2f20a301`, fontScale đã trả về 1.
+I2/toàn I/A–S, web/iOS, motion, TalkBack, lifecycle/network, full npm và
+strict32 vẫn mở; bảy finding đóng không thành chứng nhận đẹp toàn app.
 
 ### Hỏi tại hàng (xác nhận hành động phá huỷ)
 Hành động xoá thứ không lấy lại được **hỏi ngay tại hàng**, không mở hộp
@@ -3520,6 +3602,14 @@ quyền merge vào main từ các số trên.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**I1 10/10 tại 7d:** không biến F5 partial của62, lỗi nhãn «Để» của4a hay
+scan nhầm đường dẫn `ChuKy` (`[]`/exit1) thành pass. Sáu finding carry vẫn
+thuộc62; M6 thật không đổi nhãn thành7d. Opt-in wrap không thu chữ hoặc đổi
+mặc định mọi caller; nét ký trang trí không thay đồng thuận thật. I2 còn mở,
+không lấy các bố cục/lỗi đang có của I2 làm hướng dẫn mới. Expanded là cùng
+AVD đổi kích thước; subset/regex không thay nghiệm thu thị giác, computed
+contrast, native iOS, motion/TalkBack hoặc full strict gate.
 
 **H 10/10 tại d91:** tên dài trong ô Android vẫn cuộn nội bộ hai dòng;
 ảnh long chỉ hiện vùng gần caret cuối, không chứng minh toàn bộ (95 ký tự)

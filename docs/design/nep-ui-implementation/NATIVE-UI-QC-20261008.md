@@ -339,3 +339,58 @@ dev-client trước bundle-ready. Không đếm chúng thành xanh hồi tố. A
 trả320×640/font1.0, không phải tablet độc lập. Input dài vẫn cuộn nội bộ
 hai dòng gần caret; chưa chứng minh cả95 ký tự cùng hiện. Network/retry,
 lifecycle, motion/reduced-motion, TalkBack/iOS, toàn H/A–S và main còn mở.
+
+## I1 — bảy finding đã chấm, 7dcacedf (10/10)
+
+Giữ UI3/seed c8e88116, mockup06 chỉ critique-reference. Review001 đưa bảy
+finding; verdict62 mở14 contact/92 viewport và2 original, resolved sáu,
+F5 partial vì «Chọn loại sổ» mất chữ/bẻ từ cuối. Bản7d stretch đúng hàng và
+nhãn phụ48dp, căn trái/mực phụ. Root và reviewer mở3 contact/24 viewport
+mới: hai phía, sáng/tối100/200, kèm giao kèo Một đôi chỉ đọc/cancel.
+[fresh-i1-f5-verdict](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7dcacedf/fresh-i1-f5-verdict.md>)
+resolved F5, không thấy regression trong phạm vi này. Ship chỉ bảy sửa I1;
+sáu finding giữ provenance62 với diff/hashes, không relabel92 viewport cũ.
+
+Người dẫn mắt trước bìa/cảnh; tên, vai trò và trạng thái ký có thứ bậc riêng.
+Compact giữ entry giao kèo ngoài scroll; proposal/error ở footer quyết định,
+recipient có CTA ngay khi vào. Để sau trung tính/đủ chữ48dp. Sau mở primary
+con dấu và secondary mực phụ; M6 bìa/dấu tự wrap. Grain giấy/vải canonical,
+không thêm raster lấp chỗ trống. Corroboration hiện tại ở DESIGN.md và brief
+I1, không phải contract lịch sử đã vắng khỏi app/_layout.tsx.
+
+Tại62, cặp tổng hợp67fbeed6 được thao tác native: Back/cancel unopened;
+primary đề nghị21,593s; recipient cancel26,649s còn pending; recipient đồng
+ý18,839s mở active. Bảy API witness đọc hai phía chứng minh chỉ lap_so,
+không bat_doi/doc_chat. Login third có hai harness đỏ: tutorial stylus chặn
+field49,228s; lần sau login thật thành công nhưng landing Messages khác kỳ
+vọng Explore114,806s. Identity recovery20,891s xanh, không gọi đỏ thành xanh.
+Để sau ở4a từng chỉ vẽ «Để» dù accessibility đủ; giữ ảnh đỏ. M6 thật ở62,
+không reset cặp active để replay. Bốn shared couple62 chỉ đọc/cancel.
+
+Native7d tám flow exit0: primary sáng100/20029,152/31,555s, tối100/200
+27,299/30,754s; recipient sáng100/20019,190/14,783s, tối100/20015,784/
+15,284s. Hai API read200 sau cancel vẫn active/lap_so, không pending hay
+quyền cao hơn. Clean checkout đúng7d chín bước xanh: type7,293s, guide1,295s,
+export14,448s, compile2,678s, fixup0,035s, Node214 file1608/1608/33,918s,
+core-build1,762s, Go-guide0,251s, tree32,374s/5108 file.0fail/skip/cancel/todo.
+Consent harness0fc8e99f: identity12/12/0,065s, canary10/12/0,063s, mutant
+ignore-empty11/12/0,062s và own-proposal10/12/0,058s, đỏ đúng dự đoán,
+đã kiểm khác nghĩa trước chạy. Chỉ contract, không thay API/UI proof.
+
+TSX scan r0[] nhưng exit1 vì đường ChuKy sai; không tính pass. r1 đúng năm
+target exit0/[], chỉ regex, không đo contrast/geometry native. JS/API7d,
+Metro2725931/API2739700; APK vẫn2f20/hash963bd5da…514, không gọi APK7d.
+Nguồn Go không đổi, binary9ca8ea8f trùng62; chỉ restart process có ownership,
+không DB/oracle. Hai font trả1.0; peer5560 có draft không chạm. Stylus0 trên
+primary/third cần phục hồi khi xong toàn audit (third original không được
+lưu trước helper đỏ; phục hồi bằng xoá key về mặc định, không bịa observednull).
+
+I2 còn mở: baseline62 bốn flow xanh/36 viewport (34,008/43,070/42,620/
+54,235s), root mở4 contact; A/B độc lập đã đánh giá. Nháp IME7d sáng100/
+tối200124,376/124,025s chỉ gõ rồi cancel, root mở4 viewport; vùng nhập và
+hành động bị che, không gọi exit0 là UX pass. API giữ điều tránh tổng hợp46
+ký tự/version1, không lưu marker nháp. Tem Đã chốt bị cắt xác nhận lại bằng
+original7d và XML: text46×14, khung66×26, chuỗi trợ năng đầy đủ. Cần sửa
+đọc nội dung/IME/nhịp mục lục/Gu/phản hồi loại sổ rồi QC đúng source. Toàn
+I/A–S, motion/TalkBack/lifecycle/network, iOS/native crypto/fullnpm/strict32
+và landing main vẫn chưa nghiệm thu.

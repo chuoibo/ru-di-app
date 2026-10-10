@@ -71,3 +71,10 @@ căn trái với nội dung. Không đổi chữ/consent/M6; cần capture mới
 sáng/tối100/200 và regression Để sau trước verdict F5. Clean62 có9 kiểm tra
 xanh/Node1608/1608/5108file; identity12/12, canary10/12, hai mutant11/12 và
 10/12 đỏ đúng dự đoán. Đây là bằng chứng62, chưa phải kiểm tra candidate mới.
+
+7dcacedf: clean9/Node1608/1608/5108file;8nativeflow/24viewport sáng/tối100/200
+hai phía và sharedcancel. Root/reviewer mở3contact; F5resolved/ship, sáu
+finding giữ62 theo diff/hashes, không relabel92viewport/M6 cũ. HaiAPIread200
+active/lap_soonly. Identity12/12,canary10/12,hai mutant11/12+10/12đỏ đúng
+dự đoán. Scanner r0sai đường ChuKy[]/exit1 giữ riêng,r1đúng5target[]/0chỉ
+regex. I2/A–S và fullnative/lifecycle/motion/TalkBack/strict32 còn mở.

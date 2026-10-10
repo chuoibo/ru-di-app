@@ -732,7 +732,7 @@
     }
   },
   "kit": {
-    "StampButton": "mặc định rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; riêng Welcome 34d57ca9 tilt0 và rộng hết cột; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng",
+    "StampButton": "mặc định rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; riêng Welcome 34d57ca9 tilt0 và rộng hết cột; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng; I1 tại7d: wrapLabel opt-in, caller maxWidth100%, nhãn flexShrink1 căn giữa, paddingVertical12 để tự cao theo chữ hệ thống; không thu font hoặc đổi mặc định caller khác. Không lấy mô tả disabled0.55 lịch sử ở trên làm luật mới thay ADR-0038.",
     "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, mặc định rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu. Welcome 34d57ca9 dùng link full: width 100%, nhãn flex 1 căn giữa lấy phần còn lại bên chevron18, giữ đủ «Tìm hiểu thêm» / «Xem lại từ đầu»; không thêm viền và không đổi link intrinsic ở màn khác",
     "CoverBand": "nền cover + Grain vaiBia 0.3, bo dưới 28, paddingTop md (+insets.top khi underStatusBar), paddingBottom lg, bleed = lề màn; compact rút vải khi bàn phím mở; back tròn 48 coverInk 0.08, PressScale 0.92 scale-only",
     "Washi": "SVG mép xé, cao 30 (40 dưới wordmark), paddingHorizontal 18, minWidth 120, tilt ±1/±2, vạch sáng card 0.35 1.5px",
@@ -792,7 +792,8 @@
     "useGiuKhiDong": "ui/giu-khi-dong.ts: mở thì giá trị đi thẳng, khép thì giữ giá trị lần cuối còn mở, để thân sheet đang khép không vẽ lại theo state vừa đóng nó (QA UI-084)",
     "NgayViet": "src/rudi/ngay-viet.ts, viết tay không Intl: ngayVN «28/09/2026»; gioNgayVN «10:07 · 28/09» (năm khi khác năm nay); khoangNgayChuyen «28 - 29/09», «30/09 - 02/10»; thangNamVN «Tháng 9, 2026»; chuỗi lạ trả rỗng",
     "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)",
-    "SoBia": "ui/SoBia.tsx: bìa vải cover, gáy tối/thun coral/nhãn giấy; fitContent chỉ khi không mo: width 100%, nhãn quyết định chiều cao trong luồng, paddingVertical 24, không đo nhãn rồi hồi tiếp. Bìa có mo giữ hình học cố định và choLatBia; không lấy nhánh bìa đóng làm chuẩn motion."
+    "SoBia": "ui/SoBia.tsx: bìa vải cover, gáy tối/thun coral/nhãn giấy; fitContent chỉ khi không mo: width 100%, nhãn quyết định chiều cao trong luồng, paddingVertical 24, không đo nhãn rồi hồi tiếp. Bìa có mo giữ hình học cố định và choLatBia; không lấy nhánh bìa đóng làm chuẩn motion.",
+    "ChuKy": "I1 tại7d: giao kèo bật wrapName/showStatus; role caption inkSoft trên, tên Bricolage ExtraBold20/26 không skew hoặc câu chờ note inkSoft, nét trang trí rồi Đã ký/Chưa ký bằng chữ. Tên/câu chờ không giới hạn một dòng; props opt-in, không đổi mặc định mọi caller. Nét vẽ không phải chữ ký tay hay bằng chứng cấp quyền."
   },
   "surfaces": {
     "Welcome": "34d57ca9: bìa cover + Grain vaiBia0.30, lề24, maxWidth688, nội dung min(windowWidth−48,640), Logo compact wordmark18; bốn chương, EB34/40−0.7 (30/36 dưới360dp), body17/24 coverInkSoft. Bố cục short khi heightClass short, cao sau safe area<660 hoặc round(fontScale×100)≥130: xếp dọc/cuộn, scene144dp fit cover, Nếp canonical moi96dp trái12/đáy4, paper136dp bo72 + cloth124dp bo104, gradient paperShade/paper/paperShade + grain + bongGiay1. Cảnh street trang1/3, cafe2, coast4. Chấm6/active22 coral, target48×48, «Trang n trên4»; StampButton «Rủ Đi thôi!» tilt0 rộng hết cột; CoverButton link full «Tìm hiểu thêm» / «Xem lại từ đầu». Khoá một lần mở, prefetch rồi push /login trực tiếp; artwork opacity/translateY12 theo shared decelerate, reduced pager không animate. Bằng chứng ship giới hạn ở shippedWelcome20261008",
@@ -812,7 +813,8 @@
     "Personalization": "TopBar back + «Bỏ qua»; Heading «Cho Rủ Đi biết gu của bạn» không phụ đề; lưới ô gu (GuGlyph 40 + label + vòng chọn, cao 64, bo 14, viền lineStrong; chọn = accentSoft + viền accent + check) minItemWidth round(150 × max(1, fontScale)) gap 12; câu đếm caption ink khi chưa đủ, note inkSoft khi đủ; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng» + chip pill; RudiButton; câu lưu trữ note inkFaint giữa",
     "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton",
     "Diary": "K tại 5cab: BookView tối đa 560dp, bìa đóng fitContent tối đa 420dp; ảnh bìa 4:3/compact 16:9, trang đơn 4:3/collage hai cột 3:4, nền paperShade và khung tỷ lệ trước khi ảnh tải hoặc báo lỗi. Preview giữ bìa/các trang; DiaryScreen paged có tên h2/lời mở note và một trang, chỉ một pager khi nhiều trang, mũi tên 48dp/counter wrap/hint biên, sửa quiet ở header, Quản lý sổ mặc định thu gọn. EndingScreen chỉ sửa trang đang chọn trên TrangSo gồm pager/tên/chuyện/ảnh/toolbar icon 48dp có tên trợ năng; tên multiline, công cụ bìa wrap và thành cột toàn ngang từ fontScale 1.25; draft trong document khi chuyển trang. Token/world/seed c8e88116 không đổi; phạm vi bằng chứng ở shippedKDiary20261010.",
-    "GroupsFriends": "H tại d91: New/Invite/AddFriend cột form 560dp, gap24, phone action ở footer tránh IME với insets.bottom+12 khi IME đóng và shell8dp khi mở; expanded width>=600/height>=720 đặt action ngay sau vật giấy. New dùng SoBia fitContent, bìa/action maxWidth360 cùng trục, nhãn tự cao và tên–owner24; phần vải bao ngoài nhãn giữ dáng bìa. Members roster/role note inkSoft tự wrap trước wall/album, guard ngắn mở giải thích; invite/add quiet icon48 ở header. Friends message icon cạnh người, cặp accept/decline xuống dưới cột chữ khi hẹp/chữ lớn; success/duplicate recovery đi Friends/Đã gửi. Leave decision nội dung ngắn và hai nút footer ngoài scroll, prompt–action24, warn outline + ghost, Back trở lại settings. Phạm vi bằng chứng ở shippedHGroupsFriends20261010; không token/world/raster mới."
+    "GroupsFriends": "H tại d91: New/Invite/AddFriend cột form 560dp, gap24, phone action ở footer tránh IME với insets.bottom+12 khi IME đóng và shell8dp khi mở; expanded width>=600/height>=720 đặt action ngay sau vật giấy. New dùng SoBia fitContent, bìa/action maxWidth360 cùng trục, nhãn tự cao và tên–owner24; phần vải bao ngoài nhãn giữ dáng bìa. Members roster/role note inkSoft tự wrap trước wall/album, guard ngắn mở giải thích; invite/add quiet icon48 ở header. Friends message icon cạnh người, cặp accept/decline xuống dưới cột chữ khi hẹp/chữ lớn; success/duplicate recovery đi Friends/Đã gửi. Leave decision nội dung ngắn và hai nút footer ngoài scroll, prompt–action24, warn outline + ghost, Back trở lại settings. Phạm vi bằng chứng ở shippedHGroupsFriends20261010; không token/world/raster mới.",
+    "PairConsentI1": "I1 tại7d: picker cột560, hình nhân46/tên wrap/chevron/kẻ tóc, add quiet48 ở header. Chưa mở: cột640, hai tên h2 ink dẫn trục trái; body inkSoft, bìa nhỏ Hai/mình và Nếp hỗ trợ. Từ width600/font<1.3 hai vùng cạnh nhau, chữ lớn trở lại dọc. Phone entry ở footer inset max(bottom,12), expanded sau cụm mở sổ. BacDongY: quyền rồi giới hạn rồi hai chữ ký; dọc khi width<600 hoặc font>=1.3, cột stretch/basis auto. Body cuộn riêng, feedback/error/action/Để sau ngoài scroll, inset kit max(bottom,16). Sau mở: con dấu Rủ hội mình đi chơi wrap; Chọn loại sổ label inkSoft căn trái, parent/label stretch, minHeight48/padVertical12. Nền journal giữ grain sáng/tối. Bằng chứng và giới hạn ở shippedI1PairConsent20261010; I2 không được phong thánh."
   },
   "implementationCheckpoint": {
     "date": "2026-09-06",
@@ -1022,7 +1024,15 @@
       "Sổ thay bảng điều khiển: hàng tên trái, số phải, kẻ tóc dưới; số nguyên đồng, tabular, không animate trước domain state",
       "Bốn bậc chuyển động 100/200/300/550 ms, Reduce Motion đưa mọi bậc trừ instant về 0",
       "Mọi cú bấm là lò xo scale trên UI thread; trạng thái thành đúng dưới ngón tay là một cú đóng dấu ba nhịp trong ngân sách celebrate, một lần mỗi sự kiện"
-    ]
+    ],
+    "currentAuthority": {
+      "date": "2026-10-10",
+      "design": "DESIGN.md",
+      "section": "v3 «Sân khấu giấy» — Creative North Star; bổ sung I1 trong Typography/Layout/Components",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md",
+      "source": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "scope": "Hợp đồng I1 kế thừa seed c8e88116; _layout.tsx không còn contract lịch sử. Các directionContract trong snapshot cũ chỉ giữ provenance lịch sử, không chứng minh hợp đồng hiện tại."
+    }
   },
   "shippedV3": {
     "_": "Mốc đợt «chuyển mình»: nhánh claude/p0-w-ui2-bo-cuc-theo-nhiem-vu, bảy commit ab53e789 7ae05b08 20de622c e2c8b1da cc5c6795 e550c058 06a4722f. Finish review trả ship sau tám mục vật chất resolved.",
@@ -2143,6 +2153,116 @@
       "Vai thành viên là note inkSoft tự wrap, không khôi phục Stamp từ mô tả v3 cũ.",
       "Nhánh pressed opacity trong hàng người và drift cũ ngoài scope giữ nguyên, không thành phản hồi bấm thứ hai.",
       "Sáu fixes resolved không total-H/app acceptance; subset/regex không full gate, contrast hoặc điểm thẩm mỹ."
+    ]
+  },
+  "shippedI1PairConsent20261010": {
+    "_": "Bàn giao hợp nhất vào hệ hiện có sau sửa cuối; chỉ bảy finding I1, không nghiệm thu toàn I/A–S. Giữ nguyên token, lịch sử và bằng chứng H/K.",
+    "date": "2026-10-10",
+    "headCommit": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — v3 «Sân khấu giấy», Creative North Star và các mục I1",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage và Nếp canonical; không roll, token hoặc raster mới.",
+      "reference": "Mockup06 là critique-reference, chưa approved comp; _layout.tsx không còn contract lịch sử."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/hai-nguoi/ChonNguoi.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongYBac.tsx",
+      "apps/mobile/src/rudi/ui/ChuKy.tsx",
+      "apps/mobile/src/rudi/ui/StampButton.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx",
+      "apps/mobile/src/rudi/to-giay/SoDoiSong.tsx",
+      "apps/mobile/src/rudi/to-giay/so-doi-map.ts"
+    ],
+    "contract": {
+      "spatial": "Người dẫn mắt trên trục trái; cảnh bìa/Nếp hỗ trợ. Cột form picker560, đọc640; unopened hai vùng khi width>=600 và font<1.3, còn lại một cột. Compact entry ngoài scroll, inset max(bottom,12).",
+      "type": "Hai tên h2 ink, và/lời mở body inkSoft. ChuKy wrapName/showStatus giữ role, tên hoặc câu chờ, nét, Đã ký/Chưa ký; tên20/26 không skew trong giao kèo, không giới hạn một dòng.",
+      "consent": "TrangSo ke=false: Cho phép → Không kéo theo → hai phần ký → Im lặng không phải đồng ý. Dọc khi width<600 hoặc font>=1.3, stretch/basis auto; khoảng nhóm ký24.",
+      "footer": "BacDongY body cuộn riêng; feedback/lỗi, con dấu, Để sau theo thứ tự đọc ở footer. Inset kit max(bottom,16), không bật prioritizeFooter để kéo tấm hết trần.",
+      "actions": "StampButton wrapLabel opt-in giữ font/mặt dấu, tự cao padVertical12. Để sau label inkSoft target48/nhãn stretch căn giữa; Chọn loại sổ inkSoft target48/padVertical12, parent/nhãn stretch căn trái.",
+      "state": "UI theo response/provider: một bên ký chưa mở; recipient có entry/Đồng ý, proposer câu chờ có tên. Back/cancel không grant. Lập sổ không tự bật Một đôi/quyền đọc chat; Một đôi nói AI chỉ nhận phần được chọn và xác nhận gửi.",
+      "materialAndM6": "Journal giữ grain giấy sáng/vải tối. M6 bìa140 và Nếp wrap theo khoảng trống, dấu Sổ đã/mở hai dòng; mở thật chỉ có bằng chứng62, ảnh tĩnh không chứng minh motion."
+    },
+    "verdict": {
+      "carry": {
+        "source": "62c1a73b3fb5bb85c966670d26cea782eac56c43",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-62c1a73b/fresh-i1-verdict.md",
+        "resolved": [
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F6",
+          "F7"
+        ],
+        "history": "F5 partial; 14 required contact/92 viewport và2 original. Không đổi nhãn ảnh62 thành7d."
+      },
+      "final": {
+        "source": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7dcacedf/fresh-i1-f5-verdict.md",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7dcacedf/i1-f5-verdict-packet.json",
+        "disposition": "ship",
+        "scope": "F5 resolved và regression hẹp: 3 contact/24 viewport mới, primary/recipient light/dark100/200; shared couple read/cancel. Sáu finding còn lại carry theo diff/hash, không review lại toàn I."
+      }
+    },
+    "documenter": {
+      "method": "Đọc source/brief/hai verdict/packet; mở đủ3 contact7d và2 contact62. Không chạy runtime, API, web, gate hoặc detector.",
+      "openedImages": [
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-primary-light.png",
+          "viewports": 8
+        },
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-primary-dark.png",
+          "viewports": 8
+        },
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-recipient.png",
+          "viewports": 8
+        },
+        {
+          "source": "62c1a73b",
+          "name": "contact-i-after-entry-dark20.png",
+          "viewports": 6
+        },
+        {
+          "source": "62c1a73b",
+          "name": "contact-i1-functional-recipient.png",
+          "viewports": 8
+        }
+      ],
+      "observed": "7d giữ đủ Chọn loại sổ một dòng ở100/200, tách khỏi con dấu chính; shared giao kèo có quyền/giới hạn/hai phần ký, Để sau rõ. 62 có hàng người, tên dẫn unopened, recipient entry/feedback/cancel và khung M6 sau grant thật; nhãn phụ co ở62 giữ là lỗi lịch sử."
+    },
+    "technicalEvidence": {
+      "method": "Đọc các báo cáo có sẵn, không chạy lại trong lượt tài liệu.",
+      "exactCleanSource": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "checks": "clean-checks.json: 9 bước exit0, Node214files/1608/1608, 0 fail/skip/cancel/todo; repo-tree5108. Không full npm/strict32.",
+      "mutation": "i1-consent-mutation-evidence/results.json: identity12/12; canary10/12, mutants11/12 và10/12 đỏ đúng dự đoán, cùng harness SHA2560fc8e99f2d833808439d30eb2f2f1b9318730af3c2e49905b92b83459277939c.",
+      "detector": "i1-final-tsx-detector-r1.json: 5 target TSX regex, []/exit0; không native computed contrast/geometry. r0 sai đường dẫn ChuKy []/exit1 giữ là đỏ."
+    },
+    "runtimeEvidence": {
+      "javascript": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "apkBuildCheckpoint": "2f20a30179d0e21a1f4b3244dfbd685b5bade7e9",
+      "apkSha256": "963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514",
+      "continuity": "Proposal/cancel/receivergrant/M6 thật thuộc62, chỉ lap_so. Fresh7d đọc active/lap_so và shared couple cancel, không reset/replay cặp active.",
+      "restoredFontScale": 1
+    },
+    "limits": [
+      "Chỉ các finding I1 đã chấm; I2, toàn I/A–S và mockup-quality toàn app vẫn mở.",
+      "Android320×640; matrix62 có100/130/200 và expanded cùng AVD đổi kích thước. Fresh7d chỉ100/200 sáng/tối hai phía và regression đã nêu.",
+      "Không web/iOS, native computed contrast, motion/TalkBack, lifecycle/network, full npm hoặc strict32; APK checkpoint độc lập với JS7d."
+    ],
+    "notCanonized": [
+      "F5 partial62, nhãn Để của4a và scanner r0 exit1 không thành pass; giữ provenance đỏ.",
+      "Nét ký không thay đồng thuận; opt-in wrap không thu font/đổi mọi caller; M6 không replay để tạo chứng cứ.",
+      "Không biến lỗi/bố cục I2 chưa kiểm thành hướng dẫn mới; bảy finding đóng không nghiệm thu họ màn."
     ]
   }
 }
