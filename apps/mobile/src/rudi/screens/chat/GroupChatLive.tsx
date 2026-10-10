@@ -1276,7 +1276,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
