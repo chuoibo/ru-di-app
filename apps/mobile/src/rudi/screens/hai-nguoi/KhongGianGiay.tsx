@@ -536,7 +536,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <View style={[styles.than, { gap: space.lg }]}>
         {/* The waiting state below already says what `paper_wrong_state` meant;
             the server's sentence above it said the same thing worse (QC 24/09). */}
-        {so.loiLenh && so.loiGu === null && !so.xinToBiChan && !so.daDung ? (
+        {so.loiLenh && so.loiGu === null && mo !== "loai-so" && mo !== "rang-buoc" && !so.xinToBiChan && !so.daDung ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
           </Text>

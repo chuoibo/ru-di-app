@@ -190,9 +190,9 @@ export function ToLoiRu({
               // «Con dấu rơi xuống» là khoảnh khắc ký của thế giới này, và nó
               // chỉ đúng khi trạng thái vừa đổi DƯỚI NGÓN TAY người đang nhìn.
               dong={vuaDoi}
-              // Measure the actual caps, rather than transforming an intrinsic
-              // mixed-case label after Android has sized the small seal.
               label={nhanDau(to, toiId, tenNguoiKia).toLocaleUpperCase("vi-VN")}
+              labelStyle={styles.chuDauTrangThai}
+              style={styles.dauTrangThai}
               testID={testID ? `${testID}-stamp` : undefined}
               tilt={vuaDoi ? -2 : 0}
               tone="ink"
@@ -337,6 +337,11 @@ const styles = StyleSheet.create({
   butChi: { borderBottomWidth: 1, borderStyle: "dashed", paddingBottom: 3 },
   nepGui: { alignItems: "flex-end" },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
+  // Android's condensed caps need more than the intrinsic 46dp at font 1.0.
+  // Allot the seal room and let its label use it; other Stamp callers keep
+  // their own geometry. At larger font scales the natural width still grows.
+  dauTrangThai: { minWidth: 88 },
+  chuDauTrangThai: { alignSelf: "stretch", textAlign: "center" },
   // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
   lyDo: {},
   moc: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", paddingVertical: 4 },

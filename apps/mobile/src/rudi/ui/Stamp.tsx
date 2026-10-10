@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, Text, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";
@@ -23,6 +23,8 @@ export interface StampProps {
   /** A paper chip under the seal, for a seal laid over a photograph. */
   nen?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Opt-in label geometry for a seal that is allotted space by its row. */
+  labelStyle?: StyleProp<TextStyle>;
   testID?: string;
 }
 
@@ -45,7 +47,7 @@ export interface StampProps {
  * static seal; the budget is one landing per event, which the caller keeps
  * by passing `dong` only for the row it just acted on.
  */
-export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, testID }: StampProps) {
+export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, labelStyle, testID }: StampProps) {
   const { colors } = useRudiTheme();
   const ink = tone === "ink" ? colors.ink : colors[tone];
   const filled = variant === "ink";
@@ -72,7 +74,7 @@ export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, d
         style,
       ]}
     >
-      <Text style={[typography.stamp, { color: filled ? onInk : ink }]}>{label}</Text>
+      <Text style={[typography.stamp, { color: filled ? onInk : ink }, labelStyle]}>{label}</Text>
     </Animated.View>
   );
 }

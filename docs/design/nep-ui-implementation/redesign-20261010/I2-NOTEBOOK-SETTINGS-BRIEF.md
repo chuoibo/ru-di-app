@@ -36,8 +36,29 @@ Sáu nguồn I2 trước sửa giữ byte từ62 qua docs9d56 trừ nhãn phụ 
 Một batch: field multiline/keyboard-fit và save/error trong footer riêng;
 mục lục ba nhóm bằng proximity; ownstate/scope/action Gu chung nhóm; type
 có disabled/busy/error tại lớp đang mở; target48dp; hậu quả dương nổi hơn
-zero nhưng giữ đủ preview; tem đo chữ hoa trước layout tại caller hiện hành.
+zero nhưng giữ đủ preview. Batch đầu8a đổi tem sang chữ hoa chưa hết cắt
+glyph100; lần sửa có giới hạn cấp88dp tối thiểu và stretch/center chữ tại
+ToLoiRu, qua prop opt-in; các Stamp khác giữ geometry cũ. Ghi chú dài tự cao
+theo content-size trong khoảng3–8 dòng theo fontScale, thay vì mở ở cuối ô
+ba dòng. Lỗi type/constraint chỉ hiện trong sheet đang nhận thao tác.
 Không đổi API/domain/writer, tiền, consent/locks/idempotency, AI provider,
 E2EE hoặc plaintext. Không đóng sổ/cấp couple để lấy ảnh. Cần after đúng SHA,
 input/cancel/save/API thật, privacy Gu, typefailure và nestedBack; các state
 khác toànI/A–S còn mở, không hứa phạm vi chưa chạy.
+
+Sau8a: 8profile/84viewport0 (expandedr0 vuốt nhầm tay cầm, r1 không vuốt
+khi toàn thân sheet đã vừa). IME100/2000, cancel giữ nguyên46ký tự/version1.
+NativeGu bật/tắt thật; primary/counterpart200, outsider404; chỉ chia gu của
+chính mình, common vẫn ẩn khi counterpart chưa chia. TCP-reset tại riêng
+cổng53559 của emulator tạo lỗi thật, API trước/sau nối lại vẫn private.
+Native lưu hai điều tránh106/91ký tự: offline không đổi, retry lên foodv2
+và dungv1 đúng nội dung; không dùng PUT để ép xanh. Đây proof hành vi8a,
+chưa proof sau sửa hoặc finish review. Root mở ảnh lỗi và ảnh lưu, không
+nhận screenshot quá sớm/chưa settle là chứng minh đầy đủ trạng thái sau tap.
+
+Đỏ harness giữ riêng: bỏ adb reverse không ngắt HTTP đang mở nên r0 đổi
+fixture sang Hội bạn. Khôi phục bằng native Minh đề nghị/API Trang grant,
+không nhận đó là recipient-native proof. REJECT mặc định r1 để Gu request
+treo rồi gửi tiếp khi bỏ chặn; đã tắt lại native. r2 dùng TCP-reset và witness
+cả trước/sau tháo rule. Chỉ firewall trong emulator sở hữu, không API/DB/
+oracle/Docker/audit khác. Mọi rule riêng và font đã trả lại sau lượt kiểm.
