@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { cancelAnimation, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { ApiError } from "../../../api";
@@ -59,6 +59,7 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { contextId: string; ruNgay?: boolean; choGoiY?: string }) {
   const router = useRouter();
   const { colors, space } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const motion = useMotion();
   const { phien } = useRudiSession();
   const so = useSoDoi();
@@ -283,9 +284,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         <View style={styles.cungMoSo}>
         <View style={styles.hangCanh}>
           <SoBia
-            rong={112}
+            rong={fontScale >= 1.3 ? 140 : 112}
             ten={[]}
-            nhan={<View style={[styles.nhanSo, { backgroundColor: colors.card }]}><Text style={[typography.label, { color: colors.ink }]}>Hai mình</Text></View>}
+            nhan={<View style={[styles.nhanSo, { backgroundColor: colors.card }]}><Text style={[typography.label, styles.tenBan, { color: colors.ink }]}>{"Hai\nmình"}</Text></View>}
           />
           <NepTrongTrang pose="gap-lai" size={80} />
         </View>

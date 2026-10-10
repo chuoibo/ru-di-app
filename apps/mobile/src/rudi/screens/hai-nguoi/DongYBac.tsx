@@ -101,19 +101,19 @@ function BacDongY({
           <View style={[styles.haiCot, xepDoc && styles.doc]}>
             <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Cho phép" />
-              {choPhep.map((d) => (
+              {choPhep.map((d, i) => (
                 <View key={d} style={styles.dieu}>
                   <Ionicons color={colors.ink} name="checkmark" size={16} style={styles.dauDieu} />
-                  <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{d}</Text>
+                  <Text testID={`${testID}-cho-phep-${i}`} style={[typography.body, styles.flex, { color: colors.ink }]}>{d}</Text>
                 </View>
               ))}
             </View>
             <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Không kéo theo" />
-              {khongKeoTheo.map((d) => (
+              {khongKeoTheo.map((d, i) => (
                 <View key={d} style={styles.dieu}>
                   <Ionicons color={colors.inkSoft} name="close" size={16} style={styles.dauDieu} />
-                  <Text style={[typography.body, styles.flex, { color: colors.inkSoft }]}>{d}</Text>
+                  <Text testID={`${testID}-khong-keo-theo-${i}`} style={[typography.body, styles.flex, { color: colors.inkSoft }]}>{d}</Text>
                 </View>
               ))}
             </View>
@@ -179,8 +179,8 @@ const styles = StyleSheet.create({
   // Two columns when there is room for both at reading width, one under the other otherwise.
   haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   cot: { flexGrow: 1, flexBasis: 200, gap: 4 },
-  doc: { flexDirection: "column" },
-  cotDoc: { flexGrow: 0, flexBasis: "auto" },
+  doc: { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", width: "100%" },
+  cotDoc: { flexGrow: 0, flexBasis: "auto", width: "100%" },
   chuKyDoc: { flex: 0, flexBasis: "auto", width: "100%" },
   dieu: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
   dauDieu: { marginTop: 3 },

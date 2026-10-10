@@ -40,3 +40,10 @@ Clean f433: type/guide/export/compile/fixup xanh; Node1607/1608, một đỏ
 vì Maestro47 còn đợi heading cũ. Đổi đúng expectation sang "Sổ của hai mình",
 giữ test kiểm chuỗi sống/corpus và các nhãn link chat "Tờ giấy của hai mình".
 Log đỏ giữ nguyên; chưa native matrix hoặc nhận verdict cho candidate này.
+
+50e4c52b: clean Node1608/1608 và tám flow native xanh thao tác (40 PNG),
+nhưng mở đủ tám contact phát hiện giao kèo một cột bị co gần hết phần chữ
+ở compact và expanded200. Không xem lượt này là đạt visual, chưa proposal/
+grant. Bìa112 còn tách chữ «mình» ở200. Một batch sửa width/stretch/nowrap
+cho cột dọc; bìa140 từ130, nhãn hai dòng có chủ ý. Thêm testID từng điều
+khoản để đối chiếu bounds native, không lấy TSX regex làm geometry.
