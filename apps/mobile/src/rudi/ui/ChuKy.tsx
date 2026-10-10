@@ -28,6 +28,7 @@ export function ChuKy({
   choChu,
   dong = false,
   tre = 0,
+  wrapName = false,
   style,
   testID,
 }: {
@@ -40,6 +41,8 @@ export function ChuKy({
   /** The signature is new: the flourish draws itself (once per mount). */
   dong?: boolean;
   tre?: number;
+  /** Consent sheets keep the complete name and waiting instruction visible. */
+  wrapName?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -61,11 +64,11 @@ export function ChuKy({
     <View accessibilityLabel={daKy ? `${vaiTro}: ${ten} đã ký` : `${vaiTro}: ${choChu}`} accessible onLayout={(e) => setW(Math.round(e.nativeEvent.layout.width))} style={[styles.khoi, style]} testID={testID}>
       <View style={styles.dong}>
         {daKy ? (
-          <Text numberOfLines={1} style={[styles.ten, { color: colors.ink }]}>
+          <Text numberOfLines={wrapName ? undefined : 1} style={[styles.ten, { color: colors.ink }]}>
             {ten}
           </Text>
         ) : (
-          <Text numberOfLines={1} style={[typography.note, { color: colors.inkSoft }]}>
+          <Text numberOfLines={wrapName ? undefined : 1} style={[typography.note, { color: colors.inkSoft }]}>
             {choChu}
           </Text>
         )}

@@ -758,12 +758,13 @@
         "Kỷ niệm của hai bạn",
         "Loại sổ",
         "Làm mới",
-        "Một chỗ cho chuyện hai mình",
         "Mở cuộc đi này",
         "Mở sổ cặp đôi",
         "Những điều cần tránh",
         "Rủ hội mình đi chơi",
         "Rủ đi chơi",
+        "Sổ của hai mình",
+        "Sổ hai người",
         "Sổ này đã dừng",
         "Sổ này đã đóng",
         "Thêm chỗ này vào buổi đã hẹn",
@@ -774,7 +775,6 @@
         "Tạo kèo với chỗ này",
         "Tạo kèo ở …",
         "Tờ giấy cũ · chỉ đọc",
-        "Tờ giấy của hai mình",
         "Tờ tuần này ở phía …",
         "Tờ đã khép",
         "Xem lời đề nghị",
@@ -872,10 +872,6 @@
         {
           "den": "friends/add",
           "nhan": "Thêm bạn bằng tên tài khoản"
-        },
-        {
-          "den": "friends/add",
-          "nhan": "Thêm bạn khác"
         }
       ],
       "di_toi": [
@@ -884,12 +880,12 @@
       ],
       "man": "hai-nguoi/chon-nguoi",
       "nhan": [
+        "Bạn muốn rủ ai?",
         "Chưa có bạn nào để rủ",
         "Chưa đọc được danh sách bạn",
-        "Rủ ai?",
         "Rủ một người",
         "Thêm bạn bằng tên tài khoản",
-        "Thêm bạn khác"
+        "Đang mở sổ của hai bạn…"
       ],
       "tep": [
         "app/hai-nguoi/chon-nguoi.tsx",

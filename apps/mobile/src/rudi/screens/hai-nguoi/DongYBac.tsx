@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
@@ -69,6 +69,8 @@ function BacDongY({
   loi?: string | null;
 }) {
   const { colors, space } = useRudiTheme();
+  const { width, fontScale } = useWindowDimensions();
+  const xepDoc = width < 600 || fontScale >= 1.3;
   const { phien } = useRudiSession();
   // Closing, the sheet keeps what it said open (QA UI-084).
   const { dangCho, deNghiCuaToi } = useGiuKhiDong(open, { dangCho: dangChoSong, deNghiCuaToi: deNghiCuaToiSong });
@@ -83,13 +85,21 @@ function BacDongY({
   useEffect(() => {
     truoc.current = open ? toiKy : null;
   }, [open, toiKy]);
+  const actions = <View style={styles.actions}>
+    {dangCho && !deNghiCuaToi ? (
+      <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
+    ) : !dangCho ? (
+      <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
+    ) : null}
+    <RudiButton label="Để sau" onPress={onClose} variant="ghost" />
+  </View>;
   return (
-    <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID}>
+    <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID} footer={actions} showsVerticalScrollIndicator>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" title={tieuDe} />
         <TrangSo ke={false} tone="accent" testID={`${testID}-giao-keo`}>
-          <View style={styles.haiCot}>
-            <View style={styles.cot}>
+          <View style={[styles.haiCot, xepDoc && styles.doc]}>
+            <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Cho phép" />
               {choPhep.map((d) => (
                 <View key={d} style={styles.dieu}>
@@ -98,7 +108,7 @@ function BacDongY({
                 </View>
               ))}
             </View>
-            <View style={styles.cot}>
+            <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Không kéo theo" />
               {khongKeoTheo.map((d) => (
                 <View key={d} style={styles.dieu}>
@@ -108,9 +118,9 @@ function BacDongY({
               ))}
             </View>
           </View>
-          <View style={styles.chuKy}>
-            <ChuKy choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
-            <ChuKy choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
+          <View style={[styles.chuKy, xepDoc && styles.doc]}>
+            <ChuKy wrapName style={xepDoc ? styles.chuKyDoc : undefined} choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
+            <ChuKy wrapName style={xepDoc ? styles.chuKyDoc : undefined} choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
           </View>
         </TrangSo>
         {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
@@ -121,16 +131,12 @@ function BacDongY({
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
               {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
             </Text>
-            <StampButton disabled={dangLam} loading={dangLam} label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
           </>
         ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
             Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
           </Text>
-        ) : (
-          <StampButton disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
-        )}
-        <RudiButton label="Để sau" onPress={onClose} variant="ghost" />
+        ) : null}
       </View>
     </Sheet>
   );
@@ -141,11 +147,8 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
     <BacDongY
       {...props}
       choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Những điều cần tránh: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
-      // Said as far as it is true: only the two of them can open the notebook
-      // in the app, but the chat is not end to end encrypted yet (its lock
-      // label says so), and «nobody but you two sees this» beside an open lock
-      // promised more than the product keeps (QA 23/09).
-      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
+      // Notebook consent grants neither couple status nor access to chat.
+      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không tự đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app. Quyền riêng tư của tin nhắn không đổi."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
       tieuDe="Lập sổ lời hẹn"
@@ -170,11 +173,16 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
 
 const styles = StyleSheet.create({
   noiDung: { paddingBottom: 8 },
+  actions: { gap: 8, paddingTop: 16 },
+  dau: { maxWidth: "100%" },
   flex: { flex: 1 },
   // Two columns when there is room for both at reading width, one under the other otherwise.
   haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   cot: { flexGrow: 1, flexBasis: 200, gap: 4 },
+  doc: { flexDirection: "column" },
+  cotDoc: { flexGrow: 0, flexBasis: "auto" },
+  chuKyDoc: { flex: 0, flexBasis: "auto", width: "100%" },
   dieu: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
   dauDieu: { marginTop: 3 },
-  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 16, marginTop: 14 },
+  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 24, marginTop: 24 },
 });

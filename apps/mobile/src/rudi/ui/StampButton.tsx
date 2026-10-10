@@ -14,6 +14,8 @@ export interface StampButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  /** Constrained consent actions may wrap without shrinking system text. */
+  wrapLabel?: boolean;
   /** Rotation of a seal pressed by hand: -3 on the cover, -1 on a form, 0 in a table. */
   tilt?: -3 | -2 | -1.5 | -1 | 0 | 1 | 1.5 | 2 | 3;
   /** `lon` is the cover's ask; `vua` is the same seal on a form. */
@@ -49,7 +51,7 @@ const CO = {
  * (`mauSang.ink`, 5.41:1 on coral in either scheme). The same seal, one size
  * down, is the primary action on Login, so the ask has one language.
  */
-export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", tone = "accent", style, testID, lyDo }: StampButtonProps) {
+export function StampButton({ label, onPress, disabled, loading, wrapLabel = false, tilt = 0, size = "lon", tone = "accent", style, testID, lyDo }: StampButtonProps) {
   const { brand, colors } = useRudiTheme();
   const busy = !!loading;
   // ADR-0038 §2.2: a seal that cannot be pressed yet is an outline of one --
@@ -86,6 +88,7 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
         style={[
           styles.body,
           { minHeight: co.minHeight, paddingHorizontal: co.paddingHorizontal, borderRadius: co.radius },
+          wrapLabel && styles.wrapBody,
           // Until the first layout the rim has no size; plain coral for that one frame, never a hole.
           box.w === 0 && { backgroundColor: mauDau },
         ]}
@@ -103,7 +106,7 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
         )}
         <View style={styles.row}>
           {busy ? <ActivityIndicator color={muc} /> : null}
-          <Text style={[styles.label, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
+          <Text style={[styles.label, wrapLabel && styles.wrapLabel, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
         </View>
       </View>
     </PressScale>
@@ -126,6 +129,8 @@ const styles = StyleSheet.create({
   muc: { position: "absolute", left: 3, right: 3, top: 3, bottom: 3, overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
   label: { fontFamily: displayFace.bold, letterSpacing: 0.4 },
+  wrapBody: { paddingVertical: 12 },
+  wrapLabel: { flexShrink: 1, textAlign: "center" },
   coLyDo: { alignSelf: "center", alignItems: "center", gap: 8 },
   lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 8 },
   lyDoChu: { flexShrink: 1, textAlign: "center" },

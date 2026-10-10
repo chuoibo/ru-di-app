@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -9,7 +10,7 @@ import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, IconButton, RudiScreen, TopBar } from "../../ui";
 import { HinhNhan } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { PressScale } from "../../ui/PressScale";
@@ -80,9 +81,9 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
   };
 
   return (
-    <RudiScreen material="quiet" header={<TopBar back title="Rủ một người" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
-      <View style={{ gap: 10, paddingTop: 8 }}>
-        <Heading size="h2" subtitle="Chọn người bạn muốn cùng mở sổ lời hẹn. Hai bạn cùng đồng ý trước khi gửi lời hẹn." title="Rủ ai?" />
+    <RudiScreen material="quiet" cot="form" header={<TopBar back title="Rủ một người" right={<IconButton quiet icon="person-add-outline" accessibilityLabel="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} />} />} testID="chon-nguoi">
+      <View style={styles.noiDung}>
+        <Heading size="h2" subtitle="Chọn từ những người đã kết bạn." title="Bạn muốn rủ ai?" />
         {trang.pha === "dang-doc" ? (
           <SkeletonGroup>
             <SkeletonRow leading={40} />
@@ -104,7 +105,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
           // Friends as people, not rows: each a paper standee in their own ink
           // (ADR-0037 D6) on a card you press to open your notebook together.
           <View style={styles.luoi}>
-            {trang.ban.map((ban) => (
+            {trang.ban.map((ban, index) => (
               <PressScale
                 accessibilityHint="Mở chỗ hẹn của hai bạn"
                 accessibilityLabel={ban.display_name}
@@ -114,15 +115,14 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
                 haptic="select"
                 key={ban.person_id}
                 onPress={() => void ruNguoi(ban)}
-                style={[styles.the, { backgroundColor: colors.card, borderColor: colors.lineStrong, opacity: dangMo !== null && dangMo !== ban.person_id ? 0.55 : 1 }]}
+                style={[styles.the, { borderTopColor: colors.line, borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth, opacity: dangMo !== null && dangMo !== ban.person_id ? 0.55 : 1 }]}
               >
                 <HinhNhan name={ban.display_name} personId={ban.person_id} size={46} />
-                <Text numberOfLines={2} style={[typography.label, { color: mucNguoi(ban.person_id, dark) }]}>
-                  {ban.display_name}
-                </Text>
-                <Text numberOfLines={2} style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
-                  {dangMo === ban.person_id ? "Đang mở sổ của hai bạn…" : "Mở chỗ hẹn của hai bạn"}
-                </Text>
+                <View style={styles.nguoi}>
+                  <Text style={[typography.label, { color: mucNguoi(ban.person_id, dark) }]}>{ban.display_name}</Text>
+                  {dangMo === ban.person_id ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đang mở sổ của hai bạn…</Text> : null}
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.inkSoft} />
               </PressScale>
             ))}
           </View>
@@ -130,16 +130,14 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
         {loiMo !== null ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiMo}</Text>
         ) : null}
-        {trang.pha === "xong" && trang.ban.length > 0 ? (
-          <RudiButton icon="person-add-outline" label="Thêm bạn khác" onPress={() => router.push("/friends/add")} variant="ghost" />
-        ) : null}
       </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  luoi: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  the: { flexGrow: 1, flexBasis: 104, maxWidth: 180, minHeight: 132, alignItems: "center", gap: 4, paddingVertical: 12, paddingHorizontal: 8, borderWidth: 1, borderRadius: 10 },
-  giua: { textAlign: "center" },
+  noiDung: { gap: 24, paddingTop: 8 },
+  luoi: { width: "100%" },
+  the: { flexDirection: "row", minHeight: 80, alignItems: "center", gap: 12, paddingVertical: 16 },
+  nguoi: { flex: 1, minWidth: 0, gap: 4 },
 });

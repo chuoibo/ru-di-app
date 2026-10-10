@@ -279,21 +279,21 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     // names have a full reading line instead of squeezing into its tiny label.
     than = (
       <View style={styles.canh} testID="giay-chua-lap-so">
+        <Heading title="Sổ của hai mình" subtitle="Cùng hẹn nhau, giữ lại những cuộc đi. Chỉ mở khi cả hai đồng ý." />
+        <View style={styles.cungMoSo}>
         <View style={styles.hangCanh}>
           <SoBia
-            rong={128}
+            rong={112}
             ten={[]}
             nhan={<View style={[styles.nhanSo, { backgroundColor: colors.card }]}><Text style={[typography.label, { color: colors.ink }]}>Hai mình</Text></View>}
           />
-          <NepTrongTrang pose="gap-lai" size={112} />
+          <NepTrongTrang pose="gap-lai" size={80} />
         </View>
         <View style={styles.tenHaiBan}>
           <Text style={[typography.title, styles.tenBan, { color: colors.ink }]}>{tenToi}</Text>
           <Text style={[typography.body, styles.tenBan, { color: colors.inkSoft }]}>và {so.tenNguoiKia || "Người ấy"}</Text>
         </View>
-        {/* Any pair keeps a notebook, «Hội bạn» or «Một đôi» (ADR-0053): the
-            line does not assume a couple, and says the kind is chosen later. */}
-        <Heading subtitle="Một cuốn sổ chỉ hai bạn đọc, để hẹn nhau từng tuần. Cả hai đồng ý thì sổ mở; là «Hội bạn» hay «Một đôi», hai bạn chọn sau." title="Một chỗ cho chuyện hai mình" />
+        </View>
         {/* Whose proposal is waiting, said on the page (QA UI-086): closing
             the sheet left the proposer reading the receiver's words. */}
         {deNghiLapSo ? (
@@ -301,7 +301,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
             {deNghiLapSo.cuaToi ? `Đã đề nghị lập sổ. Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.` : `${so.tenNguoiKia || "Người ấy"} đề nghị lập sổ cho hai bạn.`}
           </Text>
         ) : null}
-        <StampButton label={deNghiLapSo ? (deNghiLapSo.cuaToi ? "Xem lời đề nghị của bạn" : "Xem lời đề nghị") : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
+        <StampButton wrapLabel style={styles.dauTrongCot} label={deNghiLapSo ? (deNghiLapSo.cuaToi ? "Xem lời đề nghị của bạn" : "Xem lời đề nghị") : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
       </View>
     );
   } else if (!so.batDoi && !dangCoToMo) {
@@ -513,8 +513,8 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
               <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => { sheetParents.current = []; setMo("cai-dat"); }} quiet />
             </View>
           }
-          subtitle={so.loiDoc !== null ? so.tenNguoiKia : so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
-          title="Tờ giấy của hai mình"
+          subtitle={so.loiDoc !== null ? so.tenNguoiKia : !so.lapSo ? undefined : so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
+          title="Sổ hai người"
         />
       }
       testID="khong-gian-giay"
@@ -627,6 +627,8 @@ const styles = StyleSheet.create({
   dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   than: { paddingTop: 8 },
   canh: { gap: 16 },
+  cungMoSo: { gap: 12, paddingVertical: 8 },
+  dauTrongCot: { maxWidth: "100%" },
   nhanSo: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", borderRadius: 2 },
   tenHaiBan: { gap: 4, alignItems: "center" },
   tenBan: { maxWidth: "100%", textAlign: "center" },
