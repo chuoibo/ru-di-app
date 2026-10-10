@@ -87,3 +87,12 @@ bỏ event cũ. Measurer tuyệt đối, trong suốt và ngoài accessibility; 
 chiếm layout. Gỡ toàn bộ log/probe DEV; giữ accessibilityLabel tường minh.
 048 compatibility identity7/2 (L02/L03) là thiếu label ở frozen host, không
 mutant kill/visual credit. Source cuối vẫn cần12 capture và clean gate mới.
+
+Native814 đủ12 ảnh: nhãn đã một dòng nhưng control100% còn cao60dp,
+chữ ở trên tâm icon; nhãn sửa tiếp200% còn control86dp. F3 vẫn partial.
+Clean8149/9, subset1610/1610 và frozen behavior9/0 không chứng minh
+geometry; detector chưa chạy. Giữ đo/cap/pixel-ceil hiện hành, chuyển
+minWidth của Text thành width tường minh để Android đo cả chiều cao theo
+chiều rộng đó. Đây là giả thuyết sửa dựa trên ảnh và width constraints của
+RN, chưa kết luận cached height là nguyên nhân. Cần12 ảnh native mới trước
+khi nhận verdict; không đổi handler, draft, font hay shared primitive.

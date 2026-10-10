@@ -198,9 +198,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   const editMeasurementKey = `${editLabel}:${fontScale}:${PixelRatio.get()}:${editColumnWidth}`;
   editMeasurementKeyRef.current = editMeasurementKey;
   // Android can round an auto-sized Text down below its fractional glyph width.
-  // Measure in the finite column, then round the label floor up to a device pixel.
+  // Measure in the finite column, then request an exact width rounded up to a pixel.
   const editLabelAvailable = Math.max(0, editColumnWidth - 2 * (EDIT_ACTION.paddingHorizontal + EDIT_ACTION.border) - EDIT_ACTION.icon - EDIT_ACTION.gap);
-  const editLabelFloor = editMeasurement?.key === editMeasurementKey && editColumnWidth > 0
+  const editLabelWidth = editMeasurement?.key === editMeasurementKey && editColumnWidth > 0
     ? Math.min(editMeasurement.width ?? editLabelAvailable, editLabelAvailable)
     : undefined;
   return <View onLayout={(event) => setEditColumnWidth(event.nativeEvent.layout.width)} style={[styles.passport, { borderBottomColor: colors.line }]}>
@@ -224,7 +224,7 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
     <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
       <RudiIcon color={colors.accent} name="create-outline" size={EDIT_ACTION.icon} style={styles.editIcon} />
-      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelFloor !== undefined && { minWidth: editLabelFloor }, { color: colors.accent }]}>{editLabel}</Text>
+      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelWidth !== undefined && { width: editLabelWidth }, { color: colors.accent }]}>{editLabel}</Text>
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
   </View>;
