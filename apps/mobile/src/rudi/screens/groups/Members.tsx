@@ -121,7 +121,7 @@ export function GroupMembersScreen() {
   // Native text measures and wraps the full role at every font scale.
   const nhanVaiTro = (tv: ThanhVien): string => {
     if (tv.state === "invited") return "Đã mời, chưa đồng ý";
-    if (nguoiLap === tv.person_id) return tv.role === "admin" && tv.state === "active" ? "Người lập nhóm · Quản trị" : "Người lập nhóm";
+    if (nguoiLap === tv.person_id) return "Người lập nhóm";
     if (tv.role === "admin" && tv.state === "active") return "Quản trị";
     return "Thành viên";
   };
@@ -192,7 +192,7 @@ export function GroupMembersScreen() {
                         {ten}
                         {laToi ? " (bạn)" : ""}
                       </Text>
-                      <Text style={[typography.note, { color: colors.inkSoft }]}>{vai}</Text>
+                      <Text style={[typography.note, { color: colors.inkSoft }]}>{vai}{nguoiLap === tv.person_id && tv.role === "admin" && tv.state === "active" ? " · Quản trị" : ""}</Text>
                     </View>
                   </Pressable>
                   {/* Beside the name on a phone; under it, in the text column, in

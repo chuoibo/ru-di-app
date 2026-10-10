@@ -55,7 +55,8 @@ test("cài đặt nhóm: bong bóng xem trước vẽ bằng đúng bảng màu 
   assert.match(bong, /color: mauChon\.bubbleInk/, "chữ trong bong bóng không dùng mực của theme");
   // «Rời nhóm» sits under its own rule, after every other row.
   const ke = nguon.indexOf("styles.ke");
-  assert.ok(ke > nguon.indexOf('title="Thành viên"') && ke < nguon.indexOf('label="Rời nhóm"'), "«Rời nhóm» không còn tách dưới nét kẻ");
+  const moXacNhan = nguon.indexOf('<RudiButton icon="exit-outline" label="Rời nhóm"');
+  assert.ok(ke > nguon.indexOf('title="Thành viên"') && ke < moXacNhan, "nút mở xác nhận «Rời nhóm» không còn tách dưới nét kẻ");
 });
 
 test("đọc mù S9: ô màu đang chọn có vòng mực và dấu tick; câu mức người đọc không bị cắt", () => {

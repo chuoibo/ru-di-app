@@ -70,3 +70,11 @@ recipient accept assert nhầm handle thay vì display_name. Gửi lại sau
 decline xanh19,843s; recipient accepted recapture xanh7,525s và friend graph
 hai phía đọc200. Bốn ảnh thêm đã mở. Không đổi harness đỏ thành app xanh.
 Batch mới còn chờ exact-SHA checks, capture cùng profile và verdict pass.
+
+Clean601994b4: type/guide/export/compile/fixup xanh; Node214 file1605/1608,
+ba đỏ giữ nguyên log. Privacy test chặn tên tab "Đã là bạn" trong recovery:
+rút câu còn "Xem lại danh sách bạn", giữ kiểm riêng tư. Caption người lập
+vẫn xác định trực tiếp bằng created_by_id, vai trò ghép riêng. Kiểm nguồn
+sheet đổi điểm neo từ nút Rời nhóm đầu tiên (nay là confirm ở footer) sang
+nút mở xác nhận có icon exit, vẫn bắt nó phải nằm dưới nét kẻ và roster.
+Không bỏ kiểm/giảm corpus. Candidate kế tiếp cần chạy lại toàn subset sạch.

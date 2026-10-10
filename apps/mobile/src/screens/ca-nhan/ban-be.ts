@@ -60,7 +60,7 @@ export const LOI_GUI: Record<string, string> = {
   person_not_found:
     "Người này không còn trong Rủ Đi nữa. Tìm lại bằng tên tài khoản.",
   request_not_open:
-    "Lời mời này chưa gửi được. Xem mục Đã gửi và Đã là bạn trong danh sách bạn.",
+    "Lời mời này chưa gửi được. Xem lại danh sách bạn.",
   self_edge: "Đây là tài khoản của chính bạn. Không tự kết bạn với mình được.",
   permission_denied: "Tài khoản đang dùng chưa được phép gửi lời mời kết bạn.",
 };
