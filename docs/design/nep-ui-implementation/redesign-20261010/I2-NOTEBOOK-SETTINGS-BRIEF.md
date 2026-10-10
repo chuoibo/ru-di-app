@@ -62,3 +62,10 @@ không nhận đó là recipient-native proof. REJECT mặc định r1 để Gu 
 treo rồi gửi tiếp khi bỏ chặn; đã tắt lại native. r2 dùng TCP-reset và witness
 cả trước/sau tháo rule. Chỉ firewall trong emulator sở hữu, không API/DB/
 oracle/Docker/audit khác. Mọi rule riêng và font đã trả lại sau lượt kiểm.
+
+Finish review a24: mở11contact/96viewport,20original vàmockup06; mộtP2
+ởGu200: lỗi bị ngăn khỏi nút bởi phạm vi dài. Một batchF1 giữ nguyên
+đầy đủ permission trong thân cuộn; riêng khi lỗi, câu lỗi và chính các
+nút lệnh được gom vào footer cố định có hairline. Không thêm đường retry,
+không rút câu quyền hoặc đổi trạng thái/handler. Normalprivate/shared giữ
+nhịp cũ; cần recapture sáng100/tối200 cùng privacywitness và verdictpass.
