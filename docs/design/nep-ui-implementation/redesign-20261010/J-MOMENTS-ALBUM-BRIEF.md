@@ -51,3 +51,13 @@ Giữ red outer143 và revealr0 (harness cuộn quá lỗi), không relabel thà
 ## Batch sau inspection native vòng 1
 
 Root đã mở ảnh chức năng upload/cancel/retry/check-in và ảnh lỗi tải media → tải lại có ảnh thật ở candidate2085f8b5. Sửa cùng batch GPL vì dùng chung Sheet: form ngắn cao theo nội dung, trần theo host thật; CTA chia sẻ ngắn, bỏ subtitle album lặp; bìa album chưa có ảnh dùng nét khung ảnh có contrast theo theme; chú thích viewer giữ cột đọc640 trên màn rộng. Không thêm ảnh trang trí thay cho ảnh nhóm.
+
+## Batch theo fresh finish review c3
+
+Reviewer mở đủ58 ảnh hợp lệ, gồm field/caption trên IME200, và trả `fix` cho
+hai finding ở composer: helper chạm gesture indicator trên wide-dark200 và
+footer lệch40dp so với cột ảnh/caption/privacy. Một batch sửa cùng GPL:
+footer dùng inset đáy thiết bị cộng khoảng thở12dp, giữ nhánh IME của shell;
+toàn form dùng chung cột đọc640 thay vì body640/footer560. Không thêm asset
+trang trí hoặc đổi ảnh/privacy/draft/API. Cần recapture cùng viewport và
+verdict hai finding; chưa nghiệm thu toànJ/A–S.

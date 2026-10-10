@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
   avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { alignSelf: "flex-start", maxWidth: "100%" },
+  editAction: { alignSelf: "flex-start", minWidth: 168, maxWidth: "100%" },
   form: { gap: 20 },
   editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
   editIdentityText: { flex: 1, minWidth: 0, gap: 4 },

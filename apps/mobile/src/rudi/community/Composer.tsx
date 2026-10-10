@@ -32,7 +32,8 @@ export function Composer() {
     const insets = useSafeAreaInsets();
     const { phien } = useRudiSession();
     const { colors } = useRudiTheme();
-    const { height, fontScale } = useWindowDimensions();
+    const { height, width, fontScale } = useWindowDimensions();
+    const expanded = width >= 600;
     const params = useLocalSearchParams<{
         edit?: string;
         wall?: string;
@@ -115,7 +116,7 @@ export function Composer() {
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
     const cannotSend = busy || uploading || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
-    return <RudiScreen material="quiet" avoidKeyboard cot="form" bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
+    return <RudiScreen material="quiet" avoidKeyboard cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={error} testID="cong-dong-loi-gui" />
       <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
@@ -138,8 +139,8 @@ export function Composer() {
     {audienceOpen && !params.edit ? <View accessibilityRole="radiogroup" style={[styles.audienceOptions, { backgroundColor: colors.card, borderColor: colors.line }]}>{(Object.keys(NGUOI_DOC) as Audience[]).map((value) => choice(value, ...NGUOI_DOC[value]))}</View> : null}
     {params.edit ? <Text style={[typography.note, { color: colors.inkSoft }]} testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc như lúc đăng. Muốn đổi người đọc, mở «Thêm lựa chọn cho bài» (⋯) ở trang bài.</Text> : null}
     {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change(() => setGroup(g.id))}/>)}</> : null}
-    <View style={styles.writing}>
-      <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change(() => setBody(value))} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
+    <View style={[styles.writing, expanded && styles.expandedWriting]}>
+      <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change(() => setBody(value))} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View style={[styles.tools, { borderColor: colors.line }]}>
@@ -173,7 +174,10 @@ const styles = StyleSheet.create({
   audienceChoice: { minHeight: 64, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   audienceChoiceTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
   writing: { gap: 8 },
-  body: { textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, maxHeight: 420, lineHeight: 26 },
+  expandedContent: { flexGrow: 1 },
+  expandedWriting: { flexGrow: 1 },
+  expandedBody: { flexGrow: 1 },
+  body: { textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: 26 },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
   tools: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 8 },
   toolRow: { flexDirection: "row", gap: 8 },

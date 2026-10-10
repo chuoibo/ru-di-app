@@ -11,6 +11,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -39,6 +40,7 @@ function cauGiaiDoan(giaiDoan: GiaiDoanTaiAnh | null): string | null {
 
 export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ place?: string; ten?: string }>();
   // Mở từ màn một địa điểm thì ảnh được gắn vào chỗ ấy (M12, ADR-0017 §2.4).
   // Chỉ id đi lên máy chủ; TÊN chỗ ở đây thuần tuý để nói cho người đăng biết
@@ -126,7 +128,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   return (
     <RudiScreen
       material="quiet"
-      cot="form"
+      cot="doc"
       avoidKeyboard
       contentStyle={styles.screen}
       // The one action stays on screen however tall the photo is: under the
@@ -139,7 +141,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
           {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
         </View>
       }
-      footerInset={12}
+      footerInset={insets.bottom + 12}
       testID="share-moment-screen"
     >
       <TopBar title="Thả khoảnh khắc" />

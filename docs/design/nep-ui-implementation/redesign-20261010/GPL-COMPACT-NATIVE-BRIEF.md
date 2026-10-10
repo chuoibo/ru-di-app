@@ -37,3 +37,20 @@ Clean SHA typecheck, guide, export, Node suite; mutation và finish review riên
 Root đã mở ảnh light100/dark200, hẹp320 và rộng768 của candidate70938418. Sửa nhãn tab Cá nhân có chiều rộng nội tại sai, nút sửa thành thao tác gọn theo nội dung; bỏ subtitle lặp của DM, giữ tên và trạng thái mã hoá. Khay tools/poll thay composer phải tự giữ inset đáy, không để gesture handle nằm trên nút gửi bình chọn. Mở lựa chọn người đọc/công cụ bài viết dismiss IME trước khi đổi vùng thao tác.
 
 Sheet dùng chiều cao host thật làm trần ở mọi chế độ; form ưu tiên footer chỉ cao bằng nội dung khi đủ chỗ, reference cuộn trước footer khi thiếu chỗ. Phần này dùng chung với J và cần kiểm lại check-in200/IME. Ảnh chat-idle wide-light100 bắt giữa chuyển route; ba ảnh composer dark200 hẹp còn IME từ run trước không dùng làm bằng chứng idle. Vòng 2 phải capture lại trạng thái ổn định, không sửa sản phẩm dựa trên lỗi driver.
+
+## Batch theo fresh finish review c3
+
+Reviewer mở đủ 105 ảnh hợp lệ và trả `fix`, gồm bốn finding: cột chat rộng,
+readiness/ownership tải bảng tin, nhãn sửa hồ sơ xuống dòng ở100%, và toolbar
+viết bài wide bị tách bởi hai khoảng trống. Một batch sửa: chat giới hạn640
+trên nền phủ toàn màn; vùng viết wide dùng chiều cao còn lại, counter và
+toolbar nối ở cuối; nút sửa có chiều rộng tối thiểu đủ cho nhãn thường.
+Bảng tin chỉ retry trang đầu chưa nhận khi focus lại; trang rỗng đã nhận
+vẫn là ready, chỉ request hiện hành hạ loading/fetching. Refresh chỉ cuộn
+đầu khi response được áp và màn còn focus, giữ cards/expanded/offset khi
+request cũ bị vô hiệu. Diagnostic actual TSX chứng minh race trong controlled
+focus host, chưa quy nguyên nhân duy nhất cho ảnh native lỗi trước đó.
+
+Batch này chưa được nhận verdict. Cần chụp lại cùng viewport và chấm từng
+finding resolved/partial/unresolved; không chuyển `fix` thành ship từ source
+hoặc test xanh.

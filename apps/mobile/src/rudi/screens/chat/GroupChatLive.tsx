@@ -960,6 +960,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   if (phien === null) return <CuaDangNhap />;
 
   return (
+    <View style={[styles.backdrop, { backgroundColor: colors.ground }]}>
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       // Off only under the QA negative control; see `qa-ban-phim.ts`.
@@ -1404,6 +1405,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         personId={personId}
       />
     </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -1428,7 +1430,8 @@ const styles = StyleSheet.create({
   invocation: { borderWidth: 1, borderRadius: 12, padding: 14, gap: 8, marginBottom: 10 },
   requestActions: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   dungNhan: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, gap: 4 },
-  man: { flex: 1, width: "100%", maxWidth: 820, alignSelf: "center" },
+  backdrop: { flex: 1 },
+  man: { flex: 1, width: "100%", maxWidth: 640, alignSelf: "center" },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
   pills: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 2, marginTop: -8 },

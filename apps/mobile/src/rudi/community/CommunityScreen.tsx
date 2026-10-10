@@ -104,6 +104,8 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   // Which feed is on screen. Coming back to the same one keeps it, its scroll
   // and every card opened to the end; a different one starts over (QA UI-135).
   const dangHien = useRef<string | null>(null);
+  // An accepted empty page is ready too; a first request cancelled by blur is not.
+  const daNhanTrangDau = useRef(false);
   // The reader's place in the list, kept while the screen is in front. The web
   // resets a hidden list's scroll when a post page covers it, so coming back
   // puts the reader where they were (QA UI-135).
@@ -116,38 +118,50 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   personRef.current = person;
   const topic = typeof params.topic === "string" && params.topic !== "" ? params.topic : undefined;
   useViewSignal(person, active, prefs?.personalized === true);
-  const load = useCallback(async (after?: string | null) => {
-    if (!person || fetching.current) return;
+  const load = useCallback(async (after?: string | null): Promise<number | null> => {
+    if (!person || fetching.current) return null;
     fetching.current = true;
     const seq = ++generation.current;
     setLoading(true);
     setError(null);
     try {
       const page = await readFeed(person, mode, after, topic);
-      if (seq !== generation.current) return;
+      if (seq !== generation.current) return null;
       setPosts((old) => (after ? mergePosts(old, page.posts) : page.posts));
       setNext(page.next_cursor);
-      if (!after) setFresh(false);
+      if (!after) {
+        daNhanTrangDau.current = true;
+        setFresh(false);
+      }
+      return seq;
     } catch (e) {
       if (seq === generation.current) setError(e instanceof Error ? e.message : "Chưa đọc được bảng tin.");
+      return null;
     } finally {
-      fetching.current = false;
-      if (seq === generation.current) setLoading(false);
+      if (seq === generation.current) {
+        fetching.current = false;
+        setLoading(false);
+      }
     }
   }, [person, mode, topic]);
   useFocusEffect(useCallback(() => {
     fetching.current = false;
+    setLoading(false);
     const khoa = `${person ?? ""}|${mode}|${topic ?? ""}`;
     dangTruoc.current = true;
     if (dangHien.current !== khoa) {
       dangHien.current = khoa;
+      daNhanTrangDau.current = false;
       viTriCuon.current = 0;
       setPosts([]);
       setDaAn(new Set());
       void load();
-    } else if (viTriCuon.current > 0) {
-      const y = viTriCuon.current;
-      requestAnimationFrame(() => list.current?.scrollToOffset({ offset: y, animated: false }));
+    } else {
+      if (!daNhanTrangDau.current) void load();
+      if (viTriCuon.current > 0) {
+        const y = viTriCuon.current;
+        requestAnimationFrame(() => list.current?.scrollToOffset({ offset: y, animated: false }));
+      }
     }
     if (person) {
       void translatedAsActor<Preferences>(COMMUNITY_ERRORS, "/v2/community/preferences", { actorId: person, method: "GET" }).then(setPrefs).catch(() => { });
@@ -164,7 +178,11 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   }, [load, person, mode, topic]));
   // On the tab, tapping the lit Khám phá column again goes back to the top of the feed.
   useChamLaiTab(dau ? () => { viTriCuon.current = 0; list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); } : null);
-  const refresh = async () => { await load(); list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); };
+  const refresh = async () => {
+    const appliedSeq = await load();
+    if (appliedSeq === null || appliedSeq !== generation.current || !dangTruoc.current) return;
+    list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced });
+  };
   // A (re)connection is not news by itself: it offers the refresh band instead
   // of rebuilding the list under the reader (ADR-0040: never push the scroll).
   const connected = useCommunityStream(person, [], (e) => {
