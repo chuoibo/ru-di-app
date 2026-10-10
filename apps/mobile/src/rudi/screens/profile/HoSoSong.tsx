@@ -201,7 +201,7 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
     <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
-    <RudiButton compact full={false} style={styles.editAction} icon="create-outline" label={conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"} onPress={() => moSua(hoSo)} variant="outline" />
+    <RudiButton compact full style={[styles.editAction, largeText && styles.editActionLarge]} icon="create-outline" label={conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"} onPress={() => moSua(hoSo)} variant="outline" />
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
   </View>;
 }
@@ -213,7 +213,8 @@ const styles = StyleSheet.create({
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
   avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { alignSelf: "flex-start", minWidth: 168, maxWidth: "100%" },
+  editAction: { alignSelf: "flex-start", width: "auto", minWidth: 48, maxWidth: "100%" },
+  editActionLarge: { alignSelf: "stretch", width: "100%" },
   form: { gap: 20 },
   editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
   editIdentityText: { flex: 1, minWidth: 0, gap: 4 },

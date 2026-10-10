@@ -54,3 +54,16 @@ focus host, chưa quy nguyên nhân duy nhất cho ảnh native lỗi trước �
 Batch này chưa được nhận verdict. Cần chụp lại cùng viewport và chấm từng
 finding resolved/partial/unresolved; không chuyển `fix` thành ship từ source
 hoặc test xanh.
+
+## Verdict 7cf và sửa riêng nhãn hồ sơ
+
+Verdict đã mở35 contact sheets, đối chiếu105 originals: F1/F4 resolved;
+F2 resolved trong diagnostic actual TSX9/0, chưa là chứng minh nhân quả native.
+F3 còn partial vì nhãn «Chỉnh hồ sơ» vẫn xuống dòng ở100% cả hẹp/rộng.
+Không có regression mới trong vùng đã chụp; disposition vẫn `fix`.
+
+Sửa caller hồ sơ: cho label nhận phần chiều rộng trong button, outer theo
+nội dung ở100% và theo cột khi chữ lớn. Bỏ minWidth168 không giải quyết
+phân bổ label; giữ target48, không cắt chữ hay thu font. Chưa nhận verdict
+cho sửa này. Cần chụp «Chỉnh hồ sơ» / «Sửa tiếp hồ sơ» / Huỷ trở lại ở
+light100, dark200, hẹp/rộng; chỉ mở→Back→mở tiếp→Huỷ, không nhập/lưu hồ sơ.
