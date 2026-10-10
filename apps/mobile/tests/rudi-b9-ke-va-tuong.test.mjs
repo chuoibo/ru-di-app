@@ -95,7 +95,7 @@ test("trình xem story: hai vùng chạm là nút, câu hỏi xoá nhận focus 
 
 test("hàng menu mang tên màn nó mở (UI-162)", () => {
   const p = nguon("screens/Profile.tsx");
-  assert.match(p, /subtitle="Sổ huy hiệu và các ngã rẽ của bạn"\n\s+title="Hành trình"/);
+  assert.match(p, /icon="ribbon-outline"\s+onPress=\{\(\) => router\.push\("\/achievements"\)\}\s+title="Hành trình"/);
   assert.doesNotMatch(p, /Cấp và huy hiệu/);
 });
 

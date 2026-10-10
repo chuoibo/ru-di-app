@@ -154,19 +154,20 @@ appId: com.lakiet.rudi
     timeout: 5000
 - tapOn: "Cá nhân"
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
 # QA UI-162: the menu row is named after the screen it opens («Hành trình»);
-# its subtitle is unique on the tab, the card above shares the title.
+# the profile home has one journey door; kept pages live on their own tab.
 - scrollUntilVisible:
     element:
-      text: "Sổ huy hiệu và các ngã rẽ của bạn"
+      text: "Hành trình"
     direction: DOWN
     centerElement: true
     timeout: 60000
-- tapOn: "Sổ huy hiệu và các ngã rẽ của bạn"
+- tapOn: "Hành trình"
 # The journey book replaced the level/weekly-challenge page (profile routes):
 # the cover, the route choice, then the badges kept, below.
 - extendedWaitUntil:

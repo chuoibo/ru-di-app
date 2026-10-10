@@ -22,7 +22,8 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000

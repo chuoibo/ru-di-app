@@ -41,7 +41,8 @@ appId: com.lakiet.rudi
     visible: "Ảnh"
     timeout: 15000
 - assertVisible: "Sticker"
-- tapOn: "Đóng công cụ chat"
+- assertNotVisible: "Ô soạn tin"
+- tapOn: "Đóng khay công cụ"
 - assertNotVisible: "Sticker"
 - takeScreenshot: 34-anh-trong-chat
 - tapOn: "Ô soạn tin"

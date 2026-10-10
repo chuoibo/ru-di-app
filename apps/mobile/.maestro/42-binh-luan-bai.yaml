@@ -3,7 +3,7 @@
 # Chạy SAU flow 41 trong cùng lượt, với người đang đăng nhập (C nếu 37 đã chạy,
 # D nếu không). Harness đã chuẩn bị bằng curl cho đúng người ấy (chuan_bi_bai_cho_42):
 # một ảnh cá nhân tải lên `POST /people/me/photos` và một bài «Bai co anh QA»
-# mức «Bạn bè» trỏ vào ảnh ấy. Flow: Cá nhân → «Bài bạn đã đăng và ai đọc được»
+# mức «Bạn bè» trỏ vào ảnh ấy. Flow: Cá nhân → «Tường của tôi»
 # → «Mở bài: Bai co anh QA» → màn chi tiết có «Ảnh bài đăng» (không phải khung
 # «Chưa tải được ảnh») → bấm «Thích» → dòng đếm «1 thích · 0 bình luận» → viết «Binh luan QA» →
 # «Gửi bình luận» → bình luận hiện → chụp → quay lại → dòng «… · 1 thích · 1 bình
@@ -34,18 +34,19 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
 # The row sits under the owner's diary shelf (QA UI-153 empty state), below the fold.
 - scrollUntilVisible:
     element:
-      text: "Bài bạn đã đăng và ai đọc được"
+      text: "Tường của tôi"
     direction: DOWN
     centerElement: true
     timeout: 30000
-- tapOn: "Bài bạn đã đăng và ai đọc được"
+- tapOn: "Tường của tôi"
 # Posts sit below the owner's diary shelf, under the fold on a phone.
 - scrollUntilVisible:
     element:

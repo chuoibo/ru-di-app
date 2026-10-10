@@ -28,7 +28,8 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
@@ -36,11 +37,11 @@ appId: com.lakiet.rudi
 # other mounted tabs); centred, so the tab bar and the «Tạo» stamp never cover it.
 - scrollUntilVisible:
     element:
-      text: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
+      text: "Bạn bè"
     direction: DOWN
     centerElement: true
     timeout: 60000
-- tapOn: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
+- tapOn: "Bạn bè"
 - extendedWaitUntil:
     visible: "Chưa có bạn nào"
     timeout: 30000
@@ -92,7 +93,8 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
@@ -133,7 +135,8 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
@@ -141,11 +144,11 @@ appId: com.lakiet.rudi
 # other mounted tabs); centred, so the tab bar and the «Tạo» stamp never cover it.
 - scrollUntilVisible:
     element:
-      text: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
+      text: "Bạn bè"
     direction: DOWN
     centerElement: true
     timeout: 60000
-- tapOn: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
+- tapOn: "Bạn bè"
 - extendedWaitUntil:
     visible: "Đã nhận"
     timeout: 30000
