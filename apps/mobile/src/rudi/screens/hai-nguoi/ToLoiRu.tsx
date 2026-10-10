@@ -190,7 +190,9 @@ export function ToLoiRu({
               // «Con dấu rơi xuống» là khoảnh khắc ký của thế giới này, và nó
               // chỉ đúng khi trạng thái vừa đổi DƯỚI NGÓN TAY người đang nhìn.
               dong={vuaDoi}
-              label={nhanDau(to, toiId, tenNguoiKia)}
+              // Measure the actual caps, rather than transforming an intrinsic
+              // mixed-case label after Android has sized the small seal.
+              label={nhanDau(to, toiId, tenNguoiKia).toLocaleUpperCase("vi-VN")}
               testID={testID ? `${testID}-stamp` : undefined}
               tilt={vuaDoi ? -2 : 0}
               tone="ink"

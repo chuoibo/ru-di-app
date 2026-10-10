@@ -21,7 +21,7 @@ export function DongSo({ open, onClose, xemTruoc, onDong, dangLam = false, loi =
   const { colors, space } = useRudiTheme();
   if (xemTruoc === null) {
     return (
-      <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
+      <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} showsVerticalScrollIndicator testID={testID ?? "dong-so"}>
         <View style={[styles.noiDung, { gap: space.md }]}>
           <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ lời hẹn?" />
           <Text style={[typography.body, { color: colors.inkSoft }]} testID="dong-so-dang-dem">
@@ -34,20 +34,20 @@ export function DongSo({ open, onClose, xemTruoc, onDong, dangLam = false, loi =
     );
   }
   return (
-    <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
+    <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} showsVerticalScrollIndicator testID={testID ?? "dong-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ lời hẹn?" />
-        <View style={styles.khoi} testID="dong-so-xem-truoc">
+        <View style={{ gap: space.sm }} testID="dong-so-xem-truoc">
           {xemTruoc.so_nhap_bo > 0 ? (
-            <Text style={[typography.body, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>
+            <Text style={[typography.body, styles.tacDong, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>
           ) : null}
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_to_huy > 0 && styles.tacDong, { color: xemTruoc.so_to_huy > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_to_huy === 0 ? "· Không có tờ nào đang chờ trả lời." : `· ${xemTruoc.so_to_huy} tờ đang chờ trả lời sẽ huỷ.`}
           </Text>
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_to_khoa > 0 && styles.tacDong, { color: xemTruoc.so_to_khoa > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_to_khoa === 0 ? "· Không có buổi đã chốt nào." : `· ${xemTruoc.so_to_khoa} buổi đã chốt sẽ khoá, chỉ còn đọc.`}
           </Text>
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_de_nghi_huy > 0 && styles.tacDong, { color: xemTruoc.so_de_nghi_huy > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_de_nghi_huy === 0 ? "· Không có lời đề nghị nào đang chờ." : `· ${xemTruoc.so_de_nghi_huy} lời đề nghị đang chờ sẽ huỷ.`}
           </Text>
           <Text style={[typography.body, { color: colors.ink }]}>· Ký ức đã giữ vẫn đọc được, không sửa được.</Text>
@@ -60,4 +60,4 @@ export function DongSo({ open, onClose, xemTruoc, onDong, dangLam = false, loi =
   );
 }
 
-const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, khoi: { gap: 6 } });
+const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, tacDong: { fontWeight: "600" } });

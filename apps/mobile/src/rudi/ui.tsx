@@ -1072,12 +1072,14 @@ export function Segmented({
   onSelect,
   tone = "accent",
   testIDs,
+  disabled = false,
 }: {
   items: string[];
   selected: number;
   onSelect: (index: number) => void;
   tone?: RudiTone;
   testIDs?: (string | undefined)[];
+  disabled?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   return (
@@ -1090,6 +1092,8 @@ export function Segmented({
             accessibilityLabel={item}
             accessibilityRole="tab"
             aria-selected={active}
+            accessibilityState={{ selected: active, disabled }}
+            disabled={disabled}
             onPress={() => onSelect(index)}
             testID={testIDs?.[index]}
             style={[
