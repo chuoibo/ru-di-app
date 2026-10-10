@@ -78,3 +78,10 @@ vẫn xác định trực tiếp bằng created_by_id, vai trò ghép riêng. Ki
 sheet đổi điểm neo từ nút Rời nhóm đầu tiên (nay là confirm ở footer) sang
 nút mở xác nhận có icon exit, vẫn bắt nó phải nằm dưới nét kẻ và roster.
 Không bỏ kiểm/giảm corpus. Candidate kế tiếp cần chạy lại toàn subset sạch.
+
+Verdict c941 mở đủ19 file: bốn finding resolved, F3/F5 partial. Batch tiếp
+thu sheet rời nhóm theo nội dung, body–action24dp; giữ footer ngoài cuộn.
+Bìa rộng giữ tỷ lệ bằng vùng vải, nhãn giấy tự giãn và owner cách ô tên24dp,
+không kéo nhãn lên368dp. Không sửa primitive hoặc thêm filler. Chụp lại
+expanded New tên ngắn/dài sáng/tối và leave light100/dark200, giữ capture
+c941 cho artifact không đổi bằng hash/provenance. Chưa có verdict batch này.

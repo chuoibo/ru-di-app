@@ -109,6 +109,7 @@ export function GroupNewScreen() {
     >
       <Heading title="Đặt tên cho hội" subtitle="Mời bạn bè sau khi mở nhóm." />
       <SoBia ten={[]} fitContent style={expanded ? styles.bookWidth : undefined} nhan={
+        <View style={expanded ? styles.labelSpace : undefined}>
           <View style={[styles.nhan, expanded && styles.nhanExpanded, { backgroundColor: colors.card, borderColor: colors.paperShade }]}>
             {nhapTen}
             <View style={[styles.nguoiMo, { borderTopColor: colors.line }]}>
@@ -116,6 +117,7 @@ export function GroupNewScreen() {
               <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Bạn là quản trị đầu tiên.</Text>
             </View>
           </View>
+        </View>
       } />
       {expanded ? actions : null}
       {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
@@ -134,7 +136,8 @@ export function GroupNewScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 24, maxWidth: 560 },
   nhan: { borderWidth: 1, padding: 16, minHeight: 208, justifyContent: "space-between", gap: 24 },
-  nhanExpanded: { minHeight: 368 },
+  nhanExpanded: { minHeight: 0, justifyContent: "flex-start" },
+  labelSpace: { minHeight: 368, justifyContent: "center" },
   bookWidth: { width: "100%", maxWidth: 360, alignSelf: "center" },
   nguoiMo: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   flex: { flex: 1, minWidth: 0 },

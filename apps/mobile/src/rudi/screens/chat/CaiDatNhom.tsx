@@ -120,7 +120,6 @@ export function CaiDatNhomSheet({
 
   return (
     <Sheet accessibilityLabel={xacNhanRoi ? "Xác nhận rời nhóm" : laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} onBack={xacNhanRoi ? () => setXacNhanRoi(false) : undefined} open={open} testID="cai-dat-nhom"
-      prioritizeFooter={xacNhanRoi}
       footer={xacNhanRoi ? <View style={styles.quyetDinh}>
         <RudiButton disabled={dangLuu !== null} label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
         <RudiButton disabled={dangLuu !== null} label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
