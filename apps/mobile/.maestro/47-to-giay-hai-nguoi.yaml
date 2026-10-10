@@ -50,7 +50,7 @@ appId: com.lakiet.rudi
 - tapOn: "Cài đặt cuộc trò chuyện"
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
-    visible: "Một chỗ cho chuyện hai mình"
+    visible: "Sổ của hai mình"
     timeout: 60000
 - takeScreenshot: 47a-chua-co-so
 - tapOn: "Đề nghị lập sổ"

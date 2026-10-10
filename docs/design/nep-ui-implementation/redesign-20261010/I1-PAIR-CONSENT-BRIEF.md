@@ -35,3 +35,8 @@ before notebook200 hai phía, chưa proposal/grant. Cần matrix sáng/tối
 100/130/200, expanded/chữ dài, proposer chờ/receiver đồng ý thật, Back/cancel
 không grant, mở lại sau response. BacDongY dùng chung LapSo/BatMotDoi nên
 cần capture regression cả hai; I2 trở đi và toàn I/A–S chưa nghiệm thu.
+
+Clean f433: type/guide/export/compile/fixup xanh; Node1607/1608, một đỏ
+vì Maestro47 còn đợi heading cũ. Đổi đúng expectation sang "Sổ của hai mình",
+giữ test kiểm chuỗi sống/corpus và các nhãn link chat "Tờ giấy của hai mình".
+Log đỏ giữ nguyên; chưa native matrix hoặc nhận verdict cho candidate này.
