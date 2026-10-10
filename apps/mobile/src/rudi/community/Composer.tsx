@@ -18,7 +18,7 @@ import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 import { toggleState } from "../../ui/a11y";
 import { SkeletonLines } from "../ui/Skeleton";
 import { AvatarNguoi } from "../ui/AvatarNguoi";
-import { RudiIcon } from "../ui/RudiIcon";
+import { RudiIcon, type IconName } from "../ui/RudiIcon";
 /** Who reads a story: the title and the line under it, one place for both forms. */
 const NGUOI_DOC: Record<Audience, [string, string]> = {
   friends: ["Riêng tư · Bạn bè", "Chỉ bạn và những người đang kết bạn với bạn."],
@@ -32,7 +32,7 @@ export function Composer() {
     const insets = useSafeAreaInsets();
     const { phien } = useRudiSession();
     const { colors } = useRudiTheme();
-    const { height } = useWindowDimensions();
+    const { height, fontScale } = useWindowDimensions();
     const params = useLocalSearchParams<{
         edit?: string;
         wall?: string;
@@ -49,6 +49,7 @@ export function Composer() {
     const [group, setGroup] = useState<string | null>(null);
     const [audienceOpen, setAudienceOpen] = useState(false);
     const [topicsOpen, setTopicsOpen] = useState(false);
+    const [mentionsOpen, setMentionsOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -120,17 +121,17 @@ export function Composer() {
       <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
       <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
-    <View style={styles.author}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => setAudienceOpen(!audienceOpen)} style={styles.author}>
       <AvatarNguoi name={phien.profile?.display_name ?? "Bạn"} personId={phien.person_id} size={44} />
       <View style={styles.authorText}>
         <Text style={[typography.title, { color: colors.ink }]}>{phien.profile?.display_name ?? "Bạn"}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) }} disabled={Boolean(params.edit) || busy} onPress={() => setAudienceOpen(!audienceOpen)} style={styles.audienceTrigger}>
+        <View style={styles.audienceTrigger}>
           <RudiIcon name={audience === "public" ? "globe-outline" : audience === "only_me" ? "lock-closed-outline" : "people-outline"} color={colors.inkSoft} size={16} />
-          <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>{audienceLabel}</Text>
-          <RudiIcon name={params.edit ? "lock-closed-outline" : "chevron-down"} color={colors.inkSoft} size={16} />
-        </Pressable>
+          <Text style={[typography.caption, styles.audienceLabel, { color: colors.inkSoft }]}>{audienceLabel}</Text>
+        </View>
       </View>
-    </View>
+      <RudiIcon name={params.edit ? "lock-closed-outline" : "chevron-down"} color={colors.inkSoft} size={16} />
+    </Pressable>
     {/* An edit keeps who reads the story: only that choice is shown, locked,
         with where the change is made (QA UI-091 on Cộng đồng, TC-N14-SUA-KHOA);
         no «Lựa chọn khác» opening more choices that cannot be taken. */}
@@ -142,28 +143,41 @@ export function Composer() {
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View style={[styles.tools, { borderColor: colors.line }]}>
-      <MediaPicker compact person={phien.person_id} media={media} onChange={(v) => change(() => setMedia(v))} onBusy={setUploading}/>
-      <View style={styles.secondaryTools}>
-        <RudiButton compact full={false} icon="pricetag-outline" label={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} variant="ghost" onPress={() => setTopicsOpen(!topicsOpen)} />
-        <MentionPicker person={phien.person_id} selected={mentions} onChange={(v) => change(() => setMentions(v))}/>
-      </View>
+      <MediaPicker compact person={phien.person_id} media={media} onChange={(v) => change(() => setMedia(v))} onBusy={setUploading} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
+        <ComposerTool icon="images-outline" label={picking ? "Đang tải…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={pick} stacked={fontScale >= 1.5} />
+        <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => setTopicsOpen(!topicsOpen)} stacked={fontScale >= 1.5} />
+        <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => setMentionsOpen(!mentionsOpen)} stacked={fontScale >= 1.5} />
+      </View>} />
+      <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change(() => setMentions(v))}/>
       {topicsOpen || topics || loiChuDeGo ? <Field error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change(() => setTopics(v))}/> : null}
     </View>
   </RudiScreen>;
 }
 
+function ComposerTool({ icon, label, accessibilityLabel, onPress, selected, expanded, disabled, stacked }: { icon: IconName; label: string; accessibilityLabel: string; onPress: () => void; selected?: boolean; expanded?: boolean; disabled?: boolean; stacked: boolean }) {
+  const { colors } = useRudiTheme();
+  return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.tool, stacked && styles.toolWide, { opacity: disabled ? 0.5 : pressed ? 0.65 : 1 }]}>
+    <RudiIcon name={icon} color={selected ? colors.accent : colors.inkSoft} size={21} />
+    <Text style={[typography.caption, stacked && styles.flex, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
+  </Pressable>;
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   footer: { gap: 10 },
-  author: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  authorText: { flex: 1, minWidth: 0 },
-  audienceTrigger: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start", maxWidth: "100%" },
+  author: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
+  authorText: { flex: 1, minWidth: 0, gap: 4 },
+  audienceTrigger: { flexDirection: "row", alignItems: "center", gap: 6 },
+  audienceLabel: { flexShrink: 1 },
   audienceOptions: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
   audienceChoice: { minHeight: 64, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   audienceChoiceTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
   writing: { gap: 8 },
   body: { textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, maxHeight: 420, lineHeight: 26 },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
-  tools: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 4 },
-  secondaryTools: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", columnGap: 12, rowGap: 4 },
+  tools: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 8 },
+  toolRow: { flexDirection: "row", gap: 8 },
+  toolStack: { flexDirection: "column" },
+  tool: { flex: 1, minWidth: 48, minHeight: 64, alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 8 },
+  toolWide: { flex: 0, flexDirection: "row", justifyContent: "flex-start", minHeight: 48, paddingHorizontal: 4, gap: 12 },
 });

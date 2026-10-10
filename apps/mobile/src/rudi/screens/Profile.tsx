@@ -18,7 +18,7 @@ import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatVnd } from "../../../../../packages/shared/money.mjs";
@@ -54,6 +54,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   const { colors } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "saved">("home");
+  const [page, setPage] = useState<"profile" | "kept">("profile");
   const [editor, setEditor] = useState<ProfileEditorControls | null>(null);
   const editingProfile = editor !== null;
   const dangLuuHoSo = editor?.busy ?? false;
@@ -146,7 +147,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
       footerInset={rail ? insets.bottom + 12 : 24}>
       {!editingProfile ? <View style={styles.profileTop}>
         <View style={styles.flex}>
-          <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
+          <Heading title="Cá nhân" />
         </View>
         {/* One door to Settings, and it is the row below. A gear in this corner
             reads as a second one, and on a dev client the launcher's own gear
@@ -154,14 +155,20 @@ function ProfileSong({ phien }: { phien: Phien }) {
       </View> : null}
       <HoSoSong phien={phien} onEditorChange={setEditor} />
       {!editingProfile ? <>
+      <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
+        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, { borderBottomColor: page === value ? colors.accent : 'transparent' }]}><Text style={[typography.label, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text></Pressable>)}
+      </View>
+      {page === "kept" ? <>
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
       <HanhTrinhTeaser personId={personId} />
+      </> : <>
       <View>
+            <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Kết nối &amp; gu</Text>
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
               <ListRow
                 icon="people-outline"
                 onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
-                subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời kết bạn đang chờ bạn` : "Bạn bè, lời mời đã nhận và đã gửi"}
+                subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời đang chờ` : undefined}
                 title="Bạn bè"
                 trailing={
                   loiMoiCho > 0 ? (
@@ -174,25 +181,20 @@ function ProfileSong({ phien }: { phien: Phien }) {
             </View>
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
               <ListRow
-                icon="newspaper-outline"
-                onPress={() => duongTuongToi && router.push(duongTuongToi)}
-                subtitle="Bài bạn đã đăng và ai đọc được"
-                title="Tường của tôi"
-              />
-            </View>
-            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-              <ListRow
                 icon="sparkles-outline"
                 onPress={() => router.push("/personalization")}
                 subtitle={tomTat(soThich)}
                 title="Sở thích"
               />
             </View>
+        <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Sổ của bạn</Text>
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <ListRow icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
+        </View>
         <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
           <ListRow
             icon="wallet-outline"
             onPress={() => router.push("/finance")}
-            subtitle="Chi tiêu, công nợ và lịch sử"
             title="Tài chính của tôi"
             tone="split"
           />
@@ -201,7 +203,6 @@ function ProfileSong({ phien }: { phien: Phien }) {
           <ListRow
             icon="ribbon-outline"
             onPress={() => router.push("/achievements")}
-            subtitle="Sổ huy hiệu và các ngã rẽ của bạn"
             title="Hành trình"
           />
         </View>
@@ -209,15 +210,15 @@ function ProfileSong({ phien }: { phien: Phien }) {
           <ListRow
             icon="bookmark-outline"
             onPress={() => setPanel("saved")}
-            subtitle={soLuuHien === null ? "Địa điểm bạn đã lưu" : `${soLuuHien} địa điểm trong tài khoản`}
+            subtitle={soLuuHien === null ? undefined : `${soLuuHien} địa điểm`}
             title="Đã lưu"
           />
         </View>
+        <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Quản lý</Text>
         <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
           <ListRow
             icon="settings-outline"
             onPress={() => router.push("/settings" as never)}
-            subtitle="Hồ sơ, phiên, quyền riêng tư, giao diện"
             title="Cài đặt"
           />
         </View>
@@ -229,11 +230,11 @@ function ProfileSong({ phien }: { phien: Phien }) {
           <ListRow
             icon="shield-checkmark-outline"
             onPress={() => setPanel("account")}
-            subtitle="Quyền riêng tư và đăng xuất"
             title="Tài khoản"
           />
         </View>
       </View>
+      </>}
       </> : null}
     </RudiScreen>
   );
@@ -383,6 +384,9 @@ const styles = StyleSheet.create({
   form: { maxWidth: 560 },
   khung: { gap: 14 },
   profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  profileTabs: { flexDirection: "row", gap: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center", borderBottomWidth: 2 },
+  menuHeading: { paddingTop: 24, paddingBottom: 8 },
   hero: { gap: 10 },
   heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },
   upcoming: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, marginTop: 10 },

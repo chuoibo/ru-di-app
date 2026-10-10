@@ -4,7 +4,7 @@ import { COMMUNITY_ERRORS } from "./api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { duongDangNhap } from "../duong-vao";
 import { useRudiSession } from "../session";
@@ -293,15 +293,16 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
   return <RudiScreen material="quiet" header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
-      {/* One rhythm (finish review 03/10): the title close over its line, 16 to
-          the actions, 8 between every action, the quiet ones too. */}
       <View style={styles.caiDat}>
       <View style={styles.caiDatDau}>
-      <Text style={[typography.h1, { color: colors.ink }]}>Bảng tin của bạn</Text>
-      <Text style={[typography.body, { color: colors.inkSoft }]}>Chỉ dùng những gì bạn xem và tương tác trong cộng đồng. Bạn luôn có thể đổi ý.</Text>
+      <Text style={[typography.h2, { color: colors.ink }]}>Bảng tin của bạn</Text>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>Chỉ dùng lượt xem và tương tác trong cộng đồng để gợi ý bài. Bạn luôn có thể đổi ý.</Text>
       </View>
       <View style={styles.caiDatNut}>
-      <RudiButton label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} onPress={() => void consent(!prefs?.personalized)}/>
+      <FeedAction icon="options-outline" label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} checked={Boolean(prefs?.personalized)} onPress={() => void consent(!prefs?.personalized)} />
+      <FeedAction icon="eye-off-outline" label="Bài đã ẩn" chevron onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
+      <FeedAction icon="bookmark-outline" label="Điều mình muốn giữ" chevron onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
+      <View style={styles.historyAction}>
       {xacNhanXoa ? (
         // One step to undo nothing: what goes, and what stays, before it goes.
         <View style={styles.xacNhan} testID="cong-dong-xac-nhan-xoa">
@@ -310,24 +311,26 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
           <RudiButton label="Giữ lại" variant="ghost" onPress={() => setXacNhanXoa(false)}/>
         </View>
       ) : (
-        <RudiButton label="Xóa lịch sử đề xuất" tone="warn" variant="outline" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
+        <FeedAction icon="refresh-outline" label="Xóa lịch sử đề xuất" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
       )}
       {daXoaLichSu ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đã xoá lịch sử đề xuất. Bảng tin bắt đầu lại từ những gì mới.</Text> : null}
-      {/* «Đã lưu» and «Bài của tôi» are tabs now, and the bell sits on the header. */}
-      <RudiButton label="Bài đã ẩn" variant="ghost" onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
-      <RudiButton label="Điều mình muốn giữ" variant="ghost" onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
+      </View>
       </View>
       </View>
     </Sheet>
-    <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <>
+    <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <View style={styles.caiDat}>
+      <View style={styles.caiDatDau}>
       <Text style={[typography.h2, { color: colors.ink }]}>Câu chuyện này</Text>
-      <Text style={[typography.body, { color: colors.inkSoft }]}>{selected.why}</Text>
-      <RudiButton label={selected.saved ? "Bỏ lưu" : "Lưu để đọc lại"} onPress={() => void act(async () => { await feedback(person, selected.id, "saved", !selected.saved); update({ ...selected, saved: !selected.saved }); setSelected(null); })}/>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>{selected.why}</Text>
+      </View>
+      <View>
+      <FeedAction icon={selected.saved ? "bookmark" : "bookmark-outline"} label={selected.saved ? "Bỏ lưu" : "Lưu để đọc lại"} onPress={() => void act(async () => { await feedback(person, selected.id, "saved", !selected.saved); update({ ...selected, saved: !selected.saved }); setSelected(null); })}/>
       {mode === "hidden"
-        ? <RudiButton label="Bỏ ẩn" variant="outline" onPress={() => void boAn(selected)}/>
-        : <RudiButton label="Không quan tâm" variant="outline" onPress={() => void anBai(selected)}/>}
-      {selected.author_id === person ? <RudiButton label="Mở bài và quản lý" variant="ghost" onPress={() => { router.push(`/community/posts/${selected.id}` as never); setSelected(null); }}/> : <RudiButton label="Báo cáo bài viết" variant="ghost" onPress={() => { router.push({ pathname: "/community/posts/[id]", params: { id: selected.id, report: "1" } } as never); setSelected(null); }}/>}
-    </> : null}</Sheet>
+        ? <FeedAction icon="eye-outline" label="Bỏ ẩn" onPress={() => void boAn(selected)}/>
+        : <FeedAction icon="eye-off-outline" label="Không quan tâm" onPress={() => void anBai(selected)}/>}
+      {selected.author_id === person ? <FeedAction icon="create-outline" label="Mở bài và quản lý" chevron onPress={() => { router.push(`/community/posts/${selected.id}` as never); setSelected(null); }}/> : <FeedAction icon="flag-outline" label="Báo cáo bài viết" chevron onPress={() => { router.push({ pathname: "/community/posts/[id]", params: { id: selected.id, report: "1" } } as never); setSelected(null); }}/>}
+      </View>
+    </View> : null}</Sheet>
     <Sheet open={comments !== null} onClose={() => setComments(null)} accessibilityLabel="Bình luận">{comments ? <Comments person={person} post={comments}/> : null}</Sheet>
   </>}>
     <View style={styles.readingColumn}>
@@ -438,11 +441,21 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
     </View>
   </RudiScreen>;
 }
+function FeedAction({ icon, label, onPress, chevron = false, checked }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; chevron?: boolean; checked?: boolean }) {
+  const { colors } = useRudiTheme();
+  return <Pressable accessibilityRole={checked === undefined ? "button" : "switch"} accessibilityLabel={label} accessibilityState={checked === undefined ? undefined : { checked }} onPress={onPress} style={({ pressed }) => [styles.feedAction, { borderBottomColor: colors.line, opacity: pressed ? 0.65 : 1 }]}>
+    <Ionicons name={icon} size={21} color={colors.inkSoft} />
+    <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{label}</Text>
+    {checked !== undefined ? <View pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants"><Switch value={checked} trackColor={{ false: colors.lineStrong, true: colors.accent }} thumbColor={colors.card} /></View> : chevron ? <Ionicons name="chevron-forward" size={18} color={colors.inkSoft} /> : null}
+  </Pressable>;
+}
 const styles = StyleSheet.create({
   moiVao: { paddingTop: 16, gap: 18 },
-  caiDat: { gap: 16 },
-  caiDatDau: { gap: 6 },
-  caiDatNut: { gap: 8 },
+  caiDat: { gap: 20 },
+  caiDatDau: { gap: 8 },
+  caiDatNut: { gap: 0 },
+  historyAction: { marginTop: 16 },
+  feedAction: { flexDirection: "row", alignItems: "center", minHeight: 56, gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   readingColumn: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
   header: { paddingHorizontal: 20, paddingTop: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   headerChuDe: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8 },

@@ -1286,7 +1286,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
         onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
-      {!khongNhanTin && ghiChatDuoc && nhacDangGo !== null ? (
+      {!khongNhanTin && ghiChatDuoc && !khay && !toHenChung.sheet && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
           <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
@@ -1312,13 +1312,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             {lan.lan === "legacy" ? "Tin mới cần phòng mã hoá đầu cuối trên bản ứng dụng hỗ trợ. Tin cũ vẫn đọc được ở trên." : "Chỉ gửi được khi máy này thiết lập mã hoá đầu cuối cho phòng."}
           </Text>
         </View>
-      ) : khay === "poll" ? null : (
+      ) : khay === "poll" || khay === "tools" || toHenChung.sheet ? null : (
         <View
           style={[
             styles.soan,
             {
-              backgroundColor: colors.card,
-              borderColor: colors.line,
               marginHorizontal: space.md,
               // With the keyboard up the IME covers the navigation bar, so the
               // bottom inset would only float the composer above the keys.
@@ -1327,11 +1325,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           ]}
         >
           <IconButton
-            accessibilityLabel={khay ? "Đóng công cụ chat" : "Thêm vào cuộc trò chuyện"}
+            accessibilityLabel="Thêm vào cuộc trò chuyện"
             disabled={dangGuiAnh || dangGui}
-            icon={khay ? "close" : "add"}
+            icon="add"
             loading={dangGuiAnh}
-            onPress={() => setKhay(khay ? null : "tools")}
+            onPress={() => { Keyboard.dismiss(); setKhay("tools"); }}
             quiet
           />
           <TextInput
@@ -1348,10 +1346,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             } : undefined}
             ref={oNhapRef}
             {...(Platform.OS === "web" ? { rows: 1 } : null)}
-            placeholder={nhanRieng ? `Nhắn cho ${tenNhom}` : "Nhắn cho hội…"}
+            placeholder="Tin nhắn…"
             placeholderTextColor={colors.inkSoft}
             selectionColor={colors.accentSoft}
-            style={[typography.body, styles.oNhap, { color: colors.ink, maxHeight: caoOToiDa }, KHONG_VIEN_WEB]}
+            style={[typography.body, styles.oNhap, { color: colors.ink, backgroundColor: colors.card, borderColor: colors.line, maxHeight: caoOToiDa }, KHONG_VIEN_WEB]}
             value={nhap}
           />
           <IconButton
@@ -1492,12 +1490,12 @@ const styles = StyleSheet.create({
   veCuoi: { position: "absolute", bottom: 8, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, borderWidth: 1, borderRadius: 24, paddingHorizontal: 16 },
   lenh: { maxHeight: 200, flexGrow: 0, borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { minHeight: 48, paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
-  soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
+  soan: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   // Centred on purpose, unlike the kit's multiline `Field`: the composer grows
   // with its text, so one line sits in the middle of the pill and a longer
   // message fills it from the top anyway. Said out loud because Android's
   // default is what made every other box start mid-way (QA 23/09).
   // One line is exactly the 48dp of «+» and the send button beside it, so the
   // three share a centre line; more lines grow upward from the same foot.
-  oNhap: { flex: 1, minHeight: CAO_O, paddingHorizontal: 10, paddingVertical: DEM_O, textAlignVertical: "center" },
+  oNhap: { flex: 1, minWidth: 0, minHeight: CAO_O, borderWidth: 1, borderRadius: 24, paddingHorizontal: 12, paddingVertical: DEM_O - 1, textAlignVertical: "center" },
 });

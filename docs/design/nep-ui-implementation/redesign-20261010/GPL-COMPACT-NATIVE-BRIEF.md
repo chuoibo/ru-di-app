@@ -1,0 +1,33 @@
+# G / P / L — bố cục gọn, có tổ chức trên Android
+
+Ngày 11/10/2026. Nền `2085f8b5`; refinement layout trong UI3 `c8e88116`, không thay nhận diện. Mode Operate / Read. Chủ sản phẩm yêu cầu ưu tiên chat, Cộng đồng và Cá nhân từ sáu ảnh native mới; chỉ test trong emulator.
+
+## Direction contract — native
+
+**THESIS:** Một việc chính mỗi vùng; thao tác quen tay, thông tin có thứ bậc.
+
+**OWN-WORLD:** Giữ giấy, mực, coral và Bricolage của Nếp. Hộ chiếu là dấu nhận diện nhỏ, không chiếm màn đầu.
+
+**STORY:** Nhận người và phạm vi → viết/đọc → hành động. Cá nhân tách hồ sơ khỏi trang đã giữ.
+
+**FIRST VIEWPORT:** Chat có +, pill nhập ngắn, gửi cùng trục; khay thay vùng soạn. Bài có bốn vị trí thao tác ổn định. Menu là hàng icon/chữ căn trái.
+
+**FORM:** Nhóm gần, nhóm khác cách rộng. Font200 đổi cấu trúc, giữ target48, cuộn nội dung; không thu chữ hệ thống. Wide giới hạn cột đọc.
+
+FINISH: Capture → fresh finish-reviewer → disposition → documenter.
+
+Contract native lưu trong brief vì React Native không có body/DOM; đối chiếu source, bundle provenance và ảnh emulator, không giả bằng chứng HTML.
+
+## Bằng chứng trước và quyết định
+
+- A độc lập mở 8 ảnh native100 tại SHA2085: bìa hộ chiếu dẫn màn hình, 8 mục menu ngang cấp; Tag bạn bè bẻ dòng; menu thao tác thiếu phân cấp; khay và composer cùng hiện. Long-placeholder DM và bookmark rơi hàng đến từ phản hồi chủ sản phẩm/source, chưa được chính baseline8 tái hiện.
+- B độc lập: một scan layout / 9 TSX trả `[]`, regex-only; không đo native geometry, contrast hay độ đẹp. Bổ sung vùng mở bài ngắn cần48dp và câu trạng thái duyệt cần flex bound.
+- Chat: + và gửi ngoài pill; placeholder không chứa tên người nhận đã có trên header. Mở tools dismiss IME, giữ draft. Tools/poll/shared sheet thay vùng soạn. Plan vẫn có đường về ô nhập theo ADR-0046; giữ E2EE, phản hồi gửi, retry, thiết bị và lời báo riêng tư ảnh.
+- Cộng đồng: identity và người đọc cùng nhóm compact; toolbar ba công cụ cân bằng, font200 thành hàng. Audience edit vẫn khóa, group thật, moderation, draft và logical_id không đổi. Post actions bốn slot icon, count riêng khi có; label đầy đủ trong accessibility. Menu không nhuộm mọi thao tác thành nút primary. Personalization dùng switch; xóa lịch sử vẫn bước xác nhận với phạm vi rõ.
+- Cá nhân: hộ chiếu thumbnail cạnh dữ liệu thật; tab Hồ sơ / Trang đã giữ. Ba nhóm Sổ của bạn / Kết nối & gu / Quản lý. Hành trình một cửa trên home, teaser nằm ở trang đã giữ. Tài khoản/Đăng xuất vẫn reachable tại Cá nhân. Không số đếm hay tiến độ bịa.
+
+## Kiểm cần có trước khi đóng scope
+
+Native light100, dark200, wide trên cùng emulator5558 (wide không phải thiết bị tablet độc lập); chat idle/IME/multiline/tools/plan/back/draft, composer audience/tools/IME, feed action rail, hai sheet, profile hai tab và edit/cancel. Mở ảnh thật để đánh giá. Không thao tác emulator5562 đang được chủ sản phẩm dùng.
+
+Clean SHA typecheck, guide, export, Node suite; mutation và finish review riêng. Regex, unit hoặc export không thay visual/E2EE/device proof. J2085 vẫn candidate mở: evidence và việc còn lại tại `native-audit-2085f8b5/j-pivot-checkpoint-20261011.json`, không được ghi ship khi đổi ưu tiên.
