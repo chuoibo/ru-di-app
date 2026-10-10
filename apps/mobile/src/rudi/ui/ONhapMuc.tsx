@@ -41,6 +41,8 @@ export type ONhapMucProps = TextInputProps & {
   co?: "vua" | "lon";
   style?: StyleProp<TextStyle>;
   khungStyle?: StyleProp<ViewStyle>;
+  /** A caller with a current native snapshot can keep field geometry in sync. */
+  fontScaleOverride?: number;
 };
 
 /**
@@ -72,9 +74,10 @@ export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }:
   };
 }
 
-export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
+export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, fontScaleOverride, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale: windowFontScale } = useWindowDimensions();
+  const fontScale = fontScaleOverride !== undefined && Number.isFinite(fontScaleOverride) && fontScaleOverride > 0 ? fontScaleOverride : windowFontScale;
   const [goDuoc, setGoDuoc] = useState("");
   const [dangNhap, setDangNhap] = useState(false);
   const rong = (inputProps.value ?? goDuoc) === "";

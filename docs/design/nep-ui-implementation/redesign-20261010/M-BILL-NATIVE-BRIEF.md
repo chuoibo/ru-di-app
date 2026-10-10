@@ -64,3 +64,36 @@ quy đổi thành điểm toàn app hay thay TalkBack/motion/hardware/iOS.
 
 GPL/J có verdict riêng; M/N và toàn bộ app vẫn còn cổng. Không merge/push
 main hoặc coi cổng kỹ thuật xanh là nghiệm thu vẻ đẹp.
+
+## Lượt sửa sau ma trận native a21309eb
+
+Đã mở đủ 22 ảnh gốc của màn đã ghi qua bảy profile và lần khôi phục sáng100,
+cùng PID app31543. Chữ200 vẫn ép tên thành cột hẹp cạnh tiền; wide giãn cả
+receipt và nút720dp; khôi phục100 còn giữ khoảng trống của cỡ lớn. Review và
+result cũng có chữ/tem bị cắt. XML có đủ câu không được tính là paint đạt.
+Hai probe Dimensions đều dừng mà không có metric; chưa kết luận nguyên nhân.
+
+Đường native a213 đã bấm đúng một lần Next, một lần xem kết quả và một lần
+ghi: một khoản chi mới200.000đ, hai phần125.000/75.000đ. Sau ma trận đã ghi,
+24 GET giữ nguyên body, SQL giữ nguyên mọi projection ngoài snapshot_at;
+đợt thu cũ không đổi. Đây không phải đếm HTTP request hoặc bằng chứng ngân hàng.
+Evidence private: `m-a213-native-path-complete-correction-checkpoint.json`,
+`m-recorded-hot-root-original-inspection.json` và
+`m-recorded-hot-no-ledger-write-proof.json` trong `native-audit-a21309eb`.
+
+Batch sửa dùng cột form cho trang đọc và chữ lớn; chỉ assignment/result ở
+wide chữ thường giữ hai cột. Đầu receipt opt-in chiều rộng đầy đủ; tem ghi
+opt-in wrap trong vùng có giới hạn; tên khoản chi được ngắt dòng tự nhiên.
+Hai primitive shared giữ default hiện hành.
+
+Local Expo module Android đọc resources fontScale hiện tại, phát notification
+để hook M đọc lại; subscribe trước fresh read, dedup và chặn callback muộn.
+M truyền cùng snapshot vào geometry ô nhập. Module chưa có hoặc lỗi dùng
+RN fallback hiện hành; fallback không được nhận credit hot support. Không
+đổi route key, draft, line-id, parser, allocator, Attempt hoặc API payload.
+
+Trước commit: typecheck và guide freshness đạt;10 file kiểm bill/receipt/field/
+adaptive đạt77/77, guard observer mới đạt27/27, không fail/skip. Đây là kiểm
+trong feature tree, chưa thay clean exact-SHA check. APK mới, observer available,
+hot/Settings return, giữ input/assignment/payer/occasion, IME/focus, paint và
+fresh finish review vẫn pending. Chưa nghiệm thu M hoặc toàn bộ frontend.

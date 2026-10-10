@@ -49,10 +49,10 @@ export function HoaDonGiay({
 }
 
 /** The receipt's head: the place (condensed caps) and a line under it. */
-export function TieuDeHoaDon({ ten, phu }: { ten: string; phu?: string }) {
+export function TieuDeHoaDon({ ten, phu, stretch = false }: { ten: string; phu?: string; stretch?: boolean }) {
   const { colors } = useRudiTheme();
   return (
-    <View style={styles.dau}>
+    <View style={[styles.dau, stretch && styles.dauDay]}>
       <Text style={[typography.stamp, styles.ten, { color: colors.ink }]}>{ten}</Text>
       {phu ? <Text style={[typography.note, { color: colors.inkSoft, textAlign: "center" }]}>{phu}</Text> : null}
     </View>
@@ -95,6 +95,7 @@ export function VachCat() {
 const styles = StyleSheet.create({
   giay: { paddingHorizontal: 16, gap: 8 },
   dau: { alignItems: "center", gap: 2, paddingBottom: 2 },
+  dauDay: { alignItems: "stretch", width: "100%" },
   ten: { fontSize: 15, lineHeight: 18, letterSpacing: 1.6, textAlign: "center" },
   dong: { gap: 2 },
   dongTren: { flexDirection: "row", alignItems: "flex-start", gap: 12 },

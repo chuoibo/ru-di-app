@@ -77,6 +77,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { AiCoGi } from "../../ui/AiCoGi";
 import { chuLon } from "../../adaptive";
+import { useBillFontScale } from "../../chia-bill/useBillFontScale";
 import { toggleState } from "../../../ui/a11y";
 import { HinhNhan } from "../../ui/Avatar";
 import { BanAn } from "../../ui/BanAn";
@@ -192,7 +193,10 @@ function datNguoi(a: Assignment, lineId: string, ids: readonly string[], roster:
 export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip?: string; outingId?: string }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale: windowFontScale } = useWindowDimensions();
+  const billFontScale = useBillFontScale();
+  // Older binaries keep the existing RN behavior; hot support requires the observer.
+  const fontScale = billFontScale.status === "available" ? billFontScale.fontScale : windowFontScale;
   const largeText = chuLon(fontScale);
   const layout = useAdaptiveLayout();
   // The step CTA keeps its own footer; the body can reveal an input above the IME.
@@ -458,7 +462,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
     ) : buoc.ten === "gan-mon" ? (
       <RudiButton disabled={ban} label="Xem kết quả" loading={ban} onPress={() => void xemKetQua(buoc.bill)} tone="split" />
     ) : buoc.ten === "ket-qua" ? (
-      <StampButton disabled={ban} label="Ghi vào sổ" loading={ban} onPress={() => void ghi(buoc.chia)} size="vua" tilt={-1} tone="split" />
+      <StampButton disabled={ban} label="Ghi vào sổ" loading={ban} onPress={() => void ghi(buoc.chia)} size="vua" style={[styles.nutGhi, { maxWidth: largeText ? 320 : 220 }]} tilt={-1} tone="split" wrapLabel />
     ) : buoc.ten === "xem-anh" && docAnhHong === "khong-bat" ? (
       <RudiButton disabled={ban} icon="pencil" label={coBillDo ? "Tiếp tục bill đang gõ" : "Nhập tay"} onPress={coBillDo ? tiepTuc : nhapTay} tone="split" />
     ) : null;
@@ -469,6 +473,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
     <RudiScreen
       avoidKeyboard
       material="quiet"
+      cot={layout.twoPane && !largeText && (buoc.ten === "gan-mon" || buoc.ten === "ket-qua") ? "rong" : "form"}
       bottomInset={Math.max(insets.bottom, 16) + 40}
       cuonVeDau={buoc.ten}
       footer={
@@ -512,7 +517,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                 testID="bill-dang-go"
               >
                 <HoaDonGiay rangTren>
-                  <TieuDeHoaDon phu={`${reading.lines.length} món, chưa ghi sổ`} ten="Bill đang gõ" />
+                  <TieuDeHoaDon phu={`${reading.lines.length} món, chưa ghi sổ`} stretch ten="Bill đang gõ" />
                   <VachCat />
                   {reading.lines.slice(0, 3).map((l) => (
                     <View key={l.id} style={[styles.hangTien, largeText && styles.doc]}>
@@ -543,7 +548,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
               testID="bill-trong"
             >
               <HoaDonGiay rangTren>
-                <TieuDeHoaDon phu="Chưa có món nào" ten="Bill hôm nay" />
+                <TieuDeHoaDon phu="Chưa có món nào" stretch ten="Bill hôm nay" />
                 <VachCat />
                 {[0.8, 0.55, 0.7].map((r, i) => (
                   <View importantForAccessibility="no-hide-descendants" key={i} style={styles.dongMo}>
@@ -677,6 +682,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                     <View style={styles.sua}>
                       <ONhapMuc
                         accessibilityLabel={`Ô tên món ${i + 1}`}
+                        fontScaleOverride={fontScale}
                         error={dongLoi?.id === line.id && dongLoi.o === "ten" && line.name.trim() === "" ? "Đặt tên cho món này." : null}
                         label="Món"
                         oRef={dongLoi?.id === line.id && dongLoi.o === "ten" ? oLoiRef : undefined}
@@ -688,6 +694,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                         <View style={largeText ? styles.rong : styles.oNho}>
                           <ONhapMuc
                             accessibilityLabel={`Ô số lượng món ${i + 1}`}
+                            fontScaleOverride={fontScale}
                             error={oNhap(line.id, "so-luong") === undefined ? null : loiO("so-luong", oNhap(line.id, "so-luong") ?? "")}
                             keyboardType="number-pad"
                             label="Số phần"
@@ -704,6 +711,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                         <View style={largeText ? styles.rong : styles.flex}>
                           <ONhapMuc
                             accessibilityLabel={`Ô tiền món ${i + 1}`}
+                            fontScaleOverride={fontScale}
                             error={
                               oNhap(line.id, "tien") !== undefined
                                 ? loiO("tien", oNhap(line.id, "tien") ?? "")
@@ -896,7 +904,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                 <Chip accessibilityLabel={`Người trả ${tv.name}`} disabled={ban} key={tv.id} label={tv.name} onPress={() => void doiNguoiTra(buoc.bill, tv.id)} selected={payerId === tv.id} tone="split" />
               ))}
             </Inline>
-            <ONhapMuc accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
+            <ONhapMuc accessibilityLabel="Ô tên khoản chi" fontScaleOverride={fontScale} label="Gọi khoản này là" multiline numberOfLines={2} onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" returnKeyType="done" submitBehavior="blurAndSubmit" value={occasion} />
             <ChuThichLe icon="book-outline">Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.</ChuThichLe>
           </View>
         );
@@ -964,6 +972,7 @@ const styles = StyleSheet.create({
   butChi: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, borderBottomWidth: 1, borderStyle: "dashed", paddingRight: 12 },
   hangDau: { flexDirection: "row", alignItems: "center", gap: 12 },
   chan: { gap: 8 },
+  nutGhi: { width: "100%", alignSelf: "center" },
   xacNhan: { gap: 8, paddingVertical: 4 },
   hangXacNhan: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   dauHoaDon: { gap: 4 },
