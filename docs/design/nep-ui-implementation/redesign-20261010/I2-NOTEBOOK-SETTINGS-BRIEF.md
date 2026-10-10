@@ -69,3 +69,14 @@ Finish review a24: mở11contact/96viewport,20original vàmockup06; mộtP2
 nút lệnh được gom vào footer cố định có hairline. Không thêm đường retry,
 không rút câu quyền hoặc đổi trạng thái/handler. Normalprivate/shared giữ
 nhịp cũ; cần recapture sáng100/tối200 cùng privacywitness và verdictpass.
+
+Sau814:8stage native cuối xanh/12frame mới sáng100/tối200; private →
+lỗi TCP-reset → retry → shared → unshare, witness200/200/404; private cả
+trước/sau tháo chặn. Root mở2contact/2original lỗi; verdict mở2contact và
+4original, F1resolved/ship. Bảy target I2 khác carry đúng byte từa24;
+không relabel96viewport cũ. Clean8149bước xanh, Node214file1608/1608,
+Gu identity12/12, canary10/12, hai mutant10/12+11/12 đỏ đúng dự đoán,
+cùng harness311694a7; detectorGu TSXregex[]/0, không computednative.
+Documenter cập nhật DESIGN/sidecar từ artifact đã ship; toànI/A–S và
+các cổng cuối vẫn mở. Dark r0 scroll trên footer đỏ giữ riêng; r1 vuốt
+đúng thân xanh, source không đổi.

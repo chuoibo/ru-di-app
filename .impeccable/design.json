@@ -1028,10 +1028,16 @@
     "currentAuthority": {
       "date": "2026-10-10",
       "design": "DESIGN.md",
-      "section": "v3 «Sân khấu giấy» — Creative North Star; bổ sung I1 trong Typography/Layout/Components",
+      "section": "v3 «Sân khấu giấy» — Creative North Star; bổ sung I1 trong Typography/Layout/Components và I2 trong Layout/Components",
       "brief": "docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md",
       "source": "7dcacedf164f1a84192be62392c6dbfa4148174e",
-      "scope": "Hợp đồng I1 kế thừa seed c8e88116; _layout.tsx không còn contract lịch sử. Các directionContract trong snapshot cũ chỉ giữ provenance lịch sử, không chứng minh hợp đồng hiện tại."
+      "scope": "Hợp đồng I1 kế thừa seed c8e88116; _layout.tsx không còn contract lịch sử. Các directionContract trong snapshot cũ chỉ giữ provenance lịch sử, không chứng minh hợp đồng hiện tại.",
+      "i2": {
+        "brief": "docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md",
+        "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+        "fullReviewSource": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "scope": "Hợp đồng I2 kế thừa cùng UI3/seed c8e88116; F1 resolved/ship và regression hẹp tại814, bảy target còn lại carry a24. Các trường brief/source phía trên giữ mốc I1, không gán lại bằng chứng I1 thành814."
+      }
     }
   },
   "shippedV3": {
@@ -2263,6 +2269,211 @@
       "F5 partial62, nhãn Để của4a và scanner r0 exit1 không thành pass; giữ provenance đỏ.",
       "Nét ký không thay đồng thuận; opt-in wrap không thu font/đổi mọi caller; M6 không replay để tạo chứng cứ.",
       "Không biến lỗi/bố cục I2 chưa kiểm thành hướng dẫn mới; bảy finding đóng không nghiệm thu họ màn."
+    ]
+  },
+  "shippedI2NotebookSettings20261010": {
+    "_": "Bàn giao layout/harden trong thế giới v3 hiện hành sau F1; giữ cấu trúc sidecar legacy, mirror token và toàn bộ record I1/CD/EF/H/K. Không nghiệm thu toàn I/A–S.",
+    "date": "2026-10-10",
+    "headCommit": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — v3 «Sân khấu giấy», Creative North Star và các mục I2",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md",
+      "mode": "layout/harden, Operate + Read",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/coral/Bricolage và Nếp canonical; không roll, token, raster hoặc thẻ trang trí mới.",
+      "reference": "Mockup06 là critique-reference, không approved comp mới; hợp đồng I2 không thay global world."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx",
+      "apps/mobile/src/rudi/ui.tsx",
+      "apps/mobile/src/rudi/ui/Stamp.tsx"
+    ],
+    "sourceSha256": {
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx": "9c3817090ba8264e644b71e0d3d378e9545416fdcbacccddbacc91fd0975136a",
+      "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx": "81b2bad40c4924b848157780cb60f5dcd17024f4bf795936db02853b22c01a86",
+      "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx": "3748eebac74f97c264f123c252df80ad29a0c803fea0c78877b1ae970a77662d",
+      "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx": "793bd8342181bd7e78aff7fe4278a009780e758b42474b5f80e75e0ea1da7ab7",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx": "da8c4bad5fc2a8b89b2fd73d1650332fb21cb0e0674e2f51f794f6fff8f8e049",
+      "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx": "6ff1e71cdfb958e326fc7255ce66126bd926f496e6c82ee2107964fc7f6dd79f",
+      "apps/mobile/src/rudi/ui.tsx": "48f1fdcccdf950e2f48f83a4eaf493e1934fe824ca8beb17fe226a65aaef452d",
+      "apps/mobile/src/rudi/ui/Stamp.tsx": "0368080e29e2d1ecb1ba39ba4af7d9883b835ef5dab01683ebe9a9fd0d7367c6"
+    },
+    "contract": {
+      "spatial": "Hội bạn giữ trục trái cho heading/lời dẫn/con dấu/Chọn loại sổ. Mục lục: cấu hình → tin nhắn/kỷ niệm → đóng sổ, dùng proximity và hairline; nội dung dài wrap/cuộn, không thu font.",
+      "typeChoice": "Highlight theo batDoi thật; lỗi không đổi lựa chọn. Busy/disabled/lỗi tại sheet đang nhận lệnh, Xong ở footer. Thời điểm loading native chưa được chấm.",
+      "constraints": "Hai Field multiline tự cao theo content-size trong khoảng3–8 dòng body.lineHeight × fontScale, sau đó cuộn. Phần người kia đọc riêng sau hairline. Lưu chỉ khi đổi/dangLuu, Bỏ thay đổi không gửi.",
+      "keyboardFooter": "RangBuoc opt-in avoidKeyboard/prioritizeFooter; lỗi, Lưu và Bỏ thay đổi ở footer trên IME. Ảnh200 chỉ chứng minh vùng đang đọc/caret cuối, không toàn chuỗi cùng lúc.",
+      "ownGu": "Own state → đầy đủ scope người kia/Nếp/chat → control của mình → sửa gu → tham khảo người kia/gu chung. Private solid, shared outline; chỉ tự bật gu của mình, common chỉ khi cả hai chia.",
+      "guErrorFooter": "F1 giữ nguyên copy/predicate/handler. Chỉ khi loi mới đặt CauTaiCho cùng chính hanhDong vào footer hairline với prioritizeFooter; không lỗi giữ control trong thân. Không thêm lệnh retry hoặc rút permission.",
+      "closePreview": "Hậu quả dương ink/600 nổi hơn zero inkSoft, vẫn đủ tờ chờ/buổi đã chốt/lời đề nghị/ký ức. Chưa có preview không mời đóng; lệnh dùng revision. Bằng chứng chỉ preview/cancel, không thực hiện đóng sổ.",
+      "stamp": "ToLoiRu dùng nhãn in hoa tiếng Việt, minWidth88 và labelStyle stretch/center opt-in; Stamp/caller khác giữ hình học mặc định, không suy glyph vẽ từ accessibilityLabel.",
+      "targetScope": "Các target48dp đọc từ source, không chứng nhận kích thước chạm thực đã đo; không áp footer I2 cho giao kèo I1 hoặc mọi Sheet."
+    },
+    "verdict": {
+      "fullReview": {
+        "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/i2-finish-packet.json",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/fresh-i2-finish-review.md",
+        "disposition": "fix",
+        "scope": "Full finish review trong packet I2: 11 required contact,84 static+12 functional viewport,20 original và mockup06; một P2 F1 Gu error/action. Original kiểm lại frame, không cộng thêm viewport.",
+        "findings": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 1,
+          "P3": 0
+        },
+        "scoring": "Không tổng /16; artwork N/A, interaction/motion N/E. Không nâng kết quả này thành full I/A–S hoặc native platform-reference đã có."
+      },
+      "final": {
+        "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/i2-f1-verdict-packet.json",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/fresh-i2-f1-verdict.md",
+        "disposition": "ship",
+        "finding": "F1 resolved",
+        "scope": "Chỉ F1 và regression hẹp: reviewer mở2/2 required contact,12 frame Gu mới light100/dark200-r1 và4 original. Không full review mới; original không thành16 viewport.",
+        "observed": "Lỗi nói gu còn riêng và toàn nút hai dòng cùng hiện trên navigation inset ở dark200; cuộn thân vẫn giữ footer, own state/scope nguyên. Shared outline tự cao3 dòng, private solid; không thấy regression mới trong bộ ảnh này."
+      },
+      "carryForward": {
+        "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "scope": "Bảy target byte-identical từ full review; diff a24..814 trong8 target chỉ GuHaiBan. Không gán ảnh hoặc đánh giá a24 thành capture814.",
+        "unchangedArtifactSha256": {
+          "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx": "9c3817090ba8264e644b71e0d3d378e9545416fdcbacccddbacc91fd0975136a",
+          "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx": "81b2bad40c4924b848157780cb60f5dcd17024f4bf795936db02853b22c01a86",
+          "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx": "3748eebac74f97c264f123c252df80ad29a0c803fea0c78877b1ae970a77662d",
+          "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx": "da8c4bad5fc2a8b89b2fd73d1650332fb21cb0e0674e2f51f794f6fff8f8e049",
+          "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx": "6ff1e71cdfb958e326fc7255ce66126bd926f496e6c82ee2107964fc7f6dd79f",
+          "apps/mobile/src/rudi/ui.tsx": "48f1fdcccdf950e2f48f83a4eaf493e1934fe824ca8beb17fe226a65aaef452d",
+          "apps/mobile/src/rudi/ui/Stamp.tsx": "0368080e29e2d1ecb1ba39ba4af7d9883b835ef5dab01683ebe9a9fd0d7367c6"
+        },
+        "changedArtifact": {
+          "path": "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx",
+          "beforeSha256": "c878ed56fe3babbc072383fc08fe9f9bf814aaf9ce12ee4616638aa57ee201fc",
+          "afterSha256": "793bd8342181bd7e78aff7fe4278a009780e758b42474b5f80e75e0ea1da7ab7"
+        }
+      }
+    },
+    "captureProvenance": {
+      "staticA24": "84 viewport tĩnh: food106/v2,avoid91/v1; phone settings light100/dark200, couple light/dark100/200 và expanded light100/dark200-r1.",
+      "functionalA24": "12 frame tương tác settled cùng source; tiến trình nháp/lưu thật, retry lên food116/v3 và avoid101/v2. Không reset, không coi ảnh IME đang mở là ảnh sau lưu.",
+      "fresh814": "12 frame Gu light100/dark200-r1; private/error/retry shared/unshare. Các viewport cuộn không là ảnh trọn trang.",
+      "expanded": "768×1024 là cùng AVD đổi kích thước, không hardware tablet độc lập.",
+      "hashVerification": "Documenter đối chiếu8/8 contact tĩnh,12/12 functional original a24 và12/12 Gu original814 với map;8/8 source a24 khớp Git,7/8 giữ byte tại814 và Gu khớp detector814.",
+      "permissionWitnessFromReview": "Trước/sau tháo chặn đều private; sau retry primary mine_shared=true/counterpart theirs_shared=true,common[],outsider404; sau tắt cả hai private. Witness corroborate dữ liệu/quyền, không thay ảnh.",
+      "harnessRed": "r0 dark200 default scroll bắt đầu trên footer mới, fail sau assert lỗi/nút visible; giữ đỏ. r1 chỉ chuyển swipe vào thân cuộn, source không đổi. Không gọi r0 là product mất nút."
+    },
+    "documenter": {
+      "method": "Đọc role/document reference, AGENTS/PRODUCT/DESIGN/sidecar/brief, source I2 và diff; đọc packet/reports có sẵn, mở2 contact814 và8 contact đại diện a24, đối chiếu hash. Không vận hành emulator/browser/API, không chạy test/detector và không đọc credential/env/raw transcript.",
+      "openedNativeCaptures": [
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-settings-light100.png",
+          "viewports": 9,
+          "sha256": "684d197fe7250b3514d41fb111ae29e7cc28f77992aa4e4778b17cf68e56b57a"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-settings-dark200.png",
+          "viewports": 9,
+          "sha256": "15e6fc2d01758bf1425b4e2d54b249159065b8671e6cb60ef7050f93a20fd541"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-light100.png",
+          "viewports": 11,
+          "sha256": "0afb7205d52e97b5e54b392ddb1a7703acadb0a456287a624b450de930ebe7e5"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-dark200.png",
+          "viewports": 11,
+          "sha256": "9f1a1a7c2f068307f3054f54ea9ace5389ebe383c8796953a1655310dc25865a"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-light100-expanded-r1.png",
+          "viewports": 11,
+          "sha256": "65ea8492e4d1432f1ffe5f5c851b8ba2d201cc07642f84c8c7b208b4cc38b9a6"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-1.png",
+          "viewports": 4,
+          "sha256": "5073ee9423f64d07dff4ce23f410a42a1dab956abced7f4d5f26503c351ddae2"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-2.png",
+          "viewports": 4,
+          "sha256": "4b94f2f2ff46458db3c3cf18fb044f82d3ee324146c2204b296c3433deb667c8"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-3.png",
+          "viewports": 4,
+          "sha256": "643c1800cd0e4243aa49cb50c7191907cb022ca9dee8b4511804da70027dd4e5"
+        },
+        {
+          "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/contact-i2-f1-light100.png",
+          "viewports": 6,
+          "sha256": "9042424ecf1b23231186cecb6da1add401f7d5ec4593d87ba8ad3a4154a3535b"
+        },
+        {
+          "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/contact-i2-f1-dark200-r1.png",
+          "viewports": 6,
+          "sha256": "bc7eec0d49494fb22d0dfd8858bc57d0443668e725ff2fa44f458177af2f09ac"
+        }
+      ],
+      "openedContactFiles": 10,
+      "openedContactViewports": 75,
+      "scope": "Representative artifact inspection, không đánh giá lại full review hoặc tự chấm beauty score.",
+      "observed": "Mục lục tách nhóm trên trang, constraints dài wrap/cuộn; tail nhập và action còn trên IME, type-error giữ selected truth và Xong. Tem ĐÃ CHỐT đủ glyph ở contact100/200; hậu quả dương nổi hơn zero. Hai contact814 xác nhận footer lỗi/control cùng hiện."
+    },
+    "technicalEvidence": {
+      "method": "Chỉ đọc kết quả có sẵn ở từng exact SHA, không chạy lại trong lượt tài liệu.",
+      "sources": [
+        "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "814ea5c979629acb8548215c24a5ff5f5c560b73"
+      ],
+      "cleanChecksEach": 9,
+      "nodeSubsetEach": {
+        "files": 214,
+        "pass": 1608,
+        "fail": 0,
+        "skip": 0,
+        "cancel": 0,
+        "todo": 0
+      },
+      "guMutationsEach": {
+        "identity": "12/12 exit0",
+        "canary": "10/12 exit1",
+        "mutantUnknownChat": "10/12 exit1",
+        "mutantFailedRevoke": "11/12 exit1",
+        "predicted": true,
+        "testSha256": "311694a7a01036bd07c5c71fbbfb7560e57242947e2a5a34592ed5b3b9e54a5f"
+      },
+      "detector": "a24:8 target;814:1 Gu target. TSX regex-only []/exit0; không native computed geometry/contrast hoặc điểm đẹp.",
+      "scope": "Subset không full gate/strict; unit xanh không thay bằng chứng thị giác."
+    },
+    "limits": [
+      "Ship chỉ F1 và regression hẹp; các phần I2 khác carry a24, không full review mới hoặc nghiệm thu toàn I/A–S/toàn app.",
+      "Không motion/reduced-motion, TalkBack/focus order, native computed contrast/geometry, target thực, native loading timing/lifecycle, iOS hoặc hardware proof.",
+      "Không tổng beauty /16; artwork N/A và interaction/motion N/E không đổi thành điểm2.",
+      "Không chứng minh toàn chuỗi constraints200 cùng thấy, mọi vị trí caret hoặc toàn state machine; không thực hiện đóng sổ/cấp quyền mới trong final flows.",
+      "Mockup06 chỉ critique-reference; thiếu native platform-reference trong full-review packet không được biến thành pass."
+    ],
+    "notCanonized": [
+      "Footer lỗi Gu/prioritizeFooter không thành mặc định mọi Sheet; giữ bố cục giao kèo I1 và normal Gu.",
+      "Khoảng3–8 dòng không cho phép cắt nội dung; minWidth88 của ToLoiRu không thành token Stamp chung.",
+      "r0 harness đỏ, ảnh tĩnh và witness API không biến thành full functional/visual acceptance; không sửa drift ngoài scope."
     ]
   }
 }

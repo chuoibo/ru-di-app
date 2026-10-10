@@ -382,6 +382,15 @@ Layout và Components bên dưới, kế thừa seed `c8e88116` và FORM của
 [I1 brief](docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md).
 Không mở rộng kết quả này thành nghiệm thu toàn I, I2 hoặc A–S.
 
+**Bàn giao I2 tại `814ea5c9` (10/10).** Mục lục, loại sổ, điều cần tránh,
+Gu, xem trước đóng sổ và tem trạng thái kế thừa cùng thế giới. Full review
+`a24cb4bf` mở 84 viewport tĩnh + 12 viewport tương tác, trả **fix** cho một
+P2 ở cụm lỗi/phục hồi Gu. Verdict cuối `814ea5c9` chấm **F1 resolved / ship**
+trên 12 frame Gu mới sáng100/tối200 và regression hẹp. Bảy target còn lại
+giữ byte và bằng chứng a24; đây không phải full review mới hoặc nghiệm thu
+toàn I/A–S. Hợp đồng của lát này nằm trong Layout/Components và
+[I2 brief](docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md).
+
 ## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
 Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
@@ -513,7 +522,8 @@ liên tục*; ảnh là *bản in* dán vào trang, có dòng xuất xứ; tiề
 thứ máy sinh ra là *tờ giấy ký ở chân* «Rủ Đi AI gợi ý». Khung kẻ in trước,
 màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Dấu vết thế giới kế thừa ở mục này và FORM của
 `docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md`
-(seed `c8e88116`, hướng số 6); `apps/mobile/app/_layout.tsx` hiện không còn
+(I2 tiếp tục tại `docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md`,
+cùng seed `c8e88116`, hướng số 6); `apps/mobile/app/_layout.tsx` hiện không còn
 contract lịch sử. ADR-0020 là thẩm quyền.
 
 **Cập nhật 27/09/2026, ADR-0037:** chất liệu giấy, mực, coral và Bricolage
@@ -880,6 +890,18 @@ dưới `max(insets.bottom, 16)` của kit, không kéo tấm lên hết trần 
 hai lựa chọn. Quyền rồi giới hạn xếp dọc khi rộng dưới 600dp hoặc font từ
 1.3; cột dọc stretch hết bề ngang, bỏ flex-basis của cột ngang để không co
 mất phần chữ. Đây là hợp đồng của I1, không áp hình học này cho mọi sheet.
+
+**I2 — mục lục theo nghĩa, phục hồi tại hành động (`814ea5c9`).** Cấu hình
+sổ (loại, điều cần tránh, Gu khi được phép) thành nhóm đầu; tin nhắn/kỷ niệm
+thành nhóm thứ hai; đóng sổ đứng riêng sau kẻ tóc và khoảng cách. Hội bạn
+giữ tiêu đề, lời dẫn, con dấu rủ và «Chọn loại sổ» cùng trục trái. Nội dung
+dài tự wrap; chữ lớn cuộn thân sheet, không thu font để ép vừa một viewport.
+`RangBuoc` opt-in `avoidKeyboard`/`prioritizeFooter`: thân nhập cuộn riêng,
+lỗi, Lưu và Bỏ thay đổi ở footer trên IME. Riêng Gu, khi có lỗi mới đưa câu
+lỗi và chính các nút lệnh vào footer có hairline; own state và đầy đủ phạm
+vi chia sẻ vẫn ở thân cuộn trước hành động. Trạng thái thường giữ nút trong
+cụm của mình, trước phần tham khảo. Hai lựa chọn footer này thuộc I2,
+không áp `prioritizeFooter` cho mọi sheet hay thay bố cục giao kèo I1.
 
 **Header/form ở candidate 797 (10/10).** `TopBar` giữ target icon 48dp,
 `minHeight` 52dp; hàng header mở vào gutter 12dp mỗi bên và chevron dịch
@@ -1293,6 +1315,13 @@ từ 11/09 chỉ in khi địa điểm **không có dòng lý do**: hàng live k
 từ `starts_on`/`ends_on` máy chủ qua `keo/nhip-keo.ts`, không từ chuỗi
 fixture; nghiêng -2 ở Cá nhân), «ĐÃ TỚI» (teal, nghiêng -2, điểm danh). Ship
 trên 12 màn.
+
+**Opt-in I2 (`ToLoiRu`, nguồn a24 giữ nguyên tại814).** Tem trạng thái dùng
+nhãn in hoa tiếng Việt, `minWidth` (88dp) và `labelStyle` stretch/căn giữa
+để đọc đủ «ĐÃ CHỐT» trong các ảnh100/200 đã chụp. Đây là hình học riêng của
+tem ở hàng này; mặc định `Stamp` và các caller khác không đổi. Nhãn trợ năng
+đúng không thay bằng chứng glyph thực sự được vẽ; ảnh tĩnh không chấm lại
+cú đóng dấu hoặc Reduce Motion.
 
 Hai prop đợt 8:
 - **`nen`**: miếng giấy `card` dưới con dấu viền khi con dấu nằm trên ảnh
@@ -2106,6 +2135,62 @@ identity (12/12), canary (10/12), hai mutant (11/12, 10/12) đỏ đúng dự đ
 native. APK giữ checkpoint độc lập `2f20a301`, fontScale đã trả về 1.
 I2/toàn I/A–S, web/iOS, motion, TalkBack, lifecycle/network, full npm và
 strict32 vẫn mở; bảy finding đóng không thành chứng nhận đẹp toàn app.
+
+### Mục lục và quyết định trên giấy — I2, bàn giao giới hạn 10/10/2026
+
+Nguồn cuối là `814ea5c979629acb8548215c24a5ff5f5c560b73`; lát gồm
+`KhongGianGiay`, `LoaiSo`, `RangBuoc`, `GuHaiBan`, `DongSo`, `ToLoiRu`,
+`ui.tsx` và `Stamp`. Hợp đồng layout/harden, Operate + Read trong
+[I2 brief](docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md)
+kế thừa UI3/seed `c8e88116`, giấy/mực/coral/Bricolage và Nếp canonical.
+Mockup06 là critique-reference, không approved comp mới; không thêm art,
+token hay thẻ trang trí để bù cấu trúc.
+
+- **Đọc đúng điều đang có.** Mục lục gom ba nhóm bằng proximity/hairline
+  như Layout. «Chọn loại sổ» căn trái, target source (48dp); `LoaiSo`
+  highlight Hội bạn/Cặp đôi theo trạng thái thật, không theo lời đề nghị
+  hay cú bấm vừa lỗi. Busy/disabled và lỗi thuộc sheet đang thao tác;
+  «Xong» ở footer. Native timing của loading chưa được chấm.
+- **Điều cần tránh giữ nội dung.** Hai `Field` multiline tự cao theo
+  content-size từ 3 đến 8 dòng `body.lineHeight × fontScale`; vượt khung
+  thì cuộn, không ellipsis một dòng. Người kia là phần đọc riêng sau
+  hairline. Nháp chỉ hiện Lưu khi khác dữ liệu đang lưu; «Bỏ thay đổi»
+  đóng lớp, không gửi. Lỗi và đúng nút lưu ở footer trên IME; các ảnh200
+  chỉ chứng minh đoạn đang đọc/caret cuối, không toàn chuỗi cùng hiện.
+- **Gu dẫn bằng quyết định của mình.** Own state → phạm vi cho người kia,
+  Nếp và chat → bật/tắt hoặc bật lại nếu đủ điều kiện → sửa gu → tham khảo
+  người kia/gu chung. Private dùng nút solid, shared dùng outline; mỗi
+  người chỉ tự bật gu của mình. F1 gom lỗi và chính control hiện có vào
+  footer cố định, `prioritizeFooter` chỉ khi có lỗi; không thêm lệnh retry,
+  rút câu quyền hoặc đổi handler. Ảnh tối200 mới cho thấy toàn câu lỗi và
+  nút hai dòng cùng hiện, own state vẫn đọc được khi cuộn thân.
+- **Đóng sổ là đọc hậu quả trước.** Số dương dùng `ink`/600 nổi hơn dòng
+  zero `inkSoft`, vẫn giữ đủ tờ chờ, buổi đã chốt, lời đề nghị và ký ức.
+  Chưa có preview thì nói đang đếm/lỗi và không mời đóng; lệnh dùng revision
+  của preview. Bằng chứng I2 chỉ đọc preview/cancel, không thực hiện đóng
+  sổ hay cấp đồng thuận để lấy ảnh. Tem theo opt-in riêng ở mục `Stamp`.
+
+Full review a24 mở 11 contact chứa **84 viewport tĩnh + 12 tương tác**,
+20 original và mockup06; trả **fix** cho một P2 F1 của Gu. 84 ảnh tĩnh thuộc
+nội dung tổng hợp (106/v2, 91/v1); 12 frame tương tác sau đó theo tiến trình
+thật, retry lưu lên (116/v3, 101/v2). Không gọi ảnh lúc IME còn mở là ảnh
+sau lưu. Verdict814 mở 2 contact/**12 frame Gu mới** và 4 original, chấm
+**F1 resolved / ship** cùng regression hẹp. Chỉ `GuHaiBan` đổi trong 8 target;
+bảy target còn lại carry nguyên byte từ a24. Original kiểm lại frame đã
+tính, không cộng thành viewport mới; các ảnh top/bottom là viewport cuộn.
+
+Documenter mở đủ hai contact814 và tám contact đại diện a24 (mục lục hai
+theme, couple100/200, expanded sáng100 và ba contact tương tác); đối chiếu
+hash 8/8 contact tĩnh, 12/12 functional original và 12/12 Gu original.
+Chỉ đọc số kỹ thuật có sẵn ở từng SHA: 9 clean-check xanh, Node subset
+(214 file, 1608/1608, 0 fail/skip/cancel/todo); Gu identity (12/12), canary
+(10/12), hai mutant (10/12, 11/12) đỏ đúng dự đoán/cùng test SHA. Detector
+a24 có 8 target,814 có 1 target Gu, đều regex TSX `[]`/exit0. Những số này
+không là full gate/strict hoặc điểm đẹp. Không có tổng beauty /16; artwork
+N/A và interaction/motion N/E không được đổi thành điểm2. Toàn I/A–S,
+native computed contrast/geometry, target thực, motion/reduced motion,
+TalkBack/focus order, loading timing/lifecycle, iOS và hardware chưa đo;
+expanded (768×1024) là cùng AVD đổi kích thước.
 
 ### Hỏi tại hàng (xác nhận hành động phá huỷ)
 Hành động xoá thứ không lấy lại được **hỏi ngay tại hàng**, không mở hộp
@@ -3603,11 +3688,19 @@ quyền merge vào main từ các số trên.
 
 ## Những gì bản ship KHÔNG phong thánh
 
+**I2 10/10 tại814:** ship chỉ F1 và regression hẹp; bảy target còn lại
+carry full review a24, không đổi nhãn 96 frame cũ thành814. Không biến
+footer phục hồi Gu thành mặc định mọi sheet, giới hạn ô nhập 3–8 dòng thành
+lý do cắt nội dung, hoặc minWidth88 thành token tem chung. Giữ harness đỏ
+r0 tối200: default scroll chạm footer mới đã thất bại sau assertion lỗi/nút
+visible; r1 vuốt riêng thân cuộn, source không đổi. Không nâng witness API,
+regex rỗng hay unit xanh thành thị giác; không tổng điểm đẹp hoặc full I/A–S.
+
 **I1 10/10 tại 7d:** không biến F5 partial của62, lỗi nhãn «Để» của4a hay
 scan nhầm đường dẫn `ChuKy` (`[]`/exit1) thành pass. Sáu finding carry vẫn
 thuộc62; M6 thật không đổi nhãn thành7d. Opt-in wrap không thu chữ hoặc đổi
-mặc định mọi caller; nét ký trang trí không thay đồng thuận thật. I2 còn mở,
-không lấy các bố cục/lỗi đang có của I2 làm hướng dẫn mới. Expanded là cùng
+mặc định mọi caller; nét ký trang trí không thay đồng thuận thật. Ở mốc I1,
+I2 còn mở; bàn giao I2 có bằng chứng riêng bên trên. Expanded là cùng
 AVD đổi kích thước; subset/regex không thay nghiệm thu thị giác, computed
 contrast, native iOS, motion/TalkBack hoặc full strict gate.
 

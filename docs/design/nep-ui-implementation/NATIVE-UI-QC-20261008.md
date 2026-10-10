@@ -394,3 +394,64 @@ original7d và XML: text46×14, khung66×26, chuỗi trợ năng đầy đủ. C
 đọc nội dung/IME/nhịp mục lục/Gu/phản hồi loại sổ rồi QC đúng source. Toàn
 I/A–S, motion/TalkBack/lifecycle/network, iOS/native crypto/fullnpm/strict32
 và landing main vẫn chưa nghiệm thu.
+
+
+## I2 — mục lục, điều cần tránh và Gu; chốt sửa 814ea5c9 (10/10)
+
+Phần I2 ghi mở ở mục I1 phía trên đã qua build và review trong phạm vi sau.
+Giữ UI3/seed c8e88116, mockup06 chỉ làm critique-reference. Mục lục gom ba
+nhóm theo nghĩa; nội dung điều tránh dài tự cao 3–8 dòng theo fontScale;
+footer lưu/lỗi nằm trên IME. Loại sổ nhận busy/error trong chính sheet đang
+thao tác. Hậu quả dương của đóng sổ được nhấn, không thực hiện đóng sổ.
+Tem ĐÃ CHỐT dùng minWidth88 opt-in và chữ stretch/center; các Stamp khác
+không đổi. Gu dẫn bằng trạng thái của mình và đủ phạm vi quyền chia sẻ.
+Không đổi API/domain, tiền, consent/locks, AI provider hoặc E2EE.
+
+Checkpoint a24cb4bf có 8 profile/84 viewport Android: friends sáng100/tối200;
+couple sáng100/200, tối100/200; expanded sáng100/tối200. Root mở cả8 contact.
+Có thêm26 stage tương tác xanh,343,691s/12 frame: IME/cancel cả hai field
+100/200; lỗi mạng không lưu; retry native lưu đúng116/101 ký tự, foodv3/dungv2.
+Type failure giữ Cặp đôi; Gu bật/tắt thật, counterpart chỉ thấy gu của người
+bật, common vẫn ẩn. Primary/counterpart200, outsider404; trước/sau bỏ chặn
+lỗi Gu đều private. Root mở3 contact tương tác, tổng11 contact/96 viewport.
+Chuỗi dài100 đọc từ đầu;200 dùng cuộn, không tuyên bố cả chuỗi cùng hiện.
+Expanded768×1024 là cùng AVD resize, không phải tablet độc lập.
+
+[Full finish review I2](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/fresh-i2-finish-review.md>)
+mở11 contact/96 viewport,20 original và mockup06: mộtP2, lỗi Gu200 bị đoạn
+phạm vi ngăn khỏi nút phục hồi. Bản814ea5c9 giữ nguyên permission/handlers,
+chỉ khi lỗi gom feedback cùng chính các nút lệnh vào footer cố định. Lượt
+cuối8 stage xanh/12 frame mới ở sáng100/tối200: private → lỗi TCP-reset →
+retry native → shared → unshare. Root mở2 contact và2 original lỗi;
+reviewer mở2 contact/12 frame cùng4 original.
+[Verdict F1](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/fresh-i2-f1-verdict.md>)
+resolved/ship, không thấy regression hẹp. Các sửa I2 khác carry từ a24 theo
+diff; không relabel96 viewport a24 thành814. Đây chốt sửa I2, không toàn I/A–S.
+
+Clean exact814 có9 bước xanh: type7,243s; guide1,288s; export14,462s;
+compile2,656s; fixup0,036s; Node214 file1608/1608/34,145s; core1,441s;
+Go-guide0,242s; tree32,561s/5109 file.0fail/skip/cancel/todo. Guide62 route,
+hash e62d163cd645 giữ nguyên. TSX detector cuối đúng1 target[]/exit0,
+chỉ regex; scan8 target a24 cũng chỉ regex, không đo native geometry/contrast.
+Gu harness311694a7: identity12/12/0,065s; canary10/12/0,064s;
+hai mutant10/12/0,061s và11/12/0,062s, đỏ đúng tên ca dự đoán,
+khác nghĩa được ghi trước, cùng harness. File compiled production giữ hash
+25ea577a…0ff2. Đây pure contract, không thay API/UI proof hoặc full npm/strict32.
+
+Giữ lịch sử đỏ: 8a stamp uppercase còn cắt100; expandedr0 vuốt tay cầm;
+bỏ adb reverse không ngắt HTTP nên type write vẫn chạy; REJECT mặc định để
+Gu request treo rồi gửi khi bỏ chặn. Fixture được khôi phục rõ bằng native
+proposal/API recipient grant và native tắt Gu, không gọi recipient-native
+proof. TCP-reset đúng cổng QC của owned emulator đã kiểm trước/sau tháo rule.
+814 dark r0 đã assert lỗi+nút và chụp đúng, nhưng default scroll bắt đầu trên
+footer nên không cuộn thân; r1 vuốt trong thân xanh, không sửa product cho
+harness. Helper mutation r0 nhầm raw/transformed hash, dừng trước mọi test;
+đã ghi riêng, không tính là product test đỏ hoặc pass hồi tố.
+
+JS/API814, Metro3582510/API3581698; Go binary9ca8ea8f byte-identical a24.
+APK vẫn build2f20/hash963bd5da…514. Chỉ restart process sở hữu; không DB,
+oracle, Docker, soak audit hoặc peer5560. Font1/wm320×640 và mọi rule riêng
+đã phục hồi. Stylus primary/third còn0 cho toàn audit, phục hồi ở cuối như
+mục I1. Motion/reduced motion, TalkBack, native computed contrast/target,
+lifecycle, iOS/hardware, crypto và các state chưa chụp vẫn N/E. J và toàn
+A–S/gates cuối/main tiếp tục mở; không tuyên bố app đã đạt chuẩn thẩm mỹ.
