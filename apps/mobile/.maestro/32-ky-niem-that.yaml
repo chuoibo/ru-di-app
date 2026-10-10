@@ -44,15 +44,11 @@ appId: com.lakiet.rudi
 # Màn Thả khoảnh khắc ở trạng thái chưa chọn ảnh (bộ chọn ảnh hệ thống không lái ở đây): chụp rồi lùi về tường.
 - tapOn: "Thả khoảnh khắc"
 - extendedWaitUntil:
-    visible: "Một khoảnh khắc cho nhóm"
+    visible:
+      id: "share-moment-screen"
     timeout: 30000
-# Màn 393dp (Pixel 5) để nút «Chọn ảnh» dưới ô chú thích, ngoài khung đầu.
-- scrollUntilVisible:
-    element:
-      text: "Chọn ảnh"
-    direction: DOWN
-    centerElement: true
-    timeout: 20000
+# The empty print itself opens the picker; no duplicate action below the caption.
+- assertVisible: "Chưa chọn ảnh, chạm để chọn"
 - takeScreenshot: 32-tha-khoanh-khac
 - back
 - extendedWaitUntil:
@@ -100,10 +96,12 @@ appId: com.lakiet.rudi
 # Phiên sống lúc này là của người còn đăng nhập sau flow 30/31 (C hoặc D): tên tác giả
 # là tên máy chủ trả cho người đó, không ghim ai.
 - extendedWaitUntil:
-    visible: ".* QA: Ngon that"
+    visible: "Ngon that"
     timeout: 60000
-- assertVisible: "1 tim · 1 bình luận"
 - takeScreenshot: 32-tim-binh-luan
+# The comment sheet returns to this post before leaving the wall.
+- back
+- assertVisible: "1 tim · 1 bình luận"
 # Kệ album: mỗi kèo một album, số đếm của máy chủ; check-in vừa rồi rơi vào ngày của «Keo QA».
 - back
 - extendedWaitUntil:
