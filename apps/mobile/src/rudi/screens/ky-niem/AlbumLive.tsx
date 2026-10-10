@@ -1,4 +1,3 @@
-import { AssetIllustration } from "../../ui/AssetIllustration";
 /**
  * Album chuyến đi on a real session (M6): three depths, all read-only.
  *
@@ -24,7 +23,7 @@ import { AssetIllustration } from "../../ui/AssetIllustration";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import type { Phien } from "../../../phien";
 import { AlbumError } from "../../../screens/album/album-api";
@@ -55,6 +54,8 @@ import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { PressScale } from "../../ui/PressScale";
 import { RudiIcon } from "../../ui/RudiIcon";
+import { Canh } from "../../ui/art/Canh";
+import { MemoryPhoto } from "../../ui/MemoryPhoto";
 
 function loiRaChu(error: unknown): string {
   if (error instanceof AlbumError) return error.message;
@@ -97,6 +98,8 @@ type TrangKe = { pha: "dang-doc" } | { pha: "xong"; albums: TomTatAlbum[] } | { 
 export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contextId: string }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const largeText = fontScale >= 1.5;
   const [trang, setTrang] = useState<TrangKe>({ pha: "dang-doc" });
   // B4: an empty shelf asks the plan list whether an outing is merely ahead.
   const [keoNhom, setKeoNhom] = useState<{ title: string; starts_on: string }[]>([]);
@@ -144,7 +147,8 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
       {trang.pha === "xong" && trang.albums.length === 0 ? (
         <EmptyState
           body={cauRong.than}
-          illustration={<AssetIllustration name="spot-memory" width={240} height={204} />}
+          illustration={<Canh id="chua-co-anh" width={112} />}
+          action={{ label: "Lên plan", onPress: () => router.push("/(tabs)/plan" as never) }}
           kind="first-use"
           layout="inline"
           title={cauRong.tieuDe}
@@ -158,15 +162,15 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
               key={a.outing_id}
               onPress={() => router.push(`/trips/${a.outing_id}/album?ctx=${contextId}` as never)}
               pressedScale={0.985}
-              style={[styles.albumShelf, { borderColor: colors.line }, !a.cover && styles.emptyAlbumShelf]}
+              style={[styles.albumShelf, { borderColor: colors.line }, largeText && styles.largeShelf]}
             >
-              <AlbumCover album={a} contextId={contextId} personId={phien.person_id} />
+              {!largeText ? <AlbumCover album={a} contextId={contextId} personId={phien.person_id} wide={false} /> : null}
               <View style={styles.albumWords}>
                 <Text style={[typography.title, { color: colors.ink }]}>{a.title}</Text>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauKhoang(a, ngayChuyen[a.outing_id])}</Text>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauThongKeAlbum(a)}</Text>
               </View>
-              <RudiIcon color={colors.inkSoft} name="chevron-forward" size={20} />
+              {largeText ? <AlbumCover album={a} contextId={contextId} personId={phien.person_id} wide /> : <RudiIcon color={colors.inkSoft} name="chevron-forward" size={20} />}
             </PressScale>
           ))
         : null}
@@ -175,18 +179,18 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
 }
 
 /** The shelf uses the server's own cover, or an honest empty photo frame. */
-function AlbumCover({ album, contextId, personId }: { album: TomTatAlbum; contextId: string; personId: string }) {
+function AlbumCover({ album, contextId, personId, wide }: { album: TomTatAlbum; contextId: string; personId: string; wide: boolean }) {
   const { colors } = useRudiTheme();
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [album.cover?.image_url]);
   const source = album.cover ? nguonAnh(album.cover.image_url, personId, contextId) : null;
   if (!source || failed) return (
-    <View style={[album.cover ? styles.unreadCover : styles.emptyCover, { backgroundColor: colors.paperShade, borderColor: colors.line }]}>
+    <View style={[styles.emptyCover, wide && styles.wideCover, { backgroundColor: colors.paperShade, borderColor: colors.line }]}>
       <PaperObject name="photo-stack" width={64} />
-      {failed ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh chưa mở được.</Text> : null}
+      {failed ? <Text style={[typography.note, { color: colors.inkSoft }]}>Ảnh chưa tải</Text> : null}
     </View>
   );
-  return <Image accessibilityLabel={album.cover?.caption || `Ảnh bìa ${album.title}`} contentFit="cover" onError={() => setFailed(true)} source={source} style={styles.shelfCover} />;
+  return <Image accessibilityLabel={album.cover?.caption || `Ảnh bìa ${album.title}`} contentFit="cover" onError={() => setFailed(true)} source={source} style={[styles.shelfCover, wide && styles.wideCover]} />;
 }
 
 /* --------------------------------------------------------------- một album */
@@ -197,6 +201,7 @@ type TrangAlbum =
   | { pha: "hong"; loi: string };
 
 export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phien; contextId: string; outingId: string }) {
+  const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // Same rule as the fixture album: a phone reads the lead at 4:3, a tablet
@@ -265,7 +270,8 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
       {photos.length === 0 ? (
         <EmptyState
           body="Thả khoảnh khắc lên tường nhóm trong những ngày này là ảnh về đây."
-          illustration={<AssetIllustration name="spot-memory" width={240} height={204} />}
+          illustration={<Canh id="chua-co-anh" width={112} />}
+          action={{ label: "Thả khoảnh khắc", onPress: () => router.push(`/moments/new?ctx=${contextId}` as never) }}
           kind="first-use"
           layout="inline"
           title="Chưa có khoảnh khắc"
@@ -308,7 +314,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
             const nguon = nguonAnh(canh.image_url, me, contextId);
             return (
               <View key={canh.memory_id} style={[styles.canh, { borderBottomColor: colors.line }]}>
-                {nguon !== null ? <Image contentFit="cover" source={nguon} style={[styles.anhCanh, { borderRadius: radius.small, backgroundColor: colors.line }]} /> : null}
+                {nguon !== null ? <MemoryPhoto label={canh.note || "Cảnh trong thước phim"} source={nguon} ratio={4 / 3} /> : null}
                 <Text style={[typography.body, { color: colors.ink }]}>{canh.note}</Text>
                 {canh.place_name !== null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{canh.place_name}</Text> : null}
               </View>
@@ -322,15 +328,14 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
 }
 
 const styles = StyleSheet.create({
-  albumShelf: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 16, paddingVertical: 20, borderBottomWidth: StyleSheet.hairlineWidth },
-  emptyAlbumShelf: { flexWrap: "nowrap" },
-  albumWords: { flex: 1, minWidth: 0, gap: 6 },
-  shelfCover: { width: "100%", aspectRatio: 4 / 3, borderRadius: 3 },
-  emptyCover: { width: 84, height: 104, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", alignItems: "center", justifyContent: "center", borderRadius: 3 },
-  unreadCover: { width: "100%", aspectRatio: 4 / 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 3 },
+  albumShelf: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 24, borderBottomWidth: StyleSheet.hairlineWidth },
+  largeShelf: { flexDirection: "column", alignItems: "stretch" },
+  albumWords: { flex: 1, flexShrink: 1, minWidth: 0, gap: 6 },
+  shelfCover: { width: 88, height: 104, borderRadius: 3 },
+  emptyCover: { width: 88, height: 104, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", alignItems: "center", justifyContent: "center", borderRadius: 3 },
+  wideCover: { width: "100%", height: undefined, aspectRatio: 21 / 9 },
   khung: { gap: 14 },
   ngay: { gap: 6 },
   chuThich: { marginTop: 6 },
   canh: { gap: 8, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  anhCanh: { width: "100%", aspectRatio: 4 / 3 },
 });

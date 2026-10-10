@@ -1,12 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image, type ImageSource } from "expo-image";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { typography, useRudiTheme } from "../theme";
-import { boundPhotoOffset, viewerIndex } from "../photo-viewer";
+import { boundPhotoOffset, photoButtonTransform, viewerIndex, type PhotoCommand } from "../photo-viewer";
 import { useMotion } from "./useMotion";
 
 /**
@@ -27,6 +29,8 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
   // gesture area under it were 0px (QA UI-094).
   const [height, setHeight] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [command, setCommand] = useState<{ serial: number; name: PhotoCommand }>({ serial: 0, name: "reset" });
+  const [reading, setReading] = useState(false);
   const currentIndex = viewerIndex(index, photos.length);
   const motion = useMotion();
   // Closing fades as opening does (QA UI-098): the Modal is told to hide and
@@ -47,6 +51,9 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
   viTri.current = currentIndex;
   const den = (i: number, animated = !motion.reduced) => {
     const n = viewerIndex(i, photos.length);
+    setZoomed(false);
+    setReading(false);
+    setCommand((c) => ({ serial: c.serial + 1, name: "reset" }));
     listRef.current?.scrollToOffset({ offset: n * width, animated });
     setIndex(n);
   };
@@ -88,9 +95,11 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
     // `den` reads the page through `viTri`; the listener is rebuilt with the width.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, photos.length]);
-  return <Modal visible={mo} animationType={motion.reduced ? "none" : "fade"} onRequestClose={dong} presentationStyle="fullScreen">
+  const readCaption = (value: boolean) => { setReading(value); setZoomed(false); setCommand((c) => ({ serial: c.serial + 1, name: "reset" })); };
+  return <Modal visible={mo} animationType={motion.reduced ? "none" : "fade"} onRequestClose={() => reading ? readCaption(false) : dong()} presentationStyle="fullScreen">
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={[styles.screen, { backgroundColor: colors.cover }]}>
+        <StatusBar style="light" />
         <View style={styles.header}>
           <View style={styles.flex}>
             <Text style={[typography.label, { color: colors.coverInk }]}>{title}</Text>
@@ -100,7 +109,9 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
             <Text style={[typography.label, { color: colors.coverInk }]}>Đóng</Text>
           </Pressable>
         </View>
-        <GestureDetector gesture={latTrangWeb} touchAction="none">
+        {reading ? <ScrollView contentContainerStyle={styles.fullCaption} showsVerticalScrollIndicator style={styles.flex}>
+          <Text selectable style={[typography.body, { color: colors.coverInk }]}>{photos[currentIndex]?.caption}</Text>
+        </ScrollView> : <GestureDetector gesture={latTrangWeb} touchAction="none">
         <View style={styles.flex} onLayout={(event) => {
           const nextWidth = event.nativeEvent.layout.width;
           setHeight(event.nativeEvent.layout.height);
@@ -117,12 +128,33 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
             keyExtractor={(photo) => photo.id} initialNumToRender={1} maxToRenderPerBatch={2} windowSize={3}
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(event) => { setIndex(viewerIndex(event.nativeEvent.contentOffset.x / width, photos.length)); setZoomed(false); }}
-            renderItem={({ item, index: itemIndex }) => <ZoomPhoto photo={item} width={width} height={height} active={itemIndex === currentIndex} onZoom={setZoomed} />}
+            renderItem={({ item, index: itemIndex }) => <ZoomPhoto photo={item} width={width} height={height} active={itemIndex === currentIndex} onZoom={setZoomed} command={command} />}
           /> : null}
+          {zoomed ? <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+            {(["left", "right", "up", "down"] as const).map((name) => <Pressable accessibilityRole="button" accessibilityLabel={{ left: "Dịch ảnh sang trái", right: "Dịch ảnh sang phải", up: "Dịch ảnh lên", down: "Dịch ảnh xuống" }[name]} key={name} onPress={() => setCommand((c) => ({ serial: c.serial + 1, name }))} style={[styles.pan, styles[name], { backgroundColor: colors.cover }]}>
+              <Ionicons color={colors.coverInk} size={24} name={{ left: "chevron-back", right: "chevron-forward", up: "chevron-up", down: "chevron-down" }[name] as "chevron-back"} />
+            </Pressable>)}
+          </View> : null}
         </View>
-        </GestureDetector>
-        <Text style={[typography.caption, styles.hint, { color: colors.coverInkSoft }]}>Vuốt để xem tiếp · chụm hai ngón hoặc chạm đúp để phóng to</Text>
-        <Text numberOfLines={4} style={[typography.body, styles.caption, { color: colors.coverInk }]}>{photos[currentIndex]?.caption}</Text>
+        </GestureDetector>}
+        <View style={styles.controls}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Ảnh trước" accessibilityState={{ disabled: currentIndex === 0 }} disabled={currentIndex === 0} onPress={() => den(currentIndex - 1)} style={[styles.control, currentIndex === 0 && styles.disabled]}>
+            <Ionicons color={colors.coverInk} name="chevron-back" size={24} />
+          </Pressable>
+          {!reading ? <Pressable accessibilityRole="button" accessibilityLabel={zoomed ? "Thu ảnh về ban đầu" : "Phóng to ảnh"} onPress={() => setCommand((c) => ({ serial: c.serial + 1, name: zoomed ? "reset" : "zoom" }))} style={styles.control}>
+            <Ionicons color={colors.coverInk} name={zoomed ? "contract-outline" : "expand-outline"} size={24} />
+          </Pressable> : null}
+          <Pressable accessibilityRole="button" accessibilityLabel={reading ? "Trở về ảnh" : "Đọc hết chú thích"} onPress={() => readCaption(!reading)} style={styles.control}>
+            <Ionicons color={colors.coverInk} name={reading ? "image-outline" : "reader-outline"} size={24} />
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Ảnh tiếp theo" accessibilityState={{ disabled: currentIndex >= photos.length - 1 }} disabled={currentIndex >= photos.length - 1} onPress={() => den(currentIndex + 1)} style={[styles.control, currentIndex >= photos.length - 1 && styles.disabled]}>
+            <Ionicons color={colors.coverInk} name="chevron-forward" size={24} />
+          </Pressable>
+        </View>
+        {!reading ? <Pressable accessibilityRole="button" accessibilityLabel="Đọc hết chú thích" onPress={() => readCaption(true)} style={styles.caption}>
+          <Text numberOfLines={2} style={[typography.caption, { color: colors.coverInk }]}>{photos[currentIndex]?.caption}</Text>
+          <Text style={[typography.note, { color: colors.coverInkSoft }]}>Đọc chú thích</Text>
+        </Pressable> : null}
       </SafeAreaView>
     </GestureHandlerRootView>
   </Modal>;
@@ -130,13 +162,26 @@ export function PhotoViewer({ photos, initialIndex, onClose, title = "Ảnh củ
 
 const WEB = Platform.OS === "web";
 
-function ZoomPhoto({ photo, width, height, active, onZoom }: { photo: ViewerPhoto; width: number; height: number; active: boolean; onZoom(value: boolean): void }) {
+function ZoomPhoto({ photo, width, height, active, onZoom, command }: { photo: ViewerPhoto; width: number; height: number; active: boolean; onZoom(value: boolean): void; command: { serial: number; name: PhotoCommand } }) {
+  const { colors } = useRudiTheme();
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const motion = useMotion();
   const settle = motion.timing("standard");
   const scale = useSharedValue(1), savedScale = useSharedValue(1);
   const x = useSharedValue(0), y = useSharedValue(0), originX = useSharedValue(0), originY = useSharedValue(0);
   const [canPan, setCanPan] = useState(false);
   const zoomChanged = (value: boolean) => { setCanPan(value); onZoom(value); };
+  const seenCommand = useRef(command.serial);
+  useEffect(() => {
+    if (!active || command.serial === seenCommand.current) return;
+    seenCommand.current = command.serial;
+    const next = photoButtonTransform(command.name, { scale: scale.value, x: x.value, y: y.value }, width, height);
+    scale.value = withTiming(next.scale, settle); savedScale.value = next.scale;
+    x.value = next.x; y.value = next.y; zoomChanged(next.scale > 1);
+    // A button command is consumed once by the active photo, never by preloaded pages.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, command.serial]);
   useEffect(() => {
     if (!active) { scale.value = 1; savedScale.value = 1; x.value = 0; y.value = 0; setCanPan(false); }
   }, [active, scale, savedScale, x, y]);
@@ -170,9 +215,15 @@ function ZoomPhoto({ photo, width, height, active, onZoom }: { photo: ViewerPhot
         two fingers zoom the photo, never the page; the swipe is the pager's. */}
     <GestureDetector gesture={Gesture.Simultaneous(pinch, pan, doubleTap)}>
       <Animated.View style={[StyleSheet.absoluteFill, style]}>
-        <Image source={photo.source} accessibilityLabel={photo.caption || "Ảnh của nhóm"} contentFit="contain" cachePolicy="none" style={StyleSheet.absoluteFill} />
+        {!failed ? <Image key={attempt} source={photo.source} onError={() => setFailed(true)} accessibilityLabel={photo.caption || "Ảnh của nhóm"} contentFit="contain" cachePolicy="none" style={StyleSheet.absoluteFill} /> : null}
       </Animated.View>
     </GestureDetector>
+    {failed ? <View style={[styles.photoError, { backgroundColor: colors.cover }]}>
+      <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.coverInk }]}>Chưa tải được ảnh.</Text>
+      <Pressable accessibilityLabel="Thử tải lại ảnh" accessibilityRole="button" onPress={() => { setFailed(false); setAttempt((n) => n + 1); }} style={styles.close}>
+        <Text style={[typography.label, { color: colors.coverInk }]}>Thử lại</Text>
+      </Pressable>
+    </View> : null}
   </View>;
 }
 
@@ -180,6 +231,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1 }, flex: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, gap: 16 },
   close: { minWidth: 56, minHeight: 48, alignItems: "center", justifyContent: "center" },
-  hint: { textAlign: "center", padding: 12 },
-  caption: { paddingHorizontal: 20, paddingBottom: 24 },
+  controls: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8 },
+  control: { minWidth: 48, minHeight: 48, justifyContent: "center", alignItems: "center" },
+  disabled: { opacity: 0.35 },
+  caption: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16, minHeight: 48, gap: 4 },
+  fullCaption: { padding: 24, gap: 16 },
+  photoError: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "center", justifyContent: "center", padding: 16, gap: 10 },
+  pan: { position: "absolute", width: 48, height: 48, alignItems: "center", justifyContent: "center", borderRadius: 24 },
+  left: { left: 8, top: "50%", marginTop: -24 },
+  right: { right: 8, top: "50%", marginTop: -24 },
+  up: { top: 8, left: "50%", marginLeft: -24 },
+  down: { bottom: 8, left: "50%", marginLeft: -24 },
 });

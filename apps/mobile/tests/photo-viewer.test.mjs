@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { boundPhotoOffset, viewerIndex } from "../dist-test/rudi/photo-viewer.js";
+import { boundPhotoOffset, photoButtonTransform, viewerIndex } from "../dist-test/rudi/photo-viewer.js";
 
 test("viewer keeps a bounded current page across size and collection changes", () => {
   assert.equal(viewerIndex(1, 2), 1);
@@ -38,5 +38,28 @@ test("pinch shrinking clamps the old pan offset on both axes", () => {
     assert.ok(Math.abs(boundPhotoOffset(far, extent, 1.2) - extent * 0.1) < 0.00001);
     assert.ok(Math.abs(boundPhotoOffset(-far, extent, 1.2) + extent * 0.1) < 0.00001);
     assert.equal(boundPhotoOffset(far, extent, 1), 0);
+  }
+});
+
+test("viewer buttons zoom/reset without carrying a previous pan", () => {
+  const far = { scale: 4, x: 480, y: -600 };
+  assert.deepEqual(photoButtonTransform("zoom", far, 320, 640), { scale: 2, x: 0, y: 0 });
+  assert.deepEqual(photoButtonTransform("reset", far, 320, 640), { scale: 1, x: 0, y: 0 });
+});
+
+test("pan buttons reach every edge and stay bounded on each axis", () => {
+  for (const [width, height] of [[320, 640], [768, 1024], [640, 320]]) {
+    let position = { scale: 2, x: 0, y: 0 };
+    for (let i = 0; i < 40; i += 1) position = photoButtonTransform("right", position, width, height);
+    assert.equal(position.x, width / 2);
+    assert.equal(position.y, 0);
+    for (let i = 0; i < 40; i += 1) position = photoButtonTransform("up", position, width, height);
+    assert.equal(position.x, width / 2);
+    assert.equal(position.y, -height / 2);
+    for (let i = 0; i < 40; i += 1) position = photoButtonTransform("left", position, width, height);
+    assert.equal(position.x, -width / 2);
+    for (let i = 0; i < 40; i += 1) position = photoButtonTransform("down", position, width, height);
+    assert.equal(position.y, height / 2);
+    assert.deepEqual(photoButtonTransform("right", { scale: 1, x: 0, y: 0 }, width, height), { scale: 1, x: 0, y: 0 });
   }
 });

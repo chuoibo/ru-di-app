@@ -1,12 +1,11 @@
-import { Image, type ImageSource } from "expo-image";
-import { useEffect, useState } from "react";
+import type { ImageSource } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { chiaAlbumTheoNgay } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { ResponsiveRow, SectionHeader } from "../../ui";
 import { KhungAnh } from "../../ui/KhungAnh";
-import { Canh } from "../../ui/art/Canh";
+import { MemoryPhoto } from "../../ui/MemoryPhoto";
 
 /**
  * A photograph of the group's own album. It owes no author and no licence,
@@ -20,30 +19,9 @@ export interface AnhAlbumHienThi {
   created_at: string;
 }
 
-/**
- * A photograph that says so when it fails to load, keeping its place.
- *
- * The failed slot draws the empty-frame scene, the same object a place with
- * no picture gets, with the sentence as its caption: a flat tinted rectangle
- * stood in for a broken address for a whole board run, and a tinted rectangle
- * is the one material this world does not use (review 08/09 F01, and the
- * finish review of this batch). The ground is `card`, the paper a print is
- * made of, not `accentSoft`: on the dark theme the coral tint turns into a
- * maroon slab the size of a photograph (measured on emulator 08/09).
- */
+/** Keep the full photograph and an in-place byte-load recovery on paper. */
 function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; caption: string; ratio: number; radius: number }) {
-  const { colors } = useRudiTheme();
-  const [hong, setHong] = useState(false);
-  useEffect(() => setHong(false), [source]);
-  if (hong) {
-    return (
-      <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.card }]}>
-        <Canh id="chua-co-anh" width={132} />
-        <Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text>
-      </View>
-    );
-  }
-  return <Image accessibilityLabel={caption} cachePolicy="none" contentFit="cover" onError={() => setHong(true)} source={source} style={{ width: "100%", aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.line }} />;
+  return <View style={{ borderRadius: radius, overflow: "hidden" }}><MemoryPhoto label={caption} source={source} ratio={ratio} /></View>;
 }
 
 /**
@@ -82,7 +60,7 @@ export function AlbumAnh({ photos, tiLeDan, onMo }: { photos: readonly AnhAlbumH
           <View key={ngay.ngay ?? "chua-ro"} style={styles.ngay}>
             {nhieuNgay ? <Text style={[typography.note, { color: colors.inkFaint }]}>{ngay.nhan}</Text> : null}
             {chan > 0 ? (
-              <ResponsiveRow gap={6} maxColumns={4} minItemWidth={150}>
+              <ResponsiveRow gap={10} maxColumns={4} minItemWidth={150}>
                 {ngay.anh.slice(0, chan).map((photo) => oAnh(photo, 1))}
               </ResponsiveRow>
             ) : null}
@@ -97,5 +75,4 @@ export function AlbumAnh({ photos, tiLeDan, onMo }: { photos: readonly AnhAlbumH
 
 const styles = StyleSheet.create({
   ngay: { gap: 6 },
-  hong: { width: "100%", alignItems: "center", justifyContent: "center", gap: 4 },
 });
