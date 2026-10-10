@@ -119,7 +119,18 @@ export function CaiDatNhomSheet({
   };
 
   return (
-    <Sheet accessibilityLabel={laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} open={open} testID="cai-dat-nhom">
+    <Sheet accessibilityLabel={xacNhanRoi ? "Xác nhận rời nhóm" : laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} onBack={xacNhanRoi ? () => setXacNhanRoi(false) : undefined} open={open} testID="cai-dat-nhom"
+      prioritizeFooter={xacNhanRoi}
+      footer={xacNhanRoi ? <View style={styles.quyetDinh}>
+        <RudiButton disabled={dangLuu !== null} label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
+        <RudiButton disabled={dangLuu !== null} label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
+      </View> : undefined}
+    >
+      {xacNhanRoi ? <View style={styles.khoi}>
+        <Heading size="h2" title="Rời nhóm này?" />
+        <Text style={[typography.body, { color: colors.ink }]}>Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{loi}</Text> : null}
+      </View> : <>
       <Heading size="h2" title={laPair ? "Cuộc trò chuyện" : "Cài đặt nhóm"} />
       {!laPair ? (
         <View style={styles.khoi}>
@@ -226,22 +237,16 @@ export function CaiDatNhomSheet({
       {/* Leaving sits apart, under a rule, well away from the rows above. */}
       {!laPair ? <View style={[styles.ke, { backgroundColor: colors.line }]} /> : null}
       {!laPair ? (
-        xacNhanRoi ? (
-          <View style={styles.khoi}>
-            <Text style={[typography.body, { color: colors.ink }]}>Rời nhóm này? Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
-            <RudiButton disabled={dangLuu !== null} label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
-            <RudiButton label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
-          </View>
-        ) : (
-          <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} tone="warn" variant="ghost" />
-        )
+        <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} tone="warn" variant="ghost" />
       ) : null}
+      </>}
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
   khoi: { gap: 8, paddingBottom: 8 },
+  quyetDinh: { gap: 8, paddingTop: 16 },
   themes: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingVertical: 8 },
   oTheme: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
   hangCongTac: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },

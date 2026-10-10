@@ -16,7 +16,7 @@
  */
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -38,6 +38,8 @@ type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string }
 export function GroupNewScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const expanded = width >= 600 && height >= 720;
   const { colors } = useRudiTheme();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
@@ -78,6 +80,10 @@ export function GroupNewScreen() {
   };
 
   const dangMo = trang.pha === "dang-mo";
+  const actions = <View style={[styles.footer, expanded && styles.bookWidth]}>
+    <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
+    <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} style={styles.mo} />
+  </View>;
 
   const nhapTen = (
     <ONhapMuc
@@ -99,14 +105,11 @@ export function GroupNewScreen() {
   return (
     <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="group-new-screen"
       header={<TopBar title="Nhóm mới" />}
-      footer={<View style={styles.footer}>
-        <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
-        <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} style={styles.mo} />
-      </View>}
+      footer={expanded ? undefined : actions}
     >
       <Heading title="Đặt tên cho hội" subtitle="Mời bạn bè sau khi mở nhóm." />
-      <SoBia ten={[]} fitContent nhan={
-          <View style={[styles.nhan, { backgroundColor: colors.card, borderColor: colors.paperShade }]}>
+      <SoBia ten={[]} fitContent style={expanded ? styles.bookWidth : undefined} nhan={
+          <View style={[styles.nhan, expanded && styles.nhanExpanded, { backgroundColor: colors.card, borderColor: colors.paperShade }]}>
             {nhapTen}
             <View style={[styles.nguoiMo, { borderTopColor: colors.line }]}>
               <AvatarNguoi personId={phien.person_id} name="Bạn" size={32} />
@@ -114,6 +117,7 @@ export function GroupNewScreen() {
             </View>
           </View>
       } />
+      {expanded ? actions : null}
       {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
           Linh» here because nothing pointed them at the direct conversation,
           where the two-person notebook lives. */}
@@ -130,6 +134,8 @@ export function GroupNewScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 24, maxWidth: 560 },
   nhan: { borderWidth: 1, padding: 16, minHeight: 208, justifyContent: "space-between", gap: 24 },
+  nhanExpanded: { minHeight: 368 },
+  bookWidth: { width: "100%", maxWidth: 360, alignSelf: "center" },
   nguoiMo: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   flex: { flex: 1, minWidth: 0 },
   footer: { gap: 8 },

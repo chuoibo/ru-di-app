@@ -445,7 +445,9 @@
     },
     {
       "canh": [],
-      "di_toi": [],
+      "di_toi": [
+        "friends"
+      ],
       "man": "friends/add",
       "nhan": [
         "Chỉ tài khoản cho phép tìm kiếm mới hiện ở đây. Lời mời cần được bạn ấy đồng ý.",
@@ -457,7 +459,8 @@
         "Tên tài khoản của bạn ấy",
         "Tìm",
         "Tìm một người bạn",
-        "Về danh sách bạn"
+        "Về danh sách bạn",
+        "Xem danh sách bạn"
       ],
       "tep": [
         "app/friends/add.tsx",
@@ -594,8 +597,26 @@
       ]
     },
     {
-      "canh": [],
+      "canh": [
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Gửi lời mời"
+        },
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Gửi lời mời tới …"
+        },
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Tìm người nhận"
+        },
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Về nhóm"
+        }
+      ],
       "di_toi": [
+        "groups/[id]/members",
         "messages"
       ],
       "man": "groups/[id]/invite",
@@ -653,12 +674,13 @@
       "man": "groups/[id]/members",
       "nhan": [
         "Album chuyến đi",
+        "Bạn là quản trị duy nhất. Đặt thêm quản trị trước khi bỏ quyền.",
         "Bỏ quyền quản trị của bạn",
         "Bỏ quyền quản trị của …",
         "Chưa đọc được danh sách thành viên",
+        "Giải thích bảo vệ quản trị",
         "Mời bằng tên tài khoản",
         "Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.",
-        "Quản trị",
         "Thành viên",
         "Tường kỷ niệm",
         "Xem hồ sơ của bạn",

@@ -1,7 +1,7 @@
 /** Look up an account first; only a confirmed invitation closes the envelope. */
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ApiError, newAttempt, type Attempt } from "../../../api";
 import { timBanTheoUsername, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
 import { moiVaoNhom } from "../../../screens/vao-cua/cong-api";
@@ -21,6 +21,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function GroupInviteScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const expanded = width >= 600 && height >= 720;
   const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
@@ -66,10 +68,7 @@ export function GroupInviteScreen() {
     } catch (e) { setError(e instanceof ApiError ? e.message : "Chưa gửi được lời mời. Bạn có thể thử lại với người này."); }
     finally { lock.current = false; setBusy(null); }
   };
-  return (
-    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="group-invite-screen"
-      header={<TopBar title="Mời vào nhóm" />}
-      footer={<View style={styles.footer}>
+  const actions = <View style={styles.footer}>
         <CauTaiCho cau={error} />
         <RudiButton
           label={sentId ? "Về nhóm" : recipient ? "Gửi lời mời" : "Tìm người nhận"}
@@ -78,9 +77,13 @@ export function GroupInviteScreen() {
           loading={busy !== null}
           disabled={busy !== null || (!sentId && !recipient && !username.trim())}
           lyDo={!sentId && !recipient && !username.trim() ? "Nhập tên tài khoản của bạn ấy trước." : undefined}
-          onPress={() => { if (sentId) router.back(); else if (recipient) void invite(); else void lookup(); }}
+          onPress={() => { if (sentId) router.replace(`/groups/${id}/members` as never); else if (recipient) void invite(); else void lookup(); }}
         />
-      </View>}
+      </View>;
+  return (
+    <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="group-invite-screen"
+      header={<TopBar title="Mời vào nhóm" />}
+      footer={expanded ? undefined : actions}
     >
       <Heading title={sentId ? "Lời mời đã gửi" : "Bạn muốn rủ ai?"} />
       <View style={[styles.letter, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="thu-moi-nhom">
@@ -96,6 +99,7 @@ export function GroupInviteScreen() {
         ) : null}
         {!sentId ? <ONhapMuc label="Tên tài khoản của người nhận" placeholder="@ten_cua_ban" autoCapitalize="none" autoCorrect={false} value={username} editable={busy === null} onChangeText={(value) => { setUsername(value); setRecipient(null); setError(null); }} returnKeyType="search" onSubmitEditing={() => void lookup()} /> : <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>Đã gửi lời mời tới {recipientName}. Người ấy cần đồng ý để trở thành thành viên.</Text>}
       </View>
+      {expanded ? actions : null}
       {sentId ? <>
         <View style={styles.art} pointerEvents="none" accessible={false}><AnimatedEnvelope eventKey={sentId} width={104} /></View>
         <RudiButton compact full={false} label="Mời thêm người" variant="ghost" onPress={() => { setSentId(null); setRecipient(null); setUsername(""); setError(null); attempt.current = null; }} />

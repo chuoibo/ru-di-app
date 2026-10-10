@@ -11,7 +11,7 @@
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { PaperObject } from "../../asset-pack/react-native/PaperObject";
-import { useCallback, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -59,7 +59,8 @@ export function FriendsScreen() {
   // Cá nhân links here with `?muc=da-nhan` when requests are waiting, so the
   // person lands on them instead of on an empty «Đã là bạn» tab (QA 23/09).
   const { muc: mucMo } = useLocalSearchParams<{ muc?: string }>();
-  const [muc, setMuc] = useState(mucMo === "da-nhan" ? 1 : 0);
+  const [muc, setMuc] = useState(mucMo === "da-nhan" ? 1 : mucMo === "da-gui" ? 2 : 0);
+  useEffect(() => { setMuc(mucMo === "da-nhan" ? 1 : mucMo === "da-gui" ? 2 : 0); }, [mucMo]);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangTraLoi, setDangTraLoi] = useState<string | null>(null);
   // ADR-0021 §2.5: «Nhắn tin» on a friend's row opens (or finds) the pair.

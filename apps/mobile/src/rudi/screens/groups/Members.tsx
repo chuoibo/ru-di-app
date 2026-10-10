@@ -7,7 +7,7 @@
  * design system does not colour people.
  *
  * UI v2: rows on the paper, the group's two memory doors as plain rows, the
- * invite as the one action at the foot.
+ * invite as a quiet action in the fixed header.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { HoiTaiHang } from "../../ui/HoiTaiHang";
@@ -34,7 +34,7 @@ import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { LuoiNguoi } from "../../ui/LuoiNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
-import { Stamp } from "../../ui/Stamp";
+import { RudiIcon } from "../../ui/RudiIcon";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang =
@@ -57,6 +57,7 @@ export function GroupMembersScreen() {
   // QA UI-074: stepping down from admin cannot be undone by oneself; it asks
   // in the row first.
   const [hoiTuBo, setHoiTuBo] = useState(false);
+  const [chiTietQuanTri, setChiTietQuanTri] = useState(false);
   // QA UI-075: «Người lập nhóm» is the person who opened the group, read from
   // the group itself; every other admin is «Quản trị». Unknown until it answers.
   const [nguoiLap, setNguoiLap] = useState<string | null>(null);
@@ -117,12 +118,11 @@ export function GroupMembersScreen() {
       setDangDoiVaiTro(null);
     }
   };
-  // The caption names the role unless the row already wears the «Quản trị»
-  // stamp; the one who opened the group is always said.
-  const nhanVaiTro = (tv: ThanhVien, coDau: boolean): string | null => {
+  // Native text measures and wraps the full role at every font scale.
+  const nhanVaiTro = (tv: ThanhVien): string => {
     if (tv.state === "invited") return "Đã mời, chưa đồng ý";
-    if (nguoiLap === tv.person_id) return "Người lập nhóm";
-    if (tv.role === "admin" && tv.state === "active") return coDau ? null : "Quản trị";
+    if (nguoiLap === tv.person_id) return tv.role === "admin" && tv.state === "active" ? "Người lập nhóm · Quản trị" : "Người lập nhóm";
+    if (tv.role === "admin" && tv.state === "active") return "Quản trị";
     return "Thành viên";
   };
 
@@ -158,8 +158,7 @@ export function GroupMembersScreen() {
             const laToi = tv.person_id === phien.person_id;
             const duocMoi = tv.state === "invited";
             const coNut = coTheDoiVaiTro(conSong, phien.person_id, tv) && !(laToi && hoiTuBo);
-            const coDau = !coNut && tv.role === "admin" && tv.state === "active" && !(laToi && hoiTuBo);
-            const vai = nhanVaiTro(tv, coDau);
+            const vai = nhanVaiTro(tv);
             const nutVaiTro = coNut ? (
               <RudiButton
                 accessibilityLabel={laToi ? "Bỏ quyền quản trị của bạn" : tv.role === "admin" ? `Bỏ quyền quản trị của ${ten}` : `Đặt ${ten} làm quản trị`}
@@ -193,15 +192,13 @@ export function GroupMembersScreen() {
                         {ten}
                         {laToi ? " (bạn)" : ""}
                       </Text>
-                      {vai ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{vai}</Text> : null}
+                      <Text style={[typography.note, { color: colors.inkSoft }]}>{vai}</Text>
                     </View>
                   </Pressable>
                   {/* Beside the name on a phone; under it, in the text column, in
                       a two-column grid, where beside it broke the name in two. */}
                   {nutVaiTro && !luoi && !compactWidth ? (
                     nutVaiTro
-                  ) : coDau ? (
-                    <Stamp label="Quản trị" tilt={-3} tone="ink" />
                   ) : null}
                 </View>
                 {nutVaiTro && (luoi || compactWidth) ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
@@ -221,7 +218,13 @@ export function GroupMembersScreen() {
               </View>
             ) };
           })} />
-          {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
+          {nhacQuanTriCuoi ? <View style={styles.quanTriNote}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Giải thích bảo vệ quản trị" accessibilityState={{ expanded: chiTietQuanTri }} onPress={() => setChiTietQuanTri((open) => !open)} style={styles.quanTriToggle}>
+              <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Bạn là quản trị duy nhất. Đặt thêm quản trị trước khi bỏ quyền.</Text>
+              <RudiIcon name={chiTietQuanTri ? "chevron-up" : "chevron-down"} size={18} color={colors.inkSoft} />
+            </Pressable>
+            {chiTietQuanTri ? <Text style={[typography.note, { color: colors.inkSoft }]}>{nhacQuanTriCuoi}</Text> : null}
+          </View> : null}
         </View>
       ) : null}
       <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
@@ -248,4 +251,7 @@ const styles = StyleSheet.create({
   // The ghost button's own padding (14) aligned to the text column (52).
   nutDuoi: { alignItems: "flex-start", marginTop: -12, paddingLeft: 38 },
   oLuoi: { flexGrow: 1 },
+  flex: { flex: 1, minWidth: 0 },
+  quanTriNote: { paddingVertical: 8, gap: 4 },
+  quanTriToggle: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 },
 });

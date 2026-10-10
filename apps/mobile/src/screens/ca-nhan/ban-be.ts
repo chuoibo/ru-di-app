@@ -54,14 +54,13 @@ export const LOI_TIM: Record<string, string> = {
  * two of the three states and so tells whoever is blocked that they are not.
  *
  * So the sentence says what is true of all three -- it did not go -- and sends
- * the reader to the two lists further down the screen, which are their own and
- * which they are entitled to read.
+ * the reader to their own friend lists, which they are entitled to read.
  */
 export const LOI_GUI: Record<string, string> = {
   person_not_found:
     "Người này không còn trong Rủ Đi nữa. Tìm lại bằng tên tài khoản.",
   request_not_open:
-    "Lời mời này chưa gửi được. Kéo xuống xem \"Lời mời đã gửi\" và \"Bạn bè\" bên dưới để biết hai bạn đang ở đâu.",
+    "Lời mời này chưa gửi được. Xem mục Đã gửi và Đã là bạn trong danh sách bạn.",
   self_edge: "Đây là tài khoản của chính bạn. Không tự kết bạn với mình được.",
   permission_denied: "Tài khoản đang dùng chưa được phép gửi lời mời kết bạn.",
 };

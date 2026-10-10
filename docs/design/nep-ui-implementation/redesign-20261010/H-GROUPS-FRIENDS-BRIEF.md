@@ -48,3 +48,25 @@ hay miễn test. Matrix af37 sáng100/tối100 xanh, sáng130 dừng ở transpo
 "device not connected" khi máy5562 vừa boot. Giữ nguyên log/capture đỏ,
 chạy lại sau khi cả hai thiết bị ổn định. Máy5562 giữ userdata fixture_n5g;
 attach ban đầu dùng nhầm scheme exp+rudi, sửa về rudi như helper chuẩn.
+
+Review fresh tại fa735: disposition `fix`, sáu finding. Batch sửa đích
+Friends/Đã gửi rõ ràng từ mọi entry, lỗi từ chối có recovery thật, sheet
+rời nhóm chuyển hẳn sang quyết định với hai nút ngoài vùng cuộn, vai trò
+là dòng chữ tự xuống hàng, form rộng ghép nút sát vùng nhập và bìa tối đa
+360dp, ghi chú quản trị ngắn với giải thích có thể mở. Giữ lối gọi Nếp,
+guard/consent/idempotency thật. Chưa có verdict cho batch này.
+
+Exact-fa735 clean: Node214 file1608/1608,0fail/skip/cancel/todo;
+type7,936s, guide1,371s, export15,312s, compile2,757s, fixup0,036s,
+Node35,403s, core-build1,890s, Go-guide0,491s, tree32,967s/5107PASS.
+Đây là subset native-relevant, không phải full npm hoặc gate32strict.
+Role harness9 case: identity9/9; canary7/9; hai mutant7/9, cùng harness
+và witness khác nghĩa, không thay native evidence.
+
+Native-fa735: matrix6 profile, ba recapture đã đứng yên và expanded sáng/
+tối đã mở ảnh; create/invite/reject/reinvite/duplicate/accept/role/cancel/
+leave gọi Go QC thật. Đỏ giữ lại: CTA bạn bè sai đích; leave controls khuất;
+recipient accept assert nhầm handle thay vì display_name. Gửi lại sau
+decline xanh19,843s; recipient accepted recapture xanh7,525s và friend graph
+hai phía đọc200. Bốn ảnh thêm đã mở. Không đổi harness đỏ thành app xanh.
+Batch mới còn chờ exact-SHA checks, capture cùng profile và verdict pass.

@@ -1,7 +1,7 @@
 /** Find an existing account by username, then ask for friendship. */
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { guiLoiMoi, timBanTheoUsername, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
@@ -18,7 +18,6 @@ import { Washi } from "../../ui/Washi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "nhap" }
@@ -26,7 +25,7 @@ type Trang =
   | { pha: "tim-thay"; nguoi: NguoiTimDuoc }
   | { pha: "dang-gui"; nguoi: NguoiTimDuoc }
   | { pha: "da-gui"; nguoi: NguoiTimDuoc; eventId: string }
-  | { pha: "hong"; loi: string; nguoi?: NguoiTimDuoc };
+  | { pha: "hong"; loi: string; nguoi?: NguoiTimDuoc; xemDanhSach?: boolean };
 
 /** The handle as the server spelled it, not as it was typed («@Ten_Ban » finds «ten_ban»). */
 const tenTaiKhoan = (nguoi: NguoiTimDuoc, daGo: string) => `@${nguoi.username ?? canonicalUsername(daGo)}`;
@@ -34,6 +33,8 @@ const tenTaiKhoan = (nguoi: NguoiTimDuoc, daGo: string) => `@${nguoi.username ??
 export function AddFriendScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const expanded = width >= 600 && height >= 720;
   const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [username, setUsername] = useState("");
@@ -82,16 +83,19 @@ export function AddFriendScreen() {
       setTrang({
         pha: "hong", nguoi,
         loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
+        xemDanhSach: error instanceof ApiError && error.code === "request_not_open",
       });
     } finally { lock.current = false; }
   };
+
+  const veDanhSach = () => router.replace("/friends?muc=da-gui" as never);
 
   if (trang.pha === "da-gui") {
     const nguoi = trang.nguoi;
     return (
       <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} testID="add-friend-screen"
         header={<TopBar title="Thêm bạn" />}
-        footer={<RudiButton label="Về danh sách bạn" onPress={() => luiVeVe(router as never, "/friends")} />}
+        footer={expanded ? undefined : <RudiButton label="Về danh sách bạn" onPress={veDanhSach} />}
       >
         <Heading
           title="Lời mời đã gửi"
@@ -107,20 +111,23 @@ export function AddFriendScreen() {
           </View>
           <View style={styles.art} pointerEvents="none" accessible={false}><AnimatedEnvelope eventKey={trang.eventId} width={104} /></View>
         </View>
+        {expanded ? <RudiButton label="Về danh sách bạn" onPress={veDanhSach} /> : null}
       </RudiScreen>
     );
   }
 
   const nguoi = "nguoi" in trang ? trang.nguoi : undefined;
   const ban = trang.pha === "dang-tim" || trang.pha === "dang-gui";
+  const actions = <View style={styles.footer}>
+    <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
+    {trang.pha === "hong" && trang.xemDanhSach ? <RudiButton label="Xem danh sách bạn" onPress={veDanhSach} variant="outline" />
+      : nguoi ? <StampButton disabled={ban} label="Gửi lời mời" loading={trang.pha === "dang-gui"} onPress={() => void gui(nguoi)} size="vua" tilt={-1} />
+        : <RudiButton disabled={ban} icon="search-outline" label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />}
+  </View>;
   return (
     <RudiScreen material="quiet" cot="form" avoidKeyboard bottomInset={16} footerInset={insets.bottom + 12} contentStyle={styles.screen} testID="add-friend-screen"
       header={<TopBar title="Thêm bạn" />}
-      footer={<View style={styles.footer}>
-        <CauTaiCho cau={trang.pha === "hong" ? trang.loi : null} />
-        {nguoi ? <StampButton disabled={ban} label="Gửi lời mời" loading={trang.pha === "dang-gui"} onPress={() => void gui(nguoi)} size="vua" tilt={-1} />
-          : <RudiButton disabled={ban} icon="search-outline" label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />}
-      </View>}
+      footer={expanded ? undefined : actions}
     >
       <Heading
         title="Tìm một người bạn"
@@ -164,6 +171,7 @@ export function AddFriendScreen() {
           value={username}
         />
       </View>
+      {expanded ? actions : null}
       <Text style={[typography.note, { color: colors.inkSoft }]}>Chỉ tài khoản cho phép tìm kiếm mới hiện ở đây. Lời mời cần được bạn ấy đồng ý.</Text>
     </RudiScreen>
   );
