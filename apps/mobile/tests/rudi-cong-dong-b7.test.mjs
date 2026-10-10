@@ -66,7 +66,7 @@ test("hàng duyệt nói trạng thái bằng chữ, không in mã", () => {
 test("bảng tin: quay lại giữ danh sách, ẩn có hoàn tác, xoá lịch sử hỏi trước, trang chủ đề có lối về", () => {
   const man = doc("CommunityScreen.tsx");
   // UI-135: the same feed is not cleared on focus; a different one starts over.
-  assert.match(man, /if \(dangHien\.current !== khoa\) \{\s*dangHien\.current = khoa;\s*viTriCuon\.current = 0;\s*setPosts\(\[\]\)/);
+  assert.match(man, /if \(dangHien\.current !== khoa\) \{\s*dangHien\.current = khoa;\s*daNhanTrangDau\.current = false;\s*viTriCuon\.current = 0;\s*setPosts\(\[\]\)/);
   assert.doesNotMatch(man, /useFocusEffect\(useCallback\(\(\) => \{ fetching\.current = false; setPosts\(\[\]\)/);
   // UI-140, UI-141.
   assert.match(man, /doiTheoDoiTacGia\(items, p\.author_id, !p\.following\)/);
