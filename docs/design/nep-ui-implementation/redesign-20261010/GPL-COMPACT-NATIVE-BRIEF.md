@@ -76,3 +76,14 @@ RudiIcon và typography.label hiện hành: nhóm icon/chữ không grow, outer
 shrink để reflow trong cột. Giữ spring0.98, role button, màu/radius hiện hành,
 handler và draft semantics; không đổi RudiButton dùng chung. Cần chấm lại
 cùng12 vùng native sau commit mới; chưa đóng F3 từ source.
+
+Probe native1e56 đo cùng font/nhãn: ở100%, «Chỉnh hồ sơ» cần khoảng75.219dp
+nhưng Text chỉ nhận75; «Sửa tiếp hồ sơ»90.699 nhận90. Ở200%, nhãn
+sửa tiếp167.746 nhận167. Đây là thiếu phần lẻ trong allocation, không
+thiếu cột. Sửa bằng floor trên chính Text: native đo nhãn trong cột hữu hạn,
+chỉ nhận intrinsic khi đúng một dòng, ceil theo pixel thiết bị rồi cap phần
+còn lại sau icon/padding/border/gap. Key gồm nhãn/fontScale/density/cột và
+bỏ event cũ. Measurer tuyệt đối, trong suốt và ngoài accessibility; không
+chiếm layout. Gỡ toàn bộ log/probe DEV; giữ accessibilityLabel tường minh.
+048 compatibility identity7/2 (L02/L03) là thiếu label ở frozen host, không
+mutant kill/visual credit. Source cuối vẫn cần12 capture và clean gate mới.

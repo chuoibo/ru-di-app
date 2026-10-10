@@ -17,7 +17,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Keyboard, PixelRatio, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
@@ -37,6 +37,8 @@ type Trang =
   | { pha: "dang-doc" }
   | { pha: "xong"; hoSo: HoSoToi }
   | { pha: "hong"; loi: string };
+
+const EDIT_ACTION = { paddingHorizontal: 14, paddingVertical: 10, border: 1, icon: 18, gap: 9 };
 
 function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
@@ -60,6 +62,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   // QA UI-108: Back closes the form and stays on Cá nhân; what was typed is
   // kept and comes back when the form opens again. «Huỷ» is what drops it.
   const [conNhap, setConNhap] = useState(false);
+  const [editColumnWidth, setEditColumnWidth] = useState(0);
+  const [editMeasurement, setEditMeasurement] = useState<{ key: string; width: number | null } | null>(null);
+  const editMeasurementKeyRef = useRef("");
   // The passport and its form are different pages in the same scroll view.
   const doiSua = (editing: boolean) => {
     setDangSua(editing);
@@ -190,9 +195,21 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   ].join(" · ");
   const largeText = chuLon(fontScale);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
-  const geometry = (part: string, value: unknown) => { if (__DEV__) console.info("NEP_F3_GEOMETRY", JSON.stringify({ part, label: editLabel, fontScale, value })); };
-  return <View onLayout={(event) => geometry("column", event.nativeEvent.layout)} style={[styles.passport, { borderBottomColor: colors.line }]}>
-    {__DEV__ ? <Text accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" onTextLayout={(event) => geometry("unwrapped", event.nativeEvent.lines.map(({ width, height }) => ({ width, height })))} style={[typography.label, { position: "absolute", left: 0, right: 0, opacity: 0 }]}>{editLabel}</Text> : null}
+  const editMeasurementKey = `${editLabel}:${fontScale}:${PixelRatio.get()}:${editColumnWidth}`;
+  editMeasurementKeyRef.current = editMeasurementKey;
+  // Android can round an auto-sized Text down below its fractional glyph width.
+  // Measure in the finite column, then round the label floor up to a device pixel.
+  const editLabelAvailable = Math.max(0, editColumnWidth - 2 * (EDIT_ACTION.paddingHorizontal + EDIT_ACTION.border) - EDIT_ACTION.icon - EDIT_ACTION.gap);
+  const editLabelFloor = editMeasurement?.key === editMeasurementKey && editColumnWidth > 0
+    ? Math.min(editMeasurement.width ?? editLabelAvailable, editLabelAvailable)
+    : undefined;
+  return <View onLayout={(event) => setEditColumnWidth(event.nativeEvent.layout.width)} style={[styles.passport, { borderBottomColor: colors.line }]}>
+    <Text key={editMeasurementKey} accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" onTextLayout={(event) => {
+      if (editMeasurementKeyRef.current !== editMeasurementKey) return;
+      const lines = event.nativeEvent.lines;
+      const width = lines.length === 1 ? Math.ceil(lines[0].width * PixelRatio.get()) / PixelRatio.get() : null;
+      setEditMeasurement((old) => old?.key === editMeasurementKey && old.width === width ? old : { key: editMeasurementKey, width });
+    }} style={[typography.label, styles.editMeasure]}>{editLabel}</Text>
     <View style={[styles.identityRow, largeText && styles.identityStack]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
         <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={56} ring />
@@ -205,9 +222,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
     <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
-    <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onLayout={(event) => geometry("control", event.nativeEvent.layout)} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
-      <RudiIcon color={colors.accent} name="create-outline" size={18} style={styles.editIcon} />
-      <Text onLayout={(event) => geometry("label", event.nativeEvent.layout)} onTextLayout={(event) => geometry("wrapped", event.nativeEvent.lines.map(({ width, height }) => ({ width, height })))} style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, { color: colors.accent }]}>{editLabel}</Text>
+    <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+      <RudiIcon color={colors.accent} name="create-outline" size={EDIT_ACTION.icon} style={styles.editIcon} />
+      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelFloor !== undefined && { minWidth: editLabelFloor }, { color: colors.accent }]}>{editLabel}</Text>
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
   </View>;
@@ -220,10 +237,11 @@ const styles = StyleSheet.create({
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
   avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { alignSelf: "flex-start", minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 9, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  editAction: { alignSelf: "flex-start", minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: EDIT_ACTION.gap, borderWidth: EDIT_ACTION.border, paddingHorizontal: EDIT_ACTION.paddingHorizontal, paddingVertical: EDIT_ACTION.paddingVertical },
   editIcon: { flexShrink: 0 },
   editLabel: { flexShrink: 0 },
   editLabelLarge: { flexShrink: 1, minWidth: 0 },
+  editMeasure: { position: "absolute", left: 0, right: 0, opacity: 0 },
   form: { gap: 20 },
   editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
   editIdentityText: { flex: 1, minWidth: 0, gap: 4 },
