@@ -96,3 +96,42 @@ minWidth của Text thành width tường minh để Android đo cả chiều ca
 chiều rộng đó. Đây là giả thuyết sửa dựa trên ảnh và width constraints của
 RN, chưa kết luận cached height là nguyên nhân. Cần12 ảnh native mới trước
 khi nhận verdict; không đổi handler, draft, font hay shared primitive.
+
+## Bàn giao061 — chỉ F3 đã chấm, giữ carry7cf
+
+Native JS `061d8d7afad9d145ee34180d4ed14250c67db5c6`: reviewer mở4/4
+contact, kiểm12/12 original đúng map/hash/kích thước và mở riêng6 original.
+**F3 resolved / disposition ship**, chỉ bốn profile light100/dark200 ×
+hẹp/rộng và ba trạng thái edit-action/resume-action/cancel-restored.
+Ở100%, icon và hai nhãn thành nhóm gọn, căn trái, một dòng và giữa chiều cao
+control;200 giữ đủ chữ trong cột. Huỷ trả nhãn sửa, resume giữ lời nhắc nháp.
+Không thấy regression mới trong vùng đã cung cấp; không nghiệm thu toànGPL.
+
+Final dùng **measured/capped explicit Text width**, thay minWidth814 để
+native đo lại chiều cao theo chiều rộng đã cấp. Đo cùng style trong toàn
+cột hữu hạn, chỉ nhận intrinsic khi một dòng; ceil pixel thiết bị/cap phần
+khả dụng, key nhãn/fontScale/density/cột và stale-event guard giữ nguyên.
+Text absolute opacity0 ẩn a11y/pointer-none là phép đo product; diagnostic
+DEV logs đã bỏ. Không đổi handler/draft/font/RudiButton/shared primitive.
+Cached-height vẫn là giả thuyết trước sửa, không thành nguyên nhân đã chứng minh.
+
+F1/F4 giữ resolved native7cf; F2 giữ resolved chỉ trong controlled actual
+TSX9/0 readiness/owner/empty/focus/refresh-offset, không native causal proof.
+7cf/8ec/814 vẫn giữ lịch sử F3 partial;1e56 chỉ diagnostic,048 identity7/2
+incompatibility không credit,814 không chạy detector. Không relabel ảnh cũ.
+
+`native-audit-061d8d7a/final-mechanical-verification.md` ghi exact clean061
+9/9 bước; Node214files/1610pass,0fail/skip/cancel/todo, giữ5 exclusions.
+Frozen GPL identity9/0; canary và hai mutant mỗi variant8/1/setup0 đúng
+prediction. Frozen host không phát onLayout/onTextLayout, không chứng minh
+measured width/height/centering/font200. Detector061 đúng1 invocation, chỉ
+HoSoSong.tsx, raw[]/exit0, TSX regex-only; không geometry/contrast/beauty proof.
+Mechanical và native verdict là hồ sơ riêng, không full gate hoặc main merge.
+
+APK nền2f20, SHA256963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514;
+`native_provenance` trong native-audit-061d8d7a/f3-verdict-packet.json ghi
+API runtime c3b04ae8 giữ binary ecf961065bbd1848d5e6267acd8fb54effd796321eca33041a8fe46094988de6;
+không rebuild/restart061. Cổng clean061 chỉ build/hash core, không thay runtime.
+Wide768×1024 cùngAVD5558, chưa độc lậptablet.
+Bản ghi hệ đã cập nhật có phạm vi tại DESIGN.md và .impeccable/design.json;
+TalkBack/motion/hardware/iOS/fullGPL/app/gate cuối còn ngoài bằng chứng này.

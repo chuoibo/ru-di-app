@@ -61,3 +61,30 @@ footer dùng inset đáy thiết bị cộng khoảng thở12dp, giữ nhánh IM
 toàn form dùng chung cột đọc640 thay vì body640/footer560. Không thêm asset
 trang trí hoặc đổi ảnh/privacy/draft/API. Cần recapture cùng viewport và
 verdict hai finding; chưa nghiệm thu toànJ/A–S.
+
+## Bàn giao verdict7cf — chỉ hai finding composer
+
+Reviewer mở21/21 contact chứa58/58 required frame, kiểm hash/kích thước58
+baseline và58 current, mở5 cặp original composer (10 original): **P1/P2
+resolved / disposition ship**. P1: helper có khoảng thở trên gesture
+indicator, field/audience/action/helper giữ trên IME200. P2: ảnh/caption,
+privacy và footer cùng cột640, hết thụt40 mỗi bên. Root inspection mở lại4
+original, không cộng chúng thành viewport mới. Không thấy regression trong
+region đã cung cấp; không nghiệm thu toànJ/app.
+
+Ảnh native giữ nhãn JS `7cf58966f0da6871f5e3a21534bd7d8c636a38af` trên5558:
+29frame320×640 và29frame768×1024; wide là cùngAVD, không tablet độc lập.
+Footer inset đáy thiết bị+12 khi IME đóng; nhánh IME của shell giữ nguyên.
+Năm production targets J (ShareMomentLive/AlbumLive/PhotoViewer/Sheet/pure
+photo-viewer helper) cùng test gốc byte-identical đến061d8d7a theo
+`native-audit-061d8d7a/J-production-identity-proof.json`; không rerun/relabel
+native hoặc matrix7cf thành061. PureJ prior identity5/0, canary và hai mutant
+mỗi variant4/1/setup0 chỉ chứng minh pure-helper/static scope.
+
+APK vẫn nền2f20, không phải APK rebuild7cf/061. Upload/retry/media/comment/
+check-in2085 và full reviewc3 giữ nhãn gốc, không được coi là thử lại ở7cf.
+Cổng exact0619/9 và Node subset1610/1610 là chứng cứ kỹ thuật riêng; detector
+061 chỉ một HoSoSong.tsx regex[], không phải Jscan/geometry/contrast/beauty.
+Bàn giao này không bổ sung TalkBack, motion, target thực, hardware/iOS,
+fullJ/A–S, strict gate/E2E hoặc deployment. Giữ nguyên các red/hạn chế trước;
+không thêm ảnh trang trí, comp được duyệt mới hoặc ngoại lệ privacy/draft.

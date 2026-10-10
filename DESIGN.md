@@ -391,6 +391,19 @@ giữ byte và bằng chứng a24; đây không phải full review mới hoặc 
 toàn I/A–S. Hợp đồng của lát này nằm trong Layout/Components và
 [I2 brief](docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md).
 
+**Bàn giao GPL/J có phạm vi 11/10/2026.** Vẫn UI3/seed `c8e88116`, giấy,
+mực, coral, Bricolage và Nếp canonical; không có comp được duyệt mới.
+[GPL brief](docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md)
+và [J brief](docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md)
+ghi hợp đồng native. Chỉ các mô tả Layout/Components gọi đúng GPL/J bên dưới
+thắng bố cục cũ của những caller đó; không thay token hoặc toàn hệ.
+
+Native `061d8d7a` chấm **F3 resolved / ship** ở thao tác sửa hồ sơ; F1/F4
+và F2 có giới hạn diagnostic giữ verdict `7cf58966`. J chấm **P1/P2 resolved /
+ship** tại `7cf58966`, các target J giữ nguyên byte đến061. Hai verdict chỉ
+đóng finding đã chấm, không nghiệm thu toàn GPL, J, app hoặc main. Candidate797
+và các mốc cũ vẫn giữ phạm vi/bằng chứng lịch sử của chúng.
+
 ## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
 Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
@@ -874,6 +887,22 @@ phải có chữ. Hai prop này là lựa chọn của caller giao kèo, không 
 hiển thị mặc định của mọi `ChuKy`.
 
 ## Layout
+
+**GPL/J — một cột cho cùng một việc (11/10/2026).** Chat giới hạn header,
+luồng đọc, tools/plan/poll và composer trong cùng cột giữa (640dp), nền vẫn
+phủ toàn màn; phone giữ trục +/pill/gửi. Khay tools/poll thay vùng soạn,
+plan giữ ngoại lệ quay lại composer/draft đã chốt. Composer bài viết wide
+nối vùng viết, counter và toolbar thành một vùng liên tục, không chèn thêm
+khoảng trống sau toolbar. Đây là sửa F1/F4 được nhìn thấy ở native7cf,
+không thay `RONG_COT` hoặc mặc định mọi form.
+
+Composer Khoảnh khắc J dùng cùng cột đọc (640dp) cho ảnh/caption, privacy
+và footer audience/action/helper; không giữ body640/footer560. Khi IME đóng,
+footer lấy inset đáy thiết bị cộng khoảng thở (12dp); khi mở giữ nhánh IME
+của shell. Native7cf chấm helper ở trên gesture indicator và field/action
+ở trên IME200. Cột và inset này thuộc caller J, không là công thức mới cho
+mọi footer. Wide (768×1024) là cùng emulator5558 đổi kích thước, chưa phải
+bằng chứng từ tablet độc lập.
 
 **I1 — người trước, cảnh sau (`7dcacedf`).** Picker giữ cột form (560dp),
 người thành hàng ngang có hình nhân, tên tự xuống hàng và chevron; thêm bạn
@@ -2045,6 +2074,82 @@ UI-081). Hàng tự kẻ viền của nó thì truyền `vachTrong={false}`. Hà
 lại hành động trên mỗi người dùng `RudiButton compact ghost` («một chữ lặng,
 không phải viên»), người là một `Pressable` mở hồ sơ («Xem hồ sơ <tên>»),
 hành động đứng cạnh, không bao giờ nằm trong nó.
+
+### Chat, bảng tin và hồ sơ — GPL, bàn giao giới hạn 11/10/2026
+
+Hợp đồng compact/layout giữ UI3, không thêm art hoặc đổi shared primitive
+cho F3. Cột chat và vùng viết wide theo Layout; nguồn và lịch sử trong
+[GPL brief](docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md).
+
+- **Bảng tin giữ điều đã nhận.** Chỉ retry trang đầu chưa nhận khi focus lại;
+  trang rỗng đã nhận vẫn ready. Chỉ request hiện hành hạ loading/fetching.
+  Refresh chỉ cuộn đầu khi response được áp và màn còn focus; request cũ
+  bị vô hiệu giữ cards, phần mở và offset. Diagnostic actual TSX D01–D07
+  cùng current-refresh positive có (9/0), không chứng minh nhân quả của
+  sequence native lỗi cũ hoặc toàn bộ navigation/E2E.
+- **Thao tác sửa hồ sơ ôm đúng nhãn.** «Chỉnh hồ sơ» và «Sửa tiếp hồ sơ» dùng
+  `PressScale`, icon bút chì và `typography.label` hiện hành thành nhóm gọn
+  căn trái; đệm (14×10dp), gap (9dp), target source tối thiểu (48dp) và trần
+  theo cột. Nhãn thường một dòng, căn giữa theo chiều cao; chữ lớn được
+  reflow khi chiều rộng khả dụng thực sự cần, không thu font hoặc cắt chữ.
+  Back giữ nháp trong phiên mounted, Huỷ bỏ nháp và trả lại nhãn sửa.
+- **Đo chữ phục vụ bố cục tại caller.** Text cùng style đo trong toàn cột
+  hữu hạn; chỉ dùng intrinsic width khi đúng một dòng, làm tròn lên pixel
+  thiết bị rồi cap phần còn lại sau icon/đệm/viền/gap. Key gồm nhãn,
+  fontScale, density và cột; event cũ bị loại. Final061 cấp `width` tường
+  minh cho Text để native đo lại chiều cao theo chiều rộng đó, thay
+  `minWidth` của814. Text đo absolute, opacity0, ẩn trợ năng/pointer-none là
+  phần đo chức năng, không chiếm layout; diagnostic DEV logs đã bỏ. Đây là
+  sửa cục bộ, không đổi `RudiButton` hoặc tạo token đo nhãn toàn hệ.
+
+Verdict7cf mở (35/35) contact, kiểm (105/105) original và mở lại sáu cặp
+old/new: F1/F4 resolved, F2 resolved trong diagnostic nêu trên, F3 partial.
+Verdict061 mở (4/4) contact, kiểm (12/12) original, mở riêng sáu original:
+**F3 resolved / ship**, chỉ bốn profile sáng100/tối200 × hẹp/rộng và ba
+trạng thái edit/resume/cancel-restored. Không thấy regression mới trong vùng
+đã chấm. Ảnh8ec và814 vẫn là partial, không đổi nhãn thành061.
+
+Hồ sơ private ngoài repo:
+[GPL7cf](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/gpl-verdict-review-7cf.md),
+[F3 cuối061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-review-061.md),
+[cổng061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/final-mechanical-verification.md).
+Cổng clean exact061 ghi (9/9) bước và Node subset (214 file, 1610/1610,
+0 fail/skip/cancel/todo), không full gate. Frozen GPL identity (9/0), canary
+và hai mutant riêng từng (8/1), setup0; frozen host không phát
+`onLayout/onTextLayout`, nên không chứng minh phép đo width/height native.
+Detector061 đúng một invocation/một file `HoSoSong.tsx`, raw `[]`, regex-only;
+không đo geometry, contrast, target thực hoặc độ đẹp.
+
+### Composer Khoảnh khắc — J, bàn giao giới hạn 11/10/2026
+
+Ảnh/caption, privacy và footer cùng cột; helper ở trên gesture indicator,
+IME giữ field và nhóm gửi theo Layout. Không thêm vật trang trí bù lề.
+[J brief](docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md)
+giữ lịch sử upload/retry/media/comment/check-in của2085 và full review c3.
+
+Verdict7cf mở (21/21) contact chứa (58/58) required frame, kiểm hash/kích
+thước cả58 baseline và58 current, mở năm cặp original composer: **P1/P2
+resolved / ship**, chỉ hai finding. Root inspection mở lại bốn original;
+không cộng original thành viewport mới. Bộ ảnh gồm29 phone (320×640) và29
+wide (768×1024), cùng emulator5558. Năm target production J, gồm shared
+`Sheet`, và test gốc byte-identical7cf↔061; carry verdict/ảnh7cf, không gọi
+là native J chạy lại tại061. PureJ trước đó identity (5/0), canary/hai mutant
+mỗi variant (4/1), setup0 chỉ là pure-helper/static scope.
+
+Bằng chứng private:
+[J verdict7cf](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-verdict-review-7cf.md),
+[root inspection](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-root-verdict-capture-inspection.json),
+[byte identity](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/J-production-identity-proof.json).
+Native F3 dùng Metro JS061; APK nền vẫn checkpoint
+`2f20a30179d0e21a1f4b3244dfbd685b5bade7e9`, SHA256
+`963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514`.
+Theo `native_provenance` của
+[packet runtime061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-packet.json),
+API runtime giữ source `c3b04ae8afc1cb005c650e7d35de522d7c5ac231`, binary SHA256
+`ecf961065bbd1848d5e6267acd8fb54effd796321eca33041a8fe46094988de6`.
+Cổng clean061 chỉ build/hash core, không thay runtime; không gọi APK/API là
+rebuild061. Lượt documenter chỉ đọc hồ sơ đã có,
+không mở ảnh mới, chạy source/test/device/API/runtime/detector/browser.
 
 ### Nhóm và bạn bè — bàn giao giới hạn 10/10/2026
 
@@ -3687,6 +3792,18 @@ quyền merge vào main từ các số trên.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**GPL/J 11/10:** không phong thánh nhãn wrap/đầy cột/chiều cao thừa của
+7cf/8ec/814, hoặc giả thuyết cached-height thành nguyên nhân đã chứng minh.
+Probe1e56 chỉ là chẩn đoán;048 compatibility identity7/2 không có kill/visual
+credit,814 detector0 không đổi thành scan061. Text opacity0 đo chức năng
+không cho phép giấu nội dung người dùng. F3 ship061 và J P1/P2 ship7cf chỉ
+đóng finding đã chấm; F2 (9/0), Node subset và regex `[]` không chứng minh
+native causal sequence, geometry/contrast, target thực, TalkBack, motion,
+hardware/iOS, strict gate/E2E hoặc deployment. Bản ghi mechanical và verdict
+là snapshot khác thời điểm, không sửa câu pending cũ thành cùng chứng kiến
+nhau. Toàn app/M–N/I/P–Q/L–R/A–B–S/C–D–E–F/G/K và các cổng cuối còn ngoài
+phạm vi bàn giao này; không tuyên bố main/app đã ship.
 
 **I2 10/10 tại814:** ship chỉ F1 và regression hẹp; bảy target còn lại
 carry full review a24, không đổi nhãn 96 frame cũ thành814. Không biến
