@@ -404,6 +404,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
       const a = everyoneShares(reading.lines, rosterIds);
       const bill = await taoBillTrenMayChu(reading, ctx, a, phien.person_id, attemptFor(attempts.current, `tao-bill:${signature(reading, rosterIds, a)}`));
       setAssignment(a);
+      setMoGan(moGanBanDau(reading));
       setBuoc({ ten: "gan-mon", bill });
     });
 
