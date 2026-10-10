@@ -332,7 +332,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       ) : null}
       <StampButton wrapLabel style={styles.dauTrongCot} label="Rủ hội mình đi chơi" onPress={() => router.push(ruHoi as never)} size="vua" tilt={-1} />
       <PressScale accessibilityRole="button" onPress={() => openChild("loai-so")} pressedScale={0.98} style={styles.chonLoaiSo}>
-        <Text style={[typography.label, { color: colors.inkSoft }]}>Chọn loại sổ</Text>
+        <Text style={[typography.label, styles.chonLoaiSoLabel, { color: colors.inkSoft }]}>Chọn loại sổ</Text>
       </PressScale>
       {toChiDoc()}
     </View>;
@@ -642,7 +642,8 @@ const styles = StyleSheet.create({
   canhBiaCho: { flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 12 },
   canhMo: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-start", gap: 12 },
   moSoFooter: { paddingTop: 12, alignItems: "flex-start" },
-  chonLoaiSo: { minHeight: 48, paddingVertical: 12, paddingRight: 16, justifyContent: "center", alignSelf: "flex-start" },
+  chonLoaiSo: { minHeight: 48, paddingVertical: 12, paddingRight: 16, justifyContent: "center", alignSelf: "stretch" },
+  chonLoaiSoLabel: { alignSelf: "stretch", textAlign: "left" },
   dauTrongCot: { maxWidth: "100%" },
   nhanSo: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", borderRadius: 2 },
   tenHaiBan: { gap: 4, alignItems: "flex-start" },

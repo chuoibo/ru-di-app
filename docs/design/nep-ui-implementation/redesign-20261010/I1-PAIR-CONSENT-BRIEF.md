@@ -63,3 +63,11 @@ nhãn Để sau ở100 chỉ vẽ «Để». Native XML: button288×48, text43×
 content-desc/text vẫn đủ «Để sau»; không gọi mất label/accessibility. Sửa
 nhãn stretch trong chính target48dp, không đổi typography hoặc touch target.
 Cần recapture đúng SHA; giữ nguyên ảnh4a như bằng chứng lỗi, chưa verdict.
+
+Review62: mở14 contact/92 viewport và2 original,6 finding resolved/F5 partial.
+Sau mở primary đã thành con dấu, nhưng «Chọn loại sổ» co nhãn ở100, mất từ
+hoặc bẻ riêng «sổ». Sửa đúng parent/label stretch trong hàng mực phụ48dp,
+căn trái với nội dung. Không đổi chữ/consent/M6; cần capture mới hai phía,
+sáng/tối100/200 và regression Để sau trước verdict F5. Clean62 có9 kiểm tra
+xanh/Node1608/1608/5108file; identity12/12, canary10/12, hai mutant11/12 và
+10/12 đỏ đúng dự đoán. Đây là bằng chứng62, chưa phải kiểm tra candidate mới.
