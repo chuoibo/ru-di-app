@@ -47,3 +47,7 @@ media byte failure/recovery, close/Back/swipe/zoom/buttons và review fresh.
 Hai fixture được phép không chứng minh ratio9:16 hoặc permission/camera.
 Màn768×1024 cùng AVD không phải tablet độc lập; toànJ/A–S/finalgate còn mở.
 Giữ red outer143 và revealr0 (harness cuộn quá lỗi), không relabel thành pass.
+
+## Batch sau inspection native vòng 1
+
+Root đã mở ảnh chức năng upload/cancel/retry/check-in và ảnh lỗi tải media → tải lại có ảnh thật ở candidate2085f8b5. Sửa cùng batch GPL vì dùng chung Sheet: form ngắn cao theo nội dung, trần theo host thật; CTA chia sẻ ngắn, bỏ subtitle album lặp; bìa album chưa có ảnh dùng nét khung ảnh có contrast theo theme; chú thích viewer giữ cột đọc640 trên màn rộng. Không thêm ảnh trang trí thay cho ảnh nhóm.

@@ -31,3 +31,9 @@ Contract native lưu trong brief vì React Native không có body/DOM; đối ch
 Native light100, dark200, wide trên cùng emulator5558 (wide không phải thiết bị tablet độc lập); chat idle/IME/multiline/tools/plan/back/draft, composer audience/tools/IME, feed action rail, hai sheet, profile hai tab và edit/cancel. Mở ảnh thật để đánh giá. Không thao tác emulator5562 đang được chủ sản phẩm dùng.
 
 Clean SHA typecheck, guide, export, Node suite; mutation và finish review riêng. Regex, unit hoặc export không thay visual/E2EE/device proof. J2085 vẫn candidate mở: evidence và việc còn lại tại `native-audit-2085f8b5/j-pivot-checkpoint-20261011.json`, không được ghi ship khi đổi ưu tiên.
+
+## Một batch sửa sau inspection native vòng 1
+
+Root đã mở ảnh light100/dark200, hẹp320 và rộng768 của candidate70938418. Sửa nhãn tab Cá nhân có chiều rộng nội tại sai, nút sửa thành thao tác gọn theo nội dung; bỏ subtitle lặp của DM, giữ tên và trạng thái mã hoá. Khay tools/poll thay composer phải tự giữ inset đáy, không để gesture handle nằm trên nút gửi bình chọn. Mở lựa chọn người đọc/công cụ bài viết dismiss IME trước khi đổi vùng thao tác.
+
+Sheet dùng chiều cao host thật làm trần ở mọi chế độ; form ưu tiên footer chỉ cao bằng nội dung khi đủ chỗ, reference cuộn trước footer khi thiếu chỗ. Phần này dùng chung với J và cần kiểm lại check-in200/IME. Ảnh chat-idle wide-light100 bắt giữa chuyển route; ba ảnh composer dark200 hẹp còn IME từ run trước không dùng làm bằng chứng idle. Vòng 2 phải capture lại trạng thái ổn định, không sửa sản phẩm dựa trên lỗi driver.

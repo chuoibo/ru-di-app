@@ -3,7 +3,7 @@ import { COMMUNITY_ERRORS } from "./api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { docNhomCuaToi, type NhomTomTat } from "../../phien";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -121,7 +121,7 @@ export function Composer() {
       <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
       <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
-    <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => setAudienceOpen(!audienceOpen)} style={styles.author}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => { Keyboard.dismiss(); setAudienceOpen(!audienceOpen); }} style={styles.author}>
       <AvatarNguoi name={phien.profile?.display_name ?? "Bạn"} personId={phien.person_id} size={44} />
       <View style={styles.authorText}>
         <Text style={[typography.title, { color: colors.ink }]}>{phien.profile?.display_name ?? "Bạn"}</Text>
@@ -144,9 +144,9 @@ export function Composer() {
     </View>
     <View style={[styles.tools, { borderColor: colors.line }]}>
       <MediaPicker compact person={phien.person_id} media={media} onChange={(v) => change(() => setMedia(v))} onBusy={setUploading} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
-        <ComposerTool icon="images-outline" label={picking ? "Đang tải…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={pick} stacked={fontScale >= 1.5} />
-        <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => setTopicsOpen(!topicsOpen)} stacked={fontScale >= 1.5} />
-        <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => setMentionsOpen(!mentionsOpen)} stacked={fontScale >= 1.5} />
+        <ComposerTool icon="images-outline" label={picking ? "Đang chuẩn bị…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={() => { Keyboard.dismiss(); pick(); }} stacked={fontScale >= 1.5} />
+        <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => { Keyboard.dismiss(); setTopicsOpen(!topicsOpen); }} stacked={fontScale >= 1.5} />
+        <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />
       </View>} />
       <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change(() => setMentions(v))}/>
       {topicsOpen || topics || loiChuDeGo ? <Field error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change(() => setTopics(v))}/> : null}

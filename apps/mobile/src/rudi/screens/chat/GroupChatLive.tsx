@@ -972,9 +972,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           <Pressable accessibilityRole="button" accessibilityLabel={nhanRieng ? "Xem hồ sơ" : "Thành viên nhóm"}
             onPress={() => router.push((nhanRieng && nguoiKiaId ? `/people/${nguoiKiaId}` : `/groups/${contextId}/members`) as never)} style={styles.headerIdentity}>
             <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenNhom}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {nhanRieng ? "Cuộc trò chuyện của hai mình" : hepCuaSo ? `${soDangO || nhom?.member_count || 1} thành viên` : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
-            </Text>
+            {!nhanRieng ? <Text style={[typography.caption, { color: colors.inkSoft }]}>
+              {hepCuaSo ? `${soDangO || nhom?.member_count || 1} thành viên` : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
+            </Text> : null}
           </Pressable>
           <IconButton accessibilityLabel={nhanRieng ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
@@ -1276,7 +1276,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
@@ -1285,7 +1285,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((MO_DAU_HOI_AI + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
-        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
+        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /></View> : null}
       {!khongNhanTin && ghiChatDuoc && !khay && !toHenChung.sheet && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
           <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />

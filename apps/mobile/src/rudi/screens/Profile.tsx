@@ -156,7 +156,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
       <HoSoSong phien={phien} onEditorChange={setEditor} />
       {!editingProfile ? <>
       <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
-        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, { borderBottomColor: page === value ? colors.accent : 'transparent' }]}><Text style={[typography.label, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text></Pressable>)}
+        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, { borderBottomColor: page === value ? colors.accent : 'transparent' }]}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text></Pressable>)}
       </View>
       {page === "kept" ? <>
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
@@ -386,6 +386,7 @@ const styles = StyleSheet.create({
   profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
   profileTabs: { flexDirection: "row", gap: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center", borderBottomWidth: 2 },
+  profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
   menuHeading: { paddingTop: 24, paddingBottom: 8 },
   hero: { gap: 10 },
   heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },

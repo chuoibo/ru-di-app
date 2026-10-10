@@ -135,7 +135,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         <View style={styles.footer}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{laDoi ? `Chỉ hai bạn · ${nhom?.display_name || "Người ấy"}` : `Thành viên nhóm · ${tenNhom}`}</Text>
           {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{thongBao}</Text> : null}
-          <RudiButton disabled={ban || anh === null} lyDo={!ban && anh === null ? "Chọn ảnh trước." : undefined} icon="paper-plane-outline" label={thongBao !== null && anh !== null ? "Thử gửi lại" : "Chia sẻ khoảnh khắc"} loading={ban} onPress={() => void chiaSe()} />
+          <RudiButton disabled={ban || anh === null} lyDo={!ban && anh === null ? "Chọn ảnh trước." : undefined} icon="paper-plane-outline" label={thongBao !== null && anh !== null ? "Thử gửi lại" : "Chia sẻ"} loading={ban} onPress={() => void chiaSe()} />
           {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
         </View>
       }

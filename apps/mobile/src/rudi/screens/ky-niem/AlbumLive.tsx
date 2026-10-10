@@ -51,7 +51,6 @@ import { ErrorState } from "../../ui/ErrorState";
 import { PhotoViewer, type ViewerPhoto } from "../../ui/PhotoViewer";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
-import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { PressScale } from "../../ui/PressScale";
 import { RudiIcon } from "../../ui/RudiIcon";
 import { Canh } from "../../ui/art/Canh";
@@ -136,7 +135,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
 
   return (
     <RudiScreen material="quiet" cot="doc" testID="trip-album-screen">
-      <TopBar subtitle="Mỗi kèo một album" title="Album chuyến đi" />
+      <TopBar title="Album chuyến đi" />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow />
@@ -186,7 +185,7 @@ function AlbumCover({ album, contextId, personId, wide }: { album: TomTatAlbum; 
   const source = album.cover ? nguonAnh(album.cover.image_url, personId, contextId) : null;
   if (!source || failed) return (
     <View style={[styles.emptyCover, wide && styles.wideCover, { backgroundColor: colors.paperShade, borderColor: colors.line }]}>
-      <PaperObject name="photo-stack" width={64} />
+      <RudiIcon name="images-outline" size={32} color={colors.inkSoft} />
       {failed ? <Text style={[typography.note, { color: colors.inkSoft }]}>Ảnh chưa tải</Text> : null}
     </View>
   );

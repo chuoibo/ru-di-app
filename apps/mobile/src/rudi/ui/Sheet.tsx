@@ -93,6 +93,9 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
   // The host's width, so a tablet gets a centred 640 dp panel (UI-093).
   const [rongKhung, setRongKhung] = useState(windowWidth);
   const [caoKhung, setCaoKhung] = useState(windowHeight);
+  const [caoDau, setCaoDau] = useState<number | null>(null);
+  const [caoNoiDung, setCaoNoiDung] = useState<number | null>(null);
+  const [caoChan, setCaoChan] = useState<number | null>(null);
   const panelRef = useRef<View>(null);
   const wrapperRef = useRef<View>(null);
   const closeRef = useRef(onClose);
@@ -235,7 +238,13 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
 
   if (!hien) return null;
   const le = Math.max(0, (rongKhung - RONG_TOI_DA) / 2);
-  const panelMaxHeight = avoidKeyboard ? Math.min(tran, Math.max(0, caoKhung - insets.top)) : tran;
+  const panelMaxHeight = Math.min(tran, Math.max(0, caoKhung - insets.top));
+  const demDuoi = Math.max(avoidKeyboard && caoKhung < windowHeight - insets.bottom ? 0 : insets.bottom, space.md);
+  // Reserve the editor, but do not stretch a short form into an empty page.
+  // Content size is independent of the viewport, so reducing the reference
+  // scroll does not feed its reduced height back into this measurement.
+  const caoTuNhien = caoDau !== null && caoNoiDung !== null && caoChan !== null
+    ? caoDau + caoNoiDung + caoChan + demDuoi : panelMaxHeight;
 
   // `collapsable={false}`: Fabric flattens a plain wrapper View and attaches
   // its children to the screen directly; toggling `pointerEvents` later makes
@@ -281,14 +290,14 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
             // together, not the scroll box alone with the handle and the
             // insets added on top (92% at 320×640, 96% at 390×460: UI-007, UI-040).
             maxHeight: panelMaxHeight,
-            height: prioritizeFooter && footer ? panelMaxHeight : undefined,
+            height: prioritizeFooter && footer ? Math.min(panelMaxHeight, caoTuNhien) : undefined,
             left: le,
             right: le,
             backgroundColor: colors.card,
             borderTopLeftRadius: radius.base,
             borderTopRightRadius: radius.base,
             paddingHorizontal: space.md,
-            paddingBottom: Math.max(avoidKeyboard && caoKhung < windowHeight - insets.bottom ? 0 : insets.bottom, space.md),
+            paddingBottom: demDuoi,
           },
           panel,
           style,
@@ -299,6 +308,7 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
             <View key={i} style={[styles.lo, { backgroundColor: colors.paperShade }]} />
           ))}
         </View>
+        <View onLayout={(e) => setCaoDau(Math.ceil(e.nativeEvent.layout.height))} style={styles.fixed}>
         <View style={styles.handleRow}>
           <View style={styles.closeSpace} />
           <GestureDetector gesture={keoXuong}>
@@ -314,8 +324,10 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
           </Pressable>
         </View>
         {dauTrang}
+        </View>
         <ScrollView
           bounces={false}
+          onContentSizeChange={(_width, height) => setCaoNoiDung(Math.ceil(height))}
           keyboardShouldPersistTaps="handled"
           persistentScrollbar={showsVerticalScrollIndicator}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
@@ -323,7 +335,7 @@ export function Sheet({ open, onClose, onBack, onClosed, children, accessibility
         >
           {children}
         </ScrollView>
-        {footer}
+        {footer ? <View onLayout={(e) => setCaoChan(Math.ceil(e.nativeEvent.layout.height))} style={styles.fixed}>{footer}</View> : null}
         {/* The opening's tap guard over the panel itself (UI-006). */}
         {nhanCham ? null : <View style={StyleSheet.absoluteFill} testID="sheet-chan-cham" />}
       </Animated.View>
@@ -337,6 +349,7 @@ const styles = StyleSheet.create({
   panel: { position: "absolute", bottom: 0 },
   // Shrinks inside the panel's ceiling and scrolls; grows no further than its content.
   cuon: { flexGrow: 0, flexShrink: 1 },
+  fixed: { flexShrink: 0 },
   // A grab zone the width of the panel and taller than the bar it shows.
   handleRow: { flexDirection: "row", alignItems: "center" },
   closeSpace: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
