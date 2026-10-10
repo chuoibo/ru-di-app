@@ -29,6 +29,7 @@ export function ChuKy({
   dong = false,
   tre = 0,
   wrapName = false,
+  showStatus = false,
   style,
   testID,
 }: {
@@ -43,6 +44,8 @@ export function ChuKy({
   tre?: number;
   /** Consent sheets keep the complete name and waiting instruction visible. */
   wrapName?: boolean;
+  /** Show the role above and the signing status below the complete name. */
+  showStatus?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -62,9 +65,10 @@ export function ChuKy({
   const daKy = ten !== null;
   return (
     <View accessibilityLabel={daKy ? `${vaiTro}: ${ten} đã ký` : `${vaiTro}: ${choChu}`} accessible onLayout={(e) => setW(Math.round(e.nativeEvent.layout.width))} style={[styles.khoi, style]} testID={testID}>
+      {showStatus ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{vaiTro}</Text> : null}
       <View style={styles.dong}>
         {daKy ? (
-          <Text numberOfLines={wrapName ? undefined : 1} style={[styles.ten, { color: colors.ink }]}>
+          <Text numberOfLines={wrapName ? undefined : 1} style={[styles.ten, showStatus && styles.tenGiaoKeo, { color: colors.ink }]}>
             {ten}
           </Text>
         ) : (
@@ -84,7 +88,7 @@ export function ChuKy({
       ) : (
         <View style={styles.giuCho} />
       )}
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>{vaiTro}</Text>
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>{showStatus ? (daKy ? "Đã ký" : "Chưa ký") : vaiTro}</Text>
     </View>
   );
 }
@@ -94,5 +98,6 @@ const styles = StyleSheet.create({
   dong: { minHeight: 30, justifyContent: "flex-end" },
   // A signature leans the way handwriting does; the words stay plain text.
   ten: { fontFamily: displayFace.extraBold, fontSize: 20, lineHeight: 26, transform: [{ skewX: "-8deg" }] },
+  tenGiaoKeo: { transform: [] },
   giuCho: { height: 16 },
 });

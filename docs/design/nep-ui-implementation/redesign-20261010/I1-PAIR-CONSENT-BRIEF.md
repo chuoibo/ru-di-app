@@ -12,7 +12,7 @@ STORY: Chọn bạn → hiểu sổ → quyền/giới hạn → chữ ký → �
 FIRST VIEWPORT: Tên người rõ, một trục căn; cảnh sổ hỗ trợ. Chữ lớn tự xuống
 hàng, không mất tên/câu chờ. Hai lựa chọn cuối đủ inset, body cuộn riêng.
 
-FORM: Danh sách người thay lưới thẻ lệch. Giao kèo giữ thứ tự quyền/giới hạn/
+FORM: Seed kế thừa c8e88116. Danh sách người thay lưới thẻ lệch. Giao kèo giữ thứ tự quyền/giới hạn/
 ký; chữ ký và con dấu tự nở, nút phụ yên. Header thêm bạn nhỏ48dp.
 
 FINISH: Mở ảnh Android, so mockup; fresh review, sửa finding rồi verdict pass;
@@ -47,3 +47,12 @@ nhưng mở đủ tám contact phát hiện giao kèo một cột bị co gần 
 grant. Bìa112 còn tách chữ «mình» ở200. Một batch sửa width/stretch/nowrap
 cho cột dọc; bìa140 từ130, nhãn hai dòng có chủ ý. Thêm testID từng điều
 khoản để đối chiếu bounds native, không lấy TSX regex làm geometry.
+
+Review001 disposition fix: một batch bảy finding, chưa nghiệm thu mockup-quality.
+Corroboration seed/world hiện ở DESIGN.md §UI3 Creative North Star và brief
+này; không còn contract trong app/_layout.tsx. Không tạo roll mới. Tên hai
+người dẫn đầu, cùng trục đọc; bìa hỗ trợ. Compact giữ cửa vào giao kèo ngoài
+scroll; phản hồi proposal/error nằm ở footer quyết định. Hai phần ký có
+vai trò/tên/trạng thái bằng chữ; Để sau và chọn loại sổ mực phụ. Sau mở giữ
+primary con dấu, M6 wrap cảnh và con dấu hai dòng. Picker/unopened trả lại
+grain hiện có. Cần build sạch/capture đúng SHA và verdict bảy finding.

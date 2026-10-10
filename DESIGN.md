@@ -504,9 +504,10 @@ màn tiền tông teal chỉ đậu trên **con số**, không tô cả khối. 
 là *con dấu* có chữ; bản nháp là *nét chì đứt*; kế hoạch là *một đường mực
 liên tục*; ảnh là *bản in* dán vào trang, có dòng xuất xứ; tiền là *dòng sổ*;
 thứ máy sinh ra là *tờ giấy ký ở chân* «Rủ Đi AI gợi ý». Khung kẻ in trước,
-màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Hợp đồng hướng đi nằm
-nguyên văn trong `apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6);
-ADR-0020 là thẩm quyền.
+màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Dấu vết thế giới kế thừa ở mục này và FORM của
+`docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md`
+(seed `c8e88116`, hướng số 6); `apps/mobile/app/_layout.tsx` hiện không còn
+contract lịch sử. ADR-0020 là thẩm quyền.
 
 **Cập nhật 27/09/2026, ADR-0037:** chất liệu giấy, mực, coral và Bricolage
 được giữ nguyên trong lát sổ kỷ niệm. Ẩn dụ «cả hội cùng viết» không có nghĩa

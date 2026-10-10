@@ -4,8 +4,9 @@ import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton } from "../../ui";
+import { Heading } from "../../ui";
 import { ChuKy } from "../../ui/ChuKy";
+import { PressScale } from "../../ui/PressScale";
 import { Sheet } from "../../ui/Sheet";
 import { useGiuKhiDong } from "../../ui/giu-khi-dong";
 import { StampButton } from "../../ui/StampButton";
@@ -86,12 +87,20 @@ function BacDongY({
     truoc.current = open ? toiKy : null;
   }, [open, toiKy]);
   const actions = <View style={styles.actions}>
+    {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+    {dangCho ? (
+      <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-${deNghiCuaToi ? "dang-cho" : "ho-de-nghi"}`}>
+        {deNghiCuaToi ? `Đã đề nghị. Chờ ${ho} đồng ý trên máy của họ.` : `${ho} đã đề nghị. ${testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}`}
+      </Text>
+    ) : null}
     {dangCho && !deNghiCuaToi ? (
       <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
     ) : !dangCho ? (
       <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
     ) : null}
-    <RudiButton label="Để sau" onPress={onClose} variant="ghost" />
+    <PressScale accessibilityRole="button" onPress={onClose} pressedScale={0.98} style={styles.deSau}>
+      <Text style={[typography.label, { color: colors.inkSoft }]}>Để sau</Text>
+    </PressScale>
   </View>;
   return (
     <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID} footer={actions} showsVerticalScrollIndicator>
@@ -119,24 +128,11 @@ function BacDongY({
             </View>
           </View>
           <View style={[styles.chuKy, xepDoc && styles.doc]}>
-            <ChuKy wrapName style={xepDoc ? styles.chuKyDoc : undefined} choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
-            <ChuKy wrapName style={xepDoc ? styles.chuKyDoc : undefined} choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
+            <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
+            <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
           </View>
+          <Text style={[typography.caption, { color: colors.inkSoft, marginTop: 16 }]}>Im lặng không phải đồng ý.</Text>
         </TrangSo>
-        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-        {dangCho && !deNghiCuaToi ? (
-          // Người ấy đề nghị: việc của màn này là một nút, không phải một câu
-          // nói rằng đang chờ chính mình.
-          <>
-            <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
-            </Text>
-          </>
-        ) : dangCho ? (
-          <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
-            Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
-          </Text>
-        ) : null}
       </View>
     </Sheet>
   );
@@ -175,6 +171,7 @@ const styles = StyleSheet.create({
   noiDung: { paddingBottom: 8 },
   actions: { gap: 8, paddingTop: 16 },
   dau: { maxWidth: "100%" },
+  deSau: { minHeight: 48, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
   flex: { flex: 1 },
   // Two columns when there is room for both at reading width, one under the other otherwise.
   haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },

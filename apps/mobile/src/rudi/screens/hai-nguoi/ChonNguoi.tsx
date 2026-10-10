@@ -81,7 +81,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
   };
 
   return (
-    <RudiScreen material="quiet" cot="form" header={<TopBar back title="Rủ một người" right={<IconButton quiet icon="person-add-outline" accessibilityLabel="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} />} />} testID="chon-nguoi">
+    <RudiScreen material="journal" cot="form" header={<TopBar back title="Rủ một người" right={<IconButton quiet icon="person-add-outline" accessibilityLabel="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} />} />} testID="chon-nguoi">
       <View style={styles.noiDung}>
         <Heading size="h2" subtitle="Chọn từ những người đã kết bạn." title="Bạn muốn rủ ai?" />
         {trang.pha === "dang-doc" ? (
