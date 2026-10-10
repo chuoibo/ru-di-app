@@ -23,10 +23,11 @@ import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, RudiButton } from "../../ui";
+import { Field } from "../../ui";
 import { chuLon } from "../../adaptive";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { RudiIcon } from "../../ui/RudiIcon";
+import { PressScale } from "../../ui/PressScale";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
@@ -45,7 +46,7 @@ export type ProfileEditorControls = { busy: boolean; save: () => void; back: () 
 
 export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChange: (controls: ProfileEditorControls | null) => void }) {
   const { datPhien } = useRudiSession();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
@@ -201,7 +202,10 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
     <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
-    <RudiButton compact full style={[styles.editAction, largeText && styles.editActionLarge]} icon="create-outline" label={conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"} onPress={() => moSua(hoSo)} variant="outline" />
+    <PressScale accessibilityRole="button" onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+      <RudiIcon color={colors.accent} name="create-outline" size={18} style={styles.editIcon} />
+      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, { color: colors.accent }]}>{conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"}</Text>
+    </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
   </View>;
 }
@@ -213,8 +217,10 @@ const styles = StyleSheet.create({
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
   avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { alignSelf: "flex-start", width: "auto", minWidth: 48, maxWidth: "100%" },
-  editActionLarge: { alignSelf: "stretch", width: "100%" },
+  editAction: { alignSelf: "flex-start", minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 9, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  editIcon: { flexShrink: 0 },
+  editLabel: { flexShrink: 0 },
+  editLabelLarge: { flexShrink: 1, minWidth: 0 },
   form: { gap: 20 },
   editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
   editIdentityText: { flex: 1, minWidth: 0, gap: 4 },

@@ -67,3 +67,12 @@ nội dung ở100% và theo cột khi chữ lớn. Bỏ minWidth168 không giả
 phân bổ label; giữ target48, không cắt chữ hay thu font. Chưa nhận verdict
 cho sửa này. Cần chụp «Chỉnh hồ sơ» / «Sửa tiếp hồ sơ» / Huỷ trở lại ở
 light100, dark200, hẹp/rộng; chỉ mở→Back→mở tiếp→Huỷ, không nhập/lưu hồ sơ.
+
+Verdict8ec mở đủ12 originals: hai nhãn hết wrap nhưng nút vẫn đầy cột,
+icon và nhãn cách xa; F3 tiếp tục partial. Không coi width:auto trong source
+là intrinsic width đã nhìn thấy. Thay riêng thao tác này bằng PressScale,
+RudiIcon và typography.label hiện hành: nhóm icon/chữ không grow, outer
+ôm nội dung với padding14×10, gap9, target48 và maxWidth100%; chữ lớn được
+shrink để reflow trong cột. Giữ spring0.98, role button, màu/radius hiện hành,
+handler và draft semantics; không đổi RudiButton dùng chung. Cần chấm lại
+cùng12 vùng native sau commit mới; chưa đóng F3 từ source.
