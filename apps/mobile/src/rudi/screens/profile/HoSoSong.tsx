@@ -189,7 +189,10 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     `${hoSo.counts.memories} khoảnh khắc`,
   ].join(" · ");
   const largeText = chuLon(fontScale);
-  return <View style={[styles.passport, { borderBottomColor: colors.line }]}>
+  const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
+  const geometry = (part: string, value: unknown) => { if (__DEV__) console.info("NEP_F3_GEOMETRY", JSON.stringify({ part, label: editLabel, fontScale, value })); };
+  return <View onLayout={(event) => geometry("column", event.nativeEvent.layout)} style={[styles.passport, { borderBottomColor: colors.line }]}>
+    {__DEV__ ? <Text accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" onTextLayout={(event) => geometry("unwrapped", event.nativeEvent.lines.map(({ width, height }) => ({ width, height })))} style={[typography.label, { position: "absolute", left: 0, right: 0, opacity: 0 }]}>{editLabel}</Text> : null}
     <View style={[styles.identityRow, largeText && styles.identityStack]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
         <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={56} ring />
@@ -202,9 +205,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
     <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
-    <PressScale accessibilityRole="button" onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+    <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onLayout={(event) => geometry("control", event.nativeEvent.layout)} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
       <RudiIcon color={colors.accent} name="create-outline" size={18} style={styles.editIcon} />
-      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, { color: colors.accent }]}>{conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"}</Text>
+      <Text onLayout={(event) => geometry("label", event.nativeEvent.layout)} onTextLayout={(event) => geometry("wrapped", event.nativeEvent.lines.map(({ width, height }) => ({ width, height })))} style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, { color: colors.accent }]}>{editLabel}</Text>
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
   </View>;
