@@ -470,12 +470,22 @@
     {
       "canh": [
         {
+          "den": "moments/new",
+          "nhan": "Thả khoảnh khắc"
+        },
+        {
+          "den": "plan",
+          "nhan": "Lên plan"
+        },
+        {
           "den": "trips/[id]/album",
           "nhan": "Mở album …"
         }
       ],
       "di_toi": [
         "messages",
+        "moments/new",
+        "plan",
         "trips/[id]/album"
       ],
       "man": "groups/[id]/album",
@@ -487,13 +497,16 @@
         "Chưa mở được album",
         "Chưa đọc được album",
         "Chỗ đã tới",
+        "Cảnh trong thước phim",
         "Dựng lại",
         "Dựng thước phim",
+        "Lên plan",
         "Mở album …",
         "Thước phim",
+        "Thả khoảnh khắc",
         "Xem câu chuyện ảnh",
         "Ảnh bìa …",
-        "Ảnh chưa mở được."
+        "Ảnh chưa tải"
       ],
       "tep": [
         "app/groups/[id]/album.tsx",
@@ -800,24 +813,27 @@
       ],
       "man": "groups/[id]/wall",
       "nhan": [
+        "Bình luận",
+        "Bình luận khoảnh khắc",
         "Check-in",
         "Check-in ở đâu?",
         "Chưa có bình luận. Viết câu đầu tiên.",
         "Chưa có kỷ niệm nào",
         "Chưa đọc được tường",
+        "Chọn chỗ khác",
         "Chọn …",
         "Gửi bình luận",
         "Không có chỗ nào khớp «",
         "Không có chỗ nào khớp «…». Thử tên ngắn hơn nhé.",
         "Kỷ niệm của hai bạn",
-        "Một câu (không bắt buộc)",
-        "Thôi",
+        "Một câu về nơi này (tuỳ bạn)",
+        "Mở ảnh: …",
         "Thả khoảnh khắc",
+        "Thử đăng lại",
         "Tìm chỗ bạn đang ở",
         "Tường nhóm",
         "Tải thêm kỷ niệm cũ hơn",
         "Viết bình luận…",
-        "Ví dụ: Ốc ở đây ngon",
         "». Thử tên ngắn hơn nhé.",
         "Ô câu check-in",
         "Ô tìm chỗ check-in",
@@ -994,25 +1010,22 @@
       ],
       "man": "moments/new",
       "nhan": [
-        ". Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.",
         "Bản nháp lần trước còn đây.",
         "Bỏ bản nháp",
-        "Chia sẻ ngay vào nhóm",
+        "Bỏ ảnh",
+        "Chia sẻ khoảnh khắc",
         "Chưa chọn ảnh, chạm để chọn",
-        "Chưa có ảnh. Chạm để chọn một tấm.",
-        "Chọn ảnh",
-        "Chọn ảnh khác",
-        "Giữ một khoảnh khắc",
-        "Giữ vào kỷ niệm của hai bạn",
-        "Một khoảnh khắc cho nhóm",
-        "Sài Gòn về đêm",
+        "Chọn một tấm ảnh",
+        "Một cuộc đi, một điều muốn giữ lại.",
         "Thả khoảnh khắc",
+        "Thử gửi lại",
         "Tới Tin nhắn",
+        "Viết một câu về tấm ảnh này…",
         "Vào một nhóm trước",
         "Ô câu chú thích",
-        "Đăng vào",
-        "Đăng vào …. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.",
-        "Ảnh đã chọn"
+        "Đổi ảnh",
+        "Ảnh đã chọn",
+        "Ảnh được xoá vị trí và thông tin máy chụp trước khi lưu. Thành viên có thể chọn ảnh vào sổ chuyến đi của mình."
       ],
       "tep": [
         "app/moments/new.tsx",
@@ -2088,11 +2101,20 @@
     {
       "canh": [
         {
+          "den": "moments/new",
+          "nhan": "Thả khoảnh khắc"
+        },
+        {
+          "den": "plan",
+          "nhan": "Lên plan"
+        },
+        {
           "den": "trips/[id]/album",
           "nhan": "Mở album …"
         }
       ],
       "di_toi": [
+        "moments/new",
         "plan",
         "trips/[id]/album"
       ],
@@ -2105,13 +2127,16 @@
         "Chưa mở được album",
         "Chưa đọc được album",
         "Chỗ đã tới",
+        "Cảnh trong thước phim",
         "Dựng lại",
         "Dựng thước phim",
+        "Lên plan",
         "Mở album …",
         "Thước phim",
+        "Thả khoảnh khắc",
         "Xem câu chuyện ảnh",
         "Ảnh bìa …",
-        "Ảnh chưa mở được."
+        "Ảnh chưa tải"
       ],
       "tep": [
         "app/trips/[id]/album.tsx",
