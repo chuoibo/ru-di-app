@@ -56,3 +56,10 @@ scroll; phản hồi proposal/error nằm ở footer quyết định. Hai phần
 vai trò/tên/trạng thái bằng chữ; Để sau và chọn loại sổ mực phụ. Sau mở giữ
 primary con dấu, M6 wrap cảnh và con dấu hai dòng. Picker/unopened trả lại
 grain hiện có. Cần build sạch/capture đúng SHA và verdict bảy finding.
+
+4a491dc0: clean9 xanh, Node1608/1608; native8 matrix+4 bổ sung thao tác
+xanh, cancel giữ unopened. Root mở đủ8 contact matrix và thấy regression
+nhãn Để sau ở100 chỉ vẽ «Để». Native XML: button288×48, text43×19 và
+content-desc/text vẫn đủ «Để sau»; không gọi mất label/accessibility. Sửa
+nhãn stretch trong chính target48dp, không đổi typography hoặc touch target.
+Cần recapture đúng SHA; giữ nguyên ảnh4a như bằng chứng lỗi, chưa verdict.

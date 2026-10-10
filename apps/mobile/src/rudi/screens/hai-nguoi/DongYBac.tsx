@@ -99,7 +99,7 @@ function BacDongY({
       <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
     ) : null}
     <PressScale accessibilityRole="button" onPress={onClose} pressedScale={0.98} style={styles.deSau}>
-      <Text style={[typography.label, { color: colors.inkSoft }]}>Để sau</Text>
+      <Text style={[typography.label, styles.deSauLabel, { color: colors.inkSoft }]}>Để sau</Text>
     </PressScale>
   </View>;
   return (
@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
   actions: { gap: 8, paddingTop: 16 },
   dau: { maxWidth: "100%" },
   deSau: { minHeight: 48, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
+  deSauLabel: { alignSelf: "stretch", textAlign: "center" },
   flex: { flex: 1 },
   // Two columns when there is room for both at reading width, one under the other otherwise.
   haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
