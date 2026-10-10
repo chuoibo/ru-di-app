@@ -37,7 +37,7 @@ Chỉ receipt, source và tài liệu không chứa credential được bàn gia
 | E — Plan/outing/map | Native d3 tạo kèo/check-in; APK2f20 sửa wrapper0×0, ba coldmap/pan/khớp80,472s exit0; JS41 ground→tapmốc selected16,635s exit0; cleanup chặng thêm nhầm GET200 hai records gốc nguyên | Root mở timeline/map/diagnostic; chưa review đủ đúng source cuối hoặc settled camera | Reorder/pin/cluster/map provider/permission/conflict/partial creation; fullgate/TalkBack |
 | F — Create/check-in | Native d3 empty→form/blanksubmit/name/budget→create200.000đ/2người/stop/check-in1, GET200 khớp; JS41 thêm địa điểm giữcheck-in, hủy draft không ghi | Root mở11PNG d3 và sheet41; chưa chấm toàn bộ sheet/check-in | Sheet CTA trên IME đang sửa sau41; từng entry/context/audience/location/cancel/font/theme/error |
 | G — Chat/story | MLS hai chiều và media nhận/relaunch hai emulator; poll create/vote/tie/switch/author-close/relaunch; Story thay ảnh/draft/đăng/pause/Back/Keep/DELETE thật; Ngọc bạn đọc/seen/nonauthor | Khung media `2fc1c73f` mở ảnh so board03; Story preview/viewer/question `c9a3f541` 14/16, ship chỉ hai P2 và state đã chụp | Header/history-empty copy; motion/retry/expiry/unauthorized audience/pendingDELETE/TalkBack; poll→tờ hẹn thật; reseal/reverse media |
-| H — Groups/friends | Thành viên `3b71838e`: 2 active/0 invited, tên thật, không đổi vai trò | Root mở ảnh inline: không đẩy nhãn/CTA khỏi hàng; chưa chấm cả family | Invite/accept/reject/leave/last-admin, friend pending/block và empty/error |
+| H — Groups/friends | Native fa735/c941/d91: tạo nhóm, mời/từ chối/mời lại/đồng ý, đổi vai trò/last-admin, kết bạn pending/duplicate/decline/accept và rời/cancel; API QC thật | Sáu finding của fresh review resolved tại d91; matrix sáng/tối ×100/130/200, expanded và các đích/recovery thật. Chỉ nghiệm thu sáu fixes | Chặn, network/retry/double-tap/lifecycle, motion/TalkBack, expanded IME/chữ lớn, mọi nhánh; input tên dài vẫn cuộn hai dòng; toàn H còn mở |
 | I — Hai người | Chưa nhận full native pair workflow | Chưa review native đủ | Hai phiên UI, tờ hẹn/accept/promote, chọn người và các nhánh |
 | J — Moments/album/wall | Story không thay bằng chứng khoảnh khắc/album/tường | Chưa review native đủ | Media/crop/draft/retry/audience/view/album/delete, heart/comment đúng quyền |
 | K — Ending/diary | b76: sáu profile, thêm/sửa/đổi thứ tự/chuyển/bỏ trang rồi lưu; no-op revision4→4 giữ document. Công khai4→5 rồi riêng tư5→6; other book/published photo200→404, ảnh gốc other luôn404 | Ba finding resolved tại b76; finding đường kẻ resolved tại5cab sau16 ảnh editor/shared caption130/200. Bìa tự giãn, một pager và nhóm soạn trang; review chỉ bốn finding | AI/consent/provider/quota/error/retry/photo-failure, mọi lifecycle/motion, TalkBack/contrast, tablet/iOS; chưa nghiệm thu toàn K |
@@ -300,3 +300,42 @@ b76 mutation r0 thiếu topology packages/shared; privacy r0 assert nhãn previe
 sau khi đã chuyển editor. Chúng không thành PASS hồi tố; bản r1/r2 có receipt
 riêng. Hồ sơ chi tiết ở RECOVERY. Runtime JS5cab/APK2f20/Go9a có SHA độc lập.
 AI/error/retry, full lifecycle/accessibility, toàn A–S và landing main còn mở.
+
+## H — sáu fixes nhóm/bạn bè, fa735 → c941 → d91
+
+Giữ UI3/seed c8e88116, mockup03 là critique-reference; không mở world mới
+hoặc thêm raster. Người/nhãn vai trò dẫn mắt trước shortcut và guard. Ba form
+giữ field khi IME mở, safe-area footer trên phone; expanded ghép action sát
+vật giấy. Nhãn bìa tự cao; tỷ lệ cuốn sổ nằm ở vải. Xác nhận rời nhóm có
+hậu quả và hai quyết định trong sheet lấy chiều cao nội dung, footer ngoài cuộn.
+
+[Review fa735](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-fa735354/fresh-h-review.md>)
+có sáu finding. [Verdict c941](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c941f09e/fresh-h-verdict.md>)
+resolved bốn, còn sheet82% và nhãn expanded368dp partial.
+[Verdict d91](</home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d91e66d1/fresh-h-final-verdict.md>)
+resolved đủ sáu sau khi mở sáu file chứa16 viewport mới: New sáu compact,
+bốn expanded ngắn/dài sáng/tối, sáu reinvite/accept/leave/cancel. Root cũng
+mở đủ ảnh. Năm artifact không đổi có hash đối chiếu; F1/F2/F4/F6 giữ
+provenance c941, không relabel ảnh cũ thành d91. Ship chỉ sáu fixes.
+
+Đích thành công kết bạn từ Members/Friends và recovery duplicate đều tới
+Friends/Đã gửi thật. Copy recovery không lộ trạng thái quan hệ. Vai trò đọc
+đủ130/200%; guard quản trị ngắn, mở giải thích được. Leave/cancel ở light100
+23,544s và dark200 26,650s exit0; witness chín read200 giữ cả hai active.
+Actual leave tại c941 17,486s exit0, recipient về inbox không nhóm; d91 mời
+lại20,040s và recipient đồng ý16,085s exit0. Không tạo quyền/membership giả.
+
+Clean exact d91 có chín bước xanh: type7,750s, guide1,341s, export14,919s,
+compile2,705s, fixup0,034s, Node214 file **1608/1608**/33,771s,
+core-build2,140s, Go-guide0,268s, tree32,547s/**5107 PASS**.
+Identity role9/9; canary và hai mutant độc lập mỗi7/9, đỏ đúng ca dự đoán,
+cùng harness2072d502,0skip/cancel/todo. TSX regex bảy file exit0/[];
+không đo contrast/geometry native. Đây subset native, không full npm/gate32strict.
+
+Giữ log đỏ af37/601/c941: selector cũ, transport khi boot thiết bị, privacy
+và source assertion, expanded outer143, cancel assert off-fold, deep link
+dev-client trước bundle-ready. Không đếm chúng thành xanh hồi tố. API/JS d91
+ở lượt cuối, APK2f20 không đổi; expanded768×1024 là cùng AVD resize và đã
+trả320×640/font1.0, không phải tablet độc lập. Input dài vẫn cuộn nội bộ
+hai dòng gần caret; chưa chứng minh cả95 ký tự cùng hiện. Network/retry,
+lifecycle, motion/reduced-motion, TalkBack/iOS, toàn H/A–S và main còn mở.

@@ -403,7 +403,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
 | Hành trình bản đồ | bản đồ giấy là mặt bàn; trang ngày xé khỏi sổ đặt đè lên, mép xé và lỗ gáy quay về phía bản đồ; ghim là con tem giấy đánh số mang trạng thái; kế hoạch là một nét mực coral, nháp là một nét chì đứt; đầu trang đóng dấu nét ấy là gì (chi tiết: «Hành trình bản đồ» dưới «Luật đã thay luật v2») | `NenGiay` + `hinhTrangXe`, `hinhTem`, `mocChum`, `lopDuong`, `kieuBanDo`, `veDenDau` + `useNetMuc` |
 | Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
-| Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
+| Thành viên | người trước, vai trò là dòng chữ phụ tự xuống hàng (H tại `d91e66d1`) | `AvatarNguoi`, `typography.note`, `LuoiNguoi` |
 
 Sau lượt đọc mù 26/09 (ADR-0038):
 
@@ -1979,6 +1979,51 @@ lại hành động trên mỗi người dùng `RudiButton compact ghost` («m�
 không phải viên»), người là một `Pressable` mở hồ sơ («Xem hồ sơ <tên>»),
 hành động đứng cạnh, không bao giờ nằm trong nó.
 
+### Nhóm và bạn bè — bàn giao giới hạn 10/10/2026
+
+Đọc sáu màn H và `chat/CaiDatNhom.tsx` tại source
+`d91e66d16a06b3beea166963c75890ef2b69da7a`, cùng `Sheet`, `SoBia` và
+`ONhapMuc`; kế thừa hệ giấy/mực/bìa vải/coral/Bricolage và lối gọi Nếp hoạt động.
+Không thêm token, world hoặc raster. Mockup03 chỉ là tham chiếu phản biện,
+không phải comp được duyệt.
+
+- **Bìa chứa ô nhập thật.** `GroupNewScreen` dùng `SoBia fitContent` và
+  `ONhapMuc co="lon"` hai dòng trên nhãn giấy. Ở bố cục expanded (rộng từ
+  600dp và cao từ 720dp), bìa và action chung trục, rộng tối đa (360dp).
+  Nhãn cao theo nội dung; khoảng tên–người mở (24dp). Chiều cao tối thiểu
+  để giữ dáng bìa nằm ở vùng vải bao ngoài nhãn, không kéo tờ nhãn thành
+  khoảng trắng dài. Đây là cách áp dụng bìa đóng tự cao đã có, không đổi
+  hình học bìa đang lật.
+- **Form theo người nhận.** New/Invite/AddFriend giữ cột form (560dp) và
+  nhịp khối (24dp). Trên phone, header và action ở khe riêng của
+  `RudiScreen avoidKeyboard`, footer khi IME đóng dùng `insets.bottom + 12`,
+  mở IME theo khe (8dp) của shell. Expanded đặt action ngay sau vật giấy
+  trong nội dung, không giữ một nút ở đáy xa ô nhập. Tài khoản → người
+  nhận đã tìm thấy → gửi → chờ đồng ý; chỉ hiện thành công sau response.
+  Thành công kết bạn và recovery lời mời đã tồn tại đều tới Bạn bè/Đã gửi.
+- **Người dẫn danh sách.** Members đặt roster và vai trò trước lối sang
+  tường/album; mời/thêm bạn là `IconButton quiet` (48dp) ở header cố định.
+  Vai trò dùng `note inkSoft` tự xuống hàng, không con dấu cắt chữ.
+  Ghi chú quản trị là câu nhẹ, giải thích dài mở tại chỗ. Nút đổi vai trò
+  đứng riêng khỏi nút hồ sơ; ở cột hẹp/chữ lớn chuyển dưới tên. Friends giữ
+  icon nhắn tin cạnh người; cặp Đồng ý/Từ chối có thể xuống dưới cột chữ.
+- **Quyết định ngắn thành một cụm.** Trong cài đặt nhóm, bước Rời nhóm
+  thay nội dung cài đặt bằng tiêu đề, hậu quả và hai lựa chọn. `Sheet`
+  lấy chiều cao nội dung dưới trần; (82%) là trần, không phải chiều cao
+  bắt buộc. Hai nút ở `footer` ngoài vùng cuộn, cách prompt (24dp),
+  phá huỷ `warn outline` và Ở lại `ghost`. Back của bước này trở về cài
+  đặt; không bật `prioritizeFooter` vốn dành cho editor cần chiếm trần.
+
+Fresh verdict **ship chỉ sáu fixes**: reviewer mở 6 file chứa 16 viewport.
+F3/F5 đọc ảnh d91; F1/F2/F4/F6 giữ provenance ảnh c941 và năm artifact
+byte-identical, không đổi nhãn ảnh cũ. Lượt documenter này mở hai ảnh New
+expanded sáng/tối và contact sheet invite/accept/leave/cancel gồm sáu
+viewport, không vận hành runtime. Exact d91 có subset kỹ thuật 9 bước,
+Node (1608/1608) và repo-tree (5107); regex TSX `[]` không chứng minh full
+gate, geometry, contrast hay chất lượng thị giác. H/A–S, motion, TalkBack,
+iOS, 390/430dp, phần cứng expanded độc lập, expanded chữ lớn/IME,
+network/retry/lifecycle và phần chưa chụp vẫn mở.
+
 ### Hỏi tại hàng (xác nhận hành động phá huỷ)
 Hành động xoá thứ không lấy lại được **hỏi ngay tại hàng**, không mở hộp
 thoại, không toast. Một primitive: **`ui/HoiTaiHang.tsx`** (B11, 04/10), dùng ở
@@ -3474,6 +3519,15 @@ quyền merge vào main từ các số trên.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**H 10/10 tại d91:** tên dài trong ô Android vẫn cuộn nội bộ hai dòng;
+ảnh long chỉ hiện vùng gần caret cuối, không chứng minh toàn bộ (95 ký tự)
+cùng thấy. Không biến giới hạn này thành quy tắc cắt tên hoặc chuẩn ô nhập
+đã nghiệm thu. Min-height của vùng vải New expanded không thành token
+chiều cao nhãn giấy. Sáu fixes resolved không nghiệm thu toàn H/A–S; gate
+subset/regex không thành đo tương phản, motion hay điểm đẹp. Nhánh pressed
+opacity của hàng người và drift cũ ngoài phạm vi giữ nguyên, không thành
+phản hồi bấm thứ hai của hệ.
 
 **K 10/10:** không biến giả định baseline Android thành luật kẻ dòng, hoặc
 việc bỏ nét trang trí ở chữ lớn thành lý do thu font/khóa chiều cao. Toolbar

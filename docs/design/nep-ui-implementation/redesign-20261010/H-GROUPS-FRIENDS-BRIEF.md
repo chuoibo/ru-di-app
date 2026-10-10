@@ -85,3 +85,11 @@ Bìa rộng giữ tỷ lệ bằng vùng vải, nhãn giấy tự giãn và owne
 không kéo nhãn lên368dp. Không sửa primitive hoặc thêm filler. Chụp lại
 expanded New tên ngắn/dài sáng/tối và leave light100/dark200, giữ capture
 c941 cho artifact không đổi bằng hash/provenance. Chưa có verdict batch này.
+
+Verdict d91 đã mở đủ sáu file/16 viewport, resolved cả sáu fixes; ship chỉ
+phạm vi đó. Root mở đủ ảnh; năm artifact byte-identical giữ provenance c941.
+Clean exact d91: chín bước xanh, Node214 file1608/1608,0skip/fail/cancel/todo,
+tree5107; role identity9/9, canary và hai mutant7/9 đúng predicted-red.
+Documenter cập nhật riêng mô tả H trong DESIGN/sidecar từ artifact đã kiểm.
+Input dài vẫn cuộn hai dòng, chưa full-name proof. H/A–S và main còn mở;
+chi tiết capture/đỏ/giới hạn tại NATIVE-UI-QC và RECOVERY, không relabel ảnh.

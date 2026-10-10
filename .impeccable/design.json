@@ -742,7 +742,7 @@
     "Money": "typography.money 21/27 EB tabular; sizes display/money/body/label/caption; countUp chỉ khi domainStateValid (moneyCountUpMs)",
     "RudiTabBar": "card + hairline line, cao tabBarHeight(fontScale) + max(insets.bottom,10): 64 tới fontScale 1.15, + round((fs−1.15)×44) tới 2.0, tab minHeight 48, icon 24, caption override 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral glyph brand.coralInk tĩnh vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78 chỉ ở thanh đáy, chỉ đọc từ mã",
     "PressScale": "scale-only trên UI thread; 0.97 mặc định (con dấu CTA), 0.98 RudiButton, 0.985 ListRow/khay tạo, 0.96 Chip, 0.94 IconButton/FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact; đợt 8 thay mọi nhánh pressed mờ trong kit (RudiButton, IconButton, Chip, ListRow), màn feature còn nhánh mờ riêng",
-    "Sheet": "v2 (01/10): card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), hàng lỗ giấy paperShade 5x5 mép trên; trần 82% cửa sổ cho CẢ tấm (tay cầm + dauTrang + nội dung + footer + đệm), maxHeight thay trần, avoidKeyboard co theo khung trên bàn phím; rộng tối đa 640 căn giữa (RONG_TOI_DA); trượt theo chiều cao đo được của tấm + 24, khép mờ (opacity theo progress 0→0.12→1); spring settle vào / standard ra; scrim lopPhu.toi(0.42); 250ms đầu (CHAN_CHAM_MS) scrim và tấm không nhận chạm; Back cứng Android, Esc web, Back trình duyệt (lui-web.ts) đóng; onBack tiêu Back cho bước nội tuyến; màn blur thì đóng; web role=dialog aria-modal, anh em inert+aria-hidden, focus control đầu, Tab quay vòng, trả lại thuộc tính chỉ khi còn là của nó; zIndex 10; Nếp không đè; tay cầm: hàng minHeight 36 giữa hai ô 48, vạch 40x4 lineStrong, Gesture.Pan activeOffsetY 6, > 90dp hoặc > 900dp/s đóng, scrim × (1 − kéo/cao tấm), ẨN khỏi trợ năng; lối ra trợ năng «Đóng bảng» 48x48 close 22 ink; onClosed sau khi tấm rời; thân khép đọc useGiuKhiDong; đặt qua RudiScreen overlay, LenLop hoặc route trong suốt",
+    "Sheet": "v2 (01/10): card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), hàng lỗ giấy paperShade 5x5 mép trên; trần 82% cửa sổ cho CẢ tấm (tay cầm + dauTrang + nội dung + footer + đệm), maxHeight thay trần, avoidKeyboard co theo khung trên bàn phím; rộng tối đa 640 căn giữa (RONG_TOI_DA); trượt theo chiều cao đo được của tấm + 24, khép mờ (opacity theo progress 0→0.12→1); spring settle vào / standard ra; scrim lopPhu.toi(0.42); 250ms đầu (CHAN_CHAM_MS) scrim và tấm không nhận chạm; Back cứng Android, Esc web, Back trình duyệt (lui-web.ts) đóng; onBack tiêu Back cho bước nội tuyến; màn blur thì đóng; web role=dialog aria-modal, anh em inert+aria-hidden, focus control đầu, Tab quay vòng, trả lại thuộc tính chỉ khi còn là của nó; zIndex 10; Nếp không đè; tay cầm: hàng minHeight 36 giữa hai ô 48, vạch 40x4 lineStrong, Gesture.Pan activeOffsetY 6, > 90dp hoặc > 900dp/s đóng, scrim × (1 − kéo/cao tấm), ẨN khỏi trợ năng; lối ra trợ năng «Đóng bảng» 48x48 close 22 ink; onClosed sau khi tấm rời; thân khép đọc useGiuKhiDong; đặt qua RudiScreen overlay, LenLop hoặc route trong suốt; H tại d91: quyết định ngắn lấy chiều cao nội dung dưới trần (cuộn flexGrow 0 / flexShrink 1), footer ngoài vùng cuộn; prioritizeFooter vẫn opt-in cho editor, không bật chỉ để giữ hai lựa chọn thấy được",
     "Skeleton": "xương line bo 10, băng card 0.55 1400ms, tắt dưới Reduce Motion",
     "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline; illustration = <Canh width 168> (chua-co-keo, chua-co-anh, tim-khong-ra); mọi EmptyState mang <Canh id> trừ ô có tên trong tests/trang-rong-co-hinh.test.mjs: KHONG_HINH (im lặng có lý do) và CHUA_VE (nợ chưa vẽ); ErrorState toàn màn chỉ khi chưa có gì để giữ",
     "useAdaptiveLayout": "helper compact <600 (columns 1, gutter 16, tab đáy, maxContent width) / medium 600..839 (columns 2, gutter 24, rail, maxContent 960, twoPane khi cao >=480) / expanded >=840 (columns 3, gutter 36, rail, twoPane, maxContent 1200); short <480. Đây là khả năng helper, không tự áp bố cục cho mọi màn.",
@@ -811,7 +811,8 @@
     "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet",
     "Personalization": "TopBar back + «Bỏ qua»; Heading «Cho Rủ Đi biết gu của bạn» không phụ đề; lưới ô gu (GuGlyph 40 + label + vòng chọn, cao 64, bo 14, viền lineStrong; chọn = accentSoft + viền accent + check) minItemWidth round(150 × max(1, fontScale)) gap 12; câu đếm caption ink khi chưa đủ, note inkSoft khi đủ; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng» + chip pill; RudiButton; câu lưu trữ note inkFaint giữa",
     "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton",
-    "Diary": "K tại 5cab: BookView tối đa 560dp, bìa đóng fitContent tối đa 420dp; ảnh bìa 4:3/compact 16:9, trang đơn 4:3/collage hai cột 3:4, nền paperShade và khung tỷ lệ trước khi ảnh tải hoặc báo lỗi. Preview giữ bìa/các trang; DiaryScreen paged có tên h2/lời mở note và một trang, chỉ một pager khi nhiều trang, mũi tên 48dp/counter wrap/hint biên, sửa quiet ở header, Quản lý sổ mặc định thu gọn. EndingScreen chỉ sửa trang đang chọn trên TrangSo gồm pager/tên/chuyện/ảnh/toolbar icon 48dp có tên trợ năng; tên multiline, công cụ bìa wrap và thành cột toàn ngang từ fontScale 1.25; draft trong document khi chuyển trang. Token/world/seed c8e88116 không đổi; phạm vi bằng chứng ở shippedKDiary20261010."
+    "Diary": "K tại 5cab: BookView tối đa 560dp, bìa đóng fitContent tối đa 420dp; ảnh bìa 4:3/compact 16:9, trang đơn 4:3/collage hai cột 3:4, nền paperShade và khung tỷ lệ trước khi ảnh tải hoặc báo lỗi. Preview giữ bìa/các trang; DiaryScreen paged có tên h2/lời mở note và một trang, chỉ một pager khi nhiều trang, mũi tên 48dp/counter wrap/hint biên, sửa quiet ở header, Quản lý sổ mặc định thu gọn. EndingScreen chỉ sửa trang đang chọn trên TrangSo gồm pager/tên/chuyện/ảnh/toolbar icon 48dp có tên trợ năng; tên multiline, công cụ bìa wrap và thành cột toàn ngang từ fontScale 1.25; draft trong document khi chuyển trang. Token/world/seed c8e88116 không đổi; phạm vi bằng chứng ở shippedKDiary20261010.",
+    "GroupsFriends": "H tại d91: New/Invite/AddFriend cột form 560dp, gap24, phone action ở footer tránh IME với insets.bottom+12 khi IME đóng và shell8dp khi mở; expanded width>=600/height>=720 đặt action ngay sau vật giấy. New dùng SoBia fitContent, bìa/action maxWidth360 cùng trục, nhãn tự cao và tên–owner24; phần vải bao ngoài nhãn giữ dáng bìa. Members roster/role note inkSoft tự wrap trước wall/album, guard ngắn mở giải thích; invite/add quiet icon48 ở header. Friends message icon cạnh người, cặp accept/decline xuống dưới cột chữ khi hẹp/chữ lớn; success/duplicate recovery đi Friends/Đã gửi. Leave decision nội dung ngắn và hai nút footer ngoài scroll, prompt–action24, warn outline + ghost, Back trở lại settings. Phạm vi bằng chứng ở shippedHGroupsFriends20261010; không token/world/raster mới."
   },
   "implementationCheckpoint": {
     "date": "2026-09-06",
@@ -2065,6 +2066,83 @@
       "Toolbar icon là công cụ ngữ cảnh trang K, không giấy phép thay mọi nhãn hành động bằng icon.",
       "Mockup K chưa duyệt không đặt world/raster mới; không thêm tranh để che form.",
       "Bốn finding resolved không chứng nhận họ màn; drift cũ ngoài scope giữ nguyên."
+    ]
+  },
+  "shippedHGroupsFriends20261010": {
+    "_": "Gia hạn hệ v3 hiện hành từ artifact đã kiểm; giữ cấu trúc sidecar legacy và mirror token. Chỉ sáu finding của H, không nghiệm thu họ màn hoặc A–S.",
+    "date": "2026-10-10",
+    "headCommit": "d91e66d16a06b3beea166963c75890ef2b69da7a",
+    "authority": {
+      "product": "PRODUCT.md",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/H-GROUPS-FRIENDS-BRIEF.md",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage và lối gọi Nếp hoạt động; không thêm token, world hoặc raster.",
+      "reference": "Mockup03 là critique-reference, không comp được duyệt."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/groups/New.tsx",
+      "apps/mobile/src/rudi/screens/groups/Invite.tsx",
+      "apps/mobile/src/rudi/screens/groups/Members.tsx",
+      "apps/mobile/src/rudi/screens/friends/AddFriend.tsx",
+      "apps/mobile/src/rudi/screens/friends/Friends.tsx",
+      "apps/mobile/src/rudi/screens/friends/HangNguoi.tsx",
+      "apps/mobile/src/rudi/screens/chat/CaiDatNhom.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx",
+      "apps/mobile/src/rudi/ui/SoBia.tsx",
+      "apps/mobile/src/rudi/ui/ONhapMuc.tsx",
+      "apps/mobile/src/rudi/theme.ts"
+    ],
+    "verdict": {
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d91e66d1/h-final-verdict-packet.json",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d91e66d1/fresh-h-final-verdict.md",
+      "disposition": "ship",
+      "scope": "Chỉ F1–F6 của lượt review H: reviewer mở đủ 6 required files chứa 16 viewport; cả sáu resolved.",
+      "currentNative": "F3/F5: leave decision và expanded New ở d91.",
+      "carryForward": "F1/F2/F4/F6 giữ provenance c941; năm artifact byte-identical, không đổi nhãn ảnh cũ.",
+      "carryForwardSource": "c941f09ecacdcde712a29ce645a2327dc5ac7a21",
+      "unchangedArtifactSha256": {
+        "apps/mobile/src/rudi/screens/groups/Invite.tsx": "1ad1737110363753b1562ae17f99a443faaba5d713a7627ddb512aa7f5b486c2",
+        "apps/mobile/src/rudi/screens/groups/Members.tsx": "c152315a8b5c1433482b8549cc93a11455de1c9680ab0e874a677bb8e4527667",
+        "apps/mobile/src/rudi/screens/friends/AddFriend.tsx": "782fe4ff30826b5eaa4e37eaf8fe3ae5419ae660c8b98eb4e43b0787f3158244",
+        "apps/mobile/src/rudi/screens/friends/Friends.tsx": "d04e7717eadbbee19307eef282472fddc4717fe639f1092654ce901cd6fe613a",
+        "apps/mobile/src/rudi/screens/friends/HangNguoi.tsx": "99587cb6834f6d060697e9bd1f305935e97b05efb875aaa3e575eb9ae4e6fdb5"
+      }
+    },
+    "documenter": {
+      "method": "Đọc role/reference, PRODUCT/DESIGN/sidecar/brief, 10 TSX H/shared và theme; đọc packet/verdict, đối chiếu hash; không chạy runtime, gate hoặc detector.",
+      "openedNativeCaptures": [
+        {
+          "source": "d91e66d1",
+          "name": "h-final-expanded-light-short"
+        },
+        {
+          "source": "d91e66d1",
+          "name": "h-final-expanded-dark-long"
+        },
+        {
+          "source": "d91e66d1",
+          "name": "contact-final-leave-functional",
+          "viewports": 6
+        }
+      ],
+      "observed": "Nhãn New đứng thành cụm trên vải bìa, action cùng trục ngay dưới; ảnh long hiện đoạn cuối quanh caret. Contact có roster trước shortcut và leave prompt/hai lựa chọn thành cụm ở light100/dark200; cancel về settings."
+    },
+    "technicalEvidence": {
+      "method": "Chỉ đọc số của packet, không chạy lại trong lượt tài liệu.",
+      "exactSource": "d91e66d16a06b3beea166963c75890ef2b69da7a",
+      "scope": "Subset native-relevant 9 bước; 214 Node file, 1608/1608, 0 fail/skip/cancel/todo; repo-tree5107. Không full gate/strict32.",
+      "detector": "Regex TSX 7 targets, []/exit0; không native contrast/geometry hoặc điểm đẹp."
+    },
+    "limits": [
+      "Tên dài vẫn TextInput Android cuộn nội bộ hai dòng; ảnh long không chứng minh cả 95 ký tự cùng thấy.",
+      "Expanded là cùng AVD đổi kích thước, không hardware tablet độc lập; expanded large-text/IME chưa kiểm.",
+      "Whole H/A–S, motion/reduced-motion, TalkBack, iOS, 390/430dp, network/retry/lifecycle và phần chưa chụp vẫn mở."
+    ],
+    "notCanonized": [
+      "Không biến internal scroll của tên dài thành quy tắc cắt tên hoặc full-name proof.",
+      "Chiều cao tối thiểu vùng vải New expanded không thành token chiều cao nhãn giấy.",
+      "Vai thành viên là note inkSoft tự wrap, không khôi phục Stamp từ mô tả v3 cũ.",
+      "Nhánh pressed opacity trong hàng người và drift cũ ngoài scope giữ nguyên, không thành phản hồi bấm thứ hai.",
+      "Sáu fixes resolved không total-H/app acceptance; subset/regex không full gate, contrast hoặc điểm thẩm mỹ."
     ]
   }
 }
