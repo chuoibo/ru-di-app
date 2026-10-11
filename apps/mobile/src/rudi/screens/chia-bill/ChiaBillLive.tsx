@@ -712,7 +712,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
                             value={oNhap(line.id, "so-luong") ?? hienO("so-luong", line.quantity)}
                           />
                         </View>
-                        <View style={largeText ? styles.rong : styles.flex}>
+                        <View style={largeText ? styles.rong : styles.oTien}>
                           <ONhapMuc
                             accessibilityLabel={`Ô tiền món ${i + 1}`}
                             fontScaleOverride={fontScale}
@@ -966,6 +966,7 @@ const styles = StyleSheet.create({
   doc: { flexDirection: "column", alignItems: "stretch" },
   tienDayDu: { maxWidth: "100%", alignSelf: "flex-start" },
   oNho: { width: 110 },
+  oTien: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
   anh: { width: "100%", aspectRatio: 3 / 4 },
   banTrong: { width: "100%" },
   billTrong: { width: "100%" },
