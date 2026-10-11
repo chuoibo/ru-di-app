@@ -84,11 +84,14 @@ function PostDetailContent() {
     const [nep, setNep] = useState(false);
     const [request, setRequest] = useState("");
     const [draft, setDraft] = useState("");
+    // Clearing generated content must not move the editor back to the request step.
+    const [hasDraft, setHasDraft] = useState(false);
     const [busy, setBusy] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     // The Nếp call's own failure, said in the Nếp sheet: the screen's error
     // line sits under the sheet's scrim, where nobody reads it (QA UI-138).
     const [loiNep, setLoiNep] = useState<string | null>(null);
+    const [loiNepOperation, setLoiNepOperation] = useState<"request" | "save">("request");
     // A failed re-read keeps the post already on screen; only a first read that
     // fails leaves the page without one.
     const load = useCallback(async () => { if (!person || !id)
@@ -123,22 +126,24 @@ function PostDetailContent() {
                 attempt: newAttempt()
             });
             setDraft(result.draft);
+            setHasDraft(true);
             keepAttempt.current = newAttempt().key;
         }
         catch (e) {
+            setLoiNepOperation("request");
             setLoiNep(e instanceof Error ? e.message : "Nếp chưa trả lời được. Nội dung của bạn vẫn ở đây.");
         }
         finally {
             working.current = false; setBusy(false);
         }
     };
-    const act = async (f: () => Promise<unknown>) => { if (working.current)
+    const act = async (f: () => Promise<unknown>, nepOperation: "request" | "save" = "request") => { if (working.current)
         return; working.current = true; setBusy(true); setError(null); try {
         await f();
     }
     catch (e) {
         const message = e instanceof Error ? e.message : "Chưa thực hiện được.";
-        if (nep) setLoiNep(message); else setError(message);
+        if (nep) { setLoiNepOperation(nepOperation); setLoiNep(message); } else setError(message);
     }
     finally {
         working.current = false; setBusy(false);
@@ -152,18 +157,22 @@ function PostDetailContent() {
       <Text style={[typography.caption, { color: colors.ai }]}>Bản nháp do Nếp viết</Text>
       <Field testID="community-nep-draft" nativeMetrics label="Sửa lại theo ý bạn" value={draft} editable={!busy} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline />
     </>;
-    const draftAction = <RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void act(async () => {
+    const saveDraft = () => act(async () => {
       await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/keeps", { actorId: person!, method: "POST", attempt: newAttempt(), body: { logical_id: keepAttempt.current, post_id: id, body: draft, ai_generated: true } });
       setNep(false); router.push("/community/keeps" as never);
-    })} />;
+    }, "save");
+    const draftAction = <RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void saveDraft()} />;
     // Only the decision stays outside overflow. A long editor or refusal can
     // scroll without pushing that decision below the keyboard-sized panel.
     const editorContent = person && post ? <View testID="community-nep-editor" style={{ flexShrink: 0, gap: 8, paddingBottom: 4 }}>
-      {draft ? draftField : requestField}
-      <CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" />
+      {hasDraft ? draftField : requestField}
+      {loiNep ? <View testID="community-nep-refusal" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+        <CauTaiCho cau={loiNep} testID="cong-dong-loi-nep" />
+        <RudiButton label="Thử lại" variant="outline" disabled={busy || (loiNepOperation === "save" && !draft.trim())} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : loiNepOperation === "save" && !draft.trim() ? "Viết nội dung ghi chép trước khi thử lại." : undefined} onPress={() => { if (loiNepOperation === "save") void saveDraft(); else void goiNep(); }} />
+      </View> : null}
     </View> : undefined;
     const editorFooter = person && post ? <View style={{ paddingTop: 8 }}>
-      {draft ? draftAction : requestAction}
+      {hasDraft ? draftAction : requestAction}
     </View> : undefined;
     // The comment owner supplies both slots; the editor never lives in overflow.
     // Keep body scrolling local so footer focus cannot trigger body-field reveal.
@@ -202,7 +211,7 @@ function PostDetailContent() {
           <Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text>
           <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text>
           <Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text>
-          {draft ? <>{requestField}{requestAction}</> : null}
+          {hasDraft ? <>{requestField}{requestAction}</> : null}
         </View>
         {editorContent}
       </View> : null}

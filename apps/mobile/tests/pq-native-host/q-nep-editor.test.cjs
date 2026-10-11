@@ -124,8 +124,9 @@ function refusal(h, parts, value) {
   assert.equal(alert.props.accessibilityLiveRegion, 'polite');
   assert.equal(inside(error, parts.scroll), true, 'full refusal can scroll with the editor');
   assert.equal(inside(error, parts.footer), false);
-  const retry = exactly(error.findAllByType('RNPressable'), 'one actual retry handler');
-  assert.equal(inside(retry, parts.scroll), true); assert.equal(flatten(retry.props.style).minHeight, 48, 'full retry target contract');
+  const retry = button(h, 'Thử lại');
+  assert.equal(inside(retry, error), false, 'retry has its own full-width row after the complete refusal');
+  assert.equal(inside(retry, parts.scroll), true); assert.equal(flatten(retry.props.style).minHeight, 52, 'actual RudiButton retry keeps the full target contract');
   return { error, retry, copy };
 }
 
@@ -244,4 +245,118 @@ test('QV04 inherited unavailable and absent native boundaries retain one documen
       assert.deepEqual(h.routes, []);
     });
   }
+});
+
+
+test('QV05 full refusal and retry use separate document rows under the existing metrics owner', async () => {
+  await withNep({}, async h => {
+    const body = 'QC_QV05_A\n\nQC_QV05_C';
+    await change(h, body); await press(button(h, requestAction));
+    await h.fail(h.nepRequests[0], 'Synthetic request refused');
+    const parts = document(h), failure = refusal(h, parts, requestRefusal);
+    const stack = ancestor(failure.error, node => node.type === 'RNView' && inside(failure.retry, node), 'actual common document parent for refusal and retry');
+    assert.equal(flatten(stack.props.style).flexDirection, 'column');
+    assert.equal(flatten(stack.props.style).alignItems, 'stretch');
+    assert.equal(flatten(stack.props.style).gap, 8);
+    assert.equal(stack.props.testID, 'community-nep-refusal', 'marker follows the semantic row ancestry witness');
+    assert.equal(failure.error.findAllByType('RNPressable').length, 0, 'sentence width is not divided with its retry');
+    assert.equal(flatten(failure.retry.props.style).width, '100%', 'retry receives its own full-width row');
+    assert.equal(failure.copy.props.numberOfLines, undefined, 'no important text line cap');
+    assert.equal(failure.copy.props.ellipsizeMode, undefined, 'no important text truncation');
+    const native = input(h), controller = h.owner('PostDetailContent');
+    for (const value of [font(2), font(1)]) {
+      await h.nativeFont(value);
+      const current = refusal(h, document(h), requestRefusal);
+      assert.equal(current.error === failure.error, true); assert.equal(current.retry === failure.retry, true);
+      assert.equal(current.copy === failure.copy, true); assert.equal(input(h) === native, true);
+      assert.equal(h.owner('PostDetailContent') === controller, true);
+      assert.equal(flatten(current.copy.props.style).fontSize, value.fontScale === 2 ? 28.75 : 17);
+      assert.equal(flatten(current.copy.props.style).lineHeight, value.fontScale === 2 ? 36 : 24);
+      assert.equal(current.copy.props.allowFontScaling, false);
+      assert.equal(input(h).props.value, body); ownership(h, 1);
+    }
+    assert.equal(h.nepRequests.length, 1); assert.equal(h.keepWrites.length, 0);
+    assert.deepEqual(h.routes, []);
+  });
+});
+
+test('QV06 clearing a generated draft preserves its actual editor and disabled Save through hot metrics', async () => {
+  await withNep({}, async h => {
+    const request = 'QC_QV06 request retained', generated = 'QC_QV06 generated';
+    await change(h, request); await press(button(h, requestAction));
+    await h.finish(h.nepRequests[0], { draft: generated });
+    const id = 'community-nep-draft', native = input(h, id), coreField = field(h, id);
+    const requestNative = input(h), controller = h.owner('PostDetailContent'), parts = document(h, id);
+    await act(async () => native.props.onFocus({}));
+    await change(h, '', id);
+    assert.equal(h.root.root.findAllByType('RNTextInput').includes(native), true, 'empty content must retain the already mounted native draft editor');
+    assert.equal(input(h, id) === native, true); assert.equal(field(h, id) === coreField, true);
+    assert.equal(input(h, id).props.value, ''); assert.equal(input(h) === requestNative, true);
+    assert.equal(input(h).props.value, request); assert.equal(h.owner('PostDetailContent') === controller, true);
+    assert.equal(button(h, draftAction).props.disabled, true);
+    textWithin(parts.footer, 'Viết nội dung ghi chép trước khi lưu.');
+    assert.equal(inside(button(h, requestAction), parts.scroll), true, 'regeneration stays with the original request');
+    assert.equal(inside(button(h, draftAction), parts.scroll), false, 'empty draft retains the Save decision in the fixed footer');
+    for (const value of [font(2), font(1)]) {
+      await h.nativeFont(value); metrics(h, id, value, draftLabel);
+      assert.equal(input(h, id) === native, true); assert.equal(field(h, id) === coreField, true);
+      assert.equal(input(h, id).props.value, ''); assert.equal(input(h).props.value, request);
+      assert.equal(document(h, id).scroll === parts.scroll, true); assert.equal(button(h, draftAction).props.disabled, true);
+      ownership(h, 1);
+    }
+    await change(h, 'QC_QV06 revised Aà😀\n\nC', id);
+    assert.equal(input(h, id) === native, true); assert.equal(button(h, draftAction).props.disabled, false);
+    assert.equal(h.nepRequests.length, 1); assert.equal(h.keepWrites.length, 0); assert.deepEqual(h.routes, []);
+    await press(button(h, draftAction));
+    assert.equal(h.keepWrites.length, 1); await h.fail(h.keepWrites[0], 'Synthetic save refused before clearing');
+    await change(h, '', id);
+    assert.equal(input(h, id) === native, true); assert.equal(input(h, id).props.value, '');
+    assert.equal(button(h, draftAction).props.disabled, true);
+    assert.equal(button(h, 'Thử lại').props.disabled, true, 'operation-specific retry cannot offer an empty native save');
+    textWithin(document(h, id).scroll, 'Viết nội dung ghi chép trước khi thử lại.');
+    assert.equal(h.keepWrites.length, 1); assert.equal(h.nepRequests.length, 1);
+    await change(h, 'QC_QV06 refilled', id);
+    assert.equal(input(h, id) === native, true); assert.equal(button(h, 'Thử lại').props.disabled, false);
+    // Disabled Save/Retry handlers are not invoked: the existing handler contract remains unchanged.
+  });
+});
+
+test('QV07 retry follows the recorded failed operation and preserves keep identity and consent payloads', async () => {
+  await withNep({ initialSnapshot: font(2) }, async h => {
+    const request = 'QC_QV07 original request', generated = 'QC_QV07 generated', edited = 'QC_QV07 edited Aà😀\n\nC';
+    await change(h, request); await press(button(h, requestAction));
+    await h.finish(h.nepRequests[0], { draft: generated });
+    const id = 'community-nep-draft', native = input(h, id), parts = document(h, id);
+    await change(h, edited, id); await press(button(h, draftAction));
+    const first = h.keepWrites[0];
+    assert.equal(h.keepWrites.length, 1); await h.fail(first, 'Synthetic keep refusal');
+    const failedSave = refusal(h, document(h, id), 'Chưa thực hiện được.'), retainedRetry = failedSave.retry.props.onPress;
+    await press(failedSave.retry);
+    assert.equal(h.nepRequests.length, 1, 'save retry must not send a fresh inference request');
+    assert.equal(h.keepWrites.length, 2, 'save retry repeats the actual keep transport');
+    assert.equal(button(h, 'Thử lại').props.disabled, true, 'retry cannot offer another action while the recorded save is pending');
+    const second = h.keepWrites[1];
+    assert.equal(second.route, '/v2/community/keeps'); assert.equal(second.options.method, 'POST');
+    assert.equal(second.options.actorId, first.options.actorId);
+    assert.deepEqual(plain(second.options.body), plain(first.options.body), 'failed save retains logical_id, body, post and generated provenance');
+    assert.notEqual(second.options.attempt.key, first.options.attempt.key, 'transport retry still uses the existing newAttempt policy');
+    await act(async () => retainedRetry());
+    assert.equal(h.keepWrites.length, 2, 'working guard blocks a retained duplicate save retry');
+    assert.equal(h.nepRequests.length, 1);
+    await h.fail(second, 'Synthetic keep refused again');
+    assert.equal(input(h, id) === native, true); assert.equal(input(h, id).props.value, edited);
+    await press(button(h, requestAction));
+    assert.equal(h.nepRequests.length, 2); payload(h, h.nepRequests[1], request);
+    await h.fail(h.nepRequests[1], 'Synthetic regeneration refusal');
+    const failedRequest = refusal(h, document(h, id), requestRefusal);
+    await press(failedRequest.retry);
+    assert.equal(h.keepWrites.length, 2, 'request failure retry must not infer its operation from an existing draft');
+    assert.equal(h.nepRequests.length, 3); payload(h, h.nepRequests[2], request);
+    assert.notEqual(h.nepRequests[2].options.attempt.key, h.nepRequests[1].options.attempt.key);
+    await h.finish(h.nepRequests[2], { draft: 'QC_QV07 regenerated' });
+    assert.equal(input(h, id) === native, true); assert.equal(input(h).props.value, request);
+    assert.equal(input(h, id).props.value, 'QC_QV07 regenerated');
+    assert.equal(document(h, id).scroll === parts.scroll, true);
+    assert.deepEqual(h.routes, []); ownership(h, 1);
+  });
 });
