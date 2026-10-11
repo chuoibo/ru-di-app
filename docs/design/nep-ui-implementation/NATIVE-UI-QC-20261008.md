@@ -615,3 +615,15 @@ trên toàn phần ghép có 15 file/131 pass, 0 fail/skip/cancel/todo, đỉnh 
 Đây vẫn là host, không chứng minh pixel/IME/scroll native. Handoff khi IME đã
 mở, chữ 100→200→100, retry media/comment và baseline so mockup phải chụp mới.
 Không nhận native approval hoặc merge main từ kết quả này.
+
+Clean gate đầu tại `320d6149` dừng đúng ở Node: 1779/1780, một lỗi scanner
+`khong-vien-web` chỉ nhận tên TextInput nên bỏ hai call site wrapper mới.
+Type/guide/build/compile/fixup xanh; không gọi cả chín bước xanh. Log đỏ giữ
+nguyên trong [clean receipt](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-320d6149/clean-first-failed.json).
+Scanner mới dùng AST, theo alias/conditional/wrapper và kiểm incoming style
+qua adapter; giữ một ca, `dem >= 6` và danh sách lỗi rỗng. [Controls scanner](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-web-outline-frozen-20261011-r1/results.json)
+candidate/identity 1/1; scanner cũ đỏ ở count4, hai mutant bỏ outline tại Field
+và bỏ props.style trong adapter đều đỏ đúng final assertion. Không đổi source
+sản phẩm hoặc giảm ngưỡng để qua gate. Manifest graph SHA256
+`b1707d7e913c727dbc5e1fb58f70943a98a0317a1670092711446dcf5237b8d2`;
+đỉnh scope 136,88 MiB. Cần chạy lại chín bước tại SHA mới trước bật native.
