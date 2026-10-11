@@ -16,6 +16,7 @@ import { boNhapBai, docNhapBai, ghiNhapBai, khoaNhapBai, phienNhapBai, type Nhap
 import { MentionPicker } from "./MentionPicker";
 import { coTuongNhom } from "../so/ban-tinh";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 import { toggleState } from "../../ui/a11y";
 import { SkeletonLines } from "../ui/Skeleton";
 import { AvatarNguoi } from "../ui/AvatarNguoi";
@@ -51,7 +52,9 @@ function ComposerForm() {
     const insets = useSafeAreaInsets();
     const { phien } = useRudiSession();
     const { colors } = useRudiTheme();
-    const { height, width, fontScale } = useWindowDimensions();
+    const { height, width, fontScale: windowFontScale } = useWindowDimensions();
+    const nativeFont = useNativeFontScale();
+    const fontScale = nativeFont.status === "available" ? nativeFont.fontScale : windowFontScale;
     const expanded = width >= 600;
     const params = useLocalSearchParams<{
         edit?: string;
@@ -133,7 +136,7 @@ function ComposerForm() {
     }, [phien, groupRetry]);
     const send = async () => {
         const draft = content.current;
-        if (!phien || !current() || conflict || sending.current || loading || uploadingNow.current || !draft.body.trim() || loiChuDe(draft.topics) || (draft.audience === "group" && !draft.group) || !editReady)
+        if (!phien || !current() || conflict || sending.current || loading || uploadingNow.current || pendingFileNow.current !== null || !draft.body.trim() || loiChuDe(draft.topics) || (draft.audience === "group" && !draft.group) || !editReady)
             return;
         sending.current = true;
         setBusy(true);
@@ -191,12 +194,12 @@ function ComposerForm() {
     const choice = (value: Audience, title: string, detail: string) => <Pressable key={value} {...toggleState("radio", audience === value, () => chooseAudience(value))} disabled={busy} onPress={() => chooseAudience(value)} style={[styles.audienceChoice, { borderColor: colors.line }]}><View style={styles.audienceChoiceTitle}><Text style={[typography.label, styles.flex, { color: audience === value ? colors.accent : colors.ink }]}>{title}</Text>{audience === value ? <RudiIcon name="checkmark" color={colors.accent} size={20} /> : null}</View><Text style={[typography.note, { color: colors.inkSoft }]}>{detail}</Text></Pressable>;
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
-    const cannotSend = conflict || busy || uploading || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
+    const cannotSend = conflict || busy || uploading || pendingFile !== null || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
     return <RudiScreen material="quiet" avoidKeyboard cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
       <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
-      <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
+      <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
     <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => { Keyboard.dismiss(); setAudienceOpen(!audienceOpen); }} style={styles.author}>
       <AvatarNguoi name={phien.profile?.display_name ?? "Bạn"} personId={phien.person_id} size={44} />

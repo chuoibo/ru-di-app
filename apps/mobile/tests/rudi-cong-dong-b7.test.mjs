@@ -134,7 +134,9 @@ test("chi tiết bài, bình luận, ô soạn: lỗi tại chỗ, nối lại k
   assert.match(bl, /onPress=\{\(\) => \{ setHoiXoa\(c\.id\); setLoiXoa\(null\); \}\}/);
   assert.match(bl, /Xóa bình luận này\? Không lấy lại được\./);
   assert.doesNotMatch(bl, /label="Xóa" variant="ghost" onPress=\{\(\) => \{ void translatedAsActor/);
-  assert.match(bl, /lyDo=\{uploading \? "Đợi ảnh tải xong rồi gửi\." : !body\.trim\(\) \? "Viết vài chữ trước khi gửi\."/);
+  assert.match(bl, /const sendReason = busy \? "Đợi gửi xong rồi viết tiếp\." : uploading \? "Đợi ảnh tải xong rồi gửi\." : pendingFile !== null \? "Thử lại hoặc bỏ ảnh đang chờ\." : !body\.trim\(\) \? "Viết vài chữ trước khi gửi\." : null/);
+  assert.match(bl, /testID="community-comment-send-reason"[^>]*>\{sendReason\}<\/Text>/, "disabled send keeps its visible reason in the editor");
+  assert.match(bl, /accessibilityLabel=\{busy \? "Đang gửi…" : "Gửi bình luận"\} disabled=\{busy \|\| uploading \|\| pendingFile !== null \|\| !body\.trim\(\)\}/);
   const the = doc("PostCard.tsx");
   assert.match(the, /if \(!expanded && biCat\) setExpanded\(true\)/, "UI-139");
   // UI-143: a frame never wider than the album it sits in. Since the five-column

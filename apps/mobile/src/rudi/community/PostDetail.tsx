@@ -148,7 +148,7 @@ export function PostDetail() {
             method: "DELETE",
             attempt: newAttempt()
         }); router.replace("/(tabs)/community" as never); }); }}/></> : <RudiButton label="Báo cáo bài" variant="ghost" onPress={() => { setActions(false); setReport(true); }}/>}</> : null}</Sheet>
-    {comments.phase !== "inline" && person && commentPost ? <Sheet key={comments.writer} open={comments.phase === "sheet"} onClose={comments.close} onClosed={comments.closed} accessibilityLabel="Bình luận"><Comments initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} /></Sheet> : null}
+    {comments.phase !== "inline" && person && commentPost ? <Comments key={comments.writer} initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} presentation={(thread, editor) => <Sheet open={comments.phase === "sheet"} onClose={comments.close} onClosed={comments.closed} accessibilityLabel="Bình luận" testID="community-comment-sheet" avoidKeyboard prioritizeFooter footer={editor} showsVerticalScrollIndicator>{thread}</Sheet>} /> : null}
     <Sheet open={report} onClose={() => setReport(false)} accessibilityLabel="Báo cáo bài">{person ? <NoiDungBaoCao actorId={person} loai="post" targetId={id} onXong={() => setReport(false)} onThoi={() => setReport(false)}/> : null}</Sheet>
     <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" prioritizeFooter footer={editorFooter}>
       {person && post ? <View style={{ paddingRight: 8 }}>

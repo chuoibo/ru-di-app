@@ -6,12 +6,13 @@ import { Image } from "expo-image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { typography, useRudiTheme } from "../theme";
-import { RudiButton } from "../ui";
+import { IconButton, RudiButton } from "../ui";
 import { imageSource, uploadMedia, type Media } from "./api";
+import { cauLoiTep, LoiTep } from "./loi-tep";
 
 export type SelectedFile = { asset: ImagePicker.ImagePickerAsset; uploaded?: Media & { state?: string } };
 
-export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, disabled = false, canEdit, renderToolbar }: {
+export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, disabled = false, canEdit, renderToolbar, renderLayout }: {
     person: string;
     media: Media[];
     onChange: (next: Media[]) => void;
@@ -27,6 +28,8 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
     canEdit?: () => boolean;
     /** Keep a composer's tools together while previews/errors retain full width. */
     renderToolbar?: (pick: () => void, busy: boolean) => ReactNode;
+    /** A compact editor can scroll attachment details while keeping its tools visible. */
+    renderLayout?: (details: ReactNode, toolbar: ReactNode) => ReactNode;
 }) {
     const { colors } = useRudiTheme();
     const [busy, setBusy] = useState(false);
@@ -57,9 +60,9 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
                 file = { asset: result.assets[0] };
             }
             const asset = file.asset;
-            if (asset.type === "video" && (asset.duration ?? 0) > 180000) throw new Error("Chọn video dài tối đa 3 phút nhé.");
-            if (media.length >= (video ? 10 : 1)) throw new Error(video ? "Mỗi bài tối đa 10 ảnh." : "Mỗi bình luận có một ảnh.");
-            if (media.length && (asset.type === "video" || media.some((m) => m.type.startsWith("video/")))) throw new Error("Video có một bài riêng. Bỏ ảnh đã chọn để thêm video nhé.");
+            if (asset.type === "video" && (asset.duration ?? 0) > 180000) throw new LoiTep("Chọn video dài tối đa 3 phút nhé.");
+            if (media.length >= (video ? 10 : 1)) throw new LoiTep(video ? "Mỗi bài tối đa 10 ảnh." : "Mỗi bình luận có một ảnh.");
+            if (media.length && (asset.type === "video" || media.some((m) => m.type.startsWith("video/")))) throw new LoiTep("Video có một bài riêng. Bỏ ảnh đã chọn để thêm video nhé.");
             setSelected(file);
             let uploaded = file.uploaded;
             if (!uploaded) {
@@ -85,29 +88,31 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
                     if (!current()) return;
                     if (status.state === "failed") {
                         setSelected({ asset });
-                        throw new Error("Video chưa xử lý được. Thử tải lại hoặc chọn tệp MP4 khác nhé.");
+                        throw new LoiTep("Video chưa xử lý được. Thử tải lại hoặc chọn tệp MP4 khác nhé.");
                     }
                     if (status.state === "ready") { ready = true; break; }
                 }
-                if (!ready) throw new Error("Video vẫn đang xử lý. Thử lại để kiểm tra tệp này nhé.");
+                if (!ready) throw new LoiTep("Video vẫn đang xử lý. Thử lại để kiểm tra tệp này nhé.");
                 uploaded = { ...uploaded, type: "video/mp4", state: "ready" };
             }
             if (current()) { onChange([...media, uploaded]); setSelected(null); }
         } catch (e) {
-            if (current()) setError(e instanceof Error ? e.message : "Chưa chuẩn bị được tệp. Tệp bạn chọn vẫn ở đây.");
+            if (current()) setError(cauLoiTep(e));
         } finally {
             if (current()) { working.current = false; setBusy(false); setPhase(null); onBusy?.(false); }
         }
     };
-    return <View style={{ gap: 12 }}>
-        {media.length ? <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>{media.map((m) => <View key={m.id} style={{ width: 120, gap: 4 }}>
-            {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: 120, height: 120, borderRadius: 8 }}/> : <Text style={[typography.label, { color: colors.ink, paddingVertical: 20 }]}>Video đã sẵn sàng</Text>}
-            <RudiButton compact label="Bỏ tệp" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} variant="ghost" disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
-        </View>)}</ScrollView> : null}
-        {renderToolbar ? renderToolbar(() => void prepare(), busy || disabled) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} loading={busy} onPress={() => void prepare()}/>}
+    const previews = media.length ? <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>{media.map((m) => <View key={m.id} style={{ width: renderLayout ? 128 : 120, gap: renderLayout ? 8 : 4, flexDirection: renderLayout ? "row" : "column", alignItems: renderLayout ? "center" : undefined }}>
+            {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: renderLayout ? 72 : 120, height: renderLayout ? 72 : 120, borderRadius: 8 }}/> : <Text style={[typography.label, { color: colors.ink, paddingVertical: 20 }]}>Video đã sẵn sàng</Text>}
+            {renderLayout ? <IconButton quiet icon="close" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} disabled={disabled || busy} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/> : <RudiButton compact label="Bỏ tệp" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} variant="ghost" disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
+            }
+        </View>)}</ScrollView> : null;
+    const toolbar = renderToolbar ? renderToolbar(() => void prepare(), busy || disabled) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} loading={busy} onPress={() => void prepare()}/>;
+    const recovery = <>
         {error ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.accent }]}>{error}</Text> : null}
-        {selected && !busy ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}><RudiButton full={false} label="Thử lại tệp đã chọn" variant="outline" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => void prepare(selected)}/><RudiButton full={false} label="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => { if (editsBlocked() || working.current) return; setSelected(null); setError(null); }}/></View> : null}
+        {selected && !busy ? <View style={{ flexDirection: "row", gap: 8 }}><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Thử lại" accessibilityLabel="Thử lại tệp đã chọn" variant="outline" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => void prepare(selected)}/></View><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Bỏ chọn" accessibilityLabel="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => { if (editsBlocked() || working.current) return; setSelected(null); setError(null); }}/></View></View> : null}
         {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => { if (editsBlocked()) return; generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); }}/> : null}
         {busy ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Lời viết vẫn ở đây trong lúc tệp được chuẩn bị.</Text> : null}
-    </View>;
+    </>;
+    return renderLayout ? renderLayout(media.length || error || selected || busy ? <View style={{ gap: 8 }}>{previews}{recovery}</View> : null, toolbar) : <View style={{ gap: 12 }}>{previews}{toolbar}{recovery}</View>;
 }

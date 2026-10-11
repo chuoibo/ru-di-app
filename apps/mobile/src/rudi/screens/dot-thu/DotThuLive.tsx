@@ -106,6 +106,7 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
   const contextId = phien.context_id;
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
+  const [dauWidths, setDauWidths] = useState<Record<string, number>>({});
   // A failure is said where it happened: under the row whose action failed,
   // under the publish seal, beside «Làm mới» -- not at the top of the page.
   const [loiTai, setLoiTai] = useState<{ noi: string; cau: string } | null>(null);
@@ -285,11 +286,14 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
                     <Avatar name={tenCua(roster, n.senderId)} personId={n.senderId} size={32} />
                     <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{tenCua(roster, n.senderId)}</Text>
                   </View>
-                  {/* The status has its own available column. Native seal
-                      clipping still needs a measured initial/reentry check. */}
+                  {/* The measured seal uses this status column; native pixels
+                      still decide whether exact label width prevents clipping. */}
                   {dau !== null || n.tranhCai ? (
-                    <View style={styles.dauHang}>
-                      {dau !== null ? <Stamp dong={vuaNhan === n.id && ve} label={dau} tone="split" variant={ve ? "ink" : "outline"} /> : null}
+                    <View style={styles.dauHang} onLayout={(event) => {
+                      const width = event.nativeEvent.layout.width;
+                      if (Number.isFinite(width) && width >= 0) setDauWidths((old) => old[n.id] === width ? old : { ...old, [n.id]: width });
+                    }}>
+                      {dau !== null ? <Stamp dong={vuaNhan === n.id && ve} measureLabel labelColumnWidth={dauWidths[n.id] ?? 0} label={dau} tone="split" variant={ve ? "ink" : "outline"} /> : null}
                       {n.tranhCai && n.trangThai !== "disputed" ? (
                         <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
                       ) : null}

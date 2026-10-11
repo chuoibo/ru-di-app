@@ -62,6 +62,12 @@ export const Text = forwardRef<RNText, NativeMetricTextProps>(function NativeMet
   );
 });
 
+/** Effective standalone label metrics for an opt-in measurement key; no native reads. */
+export function useNativeStandaloneTextMetrics(style: StyleProp<TextStyle>) {
+  const metrics = useContext(MetricsContext);
+  return metrics === undefined ? null : resolveTextMetrics(metrics, flattened(style), {}, "text")?.style ?? null;
+}
+
 /** Shared with the ruled input's geometry; this hook never reads native state. */
 export function useNativeTextInputMetrics(style: StyleProp<TextStyle>, props: ScalingProps) {
   const metrics = useContext(MetricsContext);

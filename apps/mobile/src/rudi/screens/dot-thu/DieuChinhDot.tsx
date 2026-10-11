@@ -422,7 +422,7 @@ function SoanDeXuat({
         placeholder="Ví dụ: chia lại món lẩu"
         value={soan.lyDo}
       />
-      <StampButton disabled={ban || lyDo !== undefined} label="Gửi đề xuất" loading={ban} lyDo={lyDo} onPress={() => onGui(soan)} size="vua" tone="split" />
+      <StampButton disabled={ban || lyDo !== undefined} measureLabel label="Gửi đề xuất" loading={ban} lyDo={lyDo} onPress={() => onGui(soan)} size="vua" tone="split" />
       <CauTaiCho cau={loi} />
       <RudiButton disabled={ban} label="Thôi, không sửa" lyDo="Đang gửi đề xuất" onPress={onThoi} tone="split" variant="ghost" />
     </View>

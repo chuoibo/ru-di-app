@@ -8,7 +8,6 @@ import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import { typography, useRudiTheme } from "../theme";
 import { AvatarNguoi } from "../ui/AvatarNguoi";
-import { RudiButton } from "../ui";
 import { PressScale } from "../ui/PressScale";
 import { useMotion } from "../ui/useMotion";
 import { imageSource, relativeTime, type Media, type Post } from "./api";
@@ -104,10 +103,12 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
         {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo khung={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>
 
-      {/* Which picture of how many; each picture already names itself to a screen reader. */}
-      {soTrang ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.soTrang, { backgroundColor: colors.card, borderRadius: radius.pill }]}><Text style={[typography.caption, { color: colors.ink }]}>{soTrang}</Text></View> : null}
+      {soTrang ? <View style={[styles.albumNavigation, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.pill }]}>
+        <PressScale accessibilityRole="button" accessibilityLabel="Ảnh trước" accessibilityHint={trangDangXem === 0 ? "Đang ở ảnh đầu tiên." : undefined} accessibilityState={{ disabled: trangDangXem === 0 }} disabled={trangDangXem === 0} onPress={() => album.current?.scrollTo({ x: Math.max(0, trangDangXem - 1) * rongAlbum, animated: motion.ms("standard") > 0 })} style={[styles.albumArrow, trangDangXem === 0 && styles.albumArrowDisabled]}><Ionicons name="chevron-back" size={19} color={colors.ink} /></PressScale>
+        <Text accessibilityLabel={`Ảnh ${trangDangXem + 1} trên ${post.media.length}`} accessibilityLiveRegion="polite" style={[typography.caption, styles.albumPosition, { color: colors.ink }]}>{soTrang}</Text>
+        <PressScale accessibilityRole="button" accessibilityLabel="Ảnh sau" accessibilityHint={trangDangXem >= post.media.length - 1 ? "Đây là ảnh cuối cùng." : undefined} accessibilityState={{ disabled: trangDangXem >= post.media.length - 1 }} disabled={trangDangXem >= post.media.length - 1} onPress={() => album.current?.scrollTo({ x: Math.min(post.media.length - 1, trangDangXem + 1) * rongAlbum, animated: motion.ms("standard") > 0 })} style={[styles.albumArrow, trangDangXem >= post.media.length - 1 && styles.albumArrowDisabled]}><Ionicons name="chevron-forward" size={19} color={colors.ink} /></PressScale>
+      </View> : null}
     </View> : null}</View> : null}
-    {!post.diary && post.media.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}><RudiButton full={false} compact label="Ảnh trước" variant="ghost" disabled={trangDangXem === 0} lyDo={trangDangXem === 0 ? "Đang ở ảnh đầu tiên." : undefined} onPress={() => album.current?.scrollTo({ x: Math.max(0, trangDangXem - 1) * rongAlbum, animated: motion.ms("standard") > 0 })}/><RudiButton full={false} compact label="Ảnh sau" variant="ghost" disabled={trangDangXem >= post.media.length - 1} lyDo={trangDangXem >= post.media.length - 1 ? "Đây là ảnh cuối cùng." : undefined} onPress={() => album.current?.scrollTo({ x: Math.min(post.media.length - 1, trangDangXem + 1) * rongAlbum, animated: motion.ms("standard") > 0 })}/></View> : null}
     {photo ? <PhotoViewer title="Ảnh khoảnh khắc" photos={post.media.filter((m) => m.type.startsWith("image/")).map((m) => ({ id: m.id, source: imageSource(person, m.url), caption: post.body }))} initialIndex={post.media.filter((m) => m.type.startsWith("image/")).findIndex((m) => m.id === photo.id)} onClose={() => setPhoto(null)} /> : null}
     {post.topics.length ? <View style={styles.topics}>{post.topics.map((t) => <Pressable key={t} accessibilityRole="button" onPress={() => onTopic ? onTopic(t) : router.push({ pathname: "/community/topic", params: { topic: t } } as never)} style={[styles.topic, { backgroundColor: colors.accentSoft }]}><Text style={[typography.caption, { color: colors.accent }]}>{t}</Text></Pressable>)}</View> : null}
     {post.likes > 0 || post.comments > 0 ? <Text style={[typography.note, { color: colors.inkSoft }]}>{[post.likes > 0 ? `${post.likes} lượt thích` : null, post.comments > 0 ? `${post.comments} bình luận` : null].filter(Boolean).join(" · ")}</Text> : null}
@@ -130,7 +131,10 @@ const styles = StyleSheet.create({
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: 26 }, readTarget: { minHeight: 48, justifyContent: "center" }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 }, statusText: { flex: 1, minWidth: 0 },
   khungAlbum: { width: "100%", aspectRatio: TI_LE_ALBUM }, album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
-  soTrang: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  albumNavigation: { position: "absolute", right: 8, bottom: 8, flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, maxWidth: "100%" },
+  albumArrow: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
+  albumArrowDisabled: { opacity: 0.35 },
+  albumPosition: { flexShrink: 1, textAlign: "center", paddingHorizontal: 2 },
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
   actions: { flexDirection: "row", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 4 }, luu: { flex: 1, minWidth: 48, height: 48, alignItems: "center", justifyContent: "center" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 }, actionCompact: { flex: 1, minWidth: 48, justifyContent: "center" },
 });

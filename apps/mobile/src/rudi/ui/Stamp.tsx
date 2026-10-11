@@ -1,5 +1,6 @@
 import { StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { Text } from "./NativeFontMetrics";
+import { MeasuredSealColumn } from "./MeasuredSealColumn";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";
@@ -26,6 +27,10 @@ export interface StampProps {
   style?: StyleProp<ViewStyle>;
   /** Opt-in label geometry for a seal that is allotted space by its row. */
   labelStyle?: StyleProp<TextStyle>;
+  /** Measure in a finite column and request an exact label width; standalone seals only. */
+  measureLabel?: boolean;
+  /** Finite status-row width, preserving room for adjacent annotations. */
+  labelColumnWidth?: number;
   testID?: string;
 }
 
@@ -48,7 +53,7 @@ export interface StampProps {
  * static seal; the budget is one landing per event, which the caller keeps
  * by passing `dong` only for the row it just acted on.
  */
-export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, labelStyle, testID }: StampProps) {
+export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, labelStyle, measureLabel = false, labelColumnWidth, testID }: StampProps) {
   const { colors } = useRudiTheme();
   const ink = tone === "ink" ? colors.ink : colors[tone];
   const filled = variant === "ink";
@@ -61,7 +66,8 @@ export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, d
     opacity: 0.25 + 0.75 * muc.value,
     transform: [{ rotate: `${tilt}deg` }, { scale: (1.35 - 0.35 * roi.value) * lun.value }],
   }));
-  return (
+  const labelTypography = [typography.stamp, { color: filled ? onInk : ink }, labelStyle];
+  const seal = (labelWidth?: number) => (
     <Animated.View
       testID={testID}
       accessibilityLabel={label}
@@ -75,9 +81,12 @@ export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, d
         style,
       ]}
     >
-      <Text style={[typography.stamp, { color: filled ? onInk : ink }, labelStyle]}>{label}</Text>
+      <Text style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
     </Animated.View>
   );
+  return measureLabel ? (
+    <MeasuredSealColumn label={label} textStyle={labelTypography} horizontalInset={20} allocatedWidth={labelColumnWidth}>{seal}</MeasuredSealColumn>
+  ) : seal();
 }
 
 const styles = StyleSheet.create({

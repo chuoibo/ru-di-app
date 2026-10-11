@@ -67,7 +67,7 @@ test('edit GET verifies access before exposing saved content, then hydrates at i
   const h = host(); await h.mount();
   try {
     const v = h.load(vaultPath), lease = v.phienNhapBai('synthetic-A');
-    v.ghiNhapBai('synthetic-A', 'edit:synthetic-post', draft(), lease);
+    v.ghiNhapBai('synthetic-A', 'edit:synthetic-post', { ...draft(), pendingFile: null }, lease);
     const read = h.deferNext('getPost'); await h.setParams({ edit: 'synthetic-post' });
     assert.throws(() => h.body(), /RNTextInput count/);
     await read.fail(new Error('Synthetic forbidden')); assert.throws(() => h.body(), /RNTextInput count/);

@@ -159,7 +159,7 @@ const loader = registerHooks({
     if (extname(path) === ".json") return { shortCircuit: true, format: "module", source: `export default ${source};` };
     if (extname(path) === ".mjs" || extname(path) === ".js") return { shortCircuit: true, format: "module", source };
     const result = ts.transpileModule(source, { fileName: path, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX }, reportDiagnostics: true });
-    assert.deepEqual((result.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error), [], `syntax diagnostics: ${path}`);
+    assert.deepEqual((result.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error).map(d => ({ code: d.code, start: d.start, message: ts.flattenDiagnosticMessageText(d.messageText, '\n') })), [], `syntax diagnostics: ${path}`);
     source = result.outputText;
     requestNames(source, state);
     // Metro's static bundled asset require is an RN asset boundary; no code require is accepted.

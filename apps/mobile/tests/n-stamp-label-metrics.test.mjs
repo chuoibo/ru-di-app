@@ -20,7 +20,7 @@ function change(base, fontBase, dp) {
 }
 const unavailable={status:"unavailable",reason:"module-unavailable"};
 function nativeLabel(h, label=phrase) {
-  const matches=h.all("RNText").filter(n=>n.children.length===1&&n.children[0]===label);
+  const matches=h.all("RNText").filter(n=>n.props.importantForAccessibility!=="no-hide-descendants"&&n.children.length===1&&n.children[0]===label);
   assert.equal(matches.length,1,`one actual native label: ${label}`);
   return matches[0];
 }

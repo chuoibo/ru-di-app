@@ -17,7 +17,8 @@ function person(id = 'synthetic-A') { return { person_id: id, token: `synthetic-
 function post(id = 'synthetic-post', revision = 3) { return { id, author_id: 'synthetic-A', body: 'Synthetic server body', audience: 'public', context_id: null, revision, topics: ['Server'], mentions: [], media: [] }; }
 function deferred() { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot, mode = 'candidate', realMedia = false } = {}) {
-  const state = { actor, params, token: null, revoke: null, show: true, tick: 0 };
+  const state = { actor, params, token: null, revoke: null, show: true, tick: 0, nativeFont: { status: "available", fontScale: 1 } };
+  const fontListeners = new Set();
   const cache = new Map(), consumed = new Map(), queue = new Map(), calls = [], routes = [];
   let root, session;
   const invoke = (kind, args, fallback) => { const call = { kind, args }; calls.push(call); const parked = queue.get(kind)?.shift(); if (parked) { parked.call = call; return parked.promise; } return Promise.resolve(typeof fallback === 'function' ? fallback() : fallback); };
@@ -45,19 +46,20 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     relative = relative.replace(/\\/g, '/').replace(/\.(tsx?|js)$/, '');
     if (adapters[relative] && !(realMedia && relative === 'apps/mobile/src/rudi/community/MediaPicker')) return adapters[relative];
     if (cache.has(relative)) return cache.get(relative).exports;
-    const variants = ['.ts', '.tsx'];
+    const variants = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
     const bases = [candidateRoot, repo];
     const file = bases.flatMap(base => variants.map(ext => path.join(base, relative + ext))).find(fs.existsSync);
     assert.ok(file, `No actual source ${relative}`);
     const bytes = fs.readFileSync(file, 'utf8');
     consumed.set(relative, file);
     const result = ts.transpileModule(bytes, { fileName: file, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true }, reportDiagnostics: true });
-    assert.deepEqual((result.diagnostics ?? []).filter(d => d.category === ts.DiagnosticCategory.Error), [], `Syntax ${relative}`);
+    assert.deepEqual((result.diagnostics ?? []).filter(d => d.category === ts.DiagnosticCategory.Error).map(d => ({ code: d.code, start: d.start, message: ts.flattenDiagnosticMessageText(d.messageText, '\n') })), [], `Syntax ${relative}`);
     const module = { exports: {} }; cache.set(relative, module);
     const req = specifier => {
       if (specifier === 'react') return React;
       if (specifier === 'react/jsx-runtime') return dependency(specifier);
       if (specifier === 'react-native') return native;
+      if (specifier === 'expo-modules-core') return { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return { getFontScale: () => state.nativeFont, addListener: (event, fn) => { assert.equal(event, 'onFontScaleChanged'); fontListeners.add(fn); return { remove: () => fontListeners.delete(fn) }; } }; } };
       if (specifier === 'expo-image') return { Image: visual('Image') };
       if (specifier === 'expo-image-picker') return { launchImageLibraryAsync: (...args) => invoke('launchImageLibraryAsync', args, { canceled: true, assets: [] }) };
       if (specifier === 'expo-image-manipulator') return { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: (...args) => invoke('manipulateAsync', args, { uri: 'file:///synthetic-clean.jpg', width: 32, height: 32 }) };
@@ -88,13 +90,15 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     async setParams(value) { await update(() => { state.params = value; }); },
     audienceOpen() { return hosts('RNPressable', p => p.accessibilityRole === 'radio').length > 0; },
     body() { return one('RNTextInput', p => p.testID === 'community-body'); },
-    field(label) { return one('Field', p => p.label === label); },
-    button(label) { return one('RudiButton', p => p.label === label); },
+    field(label) { return one('Field', p => p.label === label || p.accessibilityLabel === label); },
+    button(label) { return one('RudiButton', p => p.label === label || p.accessibilityLabel === label); },
     media() { return one('MediaPicker'); },
+    text() { return hosts('RNText').map(node => node.props.children).filter(value => typeof value === 'string').join(' '); },
     tool(label) { return one('RNPressable', p => p.accessibilityLabel === label); },
     mentions() { return one('MentionPicker'); },
     error() { return one('CauTaiCho', p => p.testID === 'cong-dong-loi-gui').props; },
     send() { return one('RudiButton', p => /^(Gửi lên cộng đồng|Gửi bản sửa|Đăng lên tường|Đang gửi…)$/.test(p.label)); },
+    async nativeFont(snapshot) { await act(async () => { state.nativeFont = snapshot; [...fontListeners].forEach(fn => fn()); }); },
     async changeBody(value) { await act(async () => { h.body().props.onChangeText(value); }); },
     async changeTopics(value) { let nodes = hosts('Field', p => p.label === 'Chủ đề'); if (!nodes.length) { await act(async () => { one('RNPressable', p => p.accessibilityLabel === 'Chủ đề').props.onPress(); }); } await act(async () => { h.field('Chủ đề').props.onChangeText(value); }); },
     async changeMedia(value) { await act(async () => { h.media().props.onChange(value); }); },

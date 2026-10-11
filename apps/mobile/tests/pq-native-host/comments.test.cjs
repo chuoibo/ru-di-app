@@ -20,7 +20,7 @@ const result = ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   reportDiagnostics: true,
 });
-assert.deepEqual((result.diagnostics || []).filter(d => d.category === ts.DiagnosticCategory.Error), [], 'actual copied TSX transpiles');
+assert.deepEqual((result.diagnostics || []).filter(d => d.category === ts.DiagnosticCategory.Error).map(d => ({ code: d.code, start: d.start, message: ts.flattenDiagnosticMessageText(d.messageText, '\n') })), [], 'actual copied TSX transpiles');
 const oldAct = globalThis.IS_REACT_ACT_ENVIRONMENT;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const oldError = console.error;
@@ -47,16 +47,16 @@ async function withCase(run, overrides = {}) {
     './api': community,
     react: React,
     'react/jsx-runtime': appRequire('react/jsx-runtime'),
-    'react-native': { Pressable: 'Pressable', Text: 'Text', View: 'View' },
+    'react-native': { Pressable: 'Pressable', ScrollView: 'ScrollView', Text: 'Text', View: 'View' },
     'expo-image': { Image: 'Image' },
     'expo-router': { useRouter: () => ({ push() {} }) },
     '../theme': { typography: {}, useRudiTheme: () => ({ colors: {} }) },
-    '../ui': { Field: 'Field', RudiButton: 'RudiButton' },
+    '../ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton' },
     '../ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' },
     '../ui/Skeleton': { SkeletonLines: 'SkeletonLines' },
     '../ui/HoiTaiHang': { HoiTaiHang: 'HoiTaiHang' },
     '../ui/CauTaiCho': { CauTaiCho: 'CauTaiCho' },
-    './MediaPicker': { MediaPicker: 'MediaPicker' },
+    './MediaPicker': { MediaPicker: props => React.createElement('MediaPicker', props, props.renderLayout?.(null, null)) },
     './MentionPicker': { MentionPicker: 'MentionPicker' },
     './useCommunityStream': { useCommunityStream: (person, posts, callback) => { streams.push({ person, posts, callback }); } },
   };
@@ -71,7 +71,7 @@ async function withCase(run, overrides = {}) {
     get props() { return props; },
     hosts(type) { return root.root.findAllByType(type); },
     one(type) { const rows = this.hosts(type); assert.equal(rows.length, 1, `one ${type}`); return rows[0]; },
-    button(label) { const rows = this.hosts('RudiButton').filter(node => node.props.label === label); assert.equal(rows.length, 1, `one button ${label}`); return rows[0]; },
+    button(label) { const rows = [...this.hosts('RudiButton'), ...this.hosts('IconButton')].filter(node => node.props.label === label || node.props.accessibilityLabel === label); assert.equal(rows.length, 1, `one button ${label}`); return rows[0]; },
     text() { return this.hosts('Text').map(node => node.children.filter(c => typeof c === 'string').join('')).join('\n'); },
     readError() { return this.hosts('CauTaiCho').find(node => node.props.testID === 'cong-dong-loi-binh-luan').props.cau; },
     draft() { return drafts.at(-1); },
@@ -144,13 +144,15 @@ test('reply failure retains all input; cancel reply rotates logical id before re
   await act(async () => h.one('Pressable').props.onPress());
   const media = [{ id: 'media-a' }], mentions = ['friend-a'], file = { asset: { uri: 'file:///synthetic' } };
   await act(async () => { h.one('MediaPicker').props.onChange(media); h.one('MediaPicker').props.onFileChange(file); h.one('MentionPicker').props.onChange(mentions); });
+  assert.equal(h.button('Gửi bình luận').props.disabled, true, 'pending selection waits for retry or explicit discard');
+  await act(async () => h.one('MediaPicker').props.onFileChange(null));
   const originalKey = h.draft().logical_id;
   await h.press('Gửi bình luận');
   assert.deepEqual(h.writes[0].args, ['actor-a', 'post-a', 'same body', originalKey, 'parent', 'media-a', mentions]);
   await h.reject(h.writes[0]);
   assert.equal(h.one('Field').props.value, 'same body');
   assert.deepEqual(h.draft().media, media); assert.deepEqual(h.draft().mentions, mentions);
-  assert.deepEqual(h.draft().pendingFile, file); assert.equal(h.draft().parent.id, 'parent');
+  assert.equal(h.draft().pendingFile, null); assert.equal(h.draft().parent.id, 'parent');
   assert.equal(h.draft().logical_id, originalKey, 'unchanged failed payload keeps identity');
   await h.press('Hủy trả lời');
   assert.equal(h.one('Field').props.value, 'same body');

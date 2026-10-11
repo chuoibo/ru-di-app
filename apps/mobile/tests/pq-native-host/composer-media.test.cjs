@@ -31,16 +31,15 @@ test('PM01 real Composer picker-first blocks a retained send callback in the sam
   });
 });
 
-test('PM02 actual child attachment controls explain their disabled state throughout send and recover after failure', async () => {
+test('PM02 actual attachment controls explain their disabled state throughout send and recover after failure', async () => {
   await withHost(async h => {
+    await h.press('Bỏ tệp đang chờ'); // Explicitly discard the pending choice before submitting ready media.
     const request = h.deferNext('createPost'); await h.pressSend(); const before = draft(h);
-    for (const label of ['Bỏ tệp', 'Thử lại tệp đã chọn', 'Bỏ tệp đang chờ']) {
-      assert.equal(h.button(label).props.disabled, true, `${label} is visibly locked`);
-      assert.equal(h.button(label).props.lyDo, 'Đợi gửi xong rồi sửa tệp.');
-    }
+    assert.equal(h.button('Bỏ tệp').props.disabled, true);
+    assert.equal(h.button('Bỏ tệp').props.lyDo, 'Đợi gửi xong rồi sửa tệp.');
     assert.equal(h.tool('Thêm ảnh hoặc video').props.disabled, true);
     await request.fail(new Error('Synthetic response lost'));
-    for (const label of ['Bỏ tệp', 'Thử lại tệp đã chọn', 'Bỏ tệp đang chờ']) assert.equal(h.button(label).props.disabled, false);
+    assert.equal(h.button('Bỏ tệp').props.disabled, false);
     assert.deepEqual(draft(h), before); await h.press('Bỏ tệp');
     assert.deepEqual(draft(h).media, []); assert.notEqual(draft(h).logical_id, before.logical_id);
   }, { media: media(), pendingFile: file() });
@@ -49,11 +48,12 @@ test('PM02 actual child attachment controls explain their disabled state through
 test('PM03 retained actual child remove/drop/retry handlers cannot alter a sending Composer', async () => {
   await withHost(async h => {
     const callbacks = ['Bỏ tệp', 'Bỏ tệp đang chờ', 'Thử lại tệp đã chọn'].map(label => h.button(label).props.onPress);
+    await h.press('Bỏ tệp đang chờ');
     const request = h.deferNext('createPost'); await h.pressSend(); const before = draft(h);
     await act(async () => callbacks.forEach(fn => fn()));
     assert.equal(h.callsFor('uploadMedia').length, 0, 'retained retry cannot upload while sending');
     assert.deepEqual(draft(h), before);
-    assert.ok(h.button('Bỏ tệp đang chờ'), 'retained drop cannot erase child pending preview');
+    assert.throws(() => h.button('Bỏ tệp đang chờ'), /count/, 'retired pending choice is not revived');
     await request.fail(new Error('Synthetic response lost'));
   }, { media: media(), pendingFile: file() });
 });
@@ -70,15 +70,15 @@ test('PM04 send-first blocks the retained real picker toolbar callback before di
   });
 });
 
-test('PM05 send-first blocks retained pending retry and drop before child disabled props rerender', async () => {
+test('PM05 send-first blocks retired pending retry and drop before child disabled props rerender', async () => {
   await withHost(async h => {
-    const retry = h.button('Thử lại tệp đã chọn').props.onPress, drop = h.button('Bỏ tệp đang chờ').props.onPress, send = h.send().props.onPress;
-    const before = draft(h), request = h.deferNext('createPost');
+    const retry = h.button('Thử lại tệp đã chọn').props.onPress, drop = h.button('Bỏ tệp đang chờ').props.onPress;
+    await h.press('Bỏ tệp đang chờ');
+    const send = h.send().props.onPress, before = draft(h), request = h.deferNext('createPost');
     await act(async () => { send(); retry(); drop(); });
-    assert.equal(h.callsFor('uploadMedia').length, 0, 'synchronous parent guard blocks pending retry');
+    assert.equal(h.callsFor('uploadMedia').length, 0, 'synchronous parent guard blocks retired retry');
     assert.equal(h.callsFor('manipulateAsync').length, 0, 'no preparation starts after send begins');
-    assert.deepEqual(draft(h).pendingFile, before.pendingFile);
-    assert.ok(h.button('Bỏ tệp đang chờ'), 'drop is refused before the next child render');
+    assert.deepEqual(draft(h), before);
     await request.fail(new Error('Synthetic response lost'));
   }, { pendingFile: file() });
 });
@@ -110,4 +110,33 @@ test('PM07 an actual upload completing after actor retirement cannot change the 
     await transfer.finish(upload());
     assert.equal(h.body().props.value, 'Synthetic actor B body'); assert.deepEqual(v.docNhapBai('synthetic-B', 'new:community'), before); assert.equal(h.send().props.disabled, false); assert.deepEqual(h.routes, []);
   });
+});
+
+
+test('PR01 failed actual picker upload retains selection, blocks direct send and recovers through retry', async () => {
+  await withHost(async h => {
+    await h.changeBody('Synthetic failed upload body');
+    const native = h.deferNext('launchImageLibraryAsync'), transfer = h.deferNext('uploadMedia');
+    await act(async () => h.tool('Thêm ảnh hoặc video').props.onPress());
+    await native.finish({ canceled: false, assets: [file().asset] });
+    const { LoiTep } = h.load('apps/mobile/src/rudi/community/loi-tep');
+    await transfer.fail(new LoiTep('Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.'));
+    assert.match(h.text(), /Không kết nối được Rủ Đi/); assert.doesNotMatch(h.text(), /localhost|java\.|53559/);
+    assert.equal(h.send().props.disabled, true); assert.equal(h.send().props.lyDo, 'Thử lại hoặc bỏ tệp đang chờ.');
+    const text = h.consumed; assert.ok(text.has('apps/mobile/src/rudi/community/MediaPicker'));
+    assert.ok(h.button('Thử lại tệp đã chọn')); assert.equal(h.button('Thử lại tệp đã chọn').props.label, 'Thử lại'); assert.equal(h.button('Bỏ tệp đang chờ').props.label, 'Bỏ chọn');
+    const before = draft(h); await h.pressSend(); assert.equal(h.callsFor('createPost').length, 0, 'direct send cannot omit the selected failed file');
+    await h.unmount(); await h.remount(); assert.deepEqual(draft(h), before); assert.equal(h.send().props.disabled, true);
+    const retry = h.deferNext('uploadMedia'); await h.press('Thử lại tệp đã chọn'); await retry.finish(upload());
+    assert.equal(draft(h).pendingFile, null); assert.equal(h.send().props.disabled, false);
+    const request = h.deferNext('createPost'); await h.pressSend(); assert.deepEqual(request.call.args[1].media_ids, ['synthetic-ready']); await request.fail(new Error('Synthetic response lost'));
+  });
+});
+
+test('PR02 explicit pending discard is the only path to a text-only post after attachment failure', async () => {
+  await withHost(async h => {
+    const before = draft(h); assert.equal(h.send().props.disabled, true); await h.pressSend(); assert.equal(h.callsFor('createPost').length, 0);
+    await h.press('Bỏ tệp đang chờ'); assert.equal(draft(h).pendingFile, null); assert.equal(h.send().props.disabled, false); assert.equal(draft(h).body, before.body);
+    const request = h.deferNext('createPost'); await h.pressSend(); assert.deepEqual(request.call.args[1].media_ids, []); await request.fail(new Error('Synthetic response lost'));
+  }, { pendingFile: file() });
 });

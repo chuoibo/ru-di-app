@@ -18,16 +18,16 @@ const row = { id: 'synthetic-parent', body: 'Synthetic parent', author: 'Synthet
 const page = () => ({ comments: [row], pending: [], next_cursor: null });
 const taggedDraft = (body, extra = {}) => ({ body, parent: null, media: [], mentions: [], pendingFile: null, logical_id: 'synthetic-retired-logical', person_id: 'synthetic-A', post_id: 'synthetic-post-1', ...extra });
 const serverPost = (actor, id) => ({ id, author_id: actor, author: actor, body: 'Synthetic post body', revision: 1, audience: 'public', status: 'published', topics: [], mentions: [], media: [], context_id: null, can_comment: true, saved: false, diary: false });
-async function withCase(run, { reduced = false, strict = false } = {}) {
+async function withCase(run, { reduced = false, strict = false, actualField = false } = {}) {
   const state = { actor: 'synthetic-A', id: 'synthetic-post-1' };
   const cache = new Map(), consumed = new Map(), gets = [], reads = [], writes = [], uploads = [], picks = [], timings = [], back = [], queues = new Map();
   let root, attempt = 0, sharedId = 0, collecting = null;
   const park = (store, args) => { const d = deferred(); store.push({ ...d, args }); return d.promise; };
   const invokeGet = (...args) => { const queued = queues.get('get')?.shift(); gets.push({ args, deferred: queued }); return queued ? queued.promise : Promise.resolve(serverPost(...args)); };
   const colors = new Proxy({}, { get: () => '#123456' });
-  const theme = { colors, radius: { base: 12 }, space: { md: 16 } };
+  const theme = { colors, radius: { base: 12, control: 16 }, space: { md: 16 } };
   const Native = {
-    View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
+    View: 'View', Text: 'Text', TextInput: 'TextInput', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
     Platform: { OS: 'android' }, StyleSheet: { create: x => x, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }),
     BackHandler: { addEventListener: (_name, callback) => { const entry = { callback, live: true }; back.push(entry); return { remove: () => { entry.live = false; } }; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(reduced), addEventListener: () => ({ remove() {} }) },
@@ -59,8 +59,8 @@ async function withCase(run, { reduced = false, strict = false } = {}) {
     'expo-haptics': { ImpactFeedbackStyle: { Medium: 'medium' }, NotificationFeedbackType: { Success: 'success' }, selectionAsync() {}, impactAsync() {}, notificationAsync() {} },
     'apps/mobile/src/api': { ApiError: class ApiError extends Error {}, newAttempt: () => ({ key: `synthetic-attempt-${++attempt}` }), translatedAsActor: () => { throw new Error('Unexpected mutation transport'); } },
     'apps/mobile/src/rudi/session': { useRudiSession: () => ({ phien: state.actor ? { person_id: state.actor } : null }) },
-    'apps/mobile/src/rudi/theme': { typography: {}, lopPhu: { toi: () => '#00000066' }, useRudiTheme: () => theme },
-    'apps/mobile/src/rudi/ui': { Field: 'Field', RudiButton: 'RudiButton', TopBar: 'TopBar', RudiScreen: props => React.createElement('RudiScreen', props, props.overlay, props.header, props.children, props.footer) },
+    'apps/mobile/src/rudi/theme': { typography: { body: { fontSize: 16, lineHeight: 24 } }, lopPhu: { toi: () => '#00000066' }, useRudiTheme: () => theme },
+    'apps/mobile/src/rudi/ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton', TopBar: 'TopBar', RudiScreen: props => React.createElement('RudiScreen', props, props.overlay, props.header, props.children, props.footer) },
     'apps/mobile/src/rudi/nep/NepProvider': { useNepGui: () => null },
     'apps/mobile/src/rudi/ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' }, 'apps/mobile/src/rudi/ui/Skeleton': { SkeletonLines: 'SkeletonLines' },
     'apps/mobile/src/rudi/ui/HoiTaiHang': { HoiTaiHang: 'HoiTaiHang' }, 'apps/mobile/src/rudi/ui/CauTaiCho': { CauTaiCho: 'CauTaiCho' },
@@ -79,32 +79,39 @@ async function withCase(run, { reduced = false, strict = false } = {}) {
     if (adapters[relative]) return adapters[relative];
     if (cache.has(relative)) return cache.get(relative).exports;
     let file = special[relative];
-    if (!file) file = ['.ts', '.tsx', ''].map(ext => path.join(repo, relative + ext)).find(fs.existsSync);
+    if (!file) file = [sourceRoot, repo].flatMap(base => ['.ts', '.tsx', ''].map(ext => path.join(base, relative + ext))).find(fs.existsSync);
     assert.ok(file, `actual source or explicit boundary ${relative}`);
     const bytes = fs.readFileSync(file, 'utf8'); consumed.set(relative, file);
     if (file.endsWith('.json')) { const module = { exports: JSON.parse(bytes) }; cache.set(relative, module); return module.exports; }
     const output = ts.transpileModule(bytes, { fileName: file, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true }, reportDiagnostics: true });
-    assert.deepEqual((output.diagnostics || []).filter(d => d.category === ts.DiagnosticCategory.Error), [], `actual TSX syntax: ${relative}`);
+    assert.deepEqual((output.diagnostics || []).filter(d => d.category === ts.DiagnosticCategory.Error).map(d => ({ code: d.code, start: d.start, message: ts.flattenDiagnosticMessageText(d.messageText, '\n') })), [], `actual TSX syntax: ${relative}`);
     const module = { exports: {} }; cache.set(relative, module);
     const req = specifier => { if (adapters[specifier]) return adapters[specifier]; assert.ok(specifier.startsWith('.'), `explicit external boundary ${specifier}`); return load(path.posix.normalize(path.posix.join(path.posix.dirname(relative), specifier))); };
     vm.runInThisContext(`(function(require,module,exports){${output.outputText}\n})`, { filename: file })(req, module, module.exports);
     return module.exports;
   }
+  if (actualField) adapters['apps/mobile/src/rudi/ui'].Field = load('apps/mobile/src/rudi/ui/Field').Field;
   const PostDetail = load('apps/mobile/src/rudi/community/PostDetail').PostDetail, Comments = load('apps/mobile/src/rudi/community/Comments').Comments, Sheet = load('apps/mobile/src/rudi/ui/Sheet').Sheet;
   const app = () => strict ? React.createElement(React.StrictMode, null, React.createElement(PostDetail)) : React.createElement(PostDetail);
   const h = {
     state, gets, reads, writes, uploads, picks, timings, consumed,
+    get root() { return root; },
+    panel() { return root.root.findAllByType('AnimatedView').find(n => n.props.accessibilityLabel === 'Bình luận'); },
+    nativeKeyboard() { return h.panel().parent; },
+    referenceScroll() { const nodes = h.panel().findAllByType('ScrollView').filter(n => typeof n.props.onContentSizeChange === 'function'); assert.equal(nodes.length, 1); return nodes[0]; },
+    detailsScroll() { return root.root.findAllByType('ScrollView').find(n => n.props.testID === 'community-comment-details'); },
+    async resize(height) { await act(async () => h.nativeKeyboard().props.onLayout({ nativeEvent: { layout: { height } } })); },
     editors() { return root.root.findAllByType(Comments); },
-    fields() { return root.root.findAllByType('Field').filter(n => n.props.label === 'Bình luận'); },
+    fields() { return root.root.findAllByType(actualField ? 'TextInput' : 'Field').filter(n => (n.props.accessibilityLabel ?? n.props.label) === 'Bình luận'); },
     field() { const nodes = h.fields(); assert.equal(nodes.length, 1, 'exactly one comment field'); return nodes[0]; },
     body() { return h.field().props.value; },
     card() { return root.root.findByType('PostCard'); },
     sheets() { return root.root.findAllByType(Sheet).filter(n => n.props.accessibilityLabel === 'Bình luận'); },
     sheet() { const nodes = h.sheets(); assert.equal(nodes.length, 1, 'one real comment Sheet'); return nodes[0]; },
     writer() { const nodes = h.editors(); assert.equal(nodes.length, 1, 'one writer'); return nodes[0].props.onDraftChange; },
-    buttons(label) { return root.root.findAllByType('RudiButton').filter(n => n.props.label === label); },
+    buttons(label) { return [...root.root.findAllByType('RudiButton'), ...root.root.findAllByType('IconButton')].filter(n => n.props.label === label || n.props.accessibilityLabel === label); },
     button(label) { const nodes = h.buttons(label); assert.equal(nodes.length, 1, `one ${label}`); return nodes[0]; },
-    sendButton() { const nodes = root.root.findAllByType('RudiButton').filter(n => /^(Gửi bình luận|Đang gửi…)$/.test(n.props.label)); assert.equal(nodes.length, 1, 'one send'); return nodes[0]; },
+    sendButton() { const nodes = [...root.root.findAllByType('RudiButton'), ...root.root.findAllByType('IconButton')].filter(n => /^(Gửi bình luận|Đang gửi…)$/.test(n.props.accessibilityLabel ?? n.props.label)); assert.equal(nodes.length, 1, 'one send'); return nodes[0]; },
     async bodyTo(value) { await act(async () => h.field().props.onChangeText(value)); },
     async open() { await act(async () => h.card().props.onComment()); },
     async close() { await act(async () => { const node = root.root.findAllByType('AnimatedView').find(n => n.props.accessibilityLabel === 'Bình luận'); assert.ok(node, 'actual sheet panel'); node.props.onAccessibilityEscape(); }); },
@@ -128,7 +135,7 @@ test('single editor owns closing sheet until actual completion; reopen and stale
   await withCase(async h => {
     await h.bodyTo('Synthetic inline draft'); const inlineWriter = h.writer(); await h.actorTo('synthetic-A'); assert.equal(h.writer(), inlineWriter, 'journal callback stays stable on parent rerender'); await h.open(); assert.equal(h.editors().length, 1); assert.equal(h.sheet().props.open, true);
     await h.bodyTo('Synthetic sheet draft'); const writer = h.writer(); await h.close(); const closing = h.closeAnimation();
-    assert.equal(h.editors().length, 1, 'closing keeps exactly one live editor'); assert.equal(h.editors()[0].props.expanded, undefined); assert.equal(h.writer(), writer);
+    assert.equal(h.editors().length, 1, 'closing keeps exactly one live editor'); assert.equal(h.editors()[0].props.expanded, undefined); assert.equal(h.writer() === writer, true);
     await h.open(); assert.equal(h.sheet().props.open, false, 'reopen is ignored while closing'); assert.equal(h.editors().length, 1);
     await h.complete(closing); assert.equal(h.sheets().length, 0); assert.equal(h.editors().length, 1); assert.equal(h.editors()[0].props.expanded, true); assert.equal(h.body(), 'Synthetic sheet draft');
     await act(async () => inlineWriter(taggedDraft('Synthetic retired inline overwrite')));
@@ -138,7 +145,7 @@ test('single editor owns closing sheet until actual completion; reopen and stale
 
 test('ACK while sheet is closing publishes cleared draft before inline handoff', async () => {
   await withCase(async h => {
-    await h.open(); await h.bodyTo('Synthetic accepted draft'); await h.reply(); await h.mentions(['synthetic-B']); await h.pendingFile(); await h.send();
+    await h.open(); await h.bodyTo('Synthetic accepted draft'); await h.reply(); await h.mentions(['synthetic-B']); await h.pendingFile(); await act(async () => h.button('Bỏ tệp đang chờ').props.onPress()); await h.send();
     await h.close(); const closing = h.closeAnimation(); await h.finish(h.writes[0], { id: 'synthetic-accepted' }); assert.equal(h.body(), '');
     await h.complete(closing); assert.equal(h.body(), ''); assert.equal(h.button('Gửi bình luận').props.disabled, true); assert.equal(h.buttons('Thử lại tệp đã chọn').length, 0);
     await h.open(); assert.equal(h.body(), ''); assert.equal(h.buttons('Hủy trả lời').length, 0);
@@ -150,7 +157,7 @@ test('ACK after inline handoff cannot overwrite newer body, reply, mentions or s
     await h.open(); await h.bodyTo('Synthetic old in-flight'); await h.send(); await h.close(); const closing = h.closeAnimation(); const oldWriter = h.writer(); await h.complete(closing);
     await h.bodyTo('Synthetic newer inline'); await h.reply(); await h.mentions(['synthetic-B']); await h.pendingFile();
     await h.finish(h.writes[0], { id: 'synthetic-late-ACK' }); await act(async () => oldWriter(taggedDraft('Synthetic old writer overwrite')));
-    await h.open(); assert.equal(h.body(), 'Synthetic newer inline'); assert.equal(h.button('Hủy trả lời').props.label, 'Hủy trả lời'); assert.deepEqual(h.editors()[0].props.initialDraft.mentions, ['synthetic-B']); assert.equal(h.editors()[0].props.initialDraft.pendingFile.asset.uri, 'file:///synthetic-pending.jpg');
+    await h.open(); assert.equal(h.body(), 'Synthetic newer inline'); assert.equal(h.button('Hủy trả lời').props.accessibilityLabel ?? h.button('Hủy trả lời').props.label, 'Hủy trả lời'); assert.deepEqual(h.editors()[0].props.initialDraft.mentions, ['synthetic-B']); assert.equal(h.editors()[0].props.initialDraft.pendingFile.asset.uri, 'file:///synthetic-pending.jpg');
   });
 });
 
@@ -206,4 +213,68 @@ test('StrictMode lifecycle and route unmount make retained handoff/ACK callbacks
     const readsBefore = h.reads.length; await h.unmount(); await act(async () => { animation.callback(true); open(); writer(taggedDraft('Synthetic after unmount')); h.writes[0].resolve({ id: 'synthetic-after-unmount' }); });
     assert.equal(h.reads.length, readsBefore, 'retired ACK does not read into unmounted context');
   }, { strict: true });
+});
+
+const isInside = (node, ancestor) => { for (let parent = node.parent; parent; parent = parent.parent) if (parent === ancestor) return true; return false; };
+const flatStyle = value => Object.assign({}, ...(Array.isArray(value) ? value.flat(Infinity) : [value]).filter(Boolean));
+
+test('QL01 comment input and send stay outside thread overflow in a keyboard-avoiding measured Sheet', async () => {
+  await withCase(async h => {
+    await h.open();
+    assert.equal(h.nativeKeyboard().type, 'KeyboardAvoidingView');
+    assert.equal(h.nativeKeyboard().props.enabled, true, 'comment sheet opts into native keyboard avoidance');
+    assert.equal(h.nativeKeyboard().props.behavior, 'height');
+    assert.equal(isInside(h.field(), h.referenceScroll()), false, 'active input belongs to the fixed footer');
+    assert.equal(isInside(h.sendButton(), h.referenceScroll()), false, 'send does not scroll away with the thread');
+    assert.equal(h.field().props.multiline, true); assert.equal(h.field().props.accessibilityLabel, 'Bình luận');
+    assert.equal(flatStyle(h.field().props.style).minHeight, 24, 'one line is enough to begin a comment');
+    assert.equal(flatStyle(h.field().props.style).maxHeight, 72, 'long text scrolls within the editor');
+    const text = h.panel().findAllByType('Text').map(n => n.props.children).filter(v => typeof v === 'string');
+    assert.equal(text.filter(v => v === 'Bình luận').length, 1, 'one visible section title, accessible field label is not repeated');
+    assert.equal(text.includes('Thêm một lời'), false); assert.equal(h.buttons('Mở rộng').length, 0);
+    await h.resize(310);
+    const measures = h.panel().findAllByType('View').filter(n => n.props.onLayout);
+    assert.equal(measures.length, 2, 'head and fixed footer have independent native measurements');
+    await act(async () => {
+      measures[0].props.onLayout({ nativeEvent: { layout: { height: 48 } } });
+      measures[1].props.onLayout({ nativeEvent: { layout: { height: 200 } } });
+      h.referenceScroll().props.onContentSizeChange(320, 400);
+    });
+    assert.equal(flatStyle(h.panel().props.style).maxHeight, 286, 'available height after IME minus top safe area');
+    assert.equal(flatStyle(h.panel().props.style).height, 286, 'reference gives up height before the footer');
+    assert.equal(isInside(h.field(), h.referenceScroll()), false);
+  }, { actualField: true });
+});
+
+test('QL02 attachment recovery and tags may scroll while native input and send remain fixed through handoff', async () => {
+  await withCase(async h => {
+    await h.open(); await h.bodyTo('Synthetic layout recovery'); await h.pendingFile();
+    const details = h.detailsScroll(); assert.ok(details, 'attachment details have a separate bounded viewport');
+    assert.equal(flatStyle(details.props.style).maxHeight, 96);
+    assert.equal(details.props.keyboardShouldPersistTaps, 'handled'); assert.equal(details.props.showsVerticalScrollIndicator, true);
+    assert.equal(isInside(h.button('Thử lại tệp đã chọn'), details), true);
+    assert.equal(isInside(h.button('Bỏ tệp đang chờ'), details), true);
+    assert.equal(isInside(h.field(), details), false); assert.equal(isInside(h.sendButton(), details), false);
+    assert.equal(isInside(h.sendButton(), h.referenceScroll()), false, 'thread cannot absorb send when attachments are present');
+    await act(async () => h.button('Gắn bạn bè').props.onPress()); await h.mentions(['synthetic-B']);
+    const mention = h.root.root.findByType('MentionPicker'); assert.equal(isInside(mention, h.detailsScroll()), true); assert.equal(mention.props.expanded, true);
+    const input = h.field(), writer = h.writer(); await h.resize(310); await h.resize(844);
+    assert.equal(h.field() === input, true, 'native IME layout does not replace EditText'); assert.equal(h.writer() === writer, true);
+    await h.close(); await h.complete(h.closeAnimation()); await h.open();
+    assert.equal(h.body(), 'Synthetic layout recovery'); assert.deepEqual(h.editors()[0].props.initialDraft.mentions, ['synthetic-B']);
+    assert.equal(h.editors()[0].props.initialDraft.pendingFile.asset.uri, 'file:///synthetic-pending.jpg');
+  }, { actualField: true });
+});
+
+test('QL03 typing, tool expansion, IME resize and failed retry keep the same native input and exact submission', async () => {
+  await withCase(async h => {
+    await h.open(); const input = h.field(), writer = h.writer();
+    await h.bodyTo('Synthetic stable native input'); assert.equal(h.field() === input, true, 'typing must preserve native focus and selection owner');
+    await act(async () => h.root.root.findByType('MentionPicker').props.onExpandedChange?.(true)); assert.equal(h.field() === input, true);
+    await h.resize(310); assert.equal(h.field() === input, true); assert.equal(h.writer() === writer, true);
+    await h.send(); const original = h.writes[0].args; await h.fail(h.writes[0], new Error('Synthetic response lost'));
+    assert.equal(h.field() === input, true); assert.equal(h.body(), original[2]); assert.equal(h.sendButton().props.disabled, false);
+    await h.send(); assert.deepEqual(h.writes[1].args, original, 'retry keeps logical ID, body and audience metadata');
+    await h.fail(h.writes[1], new Error('Synthetic retry offline'));
+  }, { actualField: true });
 });

@@ -52,9 +52,10 @@ test('same media IDs preserve retry while updated metadata and selected file sur
   const next = media('synthetic-media', '/synthetic-after'); next[0].width = 64;
   const file = { asset: { uri: 'file:///synthetic-next', width: 64, height: 32 }, uploaded: { id: 'synthetic-media', type: 'image/jpeg' } };
   await h.changeMedia(next); await h.changeFile(file);
-  assert.deepEqual(await retry(h), first);
+  assert.equal(h.send().props.disabled, true, 'a selected pending file must be resolved explicitly');
   await h.unmount(); await h.remount();
   assert.deepEqual(h.media().props.media, next); assert.deepEqual(h.media().props.initialFile, file);
+  await h.changeFile(null); // Explicit discard leaves the exact outgoing fields unchanged.
   assert.deepEqual(await retry(h), first);
 }));
 
