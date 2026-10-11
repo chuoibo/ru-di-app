@@ -13,11 +13,10 @@ import { DiaryWall } from "../diary/Wall";
  * and a plain list of doors. Money pages answer «bạn đã chi bao nhiêu» first,
  * separate sums from ledger lines, and draw no chart for decoration.
  */
-import { DongTien } from "../ui/DongTien";
-import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
+import { HoaDonGiay } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
 import { useNativeFontScale } from "../chia-bill/useBillFontScale";
@@ -270,6 +269,19 @@ function FinancePage() {
   return <CuaDangNhap tiep="/finance" />;
 }
 
+function DongSoTaiChinh({ label, phu, vnd, tone }: { label: string; phu?: string; vnd: number; tone: "split" | "warn" | "ink" }) {
+  const { colors } = useRudiTheme();
+  return (
+    <View style={[styles.dongSoTaiChinh, { borderBottomColor: colors.line }]}>
+      <View>
+        <Text style={[typography.label, { color: colors.ink }]}>{label}</Text>
+        {phu ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{phu}</Text> : null}
+      </View>
+      <Money numberOfLines={0} size="label" style={styles.tienTaiChinhDayDu} tone={tone} vnd={vnd} />
+    </View>
+  );
+}
+
 /**
  * `GET /people/{id}/finance`, printed.
  *
@@ -326,19 +338,9 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
       <TopBar title="Tài chính của tôi" />
       {/* Separate ledger figures, with no total inferred on the client. */}
       <HoaDonGiay rangTren testID="trang-so-tai-chinh">
-        {([
-          { nhan: "Phần chi của bạn", vnd: du.spend_vnd, tone: "split" },
-          { nhan: "Còn phải trả", phu: `Đã trả ${formatVnd(du.settled_vnd)}đ`, vnd: du.outstanding_vnd, tone: du.outstanding_vnd > 0 ? "warn" : "ink" },
-          { nhan: "Sẽ nhận", phu: "Bạn đã ứng trước", vnd: du.receivable_vnd, tone: "split" },
-        ] as const).map((dong) => (
-          <View key={dong.nhan} style={[styles.dongSoTaiChinh, { borderBottomColor: colors.line }]}>
-            <View>
-              <Text style={[typography.label, { color: colors.ink }]}>{dong.nhan}</Text>
-              {"phu" in dong ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{dong.phu}</Text> : null}
-            </View>
-            <Money numberOfLines={0} size="label" style={styles.tienTaiChinhDayDu} tone={dong.tone} vnd={dong.vnd} />
-          </View>
-        ))}
+        <DongSoTaiChinh label="Phần chi của bạn" vnd={du.spend_vnd} tone="split" />
+        <DongSoTaiChinh label="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}đ`} vnd={du.outstanding_vnd} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} />
+        <DongSoTaiChinh label="Sẽ nhận" phu="Bạn đã ứng trước" vnd={du.receivable_vnd} tone="split" />
         <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`}</Text>
       </HoaDonGiay>
       {/* Every figure is said once, on the page above; under it only where

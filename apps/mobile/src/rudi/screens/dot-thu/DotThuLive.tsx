@@ -235,9 +235,11 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
       {/* Progress describes published obligations; an unissued round leads
           with its board, not a zero-progress hero. */}
       <View style={styles.dau}>
-        <Text style={[typography.label, { color: colors.ink }]}>
-          {daPhatRoi ? `${tom.daVe}/${tom.tong} lượt chuyển đã về` : `${tom.tong} lượt chuyển trong đợt`}
-        </Text>
+        {daPhatRoi ? (
+          <Text style={[typography.label, { color: colors.ink }]}>{tom.daVe}/{tom.tong} lượt chuyển đã về</Text>
+        ) : (
+          <Text style={[typography.label, { color: colors.ink }]}>{tom.tong} lượt chuyển trong đợt</Text>
+        )}
         {daPhatRoi ? <DaiTienDo da={tom.daVe} tong={tom.tong} testID="dai-tien-do" /> : null}
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {tom.nguoiGui !== tom.tong ? `${tom.nguoiXong} trên ${tom.nguoiGui} người đã xong phần mình. ` : ""}
