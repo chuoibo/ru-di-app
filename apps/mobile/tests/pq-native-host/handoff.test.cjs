@@ -253,9 +253,24 @@ test('QL01 comment input and send stay outside thread overflow in a keyboard-avo
   }, { actualField: true });
 });
 
+function panelVisible(node, visible) {
+  const style = flatten(node.props.style);
+  assert.equal(style.display, undefined, 'native persistent panel never enters Yoga display:none');
+  assert.equal(node.props.pointerEvents, visible ? 'auto' : 'none', 'hidden descendants cannot receive native touches');
+  assert.equal(node.props.accessibilityElementsHidden, !visible);
+  assert.equal(node.props.importantForAccessibility, visible ? 'auto' : 'no-hide-descendants');
+  for (const [key, hidden] of Object.entries({ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 })) {
+    assert.equal(style[key], visible ? undefined : hidden, 'hidden native panel has no in-flow gap, visible footprint or paint: ' + key);
+  }
+}
 test('QL02 attachment recovery and tags may scroll while native input and send remain fixed through handoff', async () => {
   await withCase(async h => {
     await h.open(); await h.bodyTo('Synthetic layout recovery'); await h.pendingFile();
+    const hiddenMentions = h.root.root.findAllByType('View').find(node => node.props.testID === 'community-comment-mentions');
+    assert.ok(hiddenMentions); panelVisible(hiddenMentions, false);
+    const mentionOwner = h.root.root.findByType('MentionPicker');
+    const mediaOwners = h.root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'MediaPicker'); assert.equal(mediaOwners.length, 1);
+    const mediaOwner = mediaOwners[0];
     const details = h.detailsScroll(); assert.ok(details, 'attachment details have a separate bounded viewport');
     assert.equal(flatStyle(details.props.style).maxHeight, 72);
     assert.equal(details.props.keyboardShouldPersistTaps, 'handled'); assert.equal(details.props.showsVerticalScrollIndicator, true);
@@ -265,7 +280,10 @@ test('QL02 attachment recovery and tags may scroll while native input and send r
     assert.equal(isInside(h.sendButton(), h.referenceScroll()), false, 'thread cannot absorb send when attachments are present');
     await h.openTools(); await act(async () => h.button('Gắn bạn bè').props.onPress()); await h.mentions(['synthetic-B']);
     const mention = h.root.root.findByType('MentionPicker'); const mentionList = h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-comment-mentions-list'); assert.ok(mentionList); assert.equal(isInside(mention, h.detailsScroll()), false); assert.equal(isInside(mention, mentionList), true); assert.equal(mention.props.expanded, true);
+    panelVisible(hiddenMentions, true); panelVisible(h.detailsScroll(), false);
+    assert.equal(h.root.root.findByType('MentionPicker') === mentionOwner, true); assert.equal(h.root.root.findByType(mediaOwner.type) === mediaOwner, true);
     const input = h.field(), writer = h.writer(); await h.resize(310); await h.resize(844);
+    panelVisible(hiddenMentions, true); panelVisible(h.detailsScroll(), false);
     assert.equal(h.field() === input, true, 'native IME layout does not replace EditText'); assert.equal(h.writer() === writer, true);
     await h.close(); await h.complete(h.closeAnimation()); await h.open();
     assert.equal(h.body(), 'Synthetic layout recovery'); assert.deepEqual(h.editors()[0].props.initialDraft.mentions, ['synthetic-B']);

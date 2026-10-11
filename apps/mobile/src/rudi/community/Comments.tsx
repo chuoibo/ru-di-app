@@ -3,7 +3,7 @@ import { HoiTaiHang } from "../ui/HoiTaiHang";
 import { COMMUNITY_ERRORS } from "./api";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Keyboard, Pressable, ScrollView, View } from "react-native";
+import { Keyboard, Platform, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { typography, useRudiTheme } from "../theme";
 import { Field, IconButton, RudiButton } from "../ui";
@@ -18,6 +18,18 @@ import { useCommunityStream } from "./useCommunityStream";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../ui/NativeFontMetrics";
+// Hidden native panels stay mounted without Yoga's display:none cache path.
+// Web retains display:none so hidden descendants stay out of keyboard navigation.
+const hiddenCommentPanelStyle = Platform.OS === "web" ? { display: "none" as const } : {
+    position: "absolute" as const, width: 0, height: 0, overflow: "hidden" as const, opacity: 0,
+};
+function commentPanelAccess(visible: boolean) {
+    return {
+        pointerEvents: visible ? "auto" as const : "none" as const,
+        accessibilityElementsHidden: !visible,
+        importantForAccessibility: visible ? "auto" as const : "no-hide-descendants" as const,
+    };
+}
 export type CommentDraft = { body: string; parent: Comment | null; media: Media[]; mentions: string[]; logical_id: string; pendingFile: SelectedFile | null; person_id: string; post_id: string };
 type CommentsProps = {
     expanded?: boolean;
@@ -224,14 +236,16 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
       video={false}
       onBusy={(v) => { if (mounted.current) { uploadingNow.current = v; setUploading(v); } }}
       renderToolbar={(pick, preparing) => <RudiButton compact label="Ảnh" accessibilityLabel="Thêm ảnh" variant="ghost" disabled={preparing} lyDo={preparing ? "Chờ tệp chuẩn bị xong." : undefined} style={{ flex: largeText ? undefined : 1, minWidth: 0, paddingHorizontal: 8 }} onPress={() => { if (!mounted.current || snapshot.current.pendingFile !== null) return; setToolsOpen(false); setTagOpen(false); pick(); }}/>}
-      renderLayout={(_details, attachmentTool, parts) => !post.can_comment ? <Text style={[typography.body, { color: colors.inkSoft }]}>Tác giả đã giới hạn bình luận cho bài này.</Text> : <View testID="community-comment-editor" style={{ gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.line }}>
-        <ScrollView testID="community-comment-details" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ maxHeight: 72, flexGrow: 0, display: !tagOpen && (parts.preview || parts.notice || parent || loiGui) ? "flex" : "none" }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+      renderLayout={(_details, attachmentTool, parts) => {
+        const showDetails = !tagOpen && Boolean(parts.preview || parts.notice || parent || loiGui);
+        return !post.can_comment ? <Text style={[typography.body, { color: colors.inkSoft }]}>Tác giả đã giới hạn bình luận cho bài này.</Text> : <View testID="community-comment-editor" style={{ gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.line }}>
+        <ScrollView testID="community-comment-details" {...commentPanelAccess(showDetails)} bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={[{ maxHeight: 72, flexGrow: 0 }, !showDetails && hiddenCommentPanelStyle]} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
           {parent ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Text style={[typography.note, { color: colors.inkSoft, flex: 1 }]}>Trả lời {parent.author}</Text><IconButton quiet icon="close" accessibilityLabel="Hủy trả lời" onPress={() => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ parent: null }); setParent(null); setLoiGui(null); }}/></View> : null}
           {parts.preview}
           {parts.notice}
           <CauTaiCho cau={loiGui} />
         </ScrollView>
-        <View testID="community-comment-mentions" style={{ gap: 4, display: tagOpen ? "flex" : "none" }}>
+        <View testID="community-comment-mentions" {...commentPanelAccess(tagOpen)} style={[{ gap: 4 }, !tagOpen && hiddenCommentPanelStyle]}>
           <View testID="community-comment-mentions-header" style={{ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={[typography.label, { color: colors.ink, flex: 1 }]}>Gắn bạn</Text>
             <IconButton quiet icon="close" accessibilityLabel="Đóng danh sách bạn" onPress={() => { if (mounted.current) setTagOpen(false); }}/>
@@ -256,7 +270,8 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
           {!parts.pending ? attachmentTool : null}
           <RudiButton compact label={mentions.length ? `Gắn ${mentions.length} bạn` : "Gắn bạn"} accessibilityLabel={mentions.length ? `Gắn bạn bè, đã chọn ${mentions.length} người` : "Gắn bạn bè"} variant="ghost" style={{ flex: largeText ? undefined : 1, minWidth: 0, paddingHorizontal: 8 }} onPress={() => { if (!mounted.current || sending.current) return; Keyboard.dismiss(); setToolsOpen(false); setTagOpen(true); }}/>
         </View> : null}
-      </View>}
+      </View>;
+      }}
     />;
     return presentation ? presentation(thread, editor) : <View style={{ gap: 16 }}>{thread}{editor}</View>;
 }

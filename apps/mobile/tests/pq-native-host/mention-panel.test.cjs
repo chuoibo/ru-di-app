@@ -44,6 +44,16 @@ function actual(h) {
     assert.equal(h.consumedHashes.get(relative), crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'), 'exact consumed source bytes: ' + name);
   }
 }
+function panelVisible(node, visible) {
+  const style = flatten(node.props.style);
+  assert.equal(style.display, undefined, 'native persistent panel never enters Yoga display:none');
+  assert.equal(node.props.pointerEvents, visible ? 'auto' : 'none', 'hidden descendants cannot receive native touches');
+  assert.equal(node.props.accessibilityElementsHidden, !visible);
+  assert.equal(node.props.importantForAccessibility, visible ? 'auto' : 'no-hide-descendants');
+  for (const [key, hidden] of Object.entries({ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 })) {
+    assert.equal(style[key], visible ? undefined : hidden, 'hidden native panel has no in-flow gap, visible footprint or paint: ' + key);
+  }
+}
 function noWrite(h) { assert.equal(h.writes.length, 0); assert.equal(h.deletes.length, 0); }
 
 test('QM01 explicit friend action dismisses once while a pinned close and independent list preserve the Unicode draft owner', async () => {
@@ -51,22 +61,22 @@ test('QM01 explicit friend action dismisses once while a pinned close and indepe
     const body = 'A\n\nC · Ánh 😀'; await h.change(body);
     const previous = identities(h), draft = plain(h.drafts.at(-1)), publications = h.drafts.length;
     const panel = view(h, 'community-comment-mentions'), list = scroll(h, 'community-comment-mentions-list');
-    assert.equal(flatten(panel.props.style).display, 'none'); assert.equal(h.friendReads.length, 0); assert.equal(dismisses(h), 0);
+    panelVisible(panel, false); assert.equal(h.friendReads.length, 0); assert.equal(dismisses(h), 0);
     await toggle(h); assert.equal(dismisses(h), 0, 'plus alone does not dismiss the keyboard'); assert.equal(h.friendReads.length, 0);
     await click(h, 'Gắn bạn bè'); assert.equal(dismisses(h), 1, 'one explicit friend action invokes one native boundary call');
     assert.equal(h.friendReads.length, 1); assert.equal(boxes(h).length, 2);
-    assert.equal(flatten(panel.props.style).display, 'flex'); assert.equal(flatten(list.props.style).maxHeight, 216);
+    panelVisible(panel, true); assert.equal(flatten(list.props.style).maxHeight, 216);
     assert.equal(flatten(list.props.style).flexGrow, 0); assert.equal(list.props.keyboardShouldPersistTaps, 'handled');
     const header = view(h, 'community-comment-mentions-header'), close = button(h, 'Đóng danh sách bạn'), details = scroll(h, 'community-comment-details');
     assert.equal(flatten(header.props.style).minHeight, 48); assert.equal(flatten(close.props.style).width, 48); assert.equal(flatten(close.props.style).height, 48);
     assert.equal(inside(close, header), true); assert.equal(inside(close, list), false); assert.equal(inside(close, details), false);
     assert.equal(inside(previous.mentions, list), true); assert.equal(inside(h.input(), list), false); assert.equal(inside(send(h), list), false);
-    assert.equal(flatten(details.props.style).display, 'none'); assert.equal(h.text(props => props.testID === 'community-comment-send-reason').length, 0);
+    panelVisible(details, false); assert.equal(h.text(props => props.testID === 'community-comment-send-reason').length, 0);
     same(h, previous, body); assert.deepEqual(plain(h.drafts.at(-1)), draft); assert.equal(h.drafts.length, publications);
-    await h.pressAccessibility('Đóng danh sách bạn'); assert.equal(flatten(panel.props.style).display, 'none'); same(h, previous, body);
+    await h.pressAccessibility('Đóng danh sách bạn'); panelVisible(panel, false); same(h, previous, body);
     assert.equal(dismisses(h), 1, 'closing the list does not dismiss again');
     await toggle(h); assert.equal(dismisses(h), 1); await click(h, 'Gắn bạn bè'); assert.equal(dismisses(h), 2); assert.equal(h.friendReads.length, 2);
-    await h.focus(); assert.equal(flatten(panel.props.style).display, 'none', 'actual Field focus callback returns to writing');
+    await h.focus(); panelVisible(panel, false);
     same(h, previous, body); assert.deepEqual(plain(h.drafts.at(-1)), draft); assert.equal(h.drafts.length, publications);
     assert.equal(h.input().props.autoFocus, undefined); assert.equal(h.picks.length + h.uploads.length, 0); noWrite(h);
     assert.equal(h.observation().subscriptions, 1); actual(h);
@@ -80,8 +90,8 @@ test('QM02 pending media keeps selected friends and independent recovery while t
     await h.finish(h.picks[0], { canceled: false, assets: [asset] }); await h.fail(h.uploads[0], new Error('Synthetic upload refusal'));
     await h.nativeFont(snapshot(2)); await open(h);
     const panel = view(h, 'community-comment-mentions'), list = scroll(h, 'community-comment-mentions-list'), details = scroll(h, 'community-comment-details');
-    assert.equal(flatten(panel.props.style).display, 'flex'); assert.equal(flatten(list.props.style).maxHeight, 160, 'pending recovery reserves a smaller bounded friend viewport');
-    assert.equal(flatten(details.props.style).display, 'none'); assert.equal(h.text(props => props.testID === 'community-comment-send-reason').length, 0);
+    panelVisible(panel, true); assert.equal(flatten(list.props.style).maxHeight, 160, 'pending recovery reserves a smaller bounded friend viewport');
+    panelVisible(details, false); assert.equal(h.text(props => props.testID === 'community-comment-send-reason').length, 0);
     assert.equal(boxes(h).length, 1); await act(async () => boxes(h)[0].props.onPress());
     assert.deepEqual(plain(h.drafts.at(-1).mentions), ['synthetic-selected']); assert.equal(boxes(h)[0].props['aria-checked'], true);
     const retry = button(h, 'Thử lại tệp đã chọn'), drop = button(h, 'Bỏ tệp đang chờ');
@@ -91,15 +101,15 @@ test('QM02 pending media keeps selected friends and independent recovery while t
     await act(async () => retainedImage()); assert.equal(h.picks.length, 1, 'retained image action rechecks the current pending file');
     assert.deepEqual(plain(h.drafts.at(-1)), pendingDraft); same(h, previous, body);
     await click(h, 'Thử lại tệp đã chọn'); assert.equal(h.picks.length, 1); assert.equal(h.uploads.length, 2);
-    assert.equal(flatten(list.props.style).maxHeight, 160); assert.equal(flatten(panel.props.style).display, 'flex');
+    assert.equal(flatten(list.props.style).maxHeight, 160); panelVisible(panel, true);
     await h.finish(h.uploads[1], { id: 'synthetic-mention-ready', type: 'image/jpeg', url: '/synthetic-mention-ready', state: 'ready' });
-    assert.equal(flatten(panel.props.style).display, 'flex', 'actual upload completion does not close the friend list');
+    panelVisible(panel, true);
     assert.equal(flatten(list.props.style).maxHeight, 216, 'completed upload releases the recovery viewport budget without reopening');
     assert.equal(h.drafts.at(-1).pendingFile, null); assert.equal(h.drafts.at(-1).media[0].id, 'synthetic-mention-ready');
     assert.deepEqual(plain(h.drafts.at(-1).mentions), ['synthetic-selected']); assert.equal(boxes(h)[0].props['aria-checked'], true);
     assert.equal(send(h).props.disabled, false); assert.equal(h.hosts('RNView', props => props.testID === 'community-comment-recovery').length, 0);
     same(h, previous, body); await h.pressAccessibility('Đóng danh sách bạn');
-    assert.equal(flatten(details.props.style).display, 'flex');
+    panelVisible(details, true);
     const preview = h.one('RNExpoImage', props => props.accessibilityLabel === 'Ảnh đã đính kèm');
     assert.equal(flatten(preview.props.style).width, 64); assert.equal(flatten(preview.props.style).height, 64);
     same(h, previous, body); noWrite(h); actual(h);
@@ -112,7 +122,7 @@ test('QM03 actual friends reads recover from failure and empty results while ret
     const body = 'Synthetic friends Ánh\n\nC'; await h.change(body); const previous = identities(h), draft = plain(h.drafts.at(-1));
     await open(h); assert.equal(first.started, true); assert.equal(h.friendReads.length, 1);
     const panel = view(h, 'community-comment-mentions'), list = scroll(h, 'community-comment-mentions-list');
-    assert.equal(inside(previous.mentions, list), true); assert.equal(flatten(panel.props.style).display, 'flex'); assert.equal(boxes(h).length, 0);
+    assert.equal(inside(previous.mentions, list), true); panelVisible(panel, true); assert.equal(boxes(h).length, 0);
     await h.nativeFont(snapshot(2)); same(h, previous, body);
     const permission = h.one('RNText', props => text(props.children) === 'Tag gửi lời nhắc, không mở quyền xem bài.');
     assert.equal(permission.props.allowFontScaling, false); assert.equal(flatten(permission.props.style).fontSize, 21.5);

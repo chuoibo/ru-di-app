@@ -46,6 +46,16 @@ function actual(h, names) {
     assert.equal(h.consumedHashes.get(relative), crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'), 'exact consumed bytes: ' + name);
   }
 }
+function panelVisible(node, visible) {
+  const style = flatten(node.props.style);
+  assert.equal(style.display, undefined, 'native persistent panel never enters Yoga display:none');
+  assert.equal(node.props.pointerEvents, visible ? 'auto' : 'none', 'hidden descendants cannot receive native touches');
+  assert.equal(node.props.accessibilityElementsHidden, !visible);
+  assert.equal(node.props.importantForAccessibility, visible ? 'auto' : 'no-hide-descendants');
+  for (const [key, hidden] of Object.entries({ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 })) {
+    assert.equal(style[key], visible ? undefined : hidden, 'hidden native panel has no in-flow gap, visible footprint or paint: ' + key);
+  }
+}
 function mirror(h) { return h.one('RNText', props => props.testID === 'community-comment-input-measurement'); }
 function nativeLines(count, pitch) { return Array.from({ length: count }, (_, i) => ({ x: 0, y: i * pitch, width: 90 + i, height: pitch })); }
 async function nativeWidth(h, width) { await act(async () => h.input().props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width, height: 24 } } })); }
@@ -74,12 +84,15 @@ test('QC01 one quiet disclosure entry row removes idle duplication and retains n
     assert.equal(320 - 2 * 16 - flatten(plus.props.style).width - flatten(submit.props.style).width - 2 * entryStyle.gap - 30, 146, 'source budget, not a Yoga measurement');
     assert.equal(h.hosts('RNView', props => props.testID === 'community-comment-tools').length, 0, 'no idle secondary bar');
     assert.equal(h.text(props => props.testID === 'community-comment-send-reason').length, 0);
-    assert.equal(flatten(scroll(h, 'community-comment-details').props.style).display, 'none');
+    panelVisible(scroll(h, 'community-comment-details'), false); panelVisible(view(h, 'community-comment-mentions'), false);
     assert.equal(submit.props.disabled, true); assert.equal(h.input().props.placeholder, 'Viết…'); assert.equal(h.input().props.accessibilityLabel, 'Bình luận');
     await h.change('Synthetic Ánh 😀 draft'); await h.focus();
     const input = h.input(), owner = h.owner('CommentsForContext'), picker = h.owner('MediaPicker'), saved = plain(h.drafts.at(-1)), calls = h.calls.length;
+    const details = scroll(h, 'community-comment-details'), mentionsPanel = view(h, 'community-comment-mentions'), mentionsOwner = h.owner('MentionPicker');
     for (const scale of [1, 2, 1]) {
-      await h.nativeFont(snapshot(scale)); await toggle(h);
+      await h.nativeFont(snapshot(scale)); panelVisible(details, false); panelVisible(mentionsPanel, false);
+      assert.equal(scroll(h, 'community-comment-details') === details, true); assert.equal(view(h, 'community-comment-mentions') === mentionsPanel, true); assert.equal(h.owner('MentionPicker') === mentionsOwner, true);
+      await toggle(h);
       assert.equal(disclosure(h).props.accessibilityState.expanded, true);
       assert.equal(flatten(view(h, 'community-comment-tools').props.style).flexDirection, scale === 2 ? 'column' : 'row');
       assert.equal(button(h, 'Thêm ảnh').props.disabled, false); assert.ok(button(h, 'Gắn bạn bè'));
