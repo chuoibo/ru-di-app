@@ -10,7 +10,7 @@ Rule lâu dài ở [AGENTS.md](../../../AGENTS.md#cổng-chất-lượng-thị-g
 là checkpoint lịch sử `811c893f`, không mô tả trạng thái quyền hoặc Android hiện tại.
 Không đổi nhãn ảnh/capture lịch sử thành source mới.
 
-## Nguồn và giới hạn
+## Nguồn và giới hạn lịch sử 08/10
 
 Hai emulator riêng `5558`/`5560`, 320×640 portrait, native Rust/JNI thật; tài khoản và
 ảnh hoàn toàn tổng hợp. Primary5558 đã cài APK build cây sạch `2f20a301`, SHA256
@@ -1037,3 +1037,9 @@ Root chạy năm controls serial trên graph **1.085 source / 29 harness / 20 te
 Năm actual khớp prediction trước chạy; canary lỗi ancestry thật và mất draft input, hai mutant đỏ tại retained input sau clear / extra inference2 thay1 khi retry save. Đã đối chiếu read-only launch/result, hashes stdout/stderr, TAP counts/first assertions, source/harness/variants. Không skip/cancel/todo/timeout/stop/OOM/kill; heap768MiB/scope2048MiB/timeout180s/concurrency1. Elapsed candidate/identity/canary/phase/retry **29,534/30,032/30,031/30,031/30,033s**, tổng **149,661s**; scope sampled max **183,65625MiB**, host min **24,510326GiB**. [Canonical actual summary](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-q-nep-refinement-frozen-20261012-r1/actual-controls-summary-20261012-r1.json) SHA `e33693aaa4d4b4eee5bda273a99e3c5246db47009f58f4412560b22e319c69d1`; [manifest source/harness](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-q-nep-refinement-frozen-20261012-r1/manifest.json) SHA `22e643f6b98f234eb2440cec32e86618ced87d401c15c14a9582d4f5954c7fe6`.
 
 Giới hạn cũ: sau lỗi request, xoá request vẫn để Retry enabled nhưng goiNep chặn rỗng; chưa sửa affordance này. Ảnh d069 là before của delta; host không chứng minh caret/focus/IME, toàn lỗi+Retry trong viewport, pixel fit hoặc thẩm mỹ. Root đã áp hai paths và báo toàn1.085 live source khớp frozen; còn clean exact SHA mới và Android after100/200/hot100/request-error/save-error/clear-refill. Không nhận native/provider/save proof mới từ controls, không đóng A–S hoặc cổng main.
+
+## Q / B7 — giữ gate đỏ và sửa predicate UI-138 (12/10)
+
+Clean exact600318 dừng ở Node **1.837/1.838**, một B7 đỏ vì regex còn yêu cầu Retry là prop hanhDong bên trong CauTaiCho; năm checks trước đạt, Go guide/core-build/repo-tree chưa chạy. Node107,584s, stop_reason null/scope OOM0 ghi nhận. [Receipt RED](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-600318ef/clean-red-provenance-20261012-r1.json) giữ nguyên stdout/hash, không gọi clean9 xanh hoặc mở Android trên SHA này.
+
+B7 dùng AST theo binding editorContent: đúng một câu lỗi lấy loiNep, được Sheet Gọi Nếp render trong document và không chuyển vào footer CTA. Retry đã có actual-host QV02/03/05/07 kiểm độc lập, nên không buộc nó trở lại cột hẹp. Hai negative source fixtures đổi câu lỗi sang error và tách document khỏi Sheet đều bị predicate bắt đúng chỗ. Không đổi production, Q156 frozen controls giữ nguyên phạm vi. Focused B7 **7/7**,0skip/cancel/todo,0,509s; receipt scope-events của lượt ngắn không có, không suy no-OOM từ peak lấy mẫu0. [Focused log](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/memory-bounded-checks/q-b7-nep-document-live-r1-20261012/stdout.log). Cần checkpoint/clean exact SHA mới rồi native after; toàn FE/thẩm mỹ vẫn chưa duyệt.

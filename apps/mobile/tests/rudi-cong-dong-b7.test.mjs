@@ -36,6 +36,45 @@ function sendErrorExpression(source) {
   return found[0];
 }
 
+/** Follow the refusal's document binding instead of its former inline action. */
+function assertNepErrorDocument(source) {
+  const sf = ts.createSourceFile("PostDetail.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  function nodes(root, predicate) {
+    const found = [];
+    function visit(node) {
+      if (predicate(node)) found.push(node);
+      ts.forEachChild(node, visit);
+    }
+    visit(root);
+    return found;
+  }
+  function variable(name) {
+    const found = nodes(sf, (node) => ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name);
+    assert.equal(found.length, 1, `một binding ${name}`);
+    assert.ok(found[0].initializer);
+    return found[0].initializer;
+  }
+  function attribute(element, name) {
+    return element.attributes.properties.find((attr) => ts.isJsxAttribute(attr) && attr.name.getText(sf) === name)?.initializer;
+  }
+  function literalAttribute(element, name, value) {
+    const attr = attribute(element, name);
+    return attr && ts.isStringLiteral(attr) && attr.text === value;
+  }
+  const editor = variable("editorContent");
+  const errors = nodes(editor, (node) => ts.isJsxSelfClosingElement(node) && node.tagName.getText(sf) === "CauTaiCho" && literalAttribute(node, "testID", "cong-dong-loi-nep"));
+  assert.equal(errors.length, 1, "một lỗi Nếp trong tài liệu editor");
+  assert.ok(errors[0].attributes.properties.every(ts.isJsxAttribute), "lỗi Nếp không bị spread ghi đè");
+  const copy = attribute(errors[0], "cau");
+  assert.ok(copy && ts.isJsxExpression(copy) && copy.expression && ts.isIdentifier(copy.expression) && copy.expression.text === "loiNep", "lỗi Nếp lấy loiNep tại chỗ (UI-138)");
+  const sheets = nodes(sf, (node) => ts.isJsxElement(node) && node.openingElement.tagName.getText(sf) === "Sheet" && literalAttribute(node.openingElement, "accessibilityLabel", "Gọi Nếp"));
+  assert.equal(sheets.length, 1, "một sheet Nếp");
+  const documentReferences = sheets[0].children.flatMap((child) => nodes(child, (node) => ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && node.expression.text === "editorContent"));
+  assert.equal(documentReferences.length, 1, "sheet Nếp render đúng tài liệu có câu lỗi");
+  const footerReferences = nodes(variable("editorFooter"), (node) => ts.isIdentifier(node) && node.text === "editorContent");
+  assert.equal(footerReferences.length, 0, "tài liệu lỗi không chuyển vào CTA cố định");
+}
+
 test("chủ đề: kiểm như máy chủ (posts.go normalizeTopics), nói điều cần sửa", () => {
   assert.equal(TOI_DA_CHU_DE, 5);
   assert.deepEqual(tachChuDe(" cà phê, ,Đà Lạt ,"), ["cà phê", "Đà Lạt"]);
@@ -116,7 +155,10 @@ test("bảng tin: quay lại giữ danh sách, ẩn có hoàn tác, xoá lịch 
 test("chi tiết bài, bình luận, ô soạn: lỗi tại chỗ, nối lại không mất chữ", () => {
   const ct = doc("PostDetail.tsx");
   assert.doesNotMatch(ct, /setPost\(null\);\s*setDraft\(""\)/, "nối lại không xoá bài và bản nháp (UI-134)");
-  assert.match(ct, /<CauTaiCho cau=\{loiNep\} hanhDong=\{\{ label: "Thử lại"/, "lỗi Nếp nằm trong sheet Nếp (UI-138)");
+  assertNepErrorDocument(ct);
+  // A different error value or a detached document must still fail UI-138.
+  assert.throws(() => assertNepErrorDocument(ct.replace("cau={loiNep}", "cau={error}")), /lỗi Nếp lấy loiNep/);
+  assert.throws(() => assertNepErrorDocument(ct.replace("        {editorContent}\n", "        {null}\n")), /sheet Nếp render đúng tài liệu/);
   const bl = doc("Comments.tsx");
   assert.match(bl, /<CauTaiCho cau=\{error\} hanhDong=\{\{ label: "Thử lại", onPress: \(\) => void load\(\) \}\}/, "UI-148");
   assert.doesNotMatch(bl, /setItems\(\[\]\);\s*void load\(\)/);
