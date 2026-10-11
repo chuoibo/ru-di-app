@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
   dongDau: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52, paddingVertical: 4 },
   sua: { gap: 12, paddingBottom: 12 },
   soTien: { fontVariant: ["tabular-nums"] },
-  themDong: { flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 6, minHeight: 48, borderWidth: 1, borderStyle: "dashed", borderRadius: 6 },
+  themDong: { flexDirection: "row", alignItems: "center", alignContent: "center", justifyContent: "center", flexWrap: "wrap", gap: 6, minHeight: 48, paddingVertical: 10, paddingHorizontal: 12, borderWidth: 1, borderStyle: "dashed", borderRadius: 6 },
   bam: { opacity: 0.75 },
   nguoiDung: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   nguoiLui: { opacity: 0.45 },

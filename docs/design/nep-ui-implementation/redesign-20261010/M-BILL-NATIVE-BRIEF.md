@@ -97,3 +97,31 @@ adaptive đạt77/77, guard observer mới đạt27/27, không fail/skip. Đây 
 trong feature tree, chưa thay clean exact-SHA check. APK mới, observer available,
 hot/Settings return, giữ input/assignment/payer/occasion, IME/focus, paint và
 fresh finish review vẫn pending. Chưa nghiệm thu M hoặc toàn bộ frontend.
+
+
+## Vòng native 2528 — yêu cầu sửa sau ảnh thật
+
+Review độc lập ở `2528a901` yêu cầu **fix**: chữ 130% cắt tiến độ, câu nguồn
+và nhãn thêm món; 200% cắt cả tiêu đề, tên món, số tiền và CTA. Tám ảnh gốc
+của vòng 100→130→200→100 đã được mở; quay về 100% phục hồi bố cục. Đổi cỡ
+chữ tối đa bằng thanh Font size trong Android Settings rồi quay lại cùng PID
+cũng tái hiện lỗi. Vòng này dừng trước Next, không tạo bill hay ghi sổ mới.
+Đối chiếu mới: 24 GET và projection SQL chỉ đọc giữ nguyên lịch sử trước đó.
+Các ô tối, rộng, focus/IME và downstream của nguồn này chưa nhận credit.
+
+Chẩn đoán hữu hạn: giữ chữ 200%, đổi chiều rộng 320→321 làm chữ nhìn thấy được
+vẽ đầy đủ và xuống dòng tự nhiên trong cùng PID, không mở lại route. Kết quả
+này hỗ trợ thử đồng bộ lại layout, chưa xác định nguyên nhân cache/callback.
+
+Bản sửa kế tiếp yêu cầu Android đo lại content root hiện có sau thay đổi font
+hợp lệ: gộp công việc trên main Handler, lấy Activity hiện hành khi chạy, bỏ
+Activity đã hủy và hủy Runnable khi module đóng. Chỉ yêu cầu layout trên
+content, con và cháu trực tiếp để phủ root trực tiếp và một lớp bọc Expo hiện
+hành; không thay cache, không reflection, không remount hoặc đổi mặc định chữ.
+Getter vẫn chỉ đọc. Phạm vi nguồn là Fabric/Expo hiện tại, chưa xác nhận legacy
+hoặc lớp bọc sâu hơn. Nhãn thêm món được căn giữa và có padding cân đối.
+
+Đây còn là ứng viên: phải compile APK, kiểm 100→130→200→100 và Settings return
+mà không đổi chiều rộng cứu layout, mở đủ ảnh gốc, kiểm tổng sau scroll cùng
+raw input/focus/IME, rồi hoàn tất các ô còn thiếu và review lại. Detector nguồn
+không chứng minh painted text; chưa đạt ≥8/10 và chưa có ship toàn M/toàn app.
