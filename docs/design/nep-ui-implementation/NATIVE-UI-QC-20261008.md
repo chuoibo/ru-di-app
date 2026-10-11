@@ -754,3 +754,38 @@ mutant stale 108 pass/1 fail AG03; mutant ceiling 106 pass/3 fail AG01/02/07.
 Cả năm khớp dự đoán, không skip/cancel/todo/OOM/timeout. Code tích hợp khớp
 hash composite r3. Typecheck tại worktree tích hợp exit 0; staged guard đã đạt
 12 file. Clean gate tại SHA commit và native after vẫn chưa được nhận đạt.
+
+
+### Q scroll — host SP-r2, native restoration còn mở (11/10)
+
+PostDetail giữ journal theo live context/writer/phase inline; sheet/closing và
+callback cũ không ghi đè. Inline trở lại chờ extent đủ cao và ACK gần target;
+geometry được cung cấp trong event ưu tiên cache. BeginDrag hữu hạn/không âm
+mới hủy pending để người dùng thoát read chậm/lỗi hoặc content ngắn; không có
+timeout giả restore, không thêm key hoặc đổi owner/editor.
+
+[Frozen SP-r2 REPORT](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-postdetail-scroll-frozen-20261011-r2/REPORT.md) dựa exact AG-r3 + delta ba file (một production,
+một helper GET queue và SP4); giữ byte 11 test cũ/109 ca. Manifest SHA256
+`f31afed891f40151d68f0a72b67ab1c769800a0522bbe8de9647d235d6d41dcd`; cùng harness SHA256 `6343717760e947ea5bae6a384c50ec074c888276d5daaf5cc18c8e92a5ee73d4`.
+Root chạy serial đủ sáu lượt, mỗi lượt 113 ca:
+
+| Lượt | Pass/fail | Ca đỏ |
+| --- | --- | --- |
+| candidate / identity | 113/0 mỗi lượt | — |
+| canary bỏ ownership | 111/2 | SP01, SP04 |
+| mutant bỏ writer guard | 112/1 | SP01 |
+| mutant bỏ pending guard | 111/2 | SP02, SP03 |
+| mutant ưu tiên cache cũ | 112/1 | SP02 |
+
+Cả sáu prediction_matches=true, 0 skip/cancel/todo/OOM/timeout. Đỉnh scope
+lấy mẫu **173,828 MiB**, host available thấp nhất **24,862 GiB**.
+[Summary bind từng result/launch/bounded receipt](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/postdetail-scroll-prep-20261011-r1/SP-r2-completed-results-summary.json), SHA256
+`bedfcbe1af4abda2ec5f4aa3f880bb49a00cb49021a1ebf1a3fd84b17d8f2b2e`, giữ đầy đủ sáu hash và log; không cộng các lượt thành số ca độc lập.
+
+Đây là host callback/ref boundary, không Yoga/EditText pixel hoặc native scroll
+proof. SP02 kiểm dedup, chưa chứng minh retry khi native mất lệnh cùng geometry;
+SP04 teardown chỉ chặn outward calls. Ảnh29b cho thấy vị trí đổi từ lúc mở sheet,
+nhưng không có offset trace để chốt nguyên nhân. Clean exact SHA của phần ghép
+và ảnh Android after vẫn pending: scroll sâu→sheet→close/ACK ở100/200, read chậm/
+lỗi, user drag, IME/insets/a11y và bố cục so mockup. Không đóng Q restoration,
+P recovery, N, toàn A–S hoặc landing main bằng host xanh.

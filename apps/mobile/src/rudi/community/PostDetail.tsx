@@ -41,6 +41,39 @@ function PostDetailContent() {
     const comments = useCommentHandoff(person, id);
     const commentContext = JSON.stringify([person ?? null, id ?? null]);
     const bodyScroll = useMemo(() => ({ y: 0 }), [commentContext]);
+    const bodyRef = useRef<ScrollView>(null);
+    // A remounted inline thread can be shorter while its comments are loading.
+    // Keep its target until native scrolling confirms it, or the person drags.
+    const bodyLease = useMemo(() => ({
+        pending: comments.writer > 0 && bodyScroll.y > 0 ? bodyScroll.y : null as number | null,
+        viewport: 0,
+        content: 0,
+        requested: null as string | null,
+    }), [bodyScroll, comments.writer]);
+    const fitsBodyTarget = (content: number, viewport: number, target: number) =>
+        Number.isFinite(content) && Number.isFinite(viewport) && viewport > 0 && content - viewport >= target - 1;
+    const restoreBodyScroll = () => {
+        if (!comments.ownsBodyScroll() || bodyLease.pending === null || !bodyRef.current) return;
+        if (!fitsBodyTarget(bodyLease.content, bodyLease.viewport, bodyLease.pending)) return;
+        const geometry = `${bodyLease.pending}:${bodyLease.viewport}:${bodyLease.content}`;
+        if (bodyLease.requested === geometry) return;
+        bodyLease.requested = geometry;
+        bodyRef.current.scrollTo({ x: 0, y: Math.min(bodyLease.pending, Math.max(0, bodyLease.content - bodyLease.viewport)), animated: false });
+    };
+    const recordBodyScroll = (y: number, nativeContent?: number, nativeViewport?: number) => {
+        if (!comments.ownsBodyScroll() || !Number.isFinite(y) || y < 0) return;
+        // A target-looking event is not an ACK until this inline body can fit it.
+        if (bodyLease.pending !== null) {
+            // Explicit event geometry supersedes cached layout from before a reflow.
+            const hasNativeGeometry = nativeContent !== undefined || nativeViewport !== undefined;
+            const fits = hasNativeGeometry
+                ? nativeContent !== undefined && nativeViewport !== undefined && fitsBodyTarget(nativeContent, nativeViewport, bodyLease.pending)
+                : fitsBodyTarget(bodyLease.content, bodyLease.viewport, bodyLease.pending);
+            if (!fits || Math.abs(y - bodyLease.pending) > 1) return;
+        }
+        bodyLease.pending = null;
+        bodyScroll.y = y;
+    };
     const activePostContext = useRef(commentContext);
     activePostContext.current = commentContext;
     const [postContext, setPostContext] = useState<string | null>(null);
@@ -172,7 +205,11 @@ function PostDetailContent() {
       </View> : null}
     </Sheet>
   </>}>
-    <ScrollView testID="community-post-body" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentOffset={{ x: 0, y: bodyScroll.y }} onScroll={(event) => { const y = event.nativeEvent.contentOffset.y; if (Number.isFinite(y) && y >= 0) bodyScroll.y = y; }} scrollEventThrottle={16} contentContainerStyle={[{ gap: 18, paddingTop: tablet ? 22 : 8, paddingBottom: 32 }, tablet && { alignSelf: "center", width: "100%", maxWidth: COT_DOC }]}>
+    <ScrollView ref={bodyRef} testID="community-post-body" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentOffset={{ x: 0, y: bodyScroll.y }}
+      onLayout={(event) => { if (!comments.ownsBodyScroll()) return; bodyLease.viewport = event.nativeEvent.layout.height; restoreBodyScroll(); }}
+      onContentSizeChange={(_width, height) => { if (!comments.ownsBodyScroll()) return; bodyLease.content = height; restoreBodyScroll(); }}
+      onScrollBeginDrag={(event) => { const y = event.nativeEvent.contentOffset.y; if (!comments.ownsBodyScroll() || !Number.isFinite(y) || y < 0) return; bodyLease.pending = null; recordBodyScroll(y); }}
+      onScroll={(event) => recordBodyScroll(event.nativeEvent.contentOffset.y, event.nativeEvent.contentSize?.height, event.nativeEvent.layoutMeasurement?.height)} scrollEventThrottle={16} contentContainerStyle={[{ gap: 18, paddingTop: tablet ? 22 : 8, paddingBottom: 32 }, tablet && { alignSelf: "center", width: "100%", maxWidth: COT_DOC }]}>
     <View style={{ paddingHorizontal: 20 }}><TopBar title="Một câu chuyện"/><CauTaiCho cau={error} hanhDong={permanent ? undefined : { label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bai" />{permanent ? <RudiButton label="Về cộng đồng" variant="outline" onPress={() => router.replace("/(tabs)/community" as never)}/> : null}</View>
     {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={comments.open} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{thread}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
     </ScrollView>
@@ -218,5 +255,7 @@ function useCommentHandoff(person: string | undefined, post: string | undefined)
         owner.writer++; owner.phase = "inline";
         setSurface({ owner, phase: owner.phase, writer: owner.writer });
     }, [owner, writer, current]);
-    return { phase: view.phase, writer, draft: owner.draft, onDraftChange, open, close, closed };
+    // The inline scroll journal belongs to the same live writer as its editor.
+    const ownsBodyScroll = useCallback(() => current() && owner.writer === writer && owner.phase === "inline", [owner, writer, current]);
+    return { phase: view.phase, writer, draft: owner.draft, onDraftChange, open, close, closed, ownsBodyScroll };
 }

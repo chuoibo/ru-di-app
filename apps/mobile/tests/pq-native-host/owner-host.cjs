@@ -39,6 +39,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
+  const commentsReadQueue = [];
   const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], nativeHostCalls = [];
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
@@ -115,7 +116,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
       if (route === '/v2/community/preferences' && method === 'GET') return { asked: true, personalized: false };
       if (route === '/v2/community/notifications') return { notifications: [] };
       if (route === '/v2/community/follows' && method === 'GET') return { follows: [] };
-      if (route.includes('/comments') && method === 'GET') { call.kind = 'readComments'; reads.push(call); return { comments: [commentRow()], pending: [], next_cursor: null }; }
+      if (route.includes('/comments') && method === 'GET') {
+        call.kind = 'readComments'; reads.push(call);
+        const queued = commentsReadQueue.shift();
+        if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
+        return { comments: [commentRow()], pending: [], next_cursor: null };
+      }
       if (route.endsWith('/comments') && method === 'POST') { call.kind = 'comment'; return parked(writes, call); }
       if (/^\/v2\/community\/posts\/[^/]+$/.test(route) && method === 'GET') {
         call.kind = 'getPost'; gets.push(call);
@@ -233,6 +239,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     async closeComments() { await act(async () => h.commentSheet().props.onClose()); },
     closeAnimation() { const panel = h.panel(); const ids = [panel.props.style].flat(Infinity).flatMap(style => style?.syntheticSharedIds ?? []); const event = timings.filter(item => ids.includes(item.shared) && item.target === 0).at(-1); assert.ok(event?.callback, 'actual Sheet native completion'); return event; },
     async completeClose(event = h.closeAnimation(), finished = true) { await act(async () => event.callback(finished)); },
+    deferCommentsRead() { const queued = { ...deferred(), started: false }; commentsReadQueue.push(queued); return queued; },
     async resolvePost(value = state.post, index = gets.findIndex(call => typeof call.resolve === 'function')) { assert.ok(gets[index]?.resolve, 'deferred actual getPost transport'); await act(async () => gets[index].resolve(value)); },
     async rejectPost(error, index = gets.findIndex(call => typeof call.reject === 'function')) { assert.ok(gets[index]?.reject); await act(async () => gets[index].reject(error)); },
     async send() { const button = one('RNPressable', props => /^(Gửi bình luận|Đang gửi…)$/.test(props.accessibilityLabel)); assert.equal(Boolean(button.props.disabled), false, 'send is enabled'); await act(async () => button.props.onPress()); },
