@@ -35,7 +35,12 @@ function convertibleChildren(children: ReactNode, metrics: NativeFontMetrics, pa
 }
 
 export type Text = RNText;
-export const Text = forwardRef<RNText, TextProps>(function NativeMetricText(props, ref) {
+export interface NativeMetricTextProps extends TextProps {
+  /** Replace only a nonselectable native text leaf when its converted metrics change. */
+  invalidateOnMetricsChange?: boolean;
+}
+export const Text = forwardRef<RNText, NativeMetricTextProps>(function NativeMetricText(props, ref) {
+  const { invalidateOnMetricsChange, ...nativeProps } = props;
   const metrics = useContext(MetricsContext);
   const parent = useContext(ParagraphContext);
   const resolved = metrics !== undefined && parent?.mode !== "native"
@@ -44,9 +49,15 @@ export const Text = forwardRef<RNText, TextProps>(function NativeMetricText(prop
   const manual = resolved !== null && metrics !== undefined && convertibleChildren(props.children, metrics, resolved.original);
   const paragraph: Paragraph = manual ? { mode: "manual", original: resolved.original } : NATIVE;
   const overrides = manual ? { style: [props.style, resolved.style], allowFontScaling: false } : {};
+  // Android can retain a stale glyph run after a hot metrics change. Keep this
+  // opt-in limited to a standalone nonselectable leaf; never replace paragraphs.
+  const metricKey = invalidateOnMetricsChange && parent === undefined && !props.selectable && manual &&
+    (typeof props.children === "string" || typeof props.children === "number")
+    ? JSON.stringify([resolved.style.fontSize, resolved.style.lineHeight, resolved.style.letterSpacing])
+    : undefined;
   return (
     <ParagraphContext.Provider value={paragraph}>
-      <RNText {...props} {...overrides} ref={ref} />
+      <RNText {...nativeProps} {...overrides} key={metricKey} ref={ref} />
     </ParagraphContext.Provider>
   );
 });

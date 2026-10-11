@@ -107,7 +107,7 @@ export function StampButton({ label, onPress, disabled, loading, wrapLabel = fal
         )}
         <View style={styles.row}>
           {busy ? <ActivityIndicator color={muc} /> : null}
-          <Text style={[styles.label, wrapLabel && styles.wrapLabel, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
+          <Text invalidateOnMetricsChange style={[styles.label, wrapLabel && styles.wrapLabel, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
         </View>
       </View>
     </PressScale>

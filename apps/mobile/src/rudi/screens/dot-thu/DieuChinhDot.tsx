@@ -419,7 +419,7 @@ function SoanDeXuat({
         multiline
         numberOfLines={2}
         onChangeText={(t) => setSoan({ ...soan, lyDo: t })}
-        placeholder="Ví dụ: Chi không ăn món lẩu, Bình gọi thêm"
+        placeholder="Ví dụ: chia lại món lẩu"
         value={soan.lyDo}
       />
       <StampButton disabled={ban || lyDo !== undefined} label="Gửi đề xuất" loading={ban} lyDo={lyDo} onPress={() => onGui(soan)} size="vua" tone="split" />

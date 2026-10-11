@@ -268,7 +268,7 @@ test("N10 actual finance font observer updates stable metrics without resetting 
     assert.equal(h.rn.StyleSheet.flatten(money.props.style).fontSize, 14.25);
     await h.font(nativeSnapshot(2));
     assert.equal(reads, 1, "font event cannot restart financial read");
-    assert.equal(h.all("RNText").find(n => n.props.accessibilityLabel === "91.037đ"), money, "font event preserves the mounted Money host");
+    assert.equal(h.all("RNText").find(n => n.props.accessibilityLabel === "91.037đ") === money, true, "font event preserves the mounted Money host");
     assert.equal(h.rn.StyleSheet.flatten(money.props.style).fontSize, 28.25, "the native event reaches the real wrapper while the ledger host stays mounted");
     assert.ok(h.texts().includes("91.037đ"));
     assert.equal(h.nativeFontObservers, 1, "font event cannot duplicate subscriptions");
@@ -299,7 +299,7 @@ test("N11 actual board font observer preserves open amendment draft and its type
     await h.font(nativeSnapshot(2));
     const current = h.all("RNTextInput").find(n => n.props.accessibilityLabel === "Lý do sửa");
     assert.ok(current, "font event cannot discard the open draft");
-    assert.equal(current, reason, "hot configuration preserves actual ruled-input host");
+    assert.equal(current === reason, true, "hot configuration preserves actual ruled-input host");
     assert.equal(current.props.value, "Nháp qua đổi cỡ chữ");
     assert.equal(h.byId("soan-dieu-chinh").length, 1);
     assert.deepEqual({ statusReads, boardReads }, before, "font event cannot restart board/amendment reads");
