@@ -24,6 +24,9 @@ const KHONG_HINH = {
   "src/rudi/screens/cai-dat/DaChanScreen.tsx": ['"Bạn chưa chặn ai"'],
   "src/rudi/screens/cai-dat/PhienScreen.tsx": ['"Chưa có phiên nào"'],
   "src/rudi/community/CommunityScreen.tsx": ['"Chưa ẩn bài nào"'],
+  // Private notes: compact reading copy and its next step leave room for the
+  // person's writing; a full scene would outweigh this inline list state.
+  "src/rudi/community/Keeps.tsx": ['"Chưa có ghi chép nào"'],
   // Money: «Nếp đứng xa tiền», and a ledger screen takes no story.
   "src/rudi/screens/Bill.tsx": ['"Chưa có sổ nào để quyết toán"'],
   // The comments under a wall post: a line under the post it answers, where a
