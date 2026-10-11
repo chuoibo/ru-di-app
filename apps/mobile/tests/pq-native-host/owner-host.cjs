@@ -34,12 +34,13 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [] } = {}) {
-  assert.ok(['comments', 'detail', 'feed', 'boundary'].includes(surface));
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false } = {}) {
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer'].includes(surface));
   const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
   const commentsReadQueue = [], friendsReadQueue = [];
+  const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
   const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [];
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
@@ -54,7 +55,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     StyleSheet: { create: value => value, flatten, hairlineWidth: 0.5, absoluteFill: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } },
     useWindowDimensions: () => state.window,
     PixelRatio: { get: () => state.window.scale, getFontScale: () => state.window.fontScale, roundToNearestPixel: value => Math.round(value * state.window.scale) / state.window.scale },
-    Keyboard: { dismiss() { nativeHostCalls.push({ kind: 'keyboard.dismiss' }); }, addListener: () => ({ remove() {} }) },
+    Keyboard: { dismiss() { nativeHostCalls.push({ kind: 'keyboard.dismiss' }); }, addListener(name, callback) {
+      if (!nativeGeometry) return { remove() {} };
+      assert.ok(['keyboardDidShow', 'keyboardDidHide'].includes(name), `Supported keyboard boundary ${name}`);
+      const entries = keyboardListeners.get(name) ?? new Set(); keyboardListeners.set(name, entries); entries.add(callback);
+      return { remove() { entries.delete(callback); } };
+    } },
     BackHandler: { addEventListener: () => ({ remove() {} }) },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(true), addEventListener: () => ({ remove() {} }), setAccessibilityFocus() {}, announceForAccessibility() {} },
     AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) },
@@ -167,7 +173,8 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const globals = {
     console, process: { env: {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
     setTimeout: callback => { const id = ++timerId; timers.set(id, callback); return id; }, clearTimeout: id => timers.delete(id),
-    requestAnimationFrame: callback => { const id = ++timerId; timers.set(id, callback); return id; }, cancelAnimationFrame: id => timers.delete(id),
+    requestAnimationFrame: callback => { const id = ++timerId; (nativeGeometry ? frames : timers).set(id, callback); if (nativeGeometry) frameCalls.push({ kind: 'request', id }); return id; },
+    cancelAnimationFrame: id => { timers.delete(id); frames.delete(id); if (nativeGeometry) frameCalls.push({ kind: 'cancel', id }); },
     fetch: async (uri, options) => {
       if (String(uri).startsWith('file:///')) return { blob: async () => ({ size: 8, type: 'image/jpeg', slice() { return { size: 8, type: 'image/jpeg', close() {} }; }, close() {} }) };
       if (uri === api.BASE_URL + '/v2/community/media') { const response = await parked(uploads, { uri, options }); return { ok: true, json: async () => response }; }
@@ -201,7 +208,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const metrics = load('apps/mobile/src/rudi/ui/NativeFontMetrics');
   const comments = load('apps/mobile/src/rudi/community/Comments');
   const Field = load('apps/mobile/src/rudi/ui/Field').Field;
-  const Component = surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const Component = surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
   const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
   const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
   function BoundaryProbe() {
@@ -221,12 +228,30 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   }
   function hosts(kind, match = () => true) { assert.ok(root, 'mounted host'); return root.root.findAll(node => node.type === kind && match(node.props)); }
   function one(kind, match) { const values = hosts(kind, match); assert.equal(values.length, 1, `One ${kind} host`); return values[0]; }
+  function measure(kind, target, callback, ancestor, onFail) {
+    assert.equal(nativeGeometry, true, `Explicit native geometry boundary for ${kind}`);
+    assert.equal(typeof callback, 'function');
+    const entry = { kind, target, ancestor, callback, onFail, pending: true };
+    measurements.push(entry);
+  }
+  function nativeNode(element) {
+    const node = { id: ++nodeId, kind: element.type,
+      focus() { focused = this; }, blur() { if (focused === this) focused = null; }, isFocused() { return focused === this; },
+      scrollTo(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollTo', target: this.id, options } : { kind: 'scrollTo', options }); },
+      scrollToOffset(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollToOffset', target: this.id, options } : { kind: 'scrollToOffset', options }); },
+      getNativeScrollRef() { return this; },
+      measure(callback) { measure('measure', this, callback); },
+      measureLayout(ancestor, callback, onFail) { assert.ok(ancestor && Number.isInteger(ancestor.id), 'actual native ancestor handle'); measure('measureLayout', this, callback, ancestor, onFail); },
+      measureInWindow(callback) { if (nativeGeometry) measure('measureInWindow', this, callback); else callback(0, 0, 390, 400); },
+    };
+    return node;
+  }
   const h = {
     state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     get root() { return root; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,
-    input() { return one('RNTextInput', props => props.testID === (surface === 'boundary' ? 'owner-probe-input' : 'community-comment-input')); },
+    input() { return one('RNTextInput', props => props.testID === (surface === 'boundary' ? 'owner-probe-input' : surface === 'composer' ? 'community-body' : 'community-comment-input')); },
     text(match = () => true) { return hosts('RNText', props => typeof match === 'string' ? props.children === match : match(props)); },
     textContent() { return hosts('RNText').map(node => node.props.children).filter(value => typeof value === 'string').join('\n'); },
     owner(name) { const values = root.root.findAll(node => typeof node.type === 'function' && node.type.name === name); assert.equal(values.length, 1, `One ${name} owner`); return values[0]; },
@@ -236,7 +261,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     commentSheet() { const values = root.root.findAllByType(Sheet).filter(node => node.props.accessibilityLabel === 'Bình luận'); assert.equal(values.length, 1, 'one actual comment Sheet'); return values[0]; },
     panel() { return one('RNAnimatedView', props => props.accessibilityLabel === 'Bình luận'); },
     callsFor(kind) { return calls.filter(call => call.kind === kind); },
-    async mount() { await act(async () => { root = Renderer.create(React.createElement(App), { createNodeMock: element => ({ id: ++nodeId, kind: element.type, focus() { focused = this; }, blur() { if (focused === this) focused = null; }, scrollTo(options) { nativeHostCalls.push({ kind: 'scrollTo', options }); }, scrollToOffset(options) { nativeHostCalls.push({ kind: 'scrollToOffset', options }); }, getNativeScrollRef() { return this; }, measureInWindow(callback) { callback(0, 0, 390, 400); } }) }); }); },
+    async mount() { await act(async () => { root = Renderer.create(React.createElement(App), { createNodeMock: nativeNode }); }); },
     async update(callback = () => {}) { await act(async () => { callback(state); root.update(React.createElement(App, { tick: ++state.tick })); }); },
     async nativeFont(value) { await act(async () => { state.nativeFont = value; [...listeners].forEach(callback => callback()); if (state.explicitProvider) root.update(React.createElement(App, { tick: ++state.tick })); }); },
     async invokeRetired(index = retiredCallbacks.length - 1) { assert.ok(retiredCallbacks[index]); await act(async () => retiredCallbacks[index]()); },
@@ -268,7 +293,20 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     async finish(call, value) { assert.ok(call?.resolve); await act(async () => call.resolve(value)); },
     async fail(call, error) { assert.ok(call?.reject); await act(async () => call.reject(error)); },
     async actorTo(id) { await act(async () => { state.actor = person(id); session.datPhien(state.actor); root.update(React.createElement(App, { tick: ++state.tick })); }); },
-    async dispose() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } timers.clear(); },
+    native: {
+      node(host) { assert.equal(nativeGeometry, true); const ref = host.props.ref; if (ref && typeof ref === 'object' && ref.current) return ref.current; if (!hostNodes.has(host)) hostNodes.set(host, host.instance); const node = hostNodes.get(host); assert.ok(node && Number.isInteger(node.id), 'actual native renderer handle'); return node; },
+      replace(host) { const ref = host.props.ref, previous = this.node(host); ref.current = nativeNode({ type: host.type }); return { previous, current: ref.current, restore() { ref.current = previous; } }; },
+      pendingFrames() { return frames.size; }, frameCalls,
+      async frame() { assert.equal(nativeGeometry, true); const entry = frames.entries().next().value; assert.ok(entry, 'one scheduled native frame'); frames.delete(entry[0]); frameCalls.push({ kind: 'fire', id: entry[0] }); await act(async () => entry[1]()); },
+      async emitKeyboard(name) { assert.equal(nativeGeometry, true); assert.ok(['keyboardDidShow', 'keyboardDidHide'].includes(name)); const entries = keyboardListeners.get(name); assert.ok(entries?.size, `actual listener for ${name}`); await act(async () => [...entries].forEach(callback => callback({ endCoordinates: { height: 259 } }))); },
+      async focus(host) { const node = this.node(host); await act(async () => { node.focus(); host.props.onFocus?.({ nativeEvent: { synthetic: true } }); }); },
+      async blur(host) { const node = this.node(host); await act(async () => { node.blur(); host.props.onBlur?.({ nativeEvent: { synthetic: true } }); }); },
+      pending(kind, target) { return measurements.filter(entry => entry.pending && (!kind || entry.kind === kind) && (!target || entry.target === target)); },
+      take(kind, target) { const entries = this.pending(kind, target); assert.equal(entries.length, 1, `One pending ${kind} native measure for target ${target?.id}`); return entries[0]; },
+      async resolve(entry, values) { assert.equal(entry.pending, true); const count = entry.kind === 'measure' ? 6 : 4; assert.equal(values.length, count, 'native callback arity'); entry.pending = false; await act(async () => entry.callback(...values)); },
+      async fail(entry) { assert.equal(entry.pending, true); assert.equal(typeof entry.onFail, 'function', 'native failure callback exists'); entry.pending = false; await act(async () => entry.onFail()); },
+    },
+    async dispose() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } timers.clear(); frames.clear(); },
   };
   return h;
 }

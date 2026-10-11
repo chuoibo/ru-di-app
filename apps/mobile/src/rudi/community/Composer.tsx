@@ -2,8 +2,8 @@ import { translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps } from "react-native";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions, type TextInput, type TextInputProps } from "react-native";
 import { docNhomCuaToi, type NhomTomTat } from "../../phien";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -92,6 +92,14 @@ function ComposerForm() {
     const uploadingNow = useRef(false);
     const submitted = useRef(false);
     const alive = useRef(true);
+    const topicsInput = useRef<TextInput>(null);
+    const topicsTools = useRef<View>(null);
+    const topicsFrame = useRef<number | null>(null);
+    const topicsMeasurement = useRef<object | null>(null);
+    const topicsRequest = useRef<object | null>(null);
+    const topicsFocusedNow = useRef(false);
+    const [topicsFocused, setTopicsFocused] = useState(false);
+    const [topicsClearance, setTopicsClearance] = useState<{ generation: object; value: number } | null>(null);
     const [initialAttempt] = useState(() => nhapCu?.logical_id ?? newAttempt().key);
     const attempt = useRef(initialAttempt);
     const content = useRef<DraftContent>({ body, audience, topics, mentions, media, group });
@@ -189,6 +197,49 @@ function ComposerForm() {
     // The topic box checks itself as the server will (QA UI-133): the sentence
     // sits under the box while typing, and «Gửi» waits with the reason.
     const loiChuDeGo = loiChuDe(topics);
+    const topicsPresent = Boolean(phien) && !loading && editReady && Boolean(topicsOpen || topics || loiChuDeGo);
+    const topicsGeneration = useMemo(() => ({}), [topicsPresent, topicsFocused, topics, loiChuDeGo, nativeFont, fontScale, width]);
+    const measureTopics = () => {
+        if (!topicsPresent || !topicsFocused || topicsMeasurement.current !== topicsGeneration || !current()) return;
+        if (topicsFrame.current !== null) cancelAnimationFrame(topicsFrame.current);
+        const input = topicsInput.current;
+        const tools = topicsTools.current;
+        if (!input || !tools) return;
+        const request = {};
+        topicsRequest.current = request;
+        const active = () => topicsRequest.current === request && topicsMeasurement.current === topicsGeneration && topicsFocusedNow.current && current() && topicsInput.current === input && topicsTools.current === tools && input.isFocused();
+        const clear = () => { if (active()) setTopicsClearance((previous) => active() ? null : previous); };
+        // Native layout includes the whole helper/error, without guessing its lines.
+        topicsFrame.current = requestAnimationFrame(() => {
+            if (!active()) return;
+            topicsFrame.current = requestAnimationFrame(() => {
+                if (!active()) return;
+                topicsFrame.current = null;
+                tools.measure((_x, _y, toolsWidth, toolsHeight) => {
+                    if (!active()) return;
+                    if (!Number.isFinite(toolsWidth) || toolsWidth <= 0 || !Number.isFinite(toolsHeight) || toolsHeight <= 0) { clear(); return; }
+                    input.measureLayout(tools, (x, y, inputWidth, inputHeight) => {
+                        if (!active()) return;
+                        const tail = toolsHeight - y - inputHeight;
+                        if (![x, y, inputWidth, inputHeight, tail].every(Number.isFinite) || x < 0 || y < 0 || inputWidth <= 0 || inputHeight <= 0 || tail < 0) { clear(); return; }
+                        const value = tail + 16;
+                        if (!Number.isFinite(value)) { clear(); return; }
+                        setTopicsClearance((previous) => !active() || (previous?.generation === topicsGeneration && previous.value === value) ? previous : { generation: topicsGeneration, value });
+                    }, clear);
+                });
+            });
+        });
+    };
+    useLayoutEffect(() => {
+        topicsMeasurement.current = topicsPresent && topicsFocused ? topicsGeneration : null;
+        measureTopics();
+        return () => {
+            if (topicsMeasurement.current === topicsGeneration) topicsMeasurement.current = null;
+            topicsRequest.current = null;
+            if (topicsFrame.current !== null) { cancelAnimationFrame(topicsFrame.current); topicsFrame.current = null; }
+        };
+    }, [topicsGeneration]);
+    const focusBottomInset = topicsFocused && topicsClearance?.generation === topicsGeneration ? topicsClearance.value : 16;
     if (!phien)
         return <RudiScreen><TopBar title="Kể một khoảnh khắc"/><Text style={[typography.body, { color: colors.ink }]}>Đăng nhập để viết câu chuyện của bạn.</Text></RudiScreen>;
     const chooseAudience = (value: Audience) => { if (change({ audience: value })) setAudienceOpen(false); };
@@ -196,10 +247,9 @@ function ComposerForm() {
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
     const cannotSend = conflict || busy || uploading || pendingFile !== null || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
-    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
+    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard focusBottomInset={focusBottomInset} cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
-      <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
       <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
     <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => { Keyboard.dismiss(); setAudienceOpen(!audienceOpen); }} style={styles.author}>
@@ -213,6 +263,7 @@ function ComposerForm() {
         </View>
       </View>
     </Pressable>
+    <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
     {/* An edit keeps who reads the story: only that choice is shown, locked,
         with where the change is made (QA UI-091 on Cộng đồng, TC-N14-SUA-KHOA);
         no «Lựa chọn khác» opening more choices that cannot be taken. */}
@@ -223,14 +274,14 @@ function ComposerForm() {
       <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
-    <View style={[styles.tools, { borderColor: colors.line }]}>
+    <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={[styles.tools, { borderColor: colors.line }]}>
       <MediaPicker compact disabled={busy} canEdit={() => current() && !sending.current} initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={(v) => { if (current()) { uploadingNow.current = v; setUploading(v); } }} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
         <ComposerTool icon="images-outline" label={picking ? "Đang chuẩn bị…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={() => { Keyboard.dismiss(); pick(); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => { Keyboard.dismiss(); setTopicsOpen(!topicsOpen); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />
       </View>} />
       <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change({ mentions: v })}/>
-      {topicsOpen || topics || loiChuDeGo ? <Field nativeMetrics error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
+      {topicsOpen || topics || loiChuDeGo ? <Field nativeMetrics oRef={topicsInput} onLayout={measureTopics} onFocus={() => { if (current()) { topicsFocusedNow.current = true; setTopicsFocused(true); measureTopics(); } }} onBlur={() => { topicsFocusedNow.current = false; if (current()) setTopicsFocused(false); }} error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
     </View>
   </RudiScreen></NativeFontMetricsProvider>;
 }

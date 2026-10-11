@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Children, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { Text } from "./ui/NativeFontMetrics";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
@@ -114,15 +114,23 @@ export function RudiScreen({
   const keyboardReveal = useRef(false);
   const keyboardInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput> | null>(null);
   const keyboardFrame = useRef<number | null>(null);
-  const focusBottom = useRef(focusBottomInset);
-  focusBottom.current = focusBottomInset;
+  const focusBottom = useRef(16);
+  const keyboardGeneration = useRef(0);
+  const cancelKeyboardReveal = () => {
+    keyboardGeneration.current += 1;
+    if (keyboardFrame.current !== null) { cancelAnimationFrame(keyboardFrame.current); keyboardFrame.current = null; }
+  };
   // The footer remains available above the IME; reveal the focused field
   // after the scroll viewport has resized so the two never overlap.
   const revealFocusedField = () => {
     if (!avoidKeyboard || !scroll || Platform.OS === "web" || !keyboardVisible.current || !keyboardReveal.current) return;
-    if (keyboardFrame.current !== null) cancelAnimationFrame(keyboardFrame.current);
+    cancelKeyboardReveal();
+    const generation = keyboardGeneration.current;
+    const active = () => keyboardGeneration.current === generation && keyboardVisible.current && keyboardReveal.current;
     keyboardFrame.current = requestAnimationFrame(() => {
+      if (!active()) return;
       keyboardFrame.current = requestAnimationFrame(() => {
+        if (!active()) return;
         keyboardFrame.current = null;
         const input = TextInput.State.currentlyFocusedInput();
         const viewport = cuon.current?.getNativeScrollRef();
@@ -130,8 +138,9 @@ export function RudiScreen({
         // ScrollView's keyboard helper assumes a full-screen viewport. Measure
         // this form's actual viewport instead, which excludes its fixed footer.
         viewport.measureInWindow((_x, top, _width, height) => {
+          if (!active() || !Number.isFinite(top) || !Number.isFinite(height) || height <= 0) return;
           input.measureInWindow((_inputX, inputTop, _inputWidth, inputHeight) => {
-            if (!keyboardVisible.current || TextInput.State.currentlyFocusedInput() !== input) return;
+            if (!active() || TextInput.State.currentlyFocusedInput() !== input || cuon.current?.getNativeScrollRef() !== viewport || !Number.isFinite(inputTop) || !Number.isFinite(inputHeight) || inputHeight <= 0) return;
             const bottomDelta = inputTop + inputHeight + focusBottom.current - (top + height);
             const topDelta = inputTop - top - 16;
             const delta = bottomDelta > 0 ? bottomDelta : topDelta < 0 ? topDelta : 0;
@@ -141,6 +150,12 @@ export function RudiScreen({
       });
     });
   };
+  useLayoutEffect(() => {
+    focusBottom.current = Number.isFinite(focusBottomInset) && focusBottomInset >= 0 ? focusBottomInset : 16;
+    // A measured inline error can grow after the viewport's own layout event.
+    revealFocusedField();
+    return cancelKeyboardReveal;
+  }, [focusBottomInset, avoidKeyboard, scroll]);
   // The scroll a stage folds with; published only when the screen has one.
   const coCanh = canh !== undefined && canh !== null && canh !== false;
   const cuonY = useSharedValue(0);
@@ -183,12 +198,13 @@ export function RudiScreen({
     const hide = Keyboard.addListener("keyboardDidHide", () => {
       keyboardVisible.current = false;
       keyboardReveal.current = false;
+      cancelKeyboardReveal();
       setKeyboardOpen(false);
     });
     return () => {
       show.remove(); hide.remove();
       keyboardVisible.current = false;
-      if (keyboardFrame.current !== null) cancelAnimationFrame(keyboardFrame.current);
+      cancelKeyboardReveal();
     };
   }, [avoidKeyboard, scroll]);
   const tablet = layout.sizeClass !== "compact";
@@ -269,7 +285,7 @@ export function RudiScreen({
             // Recheck that final viewport, until the person scrolls by hand.
             if (keyboardReveal.current) revealFocusedField();
           } : undefined}
-          onScrollBeginDrag={avoidKeyboard ? () => { keyboardReveal.current = false; } : undefined}
+          onScrollBeginDrag={avoidKeyboard ? () => { keyboardReveal.current = false; cancelKeyboardReveal(); } : undefined}
           scrollEventThrottle={avoidKeyboard ? 16 : undefined}
           onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : avoidKeyboard ? revealFocusedField : undefined}
           refreshControl={

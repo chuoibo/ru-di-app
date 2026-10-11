@@ -22,13 +22,14 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 
 import { ACTIONS } from "../screens/Create";
 import { tabTu, thuTuViec } from "../tao-moi";
 import { typography, useRudiTheme } from "../theme";
 import { PressScale } from "./PressScale";
+import { Text } from "./NativeFontMetrics";
 import { useMotion } from "./useMotion";
 
 const DAU = 56;

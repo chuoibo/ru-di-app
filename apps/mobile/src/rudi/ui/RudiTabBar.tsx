@@ -1,18 +1,20 @@
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
-import { useEffect } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useRef } from "react";
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 import { lopPhu, typography, useRudiTheme } from "../theme";
 import { useSoSheetDangMo } from "../nep/NepProvider";
 import { TABLIST, tabState } from "../../ui/a11y";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { ConDauTao } from "./ConDauTao";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "./NativeFontMetrics";
 import { RudiIcon, type IconName } from "./RudiIcon";
 import { dichCuaCot, oCuaCot, xepThanh } from "./thanh-tab";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
@@ -54,11 +56,41 @@ const HANG_LOGO_RAIL = 56;
  * at 320 dp). The active strip
  * follows reduced-motion preferences.
  */
-export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
+export function RudiTabBar(props: TabBarProps) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <TabBarContent {...props} /> : <ObserveTabMetrics {...props} />;
+}
+
+function ObserveTabMetrics(props: TabBarProps) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}>
+    <TabBarContent {...props} observedFontScale={snapshot.status === "available" ? snapshot.fontScale : undefined} />
+  </NativeFontMetricsProvider>;
+}
+
+function TabBarContent({ state, descriptors, navigation, observedFontScale }: TabBarProps & { observedFontScale?: number }) {
   const { colors, dark } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout();
   const { fontScale } = useWindowDimensions();
+  const labelMetrics = useNativeStandaloneTextMetrics([typography.caption, styles.label]);
+  const lineHeight = labelMetrics?.lineHeight;
+  const labelPitch = lineHeight !== undefined && Number.isFinite(lineHeight) && lineHeight > 0 ? lineHeight : null;
+  const lastKnownGeometry = useRef<{ bar: number; rail: number } | null>(null);
+  const policyHeight = tabBarHeight(observedFontScale ?? fontScale);
+  // Reserve two full label lines, including the strip's icon, gap and inset.
+  const geometry = labelPitch !== null ? {
+    bar: Math.max(policyHeight, Math.ceil(24 + 2 + 8 + 2 * labelPitch + StyleSheet.hairlineWidth)),
+    rail: Math.max(HANG_RAIL, Math.ceil(24 + 2 + 2 * labelPitch)),
+  } : {
+    bar: Math.max(policyHeight, lastKnownGeometry.current?.bar ?? 0),
+    rail: lastKnownGeometry.current?.rail ?? HANG_RAIL,
+  };
+  // An unavailable native snapshot cannot make a previously known reserve smaller.
+  // Keep original RN scaling in fallback; this memory describes geometry only.
+  useEffect(() => {
+    if (labelPitch !== null || observedFontScale !== undefined) lastKnownGeometry.current = geometry;
+  }, [labelPitch, observedFontScale, geometry.bar, geometry.rail]);
   const motion = useMotion();
   const { phien } = useRudiSession();
   const coSheet = useSoSheetDangMo() > 0;
@@ -91,7 +123,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   }, [viTriVach, indicator, motion]);
 
   const indicatorStyle = useAnimatedStyle(() => {
-    if (layout.rail) return { transform: [{ translateY: dauRail + HANG_LOGO_RAIL + HANG_DAU_RAIL + indicator.value * HANG_RAIL }] };
+    if (layout.rail) return { transform: [{ translateY: dauRail + HANG_LOGO_RAIL + HANG_DAU_RAIL + indicator.value * geometry.rail }] };
     return { left: `${(indicator.value / columns) * 100}%` as const };
   });
 
@@ -120,7 +152,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         {...tabState(focused)}
         accessibilityLabel={label}
         onPress={onPress}
-        style={layout.rail ? styles.railItem : styles.item}
+        style={layout.rail ? [styles.railItem, { height: geometry.rail }] : styles.item}
       >
         <RudiIcon color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
         {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
@@ -155,7 +187,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
           borderColor: colors.line,
           ...(layout.rail
             ? { width: RAIL_WIDTH, paddingTop: dauRail, paddingBottom: Math.max(insets.bottom, 12) }
-            : { height: tabBarHeight(fontScale) + bottom, paddingBottom: bottom }),
+            : { height: geometry.bar + bottom, paddingBottom: bottom }),
         },
       ]}
     >
@@ -165,7 +197,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         testID="vach-thanh"
         style={[
           layout.rail ? styles.railIndicator : styles.indicator,
-          layout.rail ? { backgroundColor: colors.accent, width: 4 } : { width: `${100 / columns}%` },
+          layout.rail ? { backgroundColor: colors.accent, width: 4, height: geometry.rail } : { width: `${100 / columns}%` },
           indicatorStyle,
         ]}
       >
