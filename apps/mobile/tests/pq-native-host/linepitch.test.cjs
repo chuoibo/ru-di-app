@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { test, after } = require('node:test');
-const { createHost, snapshot, flatten, sourceRoot, React } = require('./exact-host.cjs');
+const { createHost, snapshot, flatten, sourceRoot, React, act } = require('./exact-host.cjs');
 const previousAct = globalThis.IS_REACT_ACT_ENVIRONMENT;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const previousError = console.error;
@@ -335,5 +335,164 @@ test('LP14 actual MediaPicker outside any metrics provider retains its original 
       assert.equal(h.observation().live, 0, 'MediaPicker adds no independent observer');
     }
     assertActual(h, ['community/MediaPicker', 'ui/NativeFontMetrics']);
+  });
+});
+
+
+// Copy metrics follow the same opt-in owner as the input; RN layout remains a device check.
+test('LP15 opt-in Field label and helper follow hot metrics without replacing input or changing draft', async () => {
+  let focuses = 0, blurs = 0;
+  const selection = { start: 2, end: 3 }, selectionChange = () => {};
+  await withHost({ fieldProps: { nativeMetrics: true, autoGrowLines: 3, numberOfLines: 1,
+    style: { minHeight: 24, maxHeight: 72 }, label: 'Synthetic field label', helper: 'Synthetic field helper',
+    selection, onSelectionChange: selectionChange, onFocus: () => { focuses += 1; }, onBlur: () => { blurs += 1; } } }, async h => {
+    await h.focus(); await h.change('Synthetic Aà😀\nC');
+    await act(async () => h.input().props.onLayout({ nativeEvent: { layout: { width: 146 } } }));
+    const input = h.input(), ref = h.refs[0], label = textHost(h, 'Synthetic field label'), helper = textHost(h, 'Synthetic field helper');
+    const mirror = () => h.one('RNText', props => props.testID === 'field-measurement');
+    const firstMirror = mirror(), oldMeasurement = firstMirror.props.onTextLayout;
+    await act(async () => oldMeasurement({ nativeEvent: { lines: [
+      { x: 0, y: 0, width: 80, height: 24 }, { x: 0, y: 24, width: 81, height: 24 },
+    ] } }));
+    assert.equal(inputStyle(h).height, 48);
+    for (const scale of [2, 1]) {
+      await h.nativeFont(snapshot(scale));
+      assert.equal(convertedText(h, 'Synthetic field label', scale === 2 ? 23.25 : 14, scale === 2 ? 31.75 : 19) === label, true, 'label host survives hot metrics');
+      assert.equal(convertedText(h, 'Synthetic field helper', scale === 2 ? 21.5 : 13, scale === 2 ? 30.25 : 18) === helper, true, 'helper host survives hot metrics');
+      sameHost(h, input, 'Synthetic Aà😀\nC');
+      assert.equal(h.refs.length, 1); assert.equal(h.refs[0] === ref, true);
+      assert.equal(h.input().props.selection === selection, true); assert.equal(h.input().props.onSelectionChange === selectionChange, true);
+      assert.equal(h.input().props.numberOfLines, 2); assert.equal(inputStyle(h).height, scale === 2 ? 79 : 48);
+      assert.equal(mirror().props.allowFontScaling, false); assert.equal(flatten(mirror().props.style).width, 146);
+      assert.equal(mirror() === firstMirror, false, 'only the existing measurement leaf is invalidated');
+      await act(async () => oldMeasurement({ nativeEvent: { lines: [{ x: 0, y: 0, width: 80, height: 24 }] } }));
+      assert.equal(h.input().props.numberOfLines, 2, 'copy update does not admit a retired grow measurement');
+    }
+    assert.equal(focuses, 1); assert.equal(blurs, 0); assert.equal(h.observation().live, 0, 'Field adds no font observer');
+    assertActual(h, ['ui/Field', 'ui/NativeFontMetrics', 'native-font-metrics']);
+  });
+});
+
+test('LP16 opt-in Field helper error replacement and unavailable metrics preserve input and accessible error', async () => {
+  await withHost({ initialSnapshot: snapshot(2), fieldProps: { nativeMetrics: true,
+    label: 'Synthetic editable label', helper: 'Synthetic editable helper' } }, async h => {
+    const input = h.input(), ref = h.refs[0], label = textHost(h, 'Synthetic editable label');
+    await h.change('Synthetic retained draft');
+    convertedText(h, 'Synthetic editable helper', 21.5, 30.25);
+    await h.update(() => { h.state.fieldProps.error = 'Synthetic validation error'; });
+    assert.equal(h.hosts('RNText', props => props.children === 'Synthetic editable helper').length, 0, 'error replaces helper');
+    const error = convertedText(h, 'Synthetic validation error', 21.5, 30.25);
+    for (const [value, manual] of [
+      [{ status: 'unavailable', reason: 'module-unavailable' }, false],
+      [{ status: 'available', fontScale: 2 }, false],
+      [snapshot(2), true], [snapshot(1), true],
+    ]) {
+      await h.nativeFont(value);
+      const currentLabel = textHost(h, 'Synthetic editable label'), currentError = textHost(h, 'Synthetic validation error');
+      assert.equal(currentLabel === label, true); assert.equal(currentError === error, true);
+      assert.equal(currentLabel.props.allowFontScaling, manual ? false : undefined);
+      assert.equal(currentError.props.allowFontScaling, manual ? false : undefined);
+      assert.equal(flatten(currentLabel.props.style).fontSize, manual && value.fontScale === 2 ? 23.25 : 14);
+      assert.equal(flatten(currentLabel.props.style).lineHeight, manual && value.fontScale === 2 ? 31.75 : 19);
+      assert.equal(flatten(currentError.props.style).fontSize, manual && value.fontScale === 2 ? 21.5 : 13);
+      assert.equal(flatten(currentError.props.style).lineHeight, manual && value.fontScale === 2 ? 30.25 : 18);
+      assert.equal(currentError.props.accessibilityRole, 'alert'); assert.equal(currentError.props.accessibilityLiveRegion, 'polite'); assert.equal(currentError.props['aria-live'], 'polite');
+      assert.equal(h.input().props['aria-invalid'], true); sameHost(h, input, 'Synthetic retained draft');
+      assert.equal(h.refs.length, 1); assert.equal(h.refs[0] === ref, true);
+    }
+    await h.update(() => { h.state.fieldProps.error = null; });
+    convertedText(h, 'Synthetic editable helper', 13, 18);
+    assert.equal(h.hosts('RNText', props => props.children === 'Synthetic validation error').length, 0);
+    assert.equal(h.input().props['aria-invalid'], undefined); sameHost(h, input, 'Synthetic retained draft');
+    assert.equal(h.observation().live, 0);
+  });
+});
+
+test('LP17 default and explicit false Field copy retain raw RN behavior inside a hot metrics owner', async () => {
+  for (const nativeMetrics of [undefined, false]) await withHost({ fieldProps: {
+    ...(nativeMetrics === undefined ? {} : { nativeMetrics }), label: 'Synthetic default label', helper: 'Synthetic default helper' } }, async h => {
+    const input = h.input(), label = textHost(h, 'Synthetic default label'), helper = textHost(h, 'Synthetic default helper');
+    for (const value of [snapshot(2), { status: 'unavailable', reason: 'module-unavailable' }, snapshot(1)]) {
+      await h.nativeFont(value);
+      assert.equal(textHost(h, 'Synthetic default label') === label, true); assert.equal(textHost(h, 'Synthetic default helper') === helper, true);
+      for (const [node, size, line] of [[label, 14, 19], [helper, 13, 18]]) {
+        assert.equal(node.props.allowFontScaling, undefined, 'default copy stays on RN scaling');
+        assert.equal(flatten(node.props.style).fontSize, size); assert.equal(flatten(node.props.style).lineHeight, line);
+      }
+      sameHost(h, input, 'Synthetic draft'); assert.equal(h.input().props.allowFontScaling, undefined);
+    }
+    await h.update(() => { h.state.fieldProps.error = 'Synthetic default error'; });
+    const error = textHost(h, 'Synthetic default error');
+    await h.nativeFont(snapshot(2));
+    assert.equal(textHost(h, 'Synthetic default error') === error, true);
+    assert.equal(error.props.allowFontScaling, undefined); assert.equal(flatten(error.props.style).fontSize, 13); assert.equal(flatten(error.props.style).lineHeight, 18);
+    assert.equal(error.props.accessibilityRole, 'alert'); sameHost(h, input, 'Synthetic draft'); assert.equal(h.refs.length, 1);
+  });
+});
+
+// Actual Composer opts its topics into the retained surface owner, not a Field adapter.
+test('LP18 actual Composer topics retain Field input and validation copy through hot native metrics', async () => {
+  await withHost({ surface: 'composer' }, async h => {
+    const vault = h.load('apps/mobile/src/rudi/community/ban-nhap');
+    const lease = vault.phienNhapBai('synthetic-A');
+    const bodyValue = 'Synthetic topic draft 🌿', validTopics = 'Alpha, Beta';
+    vault.ghiNhapBai('synthetic-A', 'new:community', { body: bodyValue, audience: 'public', topics: validTopics,
+      mentions: ['synthetic-B'], media: [], group: null, revision: 0, logical_id: 'synthetic-topic-logical', pendingFile: null }, lease);
+    await h.remountSurface();
+    const Field = h.load('apps/mobile/src/rudi/ui/Field').Field;
+    const field = h.root.root.findByType(Field), input = h.one('RNTextInput', props => props.accessibilityLabel === 'Chủ đề');
+    const body = h.input(), composer = h.owner('ComposerForm'), picker = h.owner('MediaPicker'), mentions = h.owner('MentionPicker');
+    const nativeParent = node => { let parent = node.parent; while (parent && parent.type !== 'RNView') parent = parent.parent; assert.ok(parent); return parent; };
+    const inputParent = nativeParent(input);
+    const fieldText = label => {
+      const found = field.findAllByType('RNText').filter(node => node.props.children === label);
+      assert.equal(found.length, 1, 'one copy host inside actual topic Field'); return found[0];
+    };
+    const label = fieldText('Chủ đề'), labelParent = nativeParent(label);
+    const helperText = 'Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy.', helper = fieldText(helperText);
+    const observers = h.observation(); assert.equal(observers.live, 1, 'Composer owns the one live observer');
+    const check = (scale, topics, saved, copyText, copy, error) => {
+      assert.equal(h.root.root.findByType(Field) === field, true, 'same actual Field owner');
+      assert.equal(field.props.nativeMetrics, true, 'actual Composer topics must opt into its existing owner');
+      assert.equal(h.one('RNTextInput', props => props.accessibilityLabel === 'Chủ đề') === input, true, 'same native topic input');
+      assert.equal(nativeParent(input) === inputParent, true); assert.equal(nativeParent(fieldText('Chủ đề')) === labelParent, true);
+      assert.equal(h.input() === body, true); assert.equal(body.props.value, bodyValue);
+      assert.equal(h.owner('ComposerForm') === composer, true); assert.equal(h.owner('MediaPicker') === picker, true); assert.equal(h.owner('MentionPicker') === mentions, true);
+      assert.deepEqual(Array.from(mentions.props.selected), ['synthetic-B'], 'selected mention ids survive metrics');
+      assert.equal(picker.props.media.length, 0); assert.equal(input.props.value, topics);
+      const style = flatten(input.props.style);
+      assert.equal(input.props.allowFontScaling, false); assert.equal(style.fontSize, scale === 2 ? 28.75 : 17);
+      assert.equal(style.lineHeight, scale === 2 ? 39.25 : 24); assert.equal(style.minHeight, scale === 2 ? 79 : 48);
+      assert.equal(fieldText('Chủ đề') === label, true, 'same label host through hot metrics');
+      for (const [node, size, line] of [[label, scale === 2 ? 23.25 : 14, scale === 2 ? 31.75 : 19], [fieldText(copyText), scale === 2 ? 21.5 : 13, scale === 2 ? 30.25 : 18]]) {
+        assert.equal(node.props.allowFontScaling, false); assert.equal(flatten(node.props.style).fontSize, size); assert.equal(flatten(node.props.style).lineHeight, line);
+      }
+      assert.equal(fieldText(copyText) === copy, true, 'same validation copy host through hot metrics');
+      assert.equal(input.props['aria-invalid'], error ? true : undefined);
+      if (error) { assert.equal(copy.props.accessibilityRole, 'alert'); assert.equal(copy.props.accessibilityLiveRegion, 'polite'); }
+      assert.deepEqual(vault.docNhapBai('synthetic-A', 'new:community'), saved, 'font events do not rewrite the topic draft or retry identity');
+      assert.equal(vault.phienNhapBai('synthetic-A'), lease); assert.deepEqual(h.observation(), observers, 'no descendant observer or owner churn');
+      assert.equal(h.picks.length, 0, 'topic editing never opens media transport');
+    };
+    const savedValid = vault.docNhapBai('synthetic-A', 'new:community');
+    check(1, validTopics, savedValid, helperText, helper, false);
+    for (const scale of [2, 1]) { await h.nativeFont(snapshot(scale)); check(scale, validTopics, savedValid, helperText, helper, false); }
+    const invalidTopics = 'Alpha, Beta, Gamma, Delta, Epsilon, Zeta';
+    await act(async () => input.props.onChangeText(invalidTopics));
+    const errorText = 'Tối đa 5 chủ đề. Bỏ bớt 1 chủ đề nhé.';
+    assert.equal(field.props.error, errorText, 'actual topic validation rejects the sixth topic');
+    assert.equal(field.findAllByType('RNText').filter(node => node.props.children === helperText).length, 0, 'validation error replaces helper');
+    const error = fieldText(errorText), savedError = vault.docNhapBai('synthetic-A', 'new:community');
+    const send = h.hosts('RNPressable').filter(node => node.findAllByType('RNText').some(text => text.props.children === 'Gửi lên cộng đồng'));
+    assert.equal(send.length, 1); assert.equal(send[0].props.disabled, true, 'invalid topics keep the real submit target disabled');
+    for (const scale of [2, 1]) { await h.nativeFont(snapshot(scale)); check(scale, invalidTopics, savedError, errorText, error, true); }
+    await act(async () => input.props.onChangeText(validTopics));
+    assert.equal(field.props.error, null, 'actual validator clears on a valid topic list');
+    assert.equal(field.findAllByType('RNText').filter(node => node.props.children === errorText).length, 0);
+    const restoredHelper = fieldText(helperText), restoredDraft = vault.docNhapBai('synthetic-A', 'new:community');
+    check(1, validTopics, restoredDraft, helperText, restoredHelper, false);
+    assert.equal(h.calls.some(call => call.route === '/v2/community/posts' && call.options.method === 'POST'), false);
+    assertActual(h, ['community/Composer', 'community/MediaPicker', 'community/MentionPicker', 'ui/Field', 'ui/NativeFontMetrics', 'native-font-metrics']);
+    assert.equal(h.consumed.get('apps/mobile/src/rudi/community/chu-de'), path.join(sourceRoot, 'apps/mobile/src/rudi/community/chu-de.ts'), 'actual topic validator source');
   });
 });

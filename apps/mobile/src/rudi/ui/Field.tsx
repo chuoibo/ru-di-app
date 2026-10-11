@@ -28,7 +28,7 @@ import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View
 
 import { typography, useRudiTheme } from "../theme";
 import { KHONG_VIEN_WEB } from "./khong-vien-web";
-import { TextInput as NativeMetricTextInput, useNativeTextInputMetrics } from "./NativeFontMetrics";
+import { Text as NativeMetricText, TextInput as NativeMetricTextInput, useNativeTextInputMetrics } from "./NativeFontMetrics";
 
 export type FieldCoreProps = TextInputProps & {
   label?: string;
@@ -206,9 +206,10 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
     setMeasuredRows(previous => activeMeasurement.current !== generation || (previous?.generation === generation && previous.rows === nextRows) ? previous : { generation, rows: nextRows });
   };
   const Input = nativeMetrics ? NativeMetricTextInput : TextInput;
+  const CopyText = nativeMetrics ? NativeMetricText : Text;
   return (
     <View style={styles.fieldBlock}>
-      {label ? <Text style={[typography.label, { color: colors.ink }]}>{label}</Text> : null}
+      {label ? <CopyText style={[typography.label, { color: colors.ink }]}>{label}</CopyText> : null}
       <View style={[kieu.khung, { backgroundColor: colors.card, borderColor: mauVien, borderRadius: radius.control }]}>
         {leading}
         <View style={kieu.boc}>
@@ -269,11 +270,11 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
       {coLoi ? (
         // An alert by role so it is found as an error, announced politely so
         // it never cuts off what the person is typing.
-        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" aria-live="polite" style={[typography.caption, { color: colors.warn }]}>
+        <CopyText accessibilityLiveRegion="polite" accessibilityRole="alert" aria-live="polite" style={[typography.caption, { color: colors.warn }]}>
           {error}
-        </Text>
+        </CopyText>
       ) : helper ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{helper}</Text>
+        <CopyText style={[typography.caption, { color: colors.inkSoft }]}>{helper}</CopyText>
       ) : null}
     </View>
   );

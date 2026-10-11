@@ -92,12 +92,16 @@ test('PH02 real editor retains input hosts and draft through hot metrics with gu
     assert.equal(h.profileInputs().length, 3);
     for (let index = 0; index < labels.length; index += 1) await h.changeProfile(labels[index], syntheticDraft[index]);
     sameInputs(h, inputs, owner); inputMetrics(h, 17, 24, true);
+    const fieldLabelHosts = new Map(['Tên hiển thị', 'Giới thiệu', 'Thành phố'].map(label => [label, text(h, label)]));
     for (const value of [snapshot(2), unavailable(), snapshot()]) {
       await h.nativeFont(value); sameInputs(h, inputs, owner); ownership(h, 1);
       inputMetrics(h, value.fontMetrics ? value.fontScale === 2 ? 28.75 : 17 : 17, value.fontMetrics ? value.fontScale === 2 ? 39.25 : 24 : 24, Boolean(value.fontMetrics));
       for (const label of ['Tên hiển thị', 'Giới thiệu', 'Thành phố']) {
-        assert.equal(text(h, label).props.allowFontScaling, undefined, 'shared Field labels remain raw native Text, outside manual conversion claim');
-        assert.equal(flatten(text(h, label).props.style).fontSize, 14);
+        const currentLabel = text(h, label);
+        assert.equal(currentLabel === fieldLabelHosts.get(label), true, 'opted-in Field label host stays mounted');
+        assert.equal(currentLabel.props.allowFontScaling, value.fontMetrics ? false : undefined, 'label follows the existing owner or RN fallback');
+        assert.equal(flatten(currentLabel.props.style).fontSize, value.fontMetrics && value.fontScale === 2 ? 23.25 : 14);
+        assert.equal(flatten(currentLabel.props.style).lineHeight, value.fontMetrics && value.fontScale === 2 ? 31.75 : 19);
       }
     }
     assert.equal(h.profileWrites.length, 0, 'draft/font changes do not save');
@@ -115,7 +119,9 @@ test('PH02 real editor retains input hosts and draft through hot metrics with gu
     assert.deepEqual(JSON.parse(JSON.stringify(write.body)), { display_name: syntheticDraft[0], bio: syntheticDraft[1], city: syntheticDraft[2] });
     await h.fail(write, h.apiError('Synthetic save refusal'));
     assert.equal(text(h, 'Synthetic save refusal').props.accessibilityRole, 'alert');
-    assert.equal(text(h, 'Synthetic save refusal').props.allowFontScaling, undefined, 'Field error remains raw native Text');
+    assert.equal(text(h, 'Synthetic save refusal').props.allowFontScaling, false, 'opted-in Field error uses the still-available owner at font100');
+    assert.equal(flatten(text(h, 'Synthetic save refusal').props.style).fontSize, 13);
+    assert.equal(flatten(text(h, 'Synthetic save refusal').props.style).lineHeight, 18);
     sameInputs(h, inputs, owner);
     await h.pressAccessibility('Quay lại');
     assert.equal(h.profileInputs().length, 0, 'closing editor intentionally unmounts input hosts');
@@ -173,11 +179,51 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     const title = text(h, 'Cá nhân');
     assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
     const counts = h.one('RNView', props => props.testID === 'profile-counts');
-    assert.equal(flatten(counts.props.style).flexWrap, 'wrap');
-    assert.equal(flatten(counts.props.style).columnGap, 12); assert.equal(flatten(counts.props.style).rowGap, 4);
     const expected = [`${h.state.profile.counts.friends} bạn bè`, `${h.state.profile.counts.contexts} nhóm`, `${h.state.profile.counts.outings} kèo`, `${h.state.profile.counts.places_checked_in} nơi đã tới`, `${h.state.profile.counts.memories} khoảnh khắc`];
-    assert.deepEqual(counts.findAllByType('RNText').map(node => node.props.children), expected);
-    assert.equal(counts.findAllByType('RNText').every(node => flatten(node.props.style).maxWidth === '100%'), true);
+    const facts = counts.findAllByType('RNText');
+    const factGroup = fact => nearest(fact, 'RNView', () => true);
+    const groups = [...new Set(facts.map(factGroup))];
+    assert.equal(groups.length, 2, 'five server facts belong to two actual native group parents');
+    assert.deepEqual(groups.map(group => facts.filter(fact => factGroup(fact) === group).length), [3, 2], 'social activity and experiences own separate columns');
+    const checkCounts = stacked => {
+      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same count container through hot metrics');
+      assert.equal(flatten(counts.props.style).width, '100%');
+      assert.equal(flatten(counts.props.style).gap, 4);
+      assert.equal(flatten(counts.props.style).flexWrap, undefined, 'facts do not depend on intrinsic wrapping');
+      const currentFacts = counts.findAllByType('RNText');
+      const currentGroups = [...new Set(currentFacts.map(factGroup))];
+      assert.equal(currentGroups.length, 2, 'two actual group parents remain through hot metrics');
+      for (let index = 0; index < groups.length; index += 1) {
+        assert.equal(currentGroups[index] === groups[index], true, 'same two group parents through hot metrics');
+        const style = flatten(groups[index].props.style);
+        assert.equal(style.flexDirection, stacked ? 'column' : 'row');
+        assert.equal(style.width, '100%'); assert.equal(style.minWidth, 0);
+        assert.equal(style.columnGap, 12); assert.equal(style.rowGap, 4);
+      }
+      assert.deepEqual(currentFacts.map(node => node.props.children), expected);
+      assert.equal(currentFacts.every(node => flatten(node.props.style).maxWidth === '100%'), true);
+      for (let index = 0; index < facts.length; index += 1) {
+        assert.equal(currentFacts[index] === facts[index], true, 'same five native Text hosts through hot metrics');
+        assert.equal(factGroup(currentFacts[index]) === groups[index < 3 ? 0 : 1], true, 'same fact group ancestor');
+        const style = flatten(currentFacts[index].props.style);
+        assert.equal(style.minWidth, 0);
+        assert.equal(style.flexBasis, stacked ? undefined : 0, 'zero row basis must be absent from a vertical group');
+        assert.equal(style.flexGrow, stacked ? undefined : 1);
+        assert.equal(style.flexShrink, stacked ? undefined : 1);
+        assert.equal(style.width, stacked ? '100%' : undefined);
+        assert.equal(style.alignSelf, stacked ? 'stretch' : undefined);
+      }
+      assert.equal(h.owner('HoSoSong') === original, true, 'same profile owner through count layout changes');
+      ownership(h, 1);
+    };
+    checkCounts(false);
+    for (const [value, stacked] of [[snapshot(2), true], [unavailable(), true], [snapshot(), false]]) {
+      await h.nativeFont(value);
+      assert.equal(h.state.window.fontScale, 1, 'native snapshot drives layout despite stale window scale');
+      checkCounts(stacked);
+    }
+    assert.equal(h.profileWrites.length, 0, 'count layout does not save profile');
+    assert.equal(h.sessionWrites.length, 0, 'count layout does not mutate session');
     assert.equal(h.root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'AssetIllustration' && node.props.name === 'decor-cover').length, 0);
     for (const group of ['Kết nối & gu', 'Sổ của bạn', 'Quản lý']) {
       const label = text(h, group); assert.equal(label.props.accessibilityRole, 'header'); assert.equal(flatten(label.props.style).fontSize, 14);

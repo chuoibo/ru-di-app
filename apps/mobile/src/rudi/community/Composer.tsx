@@ -209,9 +209,9 @@ function ComposerForm() {
         <View style={styles.audienceTrigger}>
           <RudiIcon name={audience === "public" ? "globe-outline" : audience === "only_me" ? "lock-closed-outline" : "people-outline"} color={colors.inkSoft} size={16} />
           <Text style={[typography.caption, styles.audienceLabel, { color: colors.inkSoft }]}>{audienceLabel}</Text>
+          <RudiIcon name={params.edit ? "lock-closed-outline" : "chevron-down"} color={colors.inkSoft} size={16} />
         </View>
       </View>
-      <RudiIcon name={params.edit ? "lock-closed-outline" : "chevron-down"} color={colors.inkSoft} size={16} />
     </Pressable>
     {/* An edit keeps who reads the story: only that choice is shown, locked,
         with where the change is made (QA UI-091 on Cộng đồng, TC-N14-SUA-KHOA);
@@ -230,7 +230,7 @@ function ComposerForm() {
         <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />
       </View>} />
       <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change({ mentions: v })}/>
-      {topicsOpen || topics || loiChuDeGo ? <Field error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
+      {topicsOpen || topics || loiChuDeGo ? <Field nativeMetrics error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
     </View>
   </RudiScreen></NativeFontMetricsProvider>;
 }
@@ -252,8 +252,8 @@ function ComposerBodyInput(props: TextInputProps) {
 function ComposerTool({ icon, label, accessibilityLabel, onPress, selected, expanded, disabled, stacked }: { icon: IconName; label: string; accessibilityLabel: string; onPress: () => void; selected?: boolean; expanded?: boolean; disabled?: boolean; stacked: boolean }) {
   const { colors } = useRudiTheme();
   return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.tool, stacked && styles.toolWide, { opacity: disabled ? 0.5 : pressed ? 0.65 : 1 }]}>
-    <RudiIcon name={icon} color={selected ? colors.accent : colors.inkSoft} size={21} />
-    <Text style={[typography.caption, stacked && styles.flex, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
+    <RudiIcon name={icon} color={selected ? colors.accent : colors.inkSoft} size={stacked ? 21 : 18} />
+    <Text style={[typography.caption, styles.toolLabel, stacked && styles.flex, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
   </Pressable>;
 }
 
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   author: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
   authorText: { flex: 1, minWidth: 0, gap: 4 },
   audienceTrigger: { flexDirection: "row", alignItems: "center", gap: 6 },
-  audienceLabel: { flexShrink: 1 },
+  audienceLabel: { flexShrink: 1, minWidth: 0 },
   audienceOptions: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
   audienceChoice: { minHeight: 64, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   audienceChoiceTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -276,6 +276,7 @@ const styles = StyleSheet.create({
   tools: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 8 },
   toolRow: { flexDirection: "row", gap: 8 },
   toolStack: { flexDirection: "column" },
-  tool: { flex: 1, minWidth: 48, minHeight: 64, alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 8 },
+  tool: { flex: 1, flexDirection: "row", minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8 },
+  toolLabel: { flexShrink: 1, minWidth: 0 },
   toolWide: { flex: 0, flexDirection: "row", justifyContent: "flex-start", minHeight: 48, paddingHorizontal: 4, gap: 12 },
 });

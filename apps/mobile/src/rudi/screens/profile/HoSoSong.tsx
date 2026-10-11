@@ -235,7 +235,13 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </View>
     <View style={styles.footprint}>
     <View testID="profile-counts" style={styles.counts}>
-      {soDem.map((count) => <Text key={count} style={[typography.note, styles.countText, { color: colors.inkSoft }]}>{count}</Text>)}
+      {/* Social activity and experiences keep their own readable columns. */}
+      <View testID="profile-counts-social" style={[styles.countGroup, largeText && styles.countGroupStack]}>
+        {soDem.slice(0, 3).map((count) => <Text key={count} style={[typography.note, styles.countText, largeText ? styles.countTextStack : styles.countTextColumn, { color: colors.inkSoft }]}>{count}</Text>)}
+      </View>
+      <View testID="profile-counts-experiences" style={[styles.countGroup, largeText && styles.countGroupStack]}>
+        {soDem.slice(3).map((count) => <Text key={count} style={[typography.note, styles.countText, largeText ? styles.countTextStack : styles.countTextColumn, { color: colors.inkSoft }]}>{count}</Text>)}
+      </View>
     </View>
     <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
       <RudiIcon color={colors.accent} name="create-outline" size={EDIT_ACTION.icon} style={styles.editIcon} />
@@ -250,8 +256,12 @@ const styles = StyleSheet.create({
   passport: { gap: 12, paddingBottom: 12 },
   identityBlock: { gap: 8 },
   footprint: { gap: 8 },
-  counts: { flexDirection: "row", flexWrap: "wrap", columnGap: 12, rowGap: 4 },
-  countText: { maxWidth: "100%" },
+  counts: { gap: 4, width: "100%", minWidth: 0 },
+  countGroup: { flexDirection: "row", columnGap: 12, rowGap: 4, width: "100%", minWidth: 0 },
+  countGroupStack: { flexDirection: "column" },
+  countText: { maxWidth: "100%", minWidth: 0 },
+  countTextColumn: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+  countTextStack: { alignSelf: "stretch", width: "100%" },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
