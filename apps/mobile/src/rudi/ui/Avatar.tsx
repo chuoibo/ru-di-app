@@ -1,5 +1,6 @@
 import { Image, type ImageSource } from "expo-image";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 
 import { chuDau } from "../../screens/ca-nhan/ban-be";
 import { MOTION_MS } from "../motion";

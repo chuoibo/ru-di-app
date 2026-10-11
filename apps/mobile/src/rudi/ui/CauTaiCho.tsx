@@ -28,7 +28,8 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { typography, useRudiTheme } from "../theme";

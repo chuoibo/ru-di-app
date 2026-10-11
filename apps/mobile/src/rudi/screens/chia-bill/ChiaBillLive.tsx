@@ -27,7 +27,8 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../../ui/NativeFontMetrics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt, type ChiaBill } from "../../../api";
@@ -270,11 +271,13 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
 
   if (contextId === null) {
     return (
+      <NativeFontMetricsProvider snapshot={billFontScale}>
       <RudiScreen tone="split" testID="receipt-review-screen">
         <TopBar title="Chia hóa đơn" />
         <Heading title="Vào một nhóm trước" subtitle="Hóa đơn là của nhóm; chưa có nhóm thì chưa có ai để chia." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} tone="split" variant="outline" />
       </RudiScreen>
+      </NativeFontMetricsProvider>
     );
   }
   const ctx = contextId;
@@ -470,6 +473,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
   const monBan = buoc.ten === "gan-mon" ? (reading.lines.find((l) => l.id === monTrenBan) ?? reading.lines[0] ?? null) : null;
 
   return (
+    <NativeFontMetricsProvider snapshot={billFontScale}>
     <RudiScreen
       avoidKeyboard
       material="quiet"
@@ -943,6 +947,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
       </View>
       </LatTrang>
     </RudiScreen>
+    </NativeFontMetricsProvider>
   );
 }
 

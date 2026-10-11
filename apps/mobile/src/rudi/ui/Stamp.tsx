@@ -1,4 +1,5 @@
-import { StyleSheet, Text, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";

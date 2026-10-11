@@ -22,7 +22,9 @@
  * every line of text, the last one being the control's own rule.
  */
 import { useState, type ReactNode, type Ref } from "react";
-import { Platform, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, StyleSheet, View, useWindowDimensions, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
+
+import { Text, TextInput, useNativeTextInputMetrics } from "./NativeFontMetrics";
 
 import { typography, useRudiTheme } from "../theme";
 import { KHONG_VIEN_WEB } from "./khong-vien-web";
@@ -86,7 +88,10 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
   // Native text scales its line height; the paper rules and writing area must
   // use the same geometry, including an explicit per-field scaling limit.
   const scale = inputProps.allowFontScaling === false ? 1 : Math.min(fontScale, (inputProps.maxFontSizeMultiplier ?? 0) >= 1 ? inputProps.maxFontSizeMultiplier! : Infinity);
-  const dongCao = chu.lineHeight * scale;
+  // Resolve the final caller style from the same snapshot as the input. Native
+  // spans round physical pixels upward; the ruled area reserves that pitch.
+  const nativeMetrics = useNativeTextInputMetrics([chu, { color: colors.ink }, KHONG_VIEN_WEB, style], inputProps);
+  const dongCao = nativeMetrics === null ? chu.lineHeight * scale : nativeMetrics.linePitch;
   const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao });
   const mauGach = coLoi ? colors.warn : dangNhap ? colors.accent : colors.lineStrong;
   const placeholderNha = !multiline && placeholder !== undefined;
@@ -133,7 +138,9 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
           />
           {placeholderNha && rong ? (
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.goiY}>
-              <Text numberOfLines={1} style={[chu, { color: colors.inkFaint }]}>
+              <Text numberOfLines={1}
+                {...(nativeMetrics === null ? {} : { allowFontScaling: false })}
+                style={[nativeMetrics === null ? chu : nativeMetrics.placeholderStyle, { color: colors.inkFaint }]}>
                 {placeholder}
               </Text>
             </View>

@@ -3,10 +3,12 @@ package expo.modules.rudifontscale
 import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
+import android.util.TypedValue
 import android.view.ViewGroup
-import com.facebook.react.ReactApplication
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -28,8 +30,6 @@ class RudiFontScaleModule : Module() {
       val activity = appContext.currentActivity ?: return@Runnable
       if (activity.isFinishing || activity.isDestroyed) return@Runnable
       val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return@Runnable
-      val host = (activity.application as? ReactApplication)?.reactHost
-      host?.onConfigurationChanged(activity)
       content.requestLayout()
       for (i in 0 until content.childCount) {
         val child = content.getChildAt(i)
@@ -50,11 +50,15 @@ class RudiFontScaleModule : Module() {
     if (!mainHandler.post(requestFontLayout)) layoutRequestPending = false
   }
 
-  private data class Snapshot(val fontScale: Float?, val reason: String = "") {
-    fun toMap(): Map<String, Any?> = if (fontScale != null) {
-      mapOf("status" to "available", "fontScale" to fontScale.toDouble())
-    } else {
-      mapOf("status" to "unavailable", "reason" to reason)
+  private data class Snapshot(
+    val fontScale: Float?,
+    val reason: String = "",
+    val fontMetrics: Map<String, Any?>? = null,
+  ) {
+    fun toMap(): Map<String, Any?> {
+      if (fontScale == null) return mapOf("status" to "unavailable", "reason" to reason)
+      val value = mapOf<String, Any?>("status" to "available", "fontScale" to fontScale.toDouble())
+      return if (fontMetrics == null) value else value + ("fontMetrics" to fontMetrics)
     }
   }
 
@@ -79,19 +83,43 @@ class RudiFontScaleModule : Module() {
     override fun onLowMemory() = Unit
   }
 
-  // The getter and callbacks read the same current application resources.
+  // Optional metrics failure keeps a valid scale and the normal RN text path.
+  private fun sampleFontMetrics(resources: Resources): Map<String, Any?>? {
+    return try {
+      val metrics = DisplayMetrics().apply { setTo(resources.displayMetrics) }
+      val density = metrics.density
+      if (!density.isFinite() || density <= 0f) return null
+      val bases = listOf(-0.65, -0.3, -0.15, 0.4, 0.8, 1.6,
+        11.0, 12.0, 13.0, 14.0, 15.0, 17.0, 18.0, 19.0,
+        21.0, 22.0, 23.0, 24.0, 27.0, 28.0, 34.0)
+      val rows = bases.map { base ->
+        val dp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, base.toFloat(), metrics) / density
+        if (!dp.isFinite() || (base > 0 && dp <= 0f) || (base < 0 && dp >= 0f)) return null
+        mapOf("base" to base, "dp" to dp.toDouble())
+      }
+      mapOf("density" to density.toDouble(), "spToDp" to rows)
+    } catch (_: RuntimeException) {
+      null
+    }
+  }
+
+  // The getter and callback use one copied SP converter. The gate protects this
+  // module, not OS resources: reject a visible scale race without claiming atomicity.
   private fun readSnapshotLocked(): Snapshot {
     if (!active) return Snapshot(null, unavailableReason)
     val heldContext = context ?: return Snapshot(null, "context-unavailable")
-    val scale = try {
-      heldContext.resources.configuration.fontScale
+    return try {
+      val resources = heldContext.resources
+      val before = resources.configuration.fontScale
+      if (!before.isFinite() || before <= 0f) return Snapshot(null, "invalid-native-value")
+      val fontMetrics = sampleFontMetrics(resources)
+      if (resources.configuration.fontScale != before) {
+        Snapshot(null, "invalid-native-value")
+      } else {
+        Snapshot(before, fontMetrics = fontMetrics)
+      }
     } catch (_: RuntimeException) {
-      return Snapshot(null, "read-failed")
-    }
-    return if (scale.isFinite() && scale > 0f) {
-      Snapshot(scale)
-    } else {
-      Snapshot(null, "invalid-native-value")
+      Snapshot(null, "read-failed")
     }
   }
 

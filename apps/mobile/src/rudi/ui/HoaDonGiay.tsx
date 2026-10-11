@@ -8,7 +8,8 @@
  * are what a screen prints on it, all React Native text.
  */
 import type { ReactNode } from "react";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 import Svg, { Path } from "react-native-svg";
 
 import { duongDut, hinhHoaDon } from "../art/giay";

@@ -1,4 +1,5 @@
-import { Text, type StyleProp, type TextStyle } from "react-native";
+import { type StyleProp, type TextStyle } from "react-native";
+import { Text } from "../../ui/NativeFontMetrics";
 import Animated, { useAnimatedStyle, type WithTimingConfig } from "react-native-reanimated";
 import { useConfirmedProgress } from "./useConfirmedProgress";
 

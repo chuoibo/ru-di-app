@@ -347,3 +347,49 @@ test("H05: cleanup removes once and blocks both reentrant and already queued not
     assert.equal(h.native.removes, 1);
   });
 });
+
+// Deliberately nonlinear synthetic conversions; these test the boundary, not
+// Android's curve or painted glyphs.
+const metricBases = [-0.65, -0.3, -0.15, 0.4, 0.8, 1.6,
+  11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 27, 28, 34];
+function metricTable() {
+  return { density: 1.5, spToDp: metricBases.map(base => ({ base, dp: base * (Math.abs(base) < 16 ? 1.8 : 1.4) })) };
+}
+
+test("H06: a complete optional table is canonical; malformed tables preserve the valid scale", async t => {
+  const table = metricTable();
+  await withHook({ current: { status: "available", fontScale: 2, fontMetrics: { ...table, spToDp: [...table.spToDp].reverse() } } }, async h => {
+    assert.deepEqual(h.current, { status: "available", fontScale: 2, fontMetrics: table });
+  });
+  const invalid = [undefined, null, {}, { ...table, density: 0 }, { ...table, density: Infinity },
+    { ...table, spToDp: table.spToDp.slice(1) },
+    { ...table, spToDp: [table.spToDp[0], ...table.spToDp.slice(0, -1)] },
+    ...[NaN, Infinity, 0, -1].map(dp => ({ ...table, spToDp: table.spToDp.map(row => row.base === 14 ? { ...row, dp } : row) })),
+    { ...table, spToDp: table.spToDp.map(row => row.base === -0.3 ? { ...row, dp: 1 } : row) }];
+  for (const [index, fontMetrics] of invalid.entries()) {
+    await t.test(`optional table ${index + 1}`, async () => {
+      await withHook({ current: { status: "available", fontScale: 2, fontMetrics } }, async h => {
+        assert.deepEqual(h.current, { status: "available", fontScale: 2 });
+      });
+    });
+  }
+});
+
+test("H07: same-scale metric and density changes notify; equivalent copies preserve identity", async () => {
+  const table = metricTable();
+  await withHook({ current: { status: "available", fontScale: 2, fontMetrics: table } }, async h => {
+    let previous = h.current;
+    h.native.current = structuredClone(h.native.current);
+    await h.notify();
+    assert.equal(h.current, previous);
+    for (const fontMetrics of [{ ...table, density: 2 },
+      { ...table, spToDp: table.spToDp.map(row => row.base === 14 ? { ...row, dp: row.dp + 1 } : row) }, undefined, table]) {
+      h.native.current = { status: "available", fontScale: 2, ...(fontMetrics ? { fontMetrics } : {}) };
+      await h.notify();
+      assert.notEqual(h.current, previous);
+      assert.equal(h.current.fontScale, 2);
+      previous = h.current;
+    }
+    assert.equal(h.native.captured.length, 1);
+  });
+});

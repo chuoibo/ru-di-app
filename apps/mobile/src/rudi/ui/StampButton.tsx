@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 import Svg, { Path } from "react-native-svg";
 
 import { Ionicons } from "@expo/vector-icons";

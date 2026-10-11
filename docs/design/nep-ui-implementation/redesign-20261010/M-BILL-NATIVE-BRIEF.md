@@ -144,3 +144,31 @@ chưa xác định nguyên nhân cache và chưa bảo đảm sửa được pai
 cache/internal flags, không remount, không đổi mặc định chữ. Khi application
 không có ReactHost, giữ yêu cầu layout cũ. Phải build APK mới, xem ảnh thật
 100→130→200→100 và Settings return trước khi nhận credit hoặc đi tiếp ghi sổ.
+
+## Vòng native fe414 — metric SP tường minh cho M
+
+APK fe414 đã compile và thay thế trên emulator5558. Sáu ảnh gốc của vòng
+100→130→200→100 cùng PID20143,320×640 được mở, gồm tổng cuối receipt sau
+scroll. 130% và200% vẫn cắt chữ/tiền; review độc lập yêu cầu fix. Dừng trước
+Next, không tạo bill/ghi sổ mới. Draft hai món được tạo mới sau install,
+không phải bằng chứng draft sống qua install. Settings return/tối/rộng/focus
+và downstream của nguồn này chưa được kiểm. Public-host retry bị loại bỏ.
+
+Ứng viên tiếp theo lấy21 giá trị SP thực từ public Android TypedValue với
+DisplayMetrics được copy, truyền bảng optional qua getter/observer hiện có.
+M dùng số DP tường minh đồng thời tắt scaling lần hai trên đúng Text/Input;
+fontScale vẫn điều khiển bố cục. Provider luôn bao cả body/footer; giữ host,
+ref, controlled value, selection và handler. Ngoài M hoặc bảng optional lỗi,
+giữ đường RN. Không thay global defaults, cache, key/route hay logic tiền.
+
+Nested Text giữ số SP gốc và fallback cả paragraph khi gặp con opaque hoặc
+giá trị không có trong bảng. Input có cap hữu hạn/natural/unknown lineHeight
+giữ fallback cũ; current M không dùng các trường hợp này. ONhapMuc active
+lấy final caller style cho cả input, placeholder và pitch đường kẻ. Sampler
+không khóa OS resources nên không tuyên bố atomic hoặc pixel equivalence
+mọi density. TextInput đã gõ có thể giữ span lineHeight cũ; bắt buộc kiểm
+multiline đang focus/IME bằng thao tác thật, không nhận credit từ source.
+
+Trước commit, typecheck và47 kiểm observer/optional metrics/conversion đạt.
+Đây chưa là clean exact-SHA gate, Kotlin/APK hay native/visual evidence.
+M vẫn chưa đạt ≥8/10; chưa ship M/N/toàn app.

@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import {
   observeFontScale,
   readFontScale,
+  sameNativeFontMetrics,
   type FontScaleSnapshot,
 } from "../../../modules/rudi-font-scale";
 
 function sameSnapshot(a: FontScaleSnapshot, b: FontScaleSnapshot): boolean {
   if (a.status === "available" && b.status === "available") {
-    return Object.is(a.fontScale, b.fontScale);
+    return Object.is(a.fontScale, b.fontScale) && sameNativeFontMetrics(a.fontMetrics, b.fontMetrics);
   }
   return a.status === "unavailable" && b.status === "unavailable" && a.reason === b.reason;
 }
