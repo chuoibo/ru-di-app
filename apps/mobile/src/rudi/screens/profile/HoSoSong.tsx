@@ -12,12 +12,12 @@
  * answer rather than trusting the form.
  *
  * UI v2 (đợt 7): a footprint, not a trophy page -- initial, name, one line,
- * and the five counts as one sentence on the paper. The form sits on the
+ * and the five counts as compact facts on the paper. The form sits on the
  * page too, with the error next to the field it is about.
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Keyboard, PixelRatio, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Keyboard, PixelRatio, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
@@ -25,7 +25,7 @@ import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field } from "../../ui";
 import { chuLon } from "../../adaptive";
-import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { RudiIcon } from "../../ui/RudiIcon";
 import { PressScale } from "../../ui/PressScale";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -50,6 +50,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   const { datPhien } = useRudiSession();
   const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
+  const metricsOwned = useNativeFontMetricsOwner();
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  const editLabelMetrics = useNativeStandaloneTextMetrics(typography.label);
   const router = useRouter();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangSua, setDangSua] = useState(false);
@@ -158,9 +161,10 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
             <Text style={[typography.note, { color: colors.inkSoft }]}>Tên, vài lời giới thiệu và nơi bạn hay ở.</Text>
           </View>
         </View>
-        <Field accessibilityLabel="Ô tên hiển thị" label="Tên hiển thị" icon="person-outline" maxLength={200} editable={!dangLuu} onChangeText={setTen} value={ten} error={loiLuu} />
+        <Field nativeMetrics accessibilityLabel="Ô tên hiển thị" label="Tên hiển thị" icon="person-outline" maxLength={200} editable={!dangLuu} onChangeText={setTen} value={ten} error={loiLuu} />
         <View style={styles.editBio}>
         <Field
+          nativeMetrics
           accessibilityLabel="Ô giới thiệu"
           label="Giới thiệu"
           maxLength={500}
@@ -175,6 +179,7 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
         <Text style={[typography.note, styles.editCounter, { color: colors.inkSoft }]}>{bio.length}/500</Text>
         </View>
         <Field
+          nativeMetrics
           accessibilityLabel="Ô thành phố"
           label="Thành phố"
           icon="location-outline"
@@ -192,10 +197,16 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     `${hoSo.counts.friends} bạn bè`, `${hoSo.counts.contexts} nhóm`,
     `${hoSo.counts.outings} kèo`, `${hoSo.counts.places_checked_in} nơi đã tới`,
     `${hoSo.counts.memories} khoảnh khắc`,
-  ].join(" · ");
-  const largeText = chuLon(fontScale);
+  ];
+  // An unusable owned snapshot keeps a conservative stack without a child observer.
+  const largeText = bodyMetrics !== null
+    ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
+    : metricsOwned || chuLon(fontScale);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
-  const editMeasurementKey = `${editLabel}:${fontScale}:${PixelRatio.get()}:${editColumnWidth}`;
+  const editMetricsKey = editLabelMetrics === null
+    ? JSON.stringify([metricsOwned ? "owned-fallback" : "unowned", fontScale])
+    : JSON.stringify(["manual", editLabelMetrics.fontSize, editLabelMetrics.lineHeight, editLabelMetrics.letterSpacing]);
+  const editMeasurementKey = `${editLabel}:${editMetricsKey}:${PixelRatio.get()}:${editColumnWidth}`;
   editMeasurementKeyRef.current = editMeasurementKey;
   // Android can round an auto-sized Text down below its fractional glyph width.
   // Measure in the finite column, then request an exact width rounded up to a pixel.
@@ -203,13 +214,14 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   const editLabelWidth = editMeasurement?.key === editMeasurementKey && editColumnWidth > 0
     ? Math.min(editMeasurement.width ?? editLabelAvailable, editLabelAvailable)
     : undefined;
-  return <View onLayout={(event) => setEditColumnWidth(event.nativeEvent.layout.width)} style={[styles.passport, { borderBottomColor: colors.line }]}>
+  return <View onLayout={(event) => setEditColumnWidth(event.nativeEvent.layout.width)} style={styles.passport}>
     <Text key={editMeasurementKey} accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" onTextLayout={(event) => {
       if (editMeasurementKeyRef.current !== editMeasurementKey) return;
       const lines = event.nativeEvent.lines;
       const width = lines.length === 1 ? Math.ceil(lines[0].width * PixelRatio.get()) / PixelRatio.get() : null;
       setEditMeasurement((old) => old?.key === editMeasurementKey && old.width === width ? old : { key: editMeasurementKey, width });
     }} style={[typography.label, styles.editMeasure]}>{editLabel}</Text>
+    <View style={styles.identityBlock}>
     <View style={[styles.identityRow, largeText && styles.identityStack]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
         <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={56} ring />
@@ -218,20 +230,28 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
         <Text style={[typography.h2, { color: colors.ink }]}>{hoSo.display_name}</Text>
         <Text style={[typography.note, { color: colors.inkSoft }]}>{[hoSo.city, `Tham gia ${new Date(hoSo.created_at).getFullYear()}`].filter(Boolean).join(" · ")}</Text>
       </View>
-      {!largeText ? <View accessible={false} importantForAccessibility="no-hide-descendants"><AssetIllustration name="decor-cover" width={56} height={56 * 4 / 3} /></View> : null}
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
-    <Text style={[typography.note, { color: colors.inkSoft }]}>{soDem}</Text>
+    </View>
+    <View style={styles.footprint}>
+    <View testID="profile-counts" style={styles.counts}>
+      {soDem.map((count) => <Text key={count} style={[typography.note, styles.countText, { color: colors.inkSoft }]}>{count}</Text>)}
+    </View>
     <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
       <RudiIcon color={colors.accent} name="create-outline" size={EDIT_ACTION.icon} style={styles.editIcon} />
       <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelWidth !== undefined && { width: editLabelWidth }, { color: colors.accent }]}>{editLabel}</Text>
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
+    </View>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  passport: { gap: 16, paddingBottom: 20, borderBottomWidth: StyleSheet.hairlineWidth },
+  passport: { gap: 12, paddingBottom: 12 },
+  identityBlock: { gap: 8 },
+  footprint: { gap: 8 },
+  counts: { flexDirection: "row", flexWrap: "wrap", columnGap: 12, rowGap: 4 },
+  countText: { maxWidth: "100%" },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },

@@ -3,7 +3,7 @@ import { HoiTaiHang } from "../ui/HoiTaiHang";
 import { COMMUNITY_ERRORS } from "./api";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { typography, useRudiTheme } from "../theme";
 import { Field, IconButton, RudiButton } from "../ui";
@@ -189,7 +189,7 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
             <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
               <View testID="community-comment-metadata" style={{ flexDirection: largeText ? "column" : "row", alignItems: largeText ? "flex-start" : "baseline", gap: largeText ? 2 : 8 }}>
                 <Text style={[typography.label, { color: colors.ink, flex: largeText ? undefined : 1, minWidth: 0 }]}>{c.author || "Bạn"}</Text>
-                <Text style={[typography.note, { color: colors.inkFaint, flexShrink: 0 }]}>{relativeTime(c.created_at)}</Text>
+                <Text style={[typography.note, { color: colors.inkFaint, flexShrink: 0, alignSelf: largeText ? "stretch" : undefined }]}>{relativeTime(c.created_at)}</Text>
               </View>
               {/* Keep the same body hosts while large text uses the whole row. */}
               <View testID="community-comment-content" style={{ gap: largeText ? 6 : 4, marginLeft: largeText ? -40 : 0 }}>
@@ -225,29 +225,36 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
       onBusy={(v) => { if (mounted.current) { uploadingNow.current = v; setUploading(v); } }}
       renderToolbar={(pick, preparing) => <RudiButton compact label="Ảnh" accessibilityLabel="Thêm ảnh" variant="ghost" disabled={preparing} lyDo={preparing ? "Chờ tệp chuẩn bị xong." : undefined} style={{ flex: largeText ? undefined : 1, minWidth: 0, paddingHorizontal: 8 }} onPress={() => { if (!mounted.current || snapshot.current.pendingFile !== null) return; setToolsOpen(false); setTagOpen(false); pick(); }}/>}
       renderLayout={(_details, attachmentTool, parts) => !post.can_comment ? <Text style={[typography.body, { color: colors.inkSoft }]}>Tác giả đã giới hạn bình luận cho bài này.</Text> : <View testID="community-comment-editor" style={{ gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.line }}>
-        <ScrollView testID="community-comment-details" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ maxHeight: 72, flexGrow: 0, display: parts.preview || parts.notice || parent || tagOpen || loiGui ? "flex" : "none" }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+        <ScrollView testID="community-comment-details" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ maxHeight: 72, flexGrow: 0, display: !tagOpen && (parts.preview || parts.notice || parent || loiGui) ? "flex" : "none" }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
           {parent ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Text style={[typography.note, { color: colors.inkSoft, flex: 1 }]}>Trả lời {parent.author}</Text><IconButton quiet icon="close" accessibilityLabel="Hủy trả lời" onPress={() => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ parent: null }); setParent(null); setLoiGui(null); }}/></View> : null}
           {parts.preview}
           {parts.notice}
-          <MentionPicker person={person} selected={mentions} expanded={tagOpen} onExpandedChange={setTagOpen} hideTrigger onChange={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ mentions: v }); setMentions(v); setLoiGui(null); }}/>
-          {tagOpen ? <RudiButton compact full={false} label="Đóng danh sách bạn" variant="ghost" onPress={() => setTagOpen(false)}/> : null}
           <CauTaiCho cau={loiGui} />
         </ScrollView>
+        <View testID="community-comment-mentions" style={{ gap: 4, display: tagOpen ? "flex" : "none" }}>
+          <View testID="community-comment-mentions-header" style={{ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={[typography.label, { color: colors.ink, flex: 1 }]}>Gắn bạn</Text>
+            <IconButton quiet icon="close" accessibilityLabel="Đóng danh sách bạn" onPress={() => { if (mounted.current) setTagOpen(false); }}/>
+          </View>
+          <ScrollView testID="community-comment-mentions-list" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ maxHeight: parts.pending || parts.retry || parts.discard || parts.stop ? 160 : 216, flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 4 }}>
+            <MentionPicker person={person} selected={mentions} expanded={tagOpen} onExpandedChange={setTagOpen} hideTrigger onChange={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ mentions: v }); setMentions(v); setLoiGui(null); }}/>
+          </ScrollView>
+        </View>
         <View testID="community-comment-entry" style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
           <PressScale pressedScale={0.94} haptic="select" accessibilityRole="button" accessibilityLabel={toolsOpen ? "Đóng công cụ bình luận" : "Thêm vào bình luận"} accessibilityState={{ expanded: toolsOpen, disabled: busy || parts.busy }} disabled={busy || parts.busy} onPress={() => { if (!mounted.current || sending.current) return; setTagOpen(false); setToolsOpen((value) => !value); }} style={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}><RudiIcon name={toolsOpen ? "close" : "add"} size={22} color={busy || parts.busy ? colors.inkFaint : colors.inkSoft}/></PressScale>
           <View testID="community-comment-field-slot" style={{ flex: 1, minWidth: 0 }}>
-            <Field nativeMetrics autoGrowLines={3} multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết…"/>
+            <Field nativeMetrics autoGrowLines={3} multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onFocus={() => { if (mounted.current) setTagOpen(false); }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết…"/>
           </View>
           <IconButton icon="arrow-up" solid tron accessibilityLabel={busy ? "Đang gửi…" : "Gửi bình luận"} disabled={busy || uploading || pendingFile !== null || parts.pending || !body.trim()} loading={busy} onPress={() => void send()}/>
         </View>
-        {sendReason && !parts.notice ? <Text testID="community-comment-send-reason" style={[typography.note, { color: colors.inkSoft }]}>{sendReason}</Text> : null}
+        {sendReason && !parts.notice && !tagOpen ? <Text testID="community-comment-send-reason" style={[typography.note, { color: colors.inkSoft }]}>{sendReason}</Text> : null}
         {parts.retry && parts.discard ? <View testID="community-comment-recovery" style={{ flexDirection: "row", alignItems: "stretch", gap: 8 }}>
           <RudiButton compact label="Thử lại" accessibilityLabel="Thử lại tệp đã chọn" variant="outline" disabled={busy} style={{ flex: 1, minWidth: 0, paddingHorizontal: 8 }} onPress={parts.retry}/>
           <RudiButton compact label="Bỏ chọn" accessibilityLabel="Bỏ tệp đang chờ" variant="ghost" disabled={busy} style={{ flex: 1, minWidth: 0, paddingHorizontal: 8 }} onPress={parts.discard}/>
         </View> : parts.stop ? <RudiButton compact label="Dừng chờ tệp" variant="ghost" disabled={busy} onPress={parts.stop}/> : null}
         {!busy && !parts.busy && toolsOpen ? <View testID="community-comment-tools" style={{ flexDirection: largeText ? "column" : "row", alignItems: "stretch", gap: 4 }}>
           {!parts.pending ? attachmentTool : null}
-          <RudiButton compact label={mentions.length ? `Gắn ${mentions.length} bạn` : "Gắn bạn"} accessibilityLabel={mentions.length ? `Gắn bạn bè, đã chọn ${mentions.length} người` : "Gắn bạn bè"} variant="ghost" style={{ flex: largeText ? undefined : 1, minWidth: 0, paddingHorizontal: 8 }} onPress={() => { if (!mounted.current || sending.current) return; setToolsOpen(false); setTagOpen(true); }}/>
+          <RudiButton compact label={mentions.length ? `Gắn ${mentions.length} bạn` : "Gắn bạn"} accessibilityLabel={mentions.length ? `Gắn bạn bè, đã chọn ${mentions.length} người` : "Gắn bạn bè"} variant="ghost" style={{ flex: largeText ? undefined : 1, minWidth: 0, paddingHorizontal: 8 }} onPress={() => { if (!mounted.current || sending.current) return; Keyboard.dismiss(); setToolsOpen(false); setTagOpen(true); }}/>
         </View> : null}
       </View>}
     />;

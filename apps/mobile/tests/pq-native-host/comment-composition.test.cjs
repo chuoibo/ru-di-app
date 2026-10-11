@@ -22,6 +22,13 @@ const send = h => h.one('RNPressable', props => /^(Gửi bình luận|Đang gử
 const disclosure = h => h.one('RNPressable', props => /^(Thêm vào bình luận|Đóng công cụ bình luận)$/.test(props.accessibilityLabel));
 async function click(h, label) { const control = button(h, label); assert.equal(Boolean(control.props.disabled), false, 'actual target is enabled'); await act(async () => control.props.onPress()); }
 async function toggle(h) { const control = disclosure(h); assert.equal(Boolean(control.props.disabled), false); await act(async () => control.props.onPress()); }
+async function closeMentions(h) {
+  const label = 'Đóng danh sách bạn';
+  const controls = h.hosts('RNPressable').filter(node => node.props.accessibilityLabel === label || node.findAllByType('RNText').some(leaf => text(leaf.props.children) === label));
+  assert.equal(controls.length, 1, 'one actual close control by its semantic label');
+  assert.equal(Boolean(controls[0].props.disabled), false, 'actual close control is enabled');
+  await act(async () => controls[0].props.onPress());
+}
 async function withHost(options, run, prepare = () => {}) {
   const h = createHost(options); h.state.window = { width: 320, height: 640, scale: 2, fontScale: 1 }; prepare(h);
   try { await h.mount(); await run(h); } finally { await h.dispose(); }
@@ -122,7 +129,7 @@ test('QC03 pending recovery stays outside details and mentions remain reachable 
     assert.ok(button(h, 'Gắn bạn bè')); assert.ok(button(h, 'Thử lại tệp đã chọn'));
     await act(async () => retainedImage()); assert.equal(h.picks.length, 1, 'current pending guard also protects retained image action');
     await click(h, 'Gắn bạn bè'); assert.equal(h.friendReads.length, 1); same(h, input, owner, 'Synthetic pending with caption');
-    await h.pressText('Đóng danh sách bạn');
+    await closeMentions(h);
     await click(h, 'Thử lại tệp đã chọn'); assert.equal(h.picks.length, 1, 'retry reuses selected native file');
     await h.finish(h.uploads[1], { id: 'synthetic-ready', type: 'image/jpeg', url: '/synthetic-ready', state: 'ready' });
     assert.equal(h.drafts.at(-1).pendingFile, null); assert.equal(h.drafts.at(-1).media[0].id, 'synthetic-ready'); assert.equal(send(h).props.disabled, false);
@@ -149,7 +156,7 @@ test('QC04 actual friends disclosure preserves controlled draft and checkbox sel
     await h.nativeFont(snapshot(2)); same(h, input, owner, 'Synthetic mentions draft');
     const friendText = boxes()[1].findAllByType('RNText')[0]; assert.equal(friendText.props.allowFontScaling, false); assert.equal(flatten(friendText.props.style).fontSize, 28.75);
     const permission = h.one('RNText', props => text(props.children) === 'Tag gửi lời nhắc, không mở quyền xem bài.'); assert.equal(permission.props.allowFontScaling, false); assert.equal(flatten(permission.props.style).fontSize, 21.5); assert.equal(flatten(permission.props.style).fontWeight, '400');
-    await h.pressText('Đóng danh sách bạn'); await toggle(h); await click(h, 'Gắn bạn bè, đã chọn 20 người'); assert.equal(h.friendReads.length, 2); assert.equal(boxes().filter(box => box.props['aria-checked']).length, 20);
+    await closeMentions(h); await toggle(h); await click(h, 'Gắn bạn bè, đã chọn 20 người'); assert.equal(h.friendReads.length, 2); assert.equal(boxes().filter(box => box.props['aria-checked']).length, 20);
     same(h, input, owner, 'Synthetic mentions draft'); assert.equal(h.writes.length + h.picks.length + h.uploads.length, 0); assert.equal(h.observation().subscriptions, 1);
   }, h => { pending = h.deferFriendsRead(); });
 });

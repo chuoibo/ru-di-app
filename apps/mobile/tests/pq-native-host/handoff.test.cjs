@@ -30,6 +30,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
   const theme = { colors, radius: { base: 12, control: 16 }, space: { md: 16 } };
   const Native = {
     View: 'View', Text: 'Text', TextInput: 'TextInput', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
+    Keyboard: { dismiss() {} },
     Platform: { OS: 'android' }, StyleSheet: { create: x => x, flatten, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }),
     BackHandler: { addEventListener: (_name, callback) => { const entry = { callback, live: true }; back.push(entry); return { remove: () => { entry.live = false; } }; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(reduced), addEventListener: () => ({ remove() {} }) },
@@ -263,7 +264,7 @@ test('QL02 attachment recovery and tags may scroll while native input and send r
     assert.equal(isInside(h.field(), details), false); assert.equal(isInside(h.sendButton(), details), false);
     assert.equal(isInside(h.sendButton(), h.referenceScroll()), false, 'thread cannot absorb send when attachments are present');
     await h.openTools(); await act(async () => h.button('Gắn bạn bè').props.onPress()); await h.mentions(['synthetic-B']);
-    const mention = h.root.root.findByType('MentionPicker'); assert.equal(isInside(mention, h.detailsScroll()), true); assert.equal(mention.props.expanded, true);
+    const mention = h.root.root.findByType('MentionPicker'); const mentionList = h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-comment-mentions-list'); assert.ok(mentionList); assert.equal(isInside(mention, h.detailsScroll()), false); assert.equal(isInside(mention, mentionList), true); assert.equal(mention.props.expanded, true);
     const input = h.field(), writer = h.writer(); await h.resize(310); await h.resize(844);
     assert.equal(h.field() === input, true, 'native IME layout does not replace EditText'); assert.equal(h.writer() === writer, true);
     await h.close(); await h.complete(h.closeAnimation()); await h.open();

@@ -54,7 +54,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     StyleSheet: { create: value => value, flatten, hairlineWidth: 0.5, absoluteFill: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } },
     useWindowDimensions: () => state.window,
     PixelRatio: { get: () => state.window.scale, getFontScale: () => state.window.fontScale, roundToNearestPixel: value => Math.round(value * state.window.scale) / state.window.scale },
-    Keyboard: { dismiss() {}, addListener: () => ({ remove() {} }) },
+    Keyboard: { dismiss() { nativeHostCalls.push({ kind: 'keyboard.dismiss' }); }, addListener: () => ({ remove() {} }) },
     BackHandler: { addEventListener: () => ({ remove() {} }) },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(true), addEventListener: () => ({ remove() {} }), setAccessibilityFocus() {}, announceForAccessibility() {} },
     AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) },

@@ -18,7 +18,7 @@ import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner } from "../ui/NativeFontMetrics";
 import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -51,6 +51,16 @@ export function ProfileScreen() {
 }
 
 function ProfileSong({ phien }: { phien: Phien }) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <ProfileContent phien={phien} /> : <ObserveProfileMetrics phien={phien} />;
+}
+
+function ObserveProfileMetrics({ phien }: { phien: Phien }) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><ProfileContent phien={phien} /></NativeFontMetricsProvider>;
+}
+
+function ProfileContent({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const session = useRudiSession();
@@ -142,97 +152,99 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
 
   return (
-    <RudiScreen material="quiet" bottomInset={editingProfile ? 16 : "tab"} cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen"
+    <RudiScreen material="quiet" bottomInset={editingProfile ? 16 : "tab"} cot="doc" avoidKeyboard={editingProfile} cuonVeDau={editingProfile ? "edit" : "passport"} testID="profile-screen" contentStyle={editingProfile ? undefined : styles.profileContent}
       header={editor ? <TopBar title="Chỉnh hồ sơ" onBack={editor.back} right={<RudiButton compact full={false} label="Huỷ" disabled={dangLuuHoSo} onPress={editor.cancel} variant="ghost" />} /> : undefined}
       footer={editor ? <RudiButton label="Lưu hồ sơ" disabled={dangLuuHoSo} loading={dangLuuHoSo} onPress={editor.save} /> : undefined}
       footerInset={rail ? insets.bottom + 12 : 24}>
-      {!editingProfile ? <View style={styles.profileTop}>
-        <View style={styles.flex}>
-          <Heading title="Cá nhân" />
-        </View>
-        {/* One door to Settings, and it is the row below. A gear in this corner
-            reads as a second one, and on a dev client the launcher's own gear
-            sits on top of it, so the corner is the worst place for it. */}
-      </View> : null}
-      <HoSoSong phien={phien} onEditorChange={setEditor} />
+      <View style={editingProfile ? undefined : styles.profileHero}>
+        {!editingProfile ? <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Cá nhân</Text> : null}
+        {/* Settings keeps its single door in the management group below. */}
+        <HoSoSong phien={phien} onEditorChange={setEditor} />
+      </View>
       {!editingProfile ? <>
       <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
-        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, { borderBottomColor: page === value ? colors.accent : 'transparent' }]}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text></Pressable>)}
+        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={styles.profileTab}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
       </View>
       {page === "kept" ? <>
       <DiaryWall person={phien.person_id} owner={phien.person_id} />
       <HanhTrinhTeaser personId={personId} />
       </> : <>
-      <View>
-            <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Kết nối &amp; gu</Text>
-            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-              <ListRow
-                icon="people-outline"
-                onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
-                subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời đang chờ` : undefined}
-                title="Bạn bè"
-                trailing={
-                  loiMoiCho > 0 ? (
-                    <View accessibilityLabel={`${loiMoiCho} lời mời đang chờ`} style={[styles.dem, { backgroundColor: colors.accent }]}>
-                      <Text style={[typography.caption, { color: colors.accentInk }]}>{loiMoiCho}</Text>
-                    </View>
-                  ) : undefined
-                }
-              />
-            </View>
-            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-              <ListRow
-                icon="sparkles-outline"
-                onPress={() => router.push("/personalization")}
-                subtitle={tomTat(soThich)}
-                title="Sở thích"
-              />
-            </View>
-        <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Sổ của bạn</Text>
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
+      <View style={styles.menuGroups}>
+        <View style={styles.menuGroup}>
+          <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Kết nối &amp; gu</Text>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="people-outline"
+              onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
+              subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời đang chờ` : undefined}
+              title="Bạn bè"
+              trailing={
+                loiMoiCho > 0 ? (
+                  <View accessibilityLabel={`${loiMoiCho} lời mời đang chờ`} style={[styles.dem, { backgroundColor: colors.accent }]}>
+                    <Text style={[typography.caption, { color: colors.accentInk }]}>{loiMoiCho}</Text>
+                  </View>
+                ) : undefined
+              }
+            />
+          </View>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="sparkles-outline"
+              onPress={() => router.push("/personalization")}
+              subtitle={tomTat(soThich)}
+              title="Sở thích"
+            />
+          </View>
         </View>
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow
-            icon="wallet-outline"
-            onPress={() => router.push("/finance")}
-            title="Tài chính của tôi"
-            tone="split"
-          />
+        <View style={styles.menuGroup}>
+          <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Sổ của bạn</Text>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
+          </View>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="wallet-outline"
+              onPress={() => router.push("/finance")}
+              title="Tài chính của tôi"
+              tone="split"
+            />
+          </View>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="ribbon-outline"
+              onPress={() => router.push("/achievements")}
+              title="Hành trình"
+            />
+          </View>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="bookmark-outline"
+              onPress={() => setPanel("saved")}
+              subtitle={soLuuHien === null ? undefined : `${soLuuHien} địa điểm`}
+              title="Đã lưu"
+            />
+          </View>
         </View>
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow
-            icon="ribbon-outline"
-            onPress={() => router.push("/achievements")}
-            title="Hành trình"
-          />
-        </View>
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow
-            icon="bookmark-outline"
-            onPress={() => setPanel("saved")}
-            subtitle={soLuuHien === null ? undefined : `${soLuuHien} địa điểm`}
-            title="Đã lưu"
-          />
-        </View>
-        <Text accessibilityRole="header" style={[typography.title, styles.menuHeading, { color: colors.ink }]}>Quản lý</Text>
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow
-            icon="settings-outline"
-            onPress={() => router.push("/settings" as never)}
-            title="Cài đặt"
-          />
-        </View>
-        {/* «Tài khoản» and «Đăng xuất» stay here, on this screen, with these
-            words: `_dang-xuat-neu-co.yaml` walks through them on every OTP
-            table, and moving them into Settings would break the evidence of
-            every other slice. */}
-        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-          <ListRow
-            icon="shield-checkmark-outline"
-            onPress={() => setPanel("account")}
-            title="Tài khoản"
-          />
+        <View style={styles.menuGroup}>
+          <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Quản lý</Text>
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="settings-outline"
+              onPress={() => router.push("/settings" as never)}
+              title="Cài đặt"
+            />
+          </View>
+          {/* «Tài khoản» and «Đăng xuất» stay here, on this screen, with these
+              words: `_dang-xuat-neu-co.yaml` walks through them on every OTP
+              table, and moving them into Settings would break the evidence of
+              every other slice. */}
+          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+            <ListRow
+              icon="shield-checkmark-outline"
+              onPress={() => setPanel("account")}
+              title="Tài khoản"
+            />
+          </View>
         </View>
       </View>
       </>}
@@ -397,11 +409,15 @@ const styles = StyleSheet.create({
   dem: { minWidth: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", paddingHorizontal: 7 },
   form: { maxWidth: 560 },
   khung: { gap: 14 },
-  profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
-  profileTabs: { flexDirection: "row", gap: 16, borderBottomWidth: StyleSheet.hairlineWidth },
-  profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center", borderBottomWidth: 2 },
+  profileContent: { gap: 0 },
+  profileHero: { gap: 12 },
+  profileTabs: { flexDirection: "row", gap: 16, marginTop: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
+  profileTabIndicator: { position: "absolute", bottom: 0, width: 32, height: 2, borderRadius: 1 },
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
-  menuHeading: { paddingTop: 24, paddingBottom: 8 },
+  menuGroups: { paddingTop: 16, gap: 20 },
+  menuGroup: { gap: 0 },
+  menuHeading: { marginBottom: 4 },
   hero: { gap: 10 },
   heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },
   upcoming: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, marginTop: 10 },
