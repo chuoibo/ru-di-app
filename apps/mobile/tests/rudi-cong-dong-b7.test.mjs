@@ -130,13 +130,14 @@ test("chi tiết bài, bình luận, ô soạn: lỗi tại chỗ, nối lại k
   const serverError = ts.isConditionalExpression(sendError) ? sendError.whenFalse : sendError;
   assert.ok(ts.isIdentifier(serverError) && serverError.text === "error", "lỗi máy chủ vẫn hiện tại chỗ khi không có xung đột bản sửa");
   assert.match(so, /params\.edit \? <Text[^>]*testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc/, "người đọc khoá khi sửa nói vì sao");
-  // UI-096 on Cộng đồng: «Xóa» asks in the comment's row; the send button says why it is off.
-  assert.match(bl, /onPress=\{\(\) => \{ setHoiXoa\(c\.id\); setLoiXoa\(null\); \}\}/);
+  // UI-096: deletion still asks in the row; active waits keep a visible reason.
+  // The idle editor uses its placeholder and disabled send without a duplicate helper.
+  assert.match(bl, /onPress=\{\(\) => \{ if \(!mounted\.current \|\| !deletableNow\.current\.has\(c\.id\)\) return; setCommentMenu\(null\); setHoiXoa\(c\.id\); setLoiXoa\(null\); \}\}/);
   assert.match(bl, /Xóa bình luận này\? Không lấy lại được\./);
   assert.doesNotMatch(bl, /label="Xóa" variant="ghost" onPress=\{\(\) => \{ void translatedAsActor/);
-  assert.match(bl, /const sendReason = busy \? "Đợi gửi xong rồi viết tiếp\." : uploading \? "Đợi ảnh tải xong rồi gửi\." : pendingFile !== null \? "Thử lại hoặc bỏ ảnh đang chờ\." : !body\.trim\(\) \? "Viết vài chữ trước khi gửi\." : null/);
+  assert.match(bl, /const sendReason = busy \? "Đợi gửi xong rồi viết tiếp\." : uploading \? "Đợi ảnh tải xong rồi gửi\." : pendingFile !== null \? "Thử lại hoặc bỏ ảnh đang chờ\." : null/);
   assert.match(bl, /testID="community-comment-send-reason"[^>]*>\{sendReason\}<\/Text>/, "disabled send keeps its visible reason in the editor");
-  assert.match(bl, /accessibilityLabel=\{busy \? "Đang gửi…" : "Gửi bình luận"\} disabled=\{busy \|\| uploading \|\| pendingFile !== null \|\| !body\.trim\(\)\}/);
+  assert.match(bl, /accessibilityLabel=\{busy \? "Đang gửi…" : "Gửi bình luận"\} disabled=\{busy \|\| uploading \|\| pendingFile !== null \|\| parts\.pending \|\| !body\.trim\(\)\}/);
   const the = doc("PostCard.tsx");
   assert.match(the, /if \(!expanded && biCat\) setExpanded\(true\)/, "UI-139");
   // UI-143: a frame never wider than the album it sits in. Since the five-column

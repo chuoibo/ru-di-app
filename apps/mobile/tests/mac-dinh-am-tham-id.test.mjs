@@ -46,6 +46,7 @@
  *   3. Floors on files read and expressions examined, so a walk that read
  *      nothing cannot pass as a tree with nothing in it.
  *
+ * Binding/context proof excludes only a selector; its subtree is still walked.
  * The allowlist below is ids used AS ids -- selection state, navigation
  * arguments, a toggle comparing a row to the open row. None of them reach a
  * person's eyes. Entries are keyed by file plus the expression text rather than
@@ -133,6 +134,71 @@ function idBearing(node) {
   return TEN_LA_ID.test(snake) ? name : null;
 }
 
+// A selector toggle is safe only when its React state never flows as a value.
+// Keep aliases, shadowed bindings and unknown reads on the ordinary finding path.
+function selectionStates(sf) {
+  const imported = sf.statements.some(node => ts.isImportDeclaration(node) &&
+    ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "react" &&
+    node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings) &&
+    node.importClause.namedBindings.elements.some(item => !item.propertyName && item.name.text === "useState"));
+  if (!imported) return [];
+  const states = [];
+  let shadowed = false;
+  const visit = node => {
+    if (ts.isIdentifier(node) && node.text === "useState" &&
+        !(ts.isImportSpecifier(node.parent) && !node.parent.propertyName) &&
+        !(ts.isCallExpression(node.parent) && node.parent.expression === node)) shadowed = true;
+    if (ts.isVariableDeclaration(node) && ts.isArrayBindingPattern(node.name) && node.name.elements.length === 2 &&
+        ts.isVariableDeclarationList(node.parent) && (node.parent.flags & ts.NodeFlags.Const) !== 0 &&
+        node.name.elements.every(item => ts.isBindingElement(item) && ts.isIdentifier(item.name) && !item.dotDotDotToken && !item.initializer) &&
+        node.initializer && ts.isCallExpression(node.initializer) && ts.isIdentifier(node.initializer.expression) &&
+        node.initializer.expression.text === "useState" && node.initializer.arguments.length === 1 && node.initializer.arguments[0].kind === ts.SyntaxKind.NullKeyword) {
+      let owner = node.parent;
+      while (owner && !ts.isFunctionLike(owner)) owner = owner.parent;
+      if (owner) states.push({ state: node.name.elements[0].name, setter: node.name.elements[1].name, owner });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return shadowed ? [] : states;
+}
+
+function selectorToggle(node, states, sf) {
+  const unwrap = value => { while (ts.isParenthesizedExpression(value)) value = value.expression; return value; };
+  let body = node;
+  while (body.parent && ts.isParenthesizedExpression(body.parent)) body = body.parent;
+  const updater = body.parent, call = updater?.parent;
+  if (!updater || !ts.isArrowFunction(updater) || updater.body !== body || updater.parameters.length !== 1 ||
+      !ts.isIdentifier(updater.parameters[0].name) || updater.parameters[0].initializer || updater.parameters[0].dotDotDotToken ||
+      !call || !ts.isCallExpression(call) || call.arguments.length !== 1 || call.arguments[0] !== updater || !ts.isIdentifier(call.expression)) return false;
+  const binding = states.find(value => value.setter.text === call.expression.text && value.owner.pos <= call.pos && value.owner.end >= call.end);
+  const condition = unwrap(node.condition), previous = updater.parameters[0].name;
+  if (!binding || !ts.isBinaryExpression(condition) || ![ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(condition.operatorToken.kind)) return false;
+  const left = unwrap(condition.left), right = unwrap(condition.right);
+  const id = ts.isIdentifier(left) && left.text === previous.text ? right : ts.isIdentifier(right) && right.text === previous.text ? left : null;
+  const simple = value => ts.isIdentifier(value) || ts.isPropertyAccessExpression(value) && simple(value.expression) ||
+    ts.isElementAccessExpression(value) && ts.isStringLiteral(value.argumentExpression) && simple(value.expression);
+  if (!id || !simple(id) || idBearing(id) === null) return false;
+  const cleared = unwrap(condition.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ? node.whenTrue : node.whenFalse);
+  const selected = unwrap(condition.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ? node.whenFalse : node.whenTrue);
+  if (cleared.kind !== ts.SyntaxKind.NullKeyword || selected.getText(sf) !== id.getText(sf)) return false;
+  let safe = true;
+  const inspect = value => {
+    if (!safe) return;
+    if (ts.isIdentifier(value)) {
+      if (value.text === binding.state.text && value !== binding.state) {
+        const parent = value.parent;
+        if (!ts.isBinaryExpression(parent) || ![ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(parent.operatorToken.kind)) safe = false;
+      } else if (value.text === binding.setter.text && value !== binding.setter) {
+        if (!ts.isCallExpression(value.parent) || value.parent.expression !== value) safe = false;
+      }
+    }
+    ts.forEachChild(value, inspect);
+  };
+  inspect(binding.owner);
+  return safe;
+}
+
 /**
  * Every fallback-to-an-id in one file, plus how many fallbacks were examined.
  *
@@ -143,6 +209,7 @@ function idBearing(node) {
 export function fallbacksToId(text, fileName) {
   const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const hits = [];
+  const states = selectionStates(sf);
   let seen = 0;
   const at = (node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
   const code = (node) => node.getText(sf).replace(/\s+/g, " ").trim();
@@ -155,7 +222,7 @@ export function fallbacksToId(text, fileName) {
       }
     } else if (ts.isConditionalExpression(node)) {
       seen += 1;
-      if (idBearing(node.whenFalse) !== null || idBearing(node.whenTrue) !== null) {
+      if ((idBearing(node.whenFalse) !== null || idBearing(node.whenTrue) !== null) && !selectorToggle(node, states, sf)) {
         hits.push({ line: at(node), code: code(node) });
       }
     }
@@ -309,6 +376,38 @@ test("phép quét nhận ra hình dạng, và không bắn oan chỗ có mặc �
   assert.equal(hits.length, 3, `phải bắt đúng ba dòng đầu, bắt được: ${JSON.stringify(hits)}`);
   assert.deepEqual(hits.map((h) => h.line), [1, 2, 3]);
   assert.equal(seen, 5, "phải soi cả năm biểu thức, kể cả hai chỗ lành");
+});
+
+test("phép quét chỉ bỏ toggle selection đã chứng minh không chảy sang giá trị hiển thị", () => {
+  const fixture = (reads, call = "setOpen(previous => previous === row.id ? null : row.id)", hook = "useState", declaration = "") =>
+    `import { useState } from "react"; function Example() { ${declaration} const [open, setOpen] = ${hook}(null); ${reads}; return <button onClick={() => ${call}} />; }`;
+  const cases = [
+    ["selection boolean reads", fixture("const selected = open === row.id"), 0, 1],
+    ["inverse strict toggle", fixture("const selected = open !== row.id", "setOpen(previous => previous !== row.id ? row.id : null)"), 0, 1],
+    ["displayed state", fixture("const label = <Text>{open}</Text>"), 1, 1],
+    ["nested displayed state", fixture("const render = () => <Text>{open}</Text>"), 1, 1],
+    ["display prop", fixture("const label = <Card title={open} />"), 1, 1],
+    ["copied state", fixture("copyToClipboard(open)"), 1, 1],
+    ["mixed boolean and string sink", fixture("const selected = open === row.id; const label = String(open)"), 1, 1],
+    ["shadowed state", fixture("function nested(open) { return open === row.id; }"), 1, 1],
+    ["shadowed setter", fixture("function nested(setOpen) { setOpen(null); }"), 1, 1],
+    ["shadowed hook", fixture("const selected = open === row.id", undefined, "useState", "const useState = fakeHook;"), 1, 1],
+    ["aliased setter", fixture("const flip = setOpen", "flip(previous => previous === row.id ? null : row.id)"), 1, 1],
+    ["unknown hook", fixture("const selected = open === row.id", undefined, "fakeHook"), 1, 1],
+    ["outer hook shadow", 'import { useState } from "react"; function Outer(useState) { function Inner() { const [open, setOpen] = useState(null); return <button onClick={() => setOpen(previous => previous === row.id ? null : row.id)} />; } }', 1, 1],
+    ["aliased hook", fixture("const selected = open === row.id", undefined, "choose", "const choose = useState;"), 1, 1],
+    ["namespace hook", 'import * as React from "react"; function Example() { const [open, setOpen] = React.useState(null); return <button onClick={() => setOpen(previous => previous === row.id ? null : row.id)} />; }', 1, 1],
+    ["block updater", fixture("const selected = open === row.id", "setOpen(previous => { return previous === row.id ? null : row.id; })"), 1, 1],
+    ["displayed ternary beside selector", fixture("const label = open === row.id ? null : row.id"), 1, 2],
+    ["nested display fallback still walked", fixture("const label = () => roster.find(p => p.id === row.id)?.name ?? row.id"), 1, 2],
+    ["ordinary displayed ternary", "const label = <Text>{name ? name : row.id}</Text>;", 1, 1],
+    ["callback display fallback", "const label = () => roster.find(p => p.id === id)?.name ?? id;", 1, 1],
+  ];
+  for (const [name, source, expectedHits, expectedSeen] of cases) {
+    const { hits, seen } = fallbacksToId(source, "selection-context-fixture.tsx");
+    assert.equal(hits.length, expectedHits, name + ": " + JSON.stringify(hits));
+    assert.equal(seen, expectedSeen, name + ": every fallback remains examined");
+  }
 });
 
 test("bản mã trước khi vá còn nguyên là bản đã ra khỏi git, không phải bản chép tay", () => {
