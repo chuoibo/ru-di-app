@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import ts from "typescript";
 
 import { TOI_DA_CHU_DE, chuanChuDe, loiChuDe, tachChuDe } from "../dist-test/rudi/community/chu-de.js";
 import { cauThongBao, coThongBaoMoi, doiTheoDoiTacGia, nhanTrangThaiDuyet, thanBiCat } from "../dist-test/rudi/community/bang-tin.js";
@@ -13,6 +14,27 @@ import { COMMUNITY_ERRORS } from "../dist-test/rudi/community/api.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "rudi", "community");
 const doc = (ten) => readFileSync(join(SRC, ten), "utf8");
+
+/** Locate the visible send error, including the stale-edit recovery branch. */
+function sendErrorExpression(source) {
+  const sf = ts.createSourceFile("Composer.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const found = [];
+  function visit(node) {
+    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(sf) === "CauTaiCho") {
+      const attrs = node.attributes.properties.filter(ts.isJsxAttribute);
+      const id = attrs.find((attr) => attr.name.getText(sf) === "testID")?.initializer;
+      if (id && ts.isStringLiteral(id) && id.text === "cong-dong-loi-gui") {
+        assert.ok(node.attributes.properties.every(ts.isJsxAttribute), "lỗi gửi không bị JSX spread ghi đè");
+        const cau = attrs.find((attr) => attr.name.getText(sf) === "cau")?.initializer;
+        if (cau && ts.isJsxExpression(cau) && cau.expression) found.push(cau.expression);
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sf);
+  assert.equal(found.length, 1, "một lỗi gửi tại chỗ, không trùng ô thông báo");
+  return found[0];
+}
 
 test("chủ đề: kiểm như máy chủ (posts.go normalizeTopics), nói điều cần sửa", () => {
   assert.equal(TOI_DA_CHU_DE, 5);
@@ -100,7 +122,13 @@ test("chi tiết bài, bình luận, ô soạn: lỗi tại chỗ, nối lại k
   assert.doesNotMatch(bl, /setItems\(\[\]\);\s*void load\(\)/);
   const so = doc("Composer.tsx");
   assert.match(so, /const loiChuDeGo = loiChuDe\(topics\)/);
-  assert.match(so, /<CauTaiCho cau=\{error\} testID="cong-dong-loi-gui" \/>/, "lỗi máy chủ ngay trên nút gửi");
+  const sendError = sendErrorExpression(so);
+  if (ts.isConditionalExpression(sendError)) {
+    assert.ok(ts.isIdentifier(sendError.condition) && sendError.condition.text === "conflict", "chỉ xung đột bản sửa mới thay câu lỗi máy chủ");
+    assert.ok(ts.isStringLiteral(sendError.whenTrue) && sendError.whenTrue.text.trim().length > 0, "xung đột có lời giải thích tại chỗ");
+  }
+  const serverError = ts.isConditionalExpression(sendError) ? sendError.whenFalse : sendError;
+  assert.ok(ts.isIdentifier(serverError) && serverError.text === "error", "lỗi máy chủ vẫn hiện tại chỗ khi không có xung đột bản sửa");
   assert.match(so, /params\.edit \? <Text[^>]*testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc/, "người đọc khoá khi sửa nói vì sao");
   // UI-096 on Cộng đồng: «Xóa» asks in the comment's row; the send button says why it is off.
   assert.match(bl, /onPress=\{\(\) => \{ setHoiXoa\(c\.id\); setLoiXoa\(null\); \}\}/);

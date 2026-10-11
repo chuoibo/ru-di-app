@@ -16,7 +16,7 @@ console.error = (...args) => { if (!String(args[0]).includes('react-test-rendere
 function person(id = 'synthetic-A') { return { person_id: id, token: `synthetic-token-${id}`, profile: { display_name: id }, contexts: [], context_id: null }; }
 function post(id = 'synthetic-post', revision = 3) { return { id, author_id: 'synthetic-A', body: 'Synthetic server body', audience: 'public', context_id: null, revision, topics: ['Server'], mentions: [], media: [] }; }
 function deferred() { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
-function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot, mode = 'candidate' } = {}) {
+function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot, mode = 'candidate', realMedia = false } = {}) {
   const state = { actor, params, token: null, revoke: null, show: true, tick: 0 };
   const cache = new Map(), consumed = new Map(), queue = new Map(), calls = [], routes = [];
   let root, session;
@@ -25,7 +25,7 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
   const Button = visual('RudiButton');
   const Screen = props => React.createElement('RudiScreen', props, props.header, props.children, props.footer);
   const colors = new Proxy({}, { get: () => '#123456' });
-  const native = { View: 'RNView', Text: 'RNText', Pressable: 'RNPressable', TextInput: 'RNTextInput', Keyboard: { dismiss() {} }, Platform: { OS: 'android', select: v => v.android ?? v.default }, StyleSheet: { create: v => v, hairlineWidth: 1 }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }) };
+  const native = { View: 'RNView', Text: 'RNText', Pressable: 'RNPressable', TextInput: 'RNTextInput', ScrollView: 'RNScrollView', Keyboard: { dismiss() {} }, Platform: { OS: 'android', select: v => v.android ?? v.default }, StyleSheet: { create: v => v, hairlineWidth: 1 }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }) };
   const adapters = {
     'apps/mobile/src/api': { newAttempt: () => ({ key: randomUUID() }), translatedAsActor: (...args) => invoke('translatedAsActor', args, { id: 'synthetic-post' }), datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token },
     'apps/mobile/src/phien': { khoiPhucPhien: () => Promise.resolve(state.actor), dangXuat: (...args) => invoke('dangXuat', args), quenPhienDaThuHoi: (...args) => invoke('quenPhienDaThuHoi', args), docNhomCuaToi: (...args) => invoke('docNhomCuaToi', args, [{ id: 'synthetic-group', display_name: 'Synthetic group', kind: 'group', my_state: 'active' }]) },
@@ -37,13 +37,13 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     'apps/mobile/src/rudi/ui/Skeleton': { SkeletonLines: visual('SkeletonLines') },
     'apps/mobile/src/rudi/ui/AvatarNguoi': { AvatarNguoi: visual('AvatarNguoi') },
     'apps/mobile/src/rudi/ui/RudiIcon': { RudiIcon: visual('RudiIcon') },
-    'apps/mobile/src/rudi/community/api': { COMMUNITY_ERRORS: { revision_conflict: 'Revision conflict' }, getPost: (...args) => invoke('getPost', args, () => post(args[1])), createPost: (...args) => invoke('createPost', args, { id: 'synthetic-post' }) },
+    'apps/mobile/src/rudi/community/api': { COMMUNITY_ERRORS: { revision_conflict: 'Revision conflict' }, getPost: (...args) => invoke('getPost', args, () => post(args[1])), createPost: (...args) => invoke('createPost', args, { id: 'synthetic-post' }), uploadMedia: (...args) => invoke('uploadMedia', args, { id: 'synthetic-upload', type: 'image/jpeg', url: '/synthetic-upload', state: 'ready' }), imageSource: (_person, uri) => ({ uri }) },
     'apps/mobile/src/rudi/community/MediaPicker': { MediaPicker: props => React.createElement('MediaPicker', props, props.renderToolbar?.(() => {}, false)) },
     'apps/mobile/src/rudi/community/MentionPicker': { MentionPicker: visual('MentionPicker') },
   };
   function load(relative) {
     relative = relative.replace(/\\/g, '/').replace(/\.(tsx?|js)$/, '');
-    if (adapters[relative]) return adapters[relative];
+    if (adapters[relative] && !(realMedia && relative === 'apps/mobile/src/rudi/community/MediaPicker')) return adapters[relative];
     if (cache.has(relative)) return cache.get(relative).exports;
     const variants = ['.ts', '.tsx'];
     const bases = [candidateRoot, repo];
@@ -58,6 +58,9 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
       if (specifier === 'react') return React;
       if (specifier === 'react/jsx-runtime') return dependency(specifier);
       if (specifier === 'react-native') return native;
+      if (specifier === 'expo-image') return { Image: visual('Image') };
+      if (specifier === 'expo-image-picker') return { launchImageLibraryAsync: (...args) => invoke('launchImageLibraryAsync', args, { canceled: true, assets: [] }) };
+      if (specifier === 'expo-image-manipulator') return { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: (...args) => invoke('manipulateAsync', args, { uri: 'file:///synthetic-clean.jpg', width: 32, height: 32 }) };
       if (specifier === 'expo-router') return { useLocalSearchParams: () => state.params, useRouter: () => ({ replace: value => routes.push(['replace', value]), push: value => routes.push(['push', value]) }) };
       if (specifier === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ bottom: 12, top: 24, left: 0, right: 0 }) };
       assert.ok(specifier.startsWith('.'), `Unmapped external ${specifier} from ${relative}`);
@@ -88,6 +91,7 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     field(label) { return one('Field', p => p.label === label); },
     button(label) { return one('RudiButton', p => p.label === label); },
     media() { return one('MediaPicker'); },
+    tool(label) { return one('RNPressable', p => p.accessibilityLabel === label); },
     mentions() { return one('MentionPicker'); },
     error() { return one('CauTaiCho', p => p.testID === 'cong-dong-loi-gui').props; },
     send() { return one('RudiButton', p => /^(Gửi lên cộng đồng|Gửi bản sửa|Đăng lên tường|Đang gửi…)$/.test(p.label)); },

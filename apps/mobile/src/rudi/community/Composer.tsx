@@ -85,6 +85,7 @@ function ComposerForm() {
     const [dirty, setDirty] = useState(!params.edit && nhapCu !== null);
     const [conflict, setConflict] = useState(false);
     const sending = useRef(false);
+    const uploadingNow = useRef(false);
     const submitted = useRef(false);
     const alive = useRef(true);
     const [initialAttempt] = useState(() => nhapCu?.logical_id ?? newAttempt().key);
@@ -132,7 +133,7 @@ function ComposerForm() {
     }, [phien, groupRetry]);
     const send = async () => {
         const draft = content.current;
-        if (!phien || !current() || conflict || sending.current || loading || uploading || !draft.body.trim() || loiChuDe(draft.topics) || (draft.audience === "group" && !draft.group) || !editReady)
+        if (!phien || !current() || conflict || sending.current || loading || uploadingNow.current || !draft.body.trim() || loiChuDe(draft.topics) || (draft.audience === "group" && !draft.group) || !editReady)
             return;
         sending.current = true;
         setBusy(true);
@@ -219,7 +220,7 @@ function ComposerForm() {
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View style={[styles.tools, { borderColor: colors.line }]}>
-      <MediaPicker compact initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={setUploading} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
+      <MediaPicker compact disabled={busy} canEdit={() => current() && !sending.current} initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={(v) => { if (current()) { uploadingNow.current = v; setUploading(v); } }} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
         <ComposerTool icon="images-outline" label={picking ? "Đang chuẩn bị…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={() => { Keyboard.dismiss(); pick(); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => { Keyboard.dismiss(); setTopicsOpen(!topicsOpen); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />

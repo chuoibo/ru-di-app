@@ -193,6 +193,12 @@ const CHO_PHEP = new Map([
   // The retained comment attempt identifies a retry, not its author or body.
   // It is persisted with the draft and submitted as the logical request id.
   ["rudi/community/Comments.tsx", ["initialDraft?.logical_id ?? newAttempt().key"]],
+  // Draft transport metadata: the retry id is submitted with the post; the
+  // context id selects its wall. Neither value supplies display copy.
+  ["rudi/community/Composer.tsx", [
+    "nhapCu?.logical_id ?? newAttempt().key",
+    "saved ? saved.group : p.context_id",
+  ]],
   // ADR-0027: these are persisted anchor references, never display fallbacks.
   ["rudi/hanh-trinh/SoHanhTrinh.tsx", ["selected ? null : editStop.id"]],
   ["rudi/hanh-trinh/ke-hoach.ts", [
