@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Text } from "./NativeFontMetrics";
-import { MeasuredSealColumn } from "./MeasuredSealColumn";
+import { MeasuredSealColumn, type SealLabelTelemetry } from "./MeasuredSealColumn";
 import Svg, { Path } from "react-native-svg";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -72,7 +72,7 @@ export function StampButton({ label, onPress, disabled, loading, wrapLabel = fal
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [indicatorWidth, setIndicatorWidth] = useState(0);
   const labelTypography = [styles.label, wrapLabel && styles.wrapLabel, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }];
-  const dau = (labelWidth?: number) => (
+  const dau = (labelWidth?: number, telemetry?: SealLabelTelemetry) => (
     <PressScale
       accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={label}
@@ -115,16 +115,16 @@ export function StampButton({ label, onPress, disabled, loading, wrapLabel = fal
             const next = event.nativeEvent.layout.width;
             if (Number.isFinite(next) && next >= 0) setIndicatorWidth((old) => old === next ? old : next);
           } : undefined} /> : null}
-          <Text invalidateOnMetricsChange style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
+          <Text {...telemetry} invalidateOnMetricsChange style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
         </View>
       </View>
     </PressScale>
   );
-  const seal = (labelWidth?: number) => {
-    if (!tat || !lyDo) return dau(labelWidth);
+  const seal = (labelWidth?: number, telemetry?: SealLabelTelemetry) => {
+    if (!tat || !lyDo) return dau(labelWidth, telemetry);
     return (
       <View style={[styles.coLyDo, { alignSelf: StyleSheet.flatten(style)?.alignSelf ?? "center", width: StyleSheet.flatten(style)?.width }]}>
-        {dau(labelWidth)}
+        {dau(labelWidth, telemetry)}
         <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
           <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />
           <Text style={[typography.caption, styles.lyDoChu, { color: colors.inkSoft }]}>{lyDo}</Text>

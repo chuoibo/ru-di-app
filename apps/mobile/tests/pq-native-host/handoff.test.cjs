@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const { createRequire } = require('node:module');
 const { test, after } = require('node:test');
 const { repo, sourceRoot } = require('./repository.cjs');
+const { flatten } = require('./native-metrics-boundary.cjs');
 const dependency = createRequire(path.join(repo, 'apps/mobile/package.json'));
 const React = dependency('react'), Renderer = dependency('react-test-renderer'), ts = dependency('typescript');
 const { act } = React;
@@ -19,7 +20,8 @@ const page = () => ({ comments: [row], pending: [], next_cursor: null });
 const taggedDraft = (body, extra = {}) => ({ body, parent: null, media: [], mentions: [], pendingFile: null, logical_id: 'synthetic-retired-logical', person_id: 'synthetic-A', post_id: 'synthetic-post-1', ...extra });
 const serverPost = (actor, id) => ({ id, author_id: actor, author: actor, body: 'Synthetic post body', revision: 1, audience: 'public', status: 'published', topics: [], mentions: [], media: [], context_id: null, can_comment: true, saved: false, diary: false });
 async function withCase(run, { reduced = false, strict = false, actualField = false } = {}) {
-  const state = { actor: 'synthetic-A', id: 'synthetic-post-1' };
+  const state = { actor: 'synthetic-A', id: 'synthetic-post-1', nativeFont: { status: 'available', fontScale: 1 } };
+  const fontListeners = new Set();
   const cache = new Map(), consumed = new Map(), gets = [], reads = [], writes = [], uploads = [], picks = [], timings = [], back = [], queues = new Map();
   let root, attempt = 0, sharedId = 0, collecting = null;
   const park = (store, args) => { const d = deferred(); store.push({ ...d, args }); return d.promise; };
@@ -28,7 +30,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
   const theme = { colors, radius: { base: 12, control: 16 }, space: { md: 16 } };
   const Native = {
     View: 'View', Text: 'Text', TextInput: 'TextInput', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
-    Platform: { OS: 'android' }, StyleSheet: { create: x => x, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }),
+    Platform: { OS: 'android' }, StyleSheet: { create: x => x, flatten, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }),
     BackHandler: { addEventListener: (_name, callback) => { const entry = { callback, live: true }; back.push(entry); return { remove: () => { entry.live = false; } }; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(reduced), addEventListener: () => ({ remove() {} }) },
   };
@@ -50,6 +52,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
   const gesture = () => { const g = {}; for (const name of ['activeOffsetY', 'onUpdate', 'onEnd']) g[name] = value => { g[name + 'Value'] = value; return g; }; return g; };
   const adapters = {
     'react': React, 'react/jsx-runtime': dependency('react/jsx-runtime'), 'react-native': Native,
+    'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return { getFontScale: () => state.nativeFont, addListener: (event, callback) => { assert.equal(event, 'onFontScaleChanged'); fontListeners.add(callback); return { remove: () => fontListeners.delete(callback) }; } }; } },
     'react-native-reanimated': reanimated, 'react-native-gesture-handler': { Gesture: { Pan: gesture }, GestureDetector: 'GestureDetector' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
     '@expo/vector-icons': { Ionicons: 'Ionicons' }, 'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
@@ -59,7 +62,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
     'expo-haptics': { ImpactFeedbackStyle: { Medium: 'medium' }, NotificationFeedbackType: { Success: 'success' }, selectionAsync() {}, impactAsync() {}, notificationAsync() {} },
     'apps/mobile/src/api': { ApiError: class ApiError extends Error {}, newAttempt: () => ({ key: `synthetic-attempt-${++attempt}` }), translatedAsActor: () => { throw new Error('Unexpected mutation transport'); } },
     'apps/mobile/src/rudi/session': { useRudiSession: () => ({ phien: state.actor ? { person_id: state.actor } : null }) },
-    'apps/mobile/src/rudi/theme': { typography: { body: { fontSize: 16, lineHeight: 24 } }, lopPhu: { toi: () => '#00000066' }, useRudiTheme: () => theme },
+    'apps/mobile/src/rudi/theme': { typography: { body: { fontSize: 17, lineHeight: 24 } }, lopPhu: { toi: () => '#00000066' }, useRudiTheme: () => theme },
     'apps/mobile/src/rudi/ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton', TopBar: 'TopBar', RudiScreen: props => React.createElement('RudiScreen', props, props.overlay, props.header, props.children, props.footer) },
     'apps/mobile/src/rudi/nep/NepProvider': { useNepGui: () => null },
     'apps/mobile/src/rudi/ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' }, 'apps/mobile/src/rudi/ui/Skeleton': { SkeletonLines: 'SkeletonLines' },
@@ -79,7 +82,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
     if (adapters[relative]) return adapters[relative];
     if (cache.has(relative)) return cache.get(relative).exports;
     let file = special[relative];
-    if (!file) file = [sourceRoot, repo].flatMap(base => ['.ts', '.tsx', ''].map(ext => path.join(base, relative + ext))).find(fs.existsSync);
+    if (!file) file = [sourceRoot, repo].flatMap(base => ['.ts', '.tsx', '/index.ts', ''].map(ext => path.join(base, relative + ext))).find(fs.existsSync);
     assert.ok(file, `actual source or explicit boundary ${relative}`);
     const bytes = fs.readFileSync(file, 'utf8'); consumed.set(relative, file);
     if (file.endsWith('.json')) { const module = { exports: JSON.parse(bytes) }; cache.set(relative, module); return module.exports; }
@@ -95,6 +98,8 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
   const app = () => strict ? React.createElement(React.StrictMode, null, React.createElement(PostDetail)) : React.createElement(PostDetail);
   const h = {
     state, gets, reads, writes, uploads, picks, timings, consumed,
+    async nativeFont(snapshot) { await act(async () => { state.nativeFont = snapshot; [...fontListeners].forEach(callback => callback()); }); },
+    nativeFontObservers() { return fontListeners.size; },
     get root() { return root; },
     panel() { return root.root.findAllByType('AnimatedView').find(n => n.props.accessibilityLabel === 'Bình luận'); },
     nativeKeyboard() { return h.panel().parent; },
@@ -276,5 +281,88 @@ test('QL03 typing, tool expansion, IME resize and failed retry keep the same nat
     assert.equal(h.field() === input, true); assert.equal(h.body(), original[2]); assert.equal(h.sendButton().props.disabled, false);
     await h.send(); assert.deepEqual(h.writes[1].args, original, 'retry keeps logical ID, body and audience metadata');
     await h.fail(h.writes[1], new Error('Synthetic retry offline'));
+  }, { actualField: true });
+});
+// Exercise inline footer placement and hot-metrics ownership with the actual controllers.
+// Android keyboard rendering and scroll restoration require native checks.
+
+function linePitchSnapshot(scale = 1) {
+  const bases = [-0.65, -0.3, -0.15, 0.4, 0.8, 1.6, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 27, 28, 34];
+  const dp = [-1.1, -0.49, -0.24, 0.62, 1.2, 2.3, 18.5, 20.25, 21.5, 23.25, 25, 28.75, 30.25, 31.75, 34.25, 36, 37.5, 39.25, 43, 44.25, 52];
+  return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: bases.map((base, i) => ({ base, dp: scale === 1 ? base : dp[i] })) } };
+}
+test('LP09 inline Comments live in keyboard-avoiding RudiScreen footer through hot metrics and exact retry', async () => {
+  await withCase(async h => {
+    const screen = h.root.root.findByType('RudiScreen');
+    assert.equal(screen.props.avoidKeyboard, true, 'inline post screen opts into native keyboard avoidance');
+    assert.equal(screen.props.scroll, false, 'local reference owns overflow while screen footer stays fixed');
+    assert.ok(screen.props.footer, 'inline editor is reserved in fixed screen footer');
+    const footerEditorID = 'community-comment-editor';
+    assert.equal(screen.props.footer.type === undefined, false, 'footer is an actual React element');
+    const footerHost = h.root.root.findAllByType('View').find(node => node.props.testID === footerEditorID);
+    assert.ok(footerHost); assert.equal(isInside(h.field(), footerHost), true);
+    assert.equal(isInside(h.sendButton(), footerHost), true);
+    const reference = h.root.root.findAllByType('ScrollView').filter(node => isInside(h.card(), node));
+    assert.equal(reference.length, 1, 'post and thread share one local reference scroll');
+    assert.equal(reference[0].props.testID, 'community-post-body');
+    assert.equal(isInside(h.field(), reference[0]), false, 'active editor is outside reference overflow');
+    assert.equal(isInside(h.sendButton(), reference[0]), false, 'send is outside reference overflow');
+    // Check placement at the actual RudiScreen call, not merely a rendered shell.
+    const screenCall = h.root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'RudiScreen');
+    // The old host intentionally adapts RudiScreen to a native shell; the prop
+    // identity below ties that shell's footer to the same production editor.
+    assert.equal(screenCall.length, 1);
+    assert.equal(screenCall[0].props.footer === screen.props.footer, true);
+    assert.equal(h.editors().length, 1); assert.equal(h.nativeFontObservers(), 1);
+    await h.nativeFont(linePitchSnapshot(1)); await h.bodyTo('Synthetic inline fixed footer draft');
+    await act(async () => reference[0].props.onScroll({ nativeEvent: { contentOffset: { y: 135 } } }));
+    const input = h.field(), writer = h.writer();
+    await h.send(); const sent = h.writes[0].args;
+    await h.fail(h.writes[0], new Error('Synthetic response lost'));
+    for (const [value, min, max] of [[linePitchSnapshot(2), 39.5, 118.5], [linePitchSnapshot(1), 24, 72]]) {
+      await h.nativeFont(value);
+      assert.equal(h.field() === input, true, 'native editor is not replaced on metrics');
+      assert.equal(h.writer() === writer, true, 'writer lease is independent of metrics');
+      assert.equal(h.body(), sent[2]); assert.equal(h.field().props.allowFontScaling, false);
+      assert.equal(flatStyle(h.field().props.style).minHeight, min); assert.equal(flatStyle(h.field().props.style).maxHeight, max);
+      assert.equal(h.nativeFontObservers(), 1); assert.equal(h.writes.length, 1);
+      const body = h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-post-body');
+      assert.equal(body === reference[0], true, 'metrics retain the same local native scroll host');
+      assert.deepEqual(body.props.contentOffset, { x: 0, y: 135 }, 'font changes do not change recorded body scroll');
+    }
+    await h.send(); assert.deepEqual(h.writes[1].args, sent, 'failed-send retry retains logical id and exact payload after metrics');
+    await h.fail(h.writes[1], new Error('Synthetic second response lost'));
+    await h.open();
+    assert.deepEqual(h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-post-body').props.contentOffset, { x: 0, y: 135 }, 'explicit handoff restores local scroll offset');
+    assert.equal(h.editors().length, 1); assert.equal(h.sheet().props.avoidKeyboard, true);
+    assert.equal(h.editors()[0].props.initialDraft.logical_id, sent[3]);
+    assert.equal(h.body(), sent[2]);
+    await h.send(); await h.close(); const closing = h.closeAnimation();
+    await h.finish(h.writes[2], { id: 'synthetic-accepted', status: 'pending' });
+    await h.complete(closing);
+    assert.equal(h.body(), '', 'accepted closing-sheet draft is not resurrected inline');
+    assert.equal(h.sendButton().props.disabled, true);
+    assert.equal(h.root.root.findByType('RudiScreen').props.avoidKeyboard, true);
+    assert.ok(h.root.root.findByType('RudiScreen').props.footer);
+    assert.deepEqual(h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-post-body').props.contentOffset, { x: 0, y: 135 }, 'close completion restores inline offset');
+    assert.equal(h.consumed.get('apps/mobile/src/rudi/community/PostDetail'), path.join(sourceRoot, 'apps/mobile/src/rudi/community/PostDetail.tsx'));
+    assert.equal(h.consumed.get('apps/mobile/src/rudi/community/Comments'), path.join(sourceRoot, 'apps/mobile/src/rudi/community/Comments.tsx'));
+    assert.equal(h.consumed.get('apps/mobile/src/rudi/ui/Field'), path.join(sourceRoot, 'apps/mobile/src/rudi/ui/Field.tsx'));
+  }, { actualField: true });
+});
+
+test('LP11 local body offset refuses nonfinite or negative values and resets on a real post context change', async () => {
+  await withCase(async h => {
+    const body = () => h.root.root.findAllByType('ScrollView').find(node => node.props.testID === 'community-post-body');
+    const scroll = async y => act(async () => body().props.onScroll({ nativeEvent: { contentOffset: { y } } }));
+    await scroll(87.5);
+    for (const invalid of [-1, NaN, Infinity, -Infinity]) await scroll(invalid);
+    await h.nativeFont(linePitchSnapshot(2));
+    assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 }, 'only finite nonnegative offsets may be journaled');
+    await h.open(); assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 });
+    await h.close(); await h.complete(h.closeAnimation()); assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 });
+    await h.postTo('synthetic-post-2');
+    assert.deepEqual(body().props.contentOffset, { x: 0, y: 0 }, 'new context cannot inherit prior post scroll');
+    assert.equal(h.body(), '', 'new context cannot inherit prior draft');
   }, { actualField: true });
 });

@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const { createRequire } = require('node:module');
 const { test, after } = require('node:test');
 const { repo, sourceRoot } = require('./repository.cjs');
+const { nativeMetricsBoundary } = require('./native-metrics-boundary.cjs');
 const dependency = createRequire(path.join(repo, 'apps/mobile/package.json'));
 const React = dependency('react');
 const Renderer = dependency('react-test-renderer');
@@ -40,7 +41,8 @@ async function withCase(run, initialDraft = null) {
     'expo-image': { Image: 'Image' },
     'expo-image-picker': { launchImageLibraryAsync: (...args) => park(picks, args) },
     'expo-image-manipulator': { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: (...args) => { manipulations.push(args); return Promise.resolve({ uri: 'file:///synthetic-only-clean.jpg', width: 32, height: 32 }); } },
-    'expo-router': { useRouter: () => ({ push() {} }) }, '../theme': { typography: {}, useRudiTheme: () => ({ colors: {} }) },
+    'expo-router': { useRouter: () => ({ push() {} }) }, '../theme': { typography: { body: { fontSize: 17, lineHeight: 24 } }, useRudiTheme: () => ({ colors: {} }) },
+    ...nativeMetricsBoundary({ dependency, React, native, repo, sourceRoot }),
     '../ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton' }, '../ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' },
     '../ui/Skeleton': { SkeletonLines: 'SkeletonLines' }, '../ui/HoiTaiHang': { HoiTaiHang: 'HoiTaiHang' },
     '../ui/CauTaiCho': { CauTaiCho: 'CauTaiCho' }, './MentionPicker': { MentionPicker: 'MentionPicker' },

@@ -1,6 +1,6 @@
 import { StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { Text } from "./NativeFontMetrics";
-import { MeasuredSealColumn } from "./MeasuredSealColumn";
+import { MeasuredSealColumn, type SealLabelTelemetry } from "./MeasuredSealColumn";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";
@@ -67,7 +67,7 @@ export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, d
     transform: [{ rotate: `${tilt}deg` }, { scale: (1.35 - 0.35 * roi.value) * lun.value }],
   }));
   const labelTypography = [typography.stamp, { color: filled ? onInk : ink }, labelStyle];
-  const seal = (labelWidth?: number) => (
+  const seal = (labelWidth?: number, telemetry?: SealLabelTelemetry) => (
     <Animated.View
       testID={testID}
       accessibilityLabel={label}
@@ -81,7 +81,7 @@ export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, d
         style,
       ]}
     >
-      <Text style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
+      <Text {...telemetry} style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
     </Animated.View>
   );
   return measureLabel ? (

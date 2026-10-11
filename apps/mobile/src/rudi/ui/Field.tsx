@@ -28,6 +28,7 @@ import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View
 
 import { typography, useRudiTheme } from "../theme";
 import { KHONG_VIEN_WEB } from "./khong-vien-web";
+import { TextInput as NativeMetricTextInput, useNativeTextInputMetrics } from "./NativeFontMetrics";
 
 export type FieldCoreProps = TextInputProps & {
   label?: string;
@@ -41,6 +42,8 @@ export type FieldCoreProps = TextInputProps & {
   error?: string | null;
   /** The input, for a screen that must put the cursor in it (as `ONhapMuc`). */
   oRef?: Ref<TextInput>;
+  /** Opt in under the surface's existing native font metrics owner. */
+  nativeMetrics?: boolean;
 };
 
 /** Body text's line height; the multiline box is sized in lines of it. */
@@ -93,7 +96,7 @@ export function kieuO({ multiline = false, numberOfLines, vien = 1 }: { multilin
   };
 }
 
-export function Field({ label, leading, trailing, multiline, numberOfLines, style, placeholder, helper, error, oRef, ...inputProps }: FieldCoreProps) {
+export function Field({ label, leading, trailing, multiline, numberOfLines, style, placeholder, helper, error, oRef, nativeMetrics = false, ...inputProps }: FieldCoreProps) {
   const { colors, radius } = useRudiTheme();
   // Android lays the native hint out at the box's width and lets it WRAP, even
   // in a single-line input, then clips the second line (audit native 09/09,
@@ -112,13 +115,27 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
   const coLoi = typeof error === "string" && error !== "";
   const kieu = kieuO({ multiline, numberOfLines, vien: dangNhap || coLoi ? 2 : 1 });
   const mauVien = coLoi ? colors.warn : dangNhap ? colors.accent : colors.lineStrong;
+  const inputStyle: StyleProp<TextStyle> = [kieu.nhap, typography.body, { color: colors.ink }, KHONG_VIEN_WEB, style];
+  const metrics = useNativeTextInputMetrics(inputStyle, inputProps);
+  const nativeGeometry: TextStyle = {};
+  if (nativeMetrics && metrics !== null) {
+    const original = StyleSheet.flatten(inputStyle);
+    const basePitch = original.lineHeight;
+    if (typeof basePitch === "number" && Number.isFinite(basePitch) && basePitch > 0) {
+      // Keep the caller's one/three/eight-line bounds in native line pitches.
+      const ratio = metrics.linePitch / basePitch;
+      if (typeof original.minHeight === "number" && Number.isFinite(original.minHeight) && original.minHeight > 0) nativeGeometry.minHeight = original.minHeight * ratio;
+      if (typeof original.maxHeight === "number" && Number.isFinite(original.maxHeight) && original.maxHeight > 0) nativeGeometry.maxHeight = original.maxHeight * ratio;
+    }
+  }
+  const Input = nativeMetrics ? NativeMetricTextInput : TextInput;
   return (
     <View style={styles.fieldBlock}>
       {label ? <Text style={[typography.label, { color: colors.ink }]}>{label}</Text> : null}
       <View style={[kieu.khung, { backgroundColor: colors.card, borderColor: mauVien, borderRadius: radius.control }]}>
         {leading}
         <View style={kieu.boc}>
-          <TextInput
+          <Input
             {...inputProps}
             ref={oRef}
             accessibilityLabel={inputProps.accessibilityLabel ?? label ?? placeholder}
@@ -139,11 +156,11 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
             }}
             placeholder={placeholderNha ? undefined : placeholder}
             placeholderTextColor={colors.inkFaint}
-            style={[kieu.nhap, typography.body, { color: colors.ink }, KHONG_VIEN_WEB, style]}
+            style={nativeMetrics ? [inputStyle, nativeGeometry] : inputStyle}
           />
           {placeholderNha && rong ? (
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.fieldPlaceholder}>
-              <Text numberOfLines={1} style={[typography.body, { color: colors.inkFaint }]}>
+              <Text numberOfLines={1} allowFontScaling={nativeMetrics && metrics !== null ? false : undefined} style={[typography.body, { color: colors.inkFaint }, nativeMetrics && metrics?.placeholderStyle]}>
                 {placeholder}
               </Text>
             </View>

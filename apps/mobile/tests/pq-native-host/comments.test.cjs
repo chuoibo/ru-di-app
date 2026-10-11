@@ -8,6 +8,7 @@ const { join } = require('node:path');
 const { test, after } = require('node:test');
 const vm = require('node:vm');
 const { repo, sourceRoot } = require('./repository.cjs');
+const { nativeMetricsBoundary } = require('./native-metrics-boundary.cjs');
 const appRequire = createRequire(join(repo, 'apps/mobile/package.json'));
 const React = appRequire('react');
 const Renderer = appRequire('react-test-renderer');
@@ -42,15 +43,17 @@ async function withCase(run, overrides = {}) {
     imageSource: (_person, path) => ({ uri: path }),
     relativeTime: () => 'synthetic time',
   };
+  const native = { Pressable: 'Pressable', ScrollView: 'ScrollView', Text: 'Text', View: 'View' };
   const mocks = {
     '../../api': { translatedAsActor: (...args) => makeCall(deletes, args), newAttempt: () => ({ key: `attempt-${++nextAttempt}`, at: nextAttempt }) },
     './api': community,
     react: React,
     'react/jsx-runtime': appRequire('react/jsx-runtime'),
-    'react-native': { Pressable: 'Pressable', ScrollView: 'ScrollView', Text: 'Text', View: 'View' },
+    'react-native': native,
     'expo-image': { Image: 'Image' },
     'expo-router': { useRouter: () => ({ push() {} }) },
-    '../theme': { typography: {}, useRudiTheme: () => ({ colors: {} }) },
+    '../theme': { typography: { body: { fontSize: 17, lineHeight: 24 } }, useRudiTheme: () => ({ colors: {} }) },
+    ...nativeMetricsBoundary({ dependency: appRequire, React, native, repo, sourceRoot }),
     '../ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton' },
     '../ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' },
     '../ui/Skeleton': { SkeletonLines: 'SkeletonLines' },

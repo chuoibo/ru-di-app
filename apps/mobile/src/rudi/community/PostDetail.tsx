@@ -1,8 +1,9 @@
 import { ApiError, translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ScrollView, View } from "react-native";
+import { Text } from "../ui/NativeFontMetrics";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
@@ -14,6 +15,9 @@ import { Comments, type CommentDraft } from "./Comments";
 import { PostCard } from "./PostCard";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useCommunityStream } from "./useCommunityStream";
+import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
+import { COT_DOC } from "../adaptive";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function PostDetail() {
     const { id, report: reportParam } = useLocalSearchParams<{
         id: string;
@@ -23,6 +27,9 @@ export function PostDetail() {
     const { phien } = useRudiSession();
     const person = phien?.person_id;
     const { colors } = useRudiTheme();
+    const layout = useAdaptiveLayout();
+    const insets = useSafeAreaInsets();
+    const tablet = layout.sizeClass !== "compact";
     const [post, setPost] = useState<Post | null>(null);
     const [permanent, setPermanent] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -30,6 +37,7 @@ export function PostDetail() {
     const [report, setReport] = useState(reportParam === "1");
     const comments = useCommentHandoff(person, id);
     const commentContext = JSON.stringify([person ?? null, id ?? null]);
+    const bodyScroll = useMemo(() => ({ y: 0 }), [commentContext]);
     const activePostContext = useRef(commentContext);
     activePostContext.current = commentContext;
     const [postContext, setPostContext] = useState<string | null>(null);
@@ -121,7 +129,9 @@ export function PostDetail() {
       </ScrollView>
       {draft ? draftAction : requestAction}
     </View> : undefined;
-    return <RudiScreen material="quiet" cot="doc" padded={false} testID="community-post-detail" overlay={<>
+    // The comment owner supplies both slots; the editor never lives in overflow.
+    // Keep body scrolling local so footer focus cannot trigger body-field reveal.
+    const renderSurface = (thread?: ReactNode, editor?: ReactNode) => <RudiScreen material="quiet" cot="doc" padded={false} scroll={false} avoidKeyboard bottomInset={0} contentStyle={{ paddingTop: 0 }} footer={editor} footerInset={insets.bottom + 12} testID="community-post-detail" overlay={<>
     <Sheet open={actions} onClose={() => { setActions(false); setConfirmDelete(false); }} accessibilityLabel="Quản lý bài">{post && person ? <><Text style={[typography.h2, { color: colors.ink }]}>Giữ lại câu chuyện</Text>{/* A refused management step is said in this sheet, where the press was. */}<CauTaiCho cau={actions ? error : null} /><RudiButton label={post.saved ? "Bỏ lưu bài" : "Lưu bài"} onPress={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); setActions(false); })}/>{post.author_id === person ? <>{!post.diary ? <RudiButton label="Sửa bài" variant="outline" onPress={() => { setActions(false); router.push({ pathname: "/community/new", params: { edit: id } } as never); }}/> : null}<RudiButton label="Cất lại cho bạn bè" variant="outline" onPress={() => void act(async () => { await translatedAsActor(COMMUNITY_ERRORS, `/v2/community/posts/${id}/audience`, {
             actorId: person,
             method: "PATCH",
@@ -159,9 +169,14 @@ export function PostDetail() {
       </View> : null}
     </Sheet>
   </>}>
+    <ScrollView testID="community-post-body" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentOffset={{ x: 0, y: bodyScroll.y }} onScroll={(event) => { const y = event.nativeEvent.contentOffset.y; if (Number.isFinite(y) && y >= 0) bodyScroll.y = y; }} scrollEventThrottle={16} contentContainerStyle={[{ gap: 18, paddingTop: tablet ? 22 : 8, paddingBottom: 32 }, tablet && { alignSelf: "center", width: "100%", maxWidth: COT_DOC }]}>
     <View style={{ paddingHorizontal: 20 }}><TopBar title="Một câu chuyện"/><CauTaiCho cau={error} hanhDong={permanent ? undefined : { label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bai" />{permanent ? <RudiButton label="Về cộng đồng" variant="outline" onPress={() => router.replace("/(tabs)/community" as never)}/> : null}</View>
-    {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={comments.open} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{comments.phase === "inline" && commentPost ? <Comments initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} expanded/> : null}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
+    {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={comments.open} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{thread}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
+    </ScrollView>
   </RudiScreen>;
+    return comments.phase === "inline" && person && commentPost
+        ? <Comments key={comments.writer} initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} expanded presentation={renderSurface}/>
+        : renderSurface();
 }
 
 

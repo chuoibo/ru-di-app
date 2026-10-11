@@ -3,7 +3,7 @@ import { HoiTaiHang } from "../ui/HoiTaiHang";
 import { COMMUNITY_ERRORS } from "./api";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { typography, useRudiTheme } from "../theme";
 import { Field, IconButton, RudiButton } from "../ui";
@@ -14,6 +14,8 @@ import { MediaPicker, type SelectedFile } from "./MediaPicker";
 import { MentionPicker } from "./MentionPicker";
 import { useCommunityStream } from "./useCommunityStream";
 import { CauTaiCho } from "../ui/CauTaiCho";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
+import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
 export type CommentDraft = { body: string; parent: Comment | null; media: Media[]; mentions: string[]; logical_id: string; pendingFile: SelectedFile | null; person_id: string; post_id: string };
 type CommentsProps = {
     expanded?: boolean;
@@ -25,11 +27,12 @@ type CommentsProps = {
     post: Post;
 };
 export function Comments(props: CommentsProps) {
+    const nativeFont = useNativeFontScale();
     const context = `${props.person}:${props.post.id}`;
     const draft = props.initialDraft;
     // Drafts are session-memory values; unowned input has no safe migration.
     const matches = draft?.person_id === props.person && draft?.post_id === props.post.id;
-    return <CommentsForContext key={context} {...props} initialDraft={matches ? draft : null}/>;
+    return <NativeFontMetricsProvider snapshot={nativeFont}><CommentsForContext key={context} {...props} initialDraft={matches ? draft : null}/></NativeFontMetricsProvider>;
 }
 function CommentsForContext({ person, post, expanded = false, presentation, initialDraft, onDraftChange }: CommentsProps) {
     const { colors } = useRudiTheme();
@@ -159,7 +162,7 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
     <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-binh-luan" />
     {!loaded && !error ? <SkeletonLines lines={3}/> : null}
     {loaded && !items.length && !pending.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có lời nào ở đây. {post.can_comment ? "Bạn có thể mở đầu chuyện trò." : "Tác giả đã giới hạn bình luận."}</Text> : null}
-    {[...items, ...pending].map((c) => <View key={c.id} style={{ paddingVertical: 12, marginLeft: c.parent_id ? 24 : 0, borderBottomWidth: 1, borderColor: colors.line, gap: 8 }}><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, alignItems: "center" }}><AvatarNguoi personId={c.author_id} name={c.author || "Bạn"} size={32}/><Text style={[typography.label, { color: colors.ink, flex: 1, minWidth: 100 }]}>{c.author || "Bạn"}</Text><Text style={[typography.caption, { color: colors.inkFaint }]}>{relativeTime(c.created_at)}</Text></View><Text style={[typography.body, { color: colors.ink }]}>{c.body}</Text>{c.media_id ? <Image source={imageSource(person, `/v2/community/media/${c.media_id}`)} cachePolicy="none" style={{ width: 180, height: 180, borderRadius: 12 }}/> : null}{c.status !== "approved" ? <Text style={[typography.caption, { color: colors.accent }]}>{c.status === "rejected" ? "Bình luận chưa phù hợp" : "Đang chờ duyệt · Chỉ bạn thấy"}</Text> : null}<View style={{ flexDirection: "row", gap: 20 }}>{!c.parent_id && c.status === "approved" && post.can_comment ? <Pressable accessibilityRole="button" onPress={() => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ parent: c }); setParent(c); setLoiGui(null); }} style={{ minHeight: 48, minWidth: 48, justifyContent: "center" }}><Text style={[typography.caption, { color: colors.inkSoft }]}>Trả lời</Text></Pressable> : null}{c.can_delete && hoiXoa !== c.id ? <RudiButton accessibilityLabel={`Xóa bình luận của bạn: «${c.body.slice(0, 40)}»`} compact full={false} label="Xóa" tone="warn" variant="ghost" onPress={() => { setHoiXoa(c.id); setLoiXoa(null); }}/> : null}</View>{hoiXoa === c.id ? <HoiTaiHang cau="Xóa bình luận này? Không lấy lại được." dangLam={dangXoa === c.id} nhan="Xóa" onDongY={() => xoa(c)} onThoi={() => setHoiXoa(null)}/> : null}{loiXoa?.id === c.id ? <CauTaiCho co="nho" cau={loiXoa.cau} hanhDong={{ label: "Thử lại", onPress: () => xoa(c) }}/> : null}</View>)}
+    {[...items, ...pending].map((c) => <View key={c.id} style={{ paddingVertical: 12, marginLeft: c.parent_id ? 24 : 0, borderBottomWidth: 1, borderColor: colors.line, gap: 8 }}><View style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}><AvatarNguoi personId={c.author_id} name={c.author || "Bạn"} size={32}/><View style={{ flex: 1, minWidth: 0, gap: 2 }}><Text style={[typography.label, { color: colors.ink }]}>{c.author || "Bạn"}</Text><Text style={[typography.caption, { color: colors.inkFaint }]}>{relativeTime(c.created_at)}</Text></View></View><Text style={[typography.body, { color: colors.ink }]}>{c.body}</Text>{c.media_id ? <Image source={imageSource(person, `/v2/community/media/${c.media_id}`)} cachePolicy="none" style={{ width: 180, height: 180, borderRadius: 12 }}/> : null}{c.status !== "approved" ? <Text style={[typography.caption, { color: colors.accent }]}>{c.status === "rejected" ? "Bình luận chưa phù hợp" : "Đang chờ duyệt · Chỉ bạn thấy"}</Text> : null}<View style={{ flexDirection: "row", gap: 20 }}>{!c.parent_id && c.status === "approved" && post.can_comment ? <Pressable accessibilityRole="button" onPress={() => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ parent: c }); setParent(c); setLoiGui(null); }} style={{ minHeight: 48, minWidth: 48, justifyContent: "center" }}><Text style={[typography.caption, { color: colors.inkSoft }]}>Trả lời</Text></Pressable> : null}{c.can_delete && hoiXoa !== c.id ? <RudiButton accessibilityLabel={`Xóa bình luận của bạn: «${c.body.slice(0, 40)}»`} compact full={false} label="Xóa" tone="warn" variant="ghost" onPress={() => { setHoiXoa(c.id); setLoiXoa(null); }}/> : null}</View>{hoiXoa === c.id ? <HoiTaiHang cau="Xóa bình luận này? Không lấy lại được." dangLam={dangXoa === c.id} nhan="Xóa" onDongY={() => xoa(c)} onThoi={() => setHoiXoa(null)}/> : null}{loiXoa?.id === c.id ? <CauTaiCho co="nho" cau={loiXoa.cau} hanhDong={{ label: "Thử lại", onPress: () => xoa(c) }}/> : null}</View>)}
     {next ? <RudiButton label="Đọc tiếp bình luận" variant="ghost" onPress={() => void load(next)}/> : null}
     </View>;
     const sendReason = busy ? "Đợi gửi xong rồi viết tiếp." : uploading ? "Đợi ảnh tải xong rồi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ ảnh đang chờ." : !body.trim() ? "Viết vài chữ trước khi gửi." : null;
@@ -183,7 +186,7 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
           <CauTaiCho cau={loiGui} />
           {sendReason ? <Text testID="community-comment-send-reason" style={[typography.caption, { color: colors.inkSoft }]}>{sendReason}</Text> : null}
         </ScrollView>
-        <Field multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết bình luận…"/>
+        <Field nativeMetrics multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết bình luận…"/>
         <View testID="community-comment-tools" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           {attachmentTool}
           <IconButton icon="at-outline" quiet selected={tagOpen || mentions.length > 0} accessibilityLabel={mentions.length ? `Gắn bạn bè, đã chọn ${mentions.length} người` : "Gắn bạn bè"} onPress={() => setTagOpen((value) => !value)}/>

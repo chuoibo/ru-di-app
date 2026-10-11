@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { createRequire } = require('node:module');
 const { randomUUID } = require('node:crypto');
 const { repo, sourceRoot } = require('./repository.cjs');
+const { flatten } = require('./native-metrics-boundary.cjs');
 const dependency = createRequire(path.join(repo, 'apps/mobile/package.json'));
 const React = dependency('react');
 const Renderer = dependency('react-test-renderer');
@@ -26,13 +27,13 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
   const Button = visual('RudiButton');
   const Screen = props => React.createElement('RudiScreen', props, props.header, props.children, props.footer);
   const colors = new Proxy({}, { get: () => '#123456' });
-  const native = { View: 'RNView', Text: 'RNText', Pressable: 'RNPressable', TextInput: 'RNTextInput', ScrollView: 'RNScrollView', Keyboard: { dismiss() {} }, Platform: { OS: 'android', select: v => v.android ?? v.default }, StyleSheet: { create: v => v, hairlineWidth: 1 }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }) };
+  const native = { View: 'RNView', Text: 'RNText', Pressable: 'RNPressable', TextInput: 'RNTextInput', ScrollView: 'RNScrollView', Keyboard: { dismiss() {} }, Platform: { OS: 'android', select: v => v.android ?? v.default }, StyleSheet: { create: v => v, flatten, hairlineWidth: 1 }, useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1, scale: 1 }) };
   const adapters = {
     'apps/mobile/src/api': { newAttempt: () => ({ key: randomUUID() }), translatedAsActor: (...args) => invoke('translatedAsActor', args, { id: 'synthetic-post' }), datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token },
     'apps/mobile/src/phien': { khoiPhucPhien: () => Promise.resolve(state.actor), dangXuat: (...args) => invoke('dangXuat', args), quenPhienDaThuHoi: (...args) => invoke('quenPhienDaThuHoi', args), docNhomCuaToi: (...args) => invoke('docNhomCuaToi', args, [{ id: 'synthetic-group', display_name: 'Synthetic group', kind: 'group', my_state: 'active' }]) },
     'apps/mobile/src/danh-tinh': { ngheThuHoiPhien: fn => { state.revoke = fn; return () => { state.revoke = null; }; } },
     'apps/mobile/src/rudi/kho': { xoaPhienAsync: async () => {} },
-    'apps/mobile/src/rudi/theme': { typography: new Proxy({}, { get: () => ({}) }), useRudiTheme: () => ({ colors }) },
+    'apps/mobile/src/rudi/theme': { typography: new Proxy({ body: { fontSize: 17, lineHeight: 24 } }, { get: (target, key) => target[key] ?? {} }), useRudiTheme: () => ({ colors }) },
     'apps/mobile/src/rudi/ui': { Field: visual('Field'), RudiButton: Button, RudiScreen: Screen, TopBar: visual('TopBar') },
     'apps/mobile/src/rudi/ui/CauTaiCho': { CauTaiCho: props => React.createElement('CauTaiCho', props, props.cau, props.cau && props.hanhDong ? React.createElement(Button, { label: props.hanhDong.label, onPress: props.hanhDong.onPress }) : null) },
     'apps/mobile/src/rudi/ui/Skeleton': { SkeletonLines: visual('SkeletonLines') },

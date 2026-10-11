@@ -499,3 +499,119 @@ Hai lượt lỗi trong quá trình sửa được giữ nguyên: scope 2 GiB đ
 Root đã chạy lại toàn bộ controls trong [packet nguồn đóng băng](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5e2ffd88/safe-frozen-controls-20261011-r1): 1.068 file nguồn khớp worktree, 14 file harness giống nhau, 12 job chạy lần lượt trong scope riêng. P/Q candidate và identity 79/79; canary bỏ tránh bàn phím 78/79 (QL01), chuyển editor vào phần cuộn 77/79 (QL01/QL02), đổi key theo body 78/79 (QL03), tháo controller khi mất quyền 78/79 (QF04). N candidate/identity 22/22; bỏ explicit width 17/22 (W01/02/04/05/06), bỏ opt-in caller 21/22 (W06), làm tròn xuống 18/22 (W01/02/04/06), nhận callback cũ 21/22 (W02). Tất cả đỏ đúng ca dự đoán, 0 skip/cancel/todo; mỗi lượt N kiểm 26 source receipt. Đỉnh scope toàn tập 189,4 MiB, RAM available thấp nhất 24,47 GiB. Manifest SHA256 `5f4aa7f45f022a172aa02e6f28e56b17f14537d11125a23a96074f62c7a2abb6`; harness aggregate `c5fe590f9970da2731265e4ea5429360ce8b0b1ed9407cddc56ca105b915ced7`.
 
 Controls chứng minh những nhánh nguồn cụ thể; tem N, toolbar P, album overlay và footer Q vẫn cần ảnh native mới tại đúng SHA. Không dùng màu xanh host để nâng điểm thẩm mỹ hoặc đóng toàn A–S.
+
+## N / P / Q — recapture edcc và các lỗi còn đỏ (11/10)
+
+JS sạch `edccaf00bf9af5f0ed1f553f27244745d49418c3` đã được xác nhận bằng
+[màn fingerprint](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/source-screen-receipt.json).
+Chỉ primary 5558, 320×640, density 160; APK vẫn nguồn `0b15db02`, hash
+`d69eb7ad…bf7`, không reinstall. Go đang chạy vẫn nguồn `c3b04ae8`;
+binary `checked-core` của clean edcc không phải binary đã chạy trong native.
+Boot `4de646e6-0df3-4883-95a6-2896c7d38a22` mới có receipts owner/PID/start
+ticks/cgroup riêng; không nhận continuity từ trước lần máy khởi động lại.
+
+[Clean checks edcc](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/clean-checks.json)
+ghi 9 bước exit 0, clean trước/sau. Node serial có 228 file, 1766/1766 pass,
+0 fail/skip/cancel/todo; loại rõ 5 file browser và 9 e2e. Lần đầu thiếu heap
+được giữ trong [resume manifest](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/resume-manifest.json),
+không tính thành pass. Toàn job Node có hai test gọi TypeScript lồng nhau
+được chạy lại với scope 2,5 GiB/heap 1,5 GiB, không chỉ riêng lệnh tsc; test và
+assertion giữ nguyên. Đây là subset, không full npm, strict gate hoặc pixel proof.
+
+Root đã mở ảnh gốc và giữ riêng kết quả chức năng với kết quả thị giác:
+
+- **N vẫn RED ở 100.** [Status100](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/batch100-measured-width.png)
+  vẽ «ĐÃ» / «VỀ» thành hai dòng; Text 31×28 trong seal 51×40.
+  [Status200](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/batch-status200.png)
+  một dòng, Text 62×26/seal 82×38. [Đề xuất200](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/batch-amendment200-form.png)
+  một dòng, Text 167×35/seal 215×52; [hot về 100](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/batch-amendment100-hot.png)
+  lại vẽ «Gửi đề» / «xuất», Text 97×44/seal 145×52. Width tường minh không
+  đủ đóng lỗi. Chưa chứng minh rounding, uppercase hay cache là nguyên nhân;
+  không gửi đề xuất/ghi tiền trong các cell này.
+- **Q sheet dùng được footer, inline và chữ lớn còn RED.**
+  [Sheet200 với IME](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/comments-compact-light200-ime.png)
+  giữ công cụ gửi trên bàn phím nhưng input native vẫn cao 24 dp nên cắt glyph;
+  timestamp bị ép hẹp. [Inline100 với IME](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/comments-inline-light100-ime.png)
+  có body/focus trong XML nhưng input ở y495 dưới bàn phím bắt đầu y381.
+  Handoff giữ nháp không chứng minh geometry hoặc focus toàn bộ lifecycle.
+- **P có phục hồi tải nhưng hot-font vẫn RED.** [Lỗi tải100](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/composer-upload-offline100.png)
+  có thông báo dễ hiểu và nút đăng disabled khi tệp chưa sẵn sàng;
+  [lỗi tải200](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/composer-upload-offline200-recovery.png)
+  còn cắt dòng lỗi, footer và phần tác giả trong lượt đổi font nóng.
+  [Nháp100 với IME](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/composer-private100-typed.png)
+  nhìn thấy input và CTA, không thay bằng chứng các font/state khác.
+- **Album gọn hơn trong cell đã mở.** Root mở first/second ở 100 và 200:
+  counter đổi 1/2↔2/2, hai control 48 dp nằm trong pill trên ảnh;
+  [second200](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/album-second200.png).
+  Đây là nhận xét hẹp cho điều hướng ảnh; whole PostCard hot-font vẫn RED,
+  chưa ship toàn card, album hoặc P/Q.
+
+Sau retry, native tạo **một bài mới** only_me/private, revision 1, với **một
+JPEG ready 960×640**; [ảnh bài sau đăng](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/composer-upload-retry-post200.png)
+và [witness DB read-only](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/composer-upload-retry-readonly-witness.json)
+khớp exact synthetic body với count 1. Đây là lần ghi mới, tách khỏi bài hai
+ảnh của 5e2. Q witness [trước](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/comment-count-before.json)
+→ [sau offline](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/comment-count-after-offline.json)
+→ [sau retry](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/comment-count-after-retry.json)
+giữ total 1→1→2, exact body 0→0→1; [ảnh sau retry](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/root-native-screens/comments-retry-one-accepted-light100.png)
+hiện đúng một bình luận mới. Counts là projection DB, không đếm request và
+không chứng minh public/moderation/actor khác hoặc mọi race của retry.
+
+Capture r2 `composer-private100-focused` có uiautomator idleERROR và đọc
+XML cũ: loại khỏi bằng chứng XML/focus. Helper r3 dùng đường XML riêng và
+assert dump thành công trước khi đọc; không sửa receipt r2 thành pass.
+`composer-private200-tools` thực tế là launcher, `composer-private200-reentry`
+là Explore: hai filename này không chứng minh toolbar hoặc reentry composer.
+Overlay FPS trong ảnh không phải bằng chứng kiểm chuyển động.
+
+[Summary bộ nhớ cuối phase](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/memory-phase-summary.json)
+có 3358 mẫu: host available thấp nhất 21,18 GiB, app PSS cao nhất
+706,01 MiB, chỉ thấy PID 2909 và không ghi nhận đổi PID. Đây là phạm vi mẫu
+đã thu, không phải soak hoặc cam kết ổn định. [Dừng native có kế hoạch](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/planned-native-stop.json)
+lúc 11:06 UTC chỉ nhắm hai unit emulator/Metro đúng ownership trước kiểm
+nguồn; oom/oom_kill đều 0. Không suy ra phiên dừng vì OOM.
+[Headroom emulator](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-edccaf00/emulator-cache-headroom.json)
+ghi scope 5→6 GiB vì file cache lúc boot chạm max; guest vẫn 2 GiB. Emulator
+có max events 352, không ghi thành mọi counter đều 0. Watcher r2 đã chuẩn bị
+và syntaxcheck, chưa chạy: scope current/events mỗi 1 giây; guest available,
+app PSS/PID mỗi 5 giây; cảnh báo dưới 384 MiB guest, dừng đúng emulator/Metro
+sở hữu khi guest dưới 192 MiB, scope OOM hoặc host dưới 8 GiB. Chưa có bằng
+chứng runtime cho watcher r2; chỉ bật sau receipts ownership mới.
+
+Packet Field/Comments/Composer/PostDetail bổ sung native line pitch và footer
+inline vẫn private/pending; chưa được native approval. Chẩn đoán N cũng chỉ
+là đề xuất private. Cần source sạch/fingerprint mới, controls đúng SHA và
+mở ảnh mới trước đóng các lỗi. Toàn A–S, các state chưa chụp, motion/TalkBack,
+lifecycle, iOS/native crypto và landing main tiếp tục mở.
+
+## P/Q — tích hợp line pitch, chờ recapture native (11/10)
+
+Sau checkpoint edcc, Field bình luận opt-in chiều cao theo native line pitch;
+Comments cấp metrics cho cả thread/editor và xếp tên + thời gian thành một
+cột cạnh avatar. Composer giữ owner/lease, cấp metrics cho toàn form/footer;
+MediaPicker nhận cùng provider cho lỗi và nút phục hồi. Body dùng token 24
+thay 26 chưa có trong bảng native. PostDetail đưa editor vào footer tránh
+bàn phím, một ScrollView riêng giữ offset hữu hạn theo context. Không đổi
+journal/ACK, quyền viết, transport hoặc khóa logical attempt.
+
+[Frozen controls](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-frozen-pitch-summary-20261011-r1.json)
+chạy serial sáu lượt, cùng harness/graph 1071 file và dependencies read-only:
+candidate/identity 93/93; canary geometry 88/93 (LP01/02/04/05/09), mutant key
+88/93 (LP01/02/05/07/09), stale Composer 88/93 (LP06/07/08/12/13), tắt tránh
+IME 92/93 (LP09). Tất cả đỏ đúng dự đoán, 0 skip/cancel/todo. Số đúng là 93:
+79 ca gốc, gồm hai ca actor/post đăng ký bằng vòng lặp, cộng 14 mới; inventory
+91 trước chạy đã sửa, không bỏ ca cũ. Manifest SHA256
+`1956e6a885a4f1b325c6e8b5cb2fe3cf50fd3593fffefa048c801f74392402db`.
+Đỉnh scope 164,82 MiB; host available thấp nhất 24,91 GiB. Loader dùng checkout
+chứa test, không còn mặc định đọc proposal private; frozen runner pin hai root
+vào cùng graph. Các con số này áp dụng proposal năm file trước phần bổ sung dưới.
+
+PostCard/PostDetail cũng đổi Text wrapper; PostCard body về token 24. Chỉ phase
+inline đang nhận provider Comments: feed/sheet/closing còn fallback, chưa đóng
+RED toàn bài. N bổ sung phép đo fit/visible chỉ khi bật diagnostics; mặc định
+tắt, không thay width. Cần control diagnostics tắt/bật để phát hiện ảnh hưởng
+của observer, chưa gọi là sửa tem. [Focused integration](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/memory-bounded-checks/ui-pitch-integration-r1/result.json)
+trên toàn phần ghép có 15 file/131 pass, 0 fail/skip/cancel/todo, đỉnh 174,28 MiB.
+Đây vẫn là host, không chứng minh pixel/IME/scroll native. Handoff khi IME đã
+mở, chữ 100→200→100, retry media/comment và baseline so mockup phải chụp mới.
+Không nhận native approval hoặc merge main từ kết quả này.

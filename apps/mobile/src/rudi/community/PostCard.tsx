@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Text } from "../ui/NativeFontMetrics";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   post: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, gap: 14 },
   avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
-  body: { lineHeight: 26 }, readTarget: { minHeight: 48, justifyContent: "center" }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 }, statusText: { flex: 1, minWidth: 0 },
+  body: { lineHeight: typography.body.lineHeight }, readTarget: { minHeight: 48, justifyContent: "center" }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 }, statusText: { flex: 1, minWidth: 0 },
   khungAlbum: { width: "100%", aspectRatio: TI_LE_ALBUM }, album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
   albumNavigation: { position: "absolute", right: 8, bottom: 8, flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, maxWidth: "100%" },
   albumArrow: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
