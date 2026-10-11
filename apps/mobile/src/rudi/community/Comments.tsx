@@ -15,7 +15,7 @@ import { MentionPicker } from "./MentionPicker";
 import { useCommunityStream } from "./useCommunityStream";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { useNativeFontScale } from "../chia-bill/useBillFontScale";
-import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner } from "../ui/NativeFontMetrics";
 export type CommentDraft = { body: string; parent: Comment | null; media: Media[]; mentions: string[]; logical_id: string; pendingFile: SelectedFile | null; person_id: string; post_id: string };
 type CommentsProps = {
     expanded?: boolean;
@@ -26,13 +26,21 @@ type CommentsProps = {
     person: string;
     post: Post;
 };
-export function Comments(props: CommentsProps) {
+/** One observer spans the community surface, its footer, and every sheet. */
+export function CommunityFontMetrics({ children }: { children: ReactNode }) {
+    const owned = useNativeFontMetricsOwner();
+    return owned ? <>{children}</> : <ObserveCommunityFontMetrics>{children}</ObserveCommunityFontMetrics>;
+}
+function ObserveCommunityFontMetrics({ children }: { children: ReactNode }) {
     const nativeFont = useNativeFontScale();
+    return <NativeFontMetricsProvider snapshot={nativeFont}>{children}</NativeFontMetricsProvider>;
+}
+export function Comments(props: CommentsProps) {
     const context = `${props.person}:${props.post.id}`;
     const draft = props.initialDraft;
     // Drafts are session-memory values; unowned input has no safe migration.
     const matches = draft?.person_id === props.person && draft?.post_id === props.post.id;
-    return <NativeFontMetricsProvider snapshot={nativeFont}><CommentsForContext key={context} {...props} initialDraft={matches ? draft : null}/></NativeFontMetricsProvider>;
+    return <CommunityFontMetrics><CommentsForContext key={context} {...props} initialDraft={matches ? draft : null}/></CommunityFontMetrics>;
 }
 function CommentsForContext({ person, post, expanded = false, presentation, initialDraft, onDraftChange }: CommentsProps) {
     const { colors } = useRudiTheme();
@@ -186,7 +194,7 @@ function CommentsForContext({ person, post, expanded = false, presentation, init
           <CauTaiCho cau={loiGui} />
           {sendReason ? <Text testID="community-comment-send-reason" style={[typography.caption, { color: colors.inkSoft }]}>{sendReason}</Text> : null}
         </ScrollView>
-        <Field nativeMetrics multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết bình luận…"/>
+        <Field nativeMetrics autoGrowLines={3} multiline accessibilityLabel="Bình luận" testID="community-comment-input" value={body} editable={!busy} numberOfLines={1} style={{ minHeight: 24, maxHeight: 72 }} onChangeText={(v) => { if (!mounted.current) return; attempt.current = newAttempt().key; publish({ body: v }); setBody(v); setLoiGui(null); }} placeholder="Viết bình luận…"/>
         <View testID="community-comment-tools" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           {attachmentTool}
           <IconButton icon="at-outline" quiet selected={tagOpen || mentions.length > 0} accessibilityLabel={mentions.length ? `Gắn bạn bè, đã chọn ${mentions.length} người` : "Gắn bạn bè"} onPress={() => setTagOpen((value) => !value)}/>

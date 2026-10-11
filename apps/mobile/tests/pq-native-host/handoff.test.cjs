@@ -358,6 +358,8 @@ test('LP11 local body offset refuses nonfinite or negative values and resets on 
     await scroll(87.5);
     for (const invalid of [-1, NaN, Infinity, -Infinity]) await scroll(invalid);
     await h.nativeFont(linePitchSnapshot(2));
+    // Inspect the mutable scroll journal after an explicit same-actor route rerender.
+    await h.actorTo(h.state.actor);
     assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 }, 'only finite nonnegative offsets may be journaled');
     await h.open(); assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 });
     await h.close(); await h.complete(h.closeAnimation()); assert.deepEqual(body().props.contentOffset, { x: 0, y: 87.5 });

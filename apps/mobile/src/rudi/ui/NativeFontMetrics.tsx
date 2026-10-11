@@ -7,6 +7,8 @@ import type { FontScaleSnapshot, NativeFontMetrics } from "../native-font-snapsh
 import { resolveTextMetrics, type OriginalTextMetrics, type ScalingProps } from "../native-font-metrics";
 
 const MetricsContext = createContext<NativeFontMetrics | undefined>(undefined);
+// An explicit provider owns native fallback as well as converted metrics.
+const MetricsOwnerContext = createContext(false);
 type Paragraph = { mode: "native" } | { mode: "manual"; original: OriginalTextMetrics };
 const ParagraphContext = createContext<Paragraph | undefined>(undefined);
 const NATIVE: Paragraph = { mode: "native" };
@@ -14,7 +16,12 @@ const NATIVE: Paragraph = { mode: "native" };
 /** Always mounted above the surface, including its footer; no global RN defaults. */
 export function NativeFontMetricsProvider({ snapshot, children }: { snapshot: FontScaleSnapshot; children: ReactNode }) {
   const metrics = snapshot.status === "available" ? snapshot.fontMetrics : undefined;
-  return <MetricsContext.Provider value={metrics}>{children}</MetricsContext.Provider>;
+  return <MetricsOwnerContext.Provider value={true}><MetricsContext.Provider value={metrics}>{children}</MetricsContext.Provider></MetricsOwnerContext.Provider>;
+}
+
+/** Presence stays true when a provider has no usable native metrics. */
+export function useNativeFontMetricsOwner(): boolean {
+  return useContext(MetricsOwnerContext);
 }
 
 function flattened(style: StyleProp<TextStyle>): TextStyle {

@@ -11,7 +11,7 @@ import { Sheet } from "../ui/Sheet";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { NoiDungBaoCao } from "../screens/nguoi/NoiDungBaoCao";
 import { feedback, follow, getPost, likePost, type Post } from "./api";
-import { Comments, type CommentDraft } from "./Comments";
+import { Comments, CommunityFontMetrics, type CommentDraft } from "./Comments";
 import { PostCard } from "./PostCard";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useCommunityStream } from "./useCommunityStream";
@@ -19,6 +19,9 @@ import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { COT_DOC } from "../adaptive";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function PostDetail() {
+    return <CommunityFontMetrics><PostDetailContent/></CommunityFontMetrics>;
+}
+function PostDetailContent() {
     const { id, report: reportParam } = useLocalSearchParams<{
         id: string;
         report?: string;

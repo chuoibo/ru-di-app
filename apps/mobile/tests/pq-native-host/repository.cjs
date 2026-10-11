@@ -6,6 +6,12 @@ function locate(start) {
     if (path.dirname(dir) === dir) throw new Error('Set PQ_SOURCE_ROOT when these tests are outside the repository.');
   }
 }
-const repo = process.env.PQ_SOURCE_ROOT ?? locate(__dirname);
-const sourceRoot = process.env.PQ_CANDIDATE_ROOT ?? repo;
+// A candidate is a complete source graph. Never fall back to a second tree.
+const repo = fs.realpathSync(path.resolve(process.env.PQ_SOURCE_ROOT ?? locate(__dirname)));
+const sourceRoot = fs.realpathSync(path.resolve(process.env.PQ_CANDIDATE_ROOT ?? repo));
+if (sourceRoot !== repo) throw new Error('PQ source and dependency repository must be the same complete graph.');
+for (const name of ['COMMENTS_SOURCE', 'PQ_HANDOFF_POSTDETAIL_SOURCE', 'PQ_HANDOFF_COMMENTS_SOURCE', 'PQ_MEDIA_COMMENTS_SOURCE', 'PQ_MEDIA_PICKER_SOURCE']) {
+  const value = process.env[name];
+  if (value !== undefined && !path.resolve(value).startsWith(repo + path.sep)) throw new Error('Source override leaves the complete graph: ' + name);
+}
 module.exports = { repo, sourceRoot };

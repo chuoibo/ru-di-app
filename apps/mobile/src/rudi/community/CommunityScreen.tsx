@@ -4,7 +4,8 @@ import { COMMUNITY_ERRORS } from "./api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, View, useWindowDimensions, type ViewToken } from "react-native";
+import { Text } from "../ui/NativeFontMetrics";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { duongDangNhap } from "../duong-vao";
 import { useRudiSession } from "../session";
@@ -23,7 +24,7 @@ import { docGiaoDienAsync } from "../kho";
 import { feedback, follow, likePost, mergePosts, readFeed, type FeedMode, type Post, type Preferences } from "./api";
 import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, traVeCho, type ThongBao } from "./bang-tin";
 import { PostCard } from "./PostCard";
-import { Comments } from "./Comments";
+import { Comments, CommunityFontMetrics } from "./Comments";
 import { useCommunityStream } from "./useCommunityStream";
 import { useViewSignal } from "./useViewSignal";
 import { TABLIST, tabState } from "../../ui/a11y";
@@ -51,7 +52,10 @@ const TABS = CHE_DO.slice(0, 3).map((c) => ({ mode: c.id, label: c.nhan }));
  * (`/community/topic`, a stack route with no strip and no stamp) it keeps its
  * own header.
  */
-export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
+export function CommunityScreen(props: { dau?: DungDau } = {}) {
+  return <CommunityFontMetrics><CommunityScreenContent {...props}/></CommunityFontMetrics>;
+}
+function CommunityScreenContent({ dau }: { dau?: DungDau }) {
   const router = useRouter();
   const params = useLocalSearchParams<{
     topic?: string;
