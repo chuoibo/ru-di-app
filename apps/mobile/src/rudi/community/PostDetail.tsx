@@ -143,26 +143,26 @@ function PostDetailContent() {
     finally {
         working.current = false; setBusy(false);
     } };
-    // The shared excerpt scrolls; the active editor stays above the IME.
-    // A generated draft keeps the original request editable in the reference
-    // area, so asking again never silently replaces the person's input.
-    const requestField = <Field testID="community-nep-request" label="Bạn muốn Nếp giúp gì?" value={request} onChangeText={setRequest} editable={!busy} multiline placeholder="Viết một lời ngắn để giữ khoảnh khắc này…" />;
+    // One document keeps the reference and editor in the same scroll viewport.
+    // A generated draft keeps the original request editable above it, so asking
+    // again never silently replaces the person's input.
+    const requestField = <Field testID="community-nep-request" nativeMetrics label="Bạn muốn Nếp giúp gì?" value={request} onChangeText={setRequest} editable={!busy} multiline placeholder="Viết một lời ngắn để giữ khoảnh khắc này…" />;
     const requestAction = <RudiButton label={busy ? "Nếp đang viết…" : "Đồng ý chia sẻ và gọi Nếp"} disabled={busy || !request.trim()} lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined} onPress={() => void goiNep()} />;
     const draftField = <>
       <Text style={[typography.caption, { color: colors.ai }]}>Bản nháp do Nếp viết</Text>
-      <Field testID="community-nep-draft" label="Sửa lại theo ý bạn" value={draft} editable={!busy} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline />
+      <Field testID="community-nep-draft" nativeMetrics label="Sửa lại theo ý bạn" value={draft} editable={!busy} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline />
     </>;
     const draftAction = <RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void act(async () => {
       await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/keeps", { actorId: person!, method: "POST", attempt: newAttempt(), body: { logical_id: keepAttempt.current, post_id: id, body: draft, ai_generated: true } });
       setNep(false); router.push("/community/keeps" as never);
     })} />;
-    // The decision stays outside overflow. The field may scroll at large text;
-    // the reference gives up height first, while the primary action stays put.
-    const editorFooter = person && post ? <View style={{ flexShrink: 1, gap: 8 }}>
-      <ScrollView testID="community-nep-editor" bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator style={{ flexGrow: 0, flexShrink: 1, minHeight: 128, width: "100%" }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-        {draft ? draftField : requestField}
-        <CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" />
-      </ScrollView>
+    // Only the decision stays outside overflow. A long editor or refusal can
+    // scroll without pushing that decision below the keyboard-sized panel.
+    const editorContent = person && post ? <View testID="community-nep-editor" style={{ flexShrink: 0, gap: 8, paddingBottom: 4 }}>
+      {draft ? draftField : requestField}
+      <CauTaiCho cau={loiNep} hanhDong={{ label: "Thử lại", onPress: () => void goiNep() }} testID="cong-dong-loi-nep" />
+    </View> : undefined;
+    const editorFooter = person && post ? <View style={{ paddingTop: 8 }}>
       {draft ? draftAction : requestAction}
     </View> : undefined;
     // The comment owner supplies both slots; the editor never lives in overflow.
@@ -197,11 +197,14 @@ function PostDetailContent() {
     {comments.phase !== "inline" && person && commentPost ? <Comments key={comments.writer} initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} presentation={(thread, editor) => <Sheet open={comments.phase === "sheet"} onClose={comments.close} onClosed={comments.closed} accessibilityLabel="Bình luận" testID="community-comment-sheet" avoidKeyboard prioritizeFooter footer={editor} showsVerticalScrollIndicator>{thread}</Sheet>} /> : null}
     <Sheet open={report} onClose={() => setReport(false)} accessibilityLabel="Báo cáo bài">{person ? <NoiDungBaoCao actorId={person} loai="post" targetId={id} onXong={() => setReport(false)} onThoi={() => setReport(false)}/> : null}</Sheet>
     <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" prioritizeFooter footer={editorFooter}>
-      {person && post ? <View style={{ paddingRight: 8 }}>
-        <Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text>
-        <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text>
-        <Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text>
-        {draft ? <>{requestField}{requestAction}</> : null}
+      {person && post ? <View style={{ flexShrink: 0, gap: 12 }}>
+        <View style={{ paddingRight: 8 }}>
+          <Text style={[typography.h2, { color: colors.ink }]}>Nhờ Nếp giữ một điều</Text>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp chỉ nhận đoạn dưới đây và yêu cầu của bạn. Bạn xem lại bản nháp trước khi lưu thành ghi chép riêng.</Text>
+          <Text style={[typography.body, { color: colors.ink, paddingVertical: 16 }]}>{post.body}</Text>
+          {draft ? <>{requestField}{requestAction}</> : null}
+        </View>
+        {editorContent}
       </View> : null}
     </Sheet>
   </>}>

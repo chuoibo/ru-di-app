@@ -47,6 +47,18 @@ function sameHosts(h, before) {
   labels.forEach((value, index) => assert.equal(label(h, value) === before.texts[index], true, 'same five native label hosts'));
   destinations.forEach((value, index) => assert.equal(tab(h, value) === before.tabs[index], true, 'same four native destination hosts'));
 }
+// This checks the source graph's column-width policy, not Yoga or visible glyphs.
+function allocatedDestinationLabel(h, value) {
+  const native = label(h, value), style = flatten(native.props.style);
+  assert.equal(nearest(native, 'RNPressable') === tab(h, value), true, 'destination label belongs to its allocated tab column');
+  const fillsColumn = style.width === '100%' || (style.width === undefined && style.alignSelf === 'stretch');
+  assert.equal(fillsColumn, true, 'destination label uses its column instead of an intrinsic glyph-width box');
+  assert.equal(style.maxWidth === undefined || style.maxWidth === '100%', true, 'no narrower destination label maximum');
+  assert.equal(style.minWidth === undefined || style.minWidth === 0, true, 'no destination label minimum wider than its column');
+  assert.equal(style.textAlign, 'center', 'label stays centered inside its column');
+  assert.equal(style.height, undefined, 'line count remains free to use the existing two-line reserve');
+  assert.equal(style.maxHeight, undefined, 'no separate label-height clip');
+}
 function textMetrics(h, size, pitch, manual) {
   labels.forEach((value, index) => {
     const native = label(h, value), style = flatten(native.props.style);
@@ -56,6 +68,7 @@ function textMetrics(h, size, pitch, manual) {
     assert.equal(native.props.allowFontScaling, manual ? false : undefined, 'converted metrics or original RN fallback');
     assert.equal(native.props.maxFontSizeMultiplier, undefined, 'no font size cap added');
     assert.equal(native.props.numberOfLines, index < 4 ? 2 : 1, 'existing full label line contract');
+    if (index < destinations.length) allocatedDestinationLabel(h, value);
   });
 }
 function ownership(h, subscriptions, reads, removals = 0) {

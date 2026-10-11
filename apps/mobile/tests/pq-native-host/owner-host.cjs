@@ -34,14 +34,14 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false } = {}) {
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true } = {}) {
   assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer'].includes(surface));
   const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
   const commentsReadQueue = [], friendsReadQueue = [];
   const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
-  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [];
+  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [];
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
   const visual = name => React.forwardRef(function NativeBoundary(props, ref) { return React.createElement(name, { ...props, ref }); });
@@ -134,6 +134,16 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
         if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
         return { comments: [commentRow()], pending: [], next_cursor: null };
       }
+      // Opt-in deferred transport for the exact synthetic Nếp editor fixture.
+      // Unknown routes/methods retain the fail-closed boundary below.
+      if (nepTransport && route === '/v2/community/posts/synthetic-post-1/nep' && method === 'POST') {
+        assert.equal(state.params.id, 'synthetic-post-1'); assert.equal(options.actorId, state.actor.person_id);
+        call.kind = 'nepRequest'; return parked(nepRequests, call);
+      }
+      if (nepTransport && route === '/v2/community/keeps' && method === 'POST') {
+        assert.equal(options.actorId, state.actor.person_id);
+        call.kind = 'keepWrite'; return parked(keepWrites, call);
+      }
       if (route.endsWith('/comments') && method === 'POST') { call.kind = 'comment'; return parked(writes, call); }
       if (/^\/v2\/community\/posts\/[^/]+\/comments\/[^/]+$/.test(route) && method === 'DELETE') {
         call.kind = 'deleteComment'; return parked(deletes, call);
@@ -157,7 +167,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const svg = new Proxy({ __esModule: true, default: visual('RNSvg') }, { get(target, key) { if (key in target) return target[key]; target[key] = visual(`RNSvg${String(key)}`); return target[key]; } });
   const externals = {
     react: React, 'react/jsx-runtime': dependency('react/jsx-runtime'), 'react-native': Native, 'react-native-reanimated': reanimated,
-    'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return nativeFontModule; } },
+    'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
     'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
     'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
     'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'detail' ? `/community/posts/${state.params.id}` : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
@@ -247,7 +257,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     return node;
   }
   const h = {
-    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     get root() { return root; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,

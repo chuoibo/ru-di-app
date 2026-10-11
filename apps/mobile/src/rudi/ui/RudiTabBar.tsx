@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   railItem: { height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
   oDauRail: { height: HANG_DAU_RAIL },
   logoRail: { height: HANG_LOGO_RAIL, alignItems: "center", justifyContent: "center" },
-  label: { fontSize: 12, lineHeight: 14, textAlign: "center" },
+  label: { alignSelf: "stretch", fontSize: 12, lineHeight: 14, textAlign: "center" },
   dauThanh: { position: "absolute", top: 0, alignItems: "stretch" },
   dauRail: { position: "absolute", left: 0, right: 0, height: HANG_DAU_RAIL, alignItems: "stretch" },
   indicator: { position: "absolute", top: 0, height: 6, alignItems: "center", backgroundColor: "transparent" },
