@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { datChuSoHuuBanNhap } from "./chat/ban-nhap-cong-cu";
+import { datChuSoHuuNhapBai } from "./community/ban-nhap";
 import { datTokenPhien, tokenPhienHienTai } from "../api";
 import { ngheThuHoiPhien } from "../danh-tinh";
 import { dangXuat, khoiPhucPhien, quenPhienDaThuHoi, type Phien } from "../phien";
@@ -64,6 +65,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
         if (!song) return;
         if (phien !== null) datTokenPhien(phien.token);
         datChuSoHuuBanNhap(phien?.person_id ?? null);
+        datChuSoHuuNhapBai(phien?.person_id ?? null);
         setPhien(phien);
         setPhienDaDoc(true);
       })
@@ -72,6 +74,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
         // both answers are the same: no session, the sign-in door.
         if (!song) return;
         datChuSoHuuBanNhap(null);
+        datChuSoHuuNhapBai(null);
         setPhien(null);
         setPhienDaDoc(true);
       });
@@ -88,6 +91,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
     () =>
       ngheThuHoiPhien((token) => {
         datChuSoHuuBanNhap(null);
+        datChuSoHuuNhapBai(null);
         setPhien((dangCo) => (dangCo !== null && dangCo.token !== token ? dangCo : null));
         void quenPhienDaThuHoi(token).catch(() => undefined);
       }),
@@ -104,10 +108,12 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
       // somewhere else must not leave the bearer pointing at the old one.
       datTokenPhien(moi.token);
       datChuSoHuuBanNhap(moi.person_id);
+      datChuSoHuuNhapBai(moi.person_id);
       setPhien(moi);
     },
     resetSession: () => {
       datChuSoHuuBanNhap(null);
+      datChuSoHuuNhapBai(null);
       // `dangXuat` calls the server FIRST and forgets locally in a `finally`,
       // which is the order that matters: a session only the phone forgets is
       // still a live credential on the server, and a phone somebody else is
@@ -121,6 +127,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
     quenTaiCho: () => {
       const token = phien?.token ?? tokenPhienHienTai();
       datChuSoHuuBanNhap(null);
+      datChuSoHuuNhapBai(null);
       if (tokenPhienHienTai() === token) datTokenPhien(null);
       setPhien(null);
       if (token) void quenPhienDaThuHoi(token).catch(() => undefined);

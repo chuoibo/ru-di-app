@@ -11,7 +11,7 @@ import { imageSource, uploadMedia, type Media } from "./api";
 
 export type SelectedFile = { asset: ImagePicker.ImagePickerAsset; uploaded?: Media & { state?: string } };
 
-export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, renderToolbar }: {
+export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, disabled = false, renderToolbar }: {
     person: string;
     media: Media[];
     onChange: (next: Media[]) => void;
@@ -21,6 +21,8 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
     onFileChange?: (file: SelectedFile | null) => void;
     /** An attachment tool in a composer, rather than a standalone form field. */
     compact?: boolean;
+    /** Block attachment edits while the enclosing form is submitting. */
+    disabled?: boolean;
     /** Keep a composer's tools together while previews/errors retain full width. */
     renderToolbar?: (pick: () => void, busy: boolean) => ReactNode;
 }) {
@@ -31,11 +33,13 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
     const [selected, setSelected] = useState<SelectedFile | null>(initialFile ?? null);
     useEffect(() => { onFileChange?.(selected); }, [selected, onFileChange]);
     const working = useRef(false);
+    const disabledNow = useRef(disabled);
+    disabledNow.current = disabled;
     const mounted = useRef(true);
     const generation = useRef(0);
     useEffect(() => { mounted.current = true; return () => { mounted.current = false; generation.current++; }; }, []);
     const prepare = async (retry?: SelectedFile) => {
-        if (working.current) return;
+        if (disabledNow.current || working.current) return;
         working.current = true;
         const operation = ++generation.current;
         const current = () => mounted.current && generation.current === operation;
@@ -93,12 +97,12 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
     return <View style={{ gap: 12 }}>
         {media.length ? <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>{media.map((m) => <View key={m.id} style={{ width: 120, gap: 4 }}>
             {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: 120, height: 120, borderRadius: 8 }}/> : <Text style={[typography.label, { color: colors.ink, paddingVertical: 20 }]}>Video đã sẵn sàng</Text>}
-            <RudiButton compact label="Bỏ tệp" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} variant="ghost" disabled={busy} onPress={() => onChange(media.filter((item) => item.id !== m.id))}/>
+            <RudiButton compact label="Bỏ tệp" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} variant="ghost" disabled={disabled || busy} onPress={() => { if (!disabledNow.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
         </View>)}</ScrollView> : null}
-        {renderToolbar ? renderToolbar(() => void prepare(), busy) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={busy} loading={busy} onPress={() => void prepare()}/>}
+        {renderToolbar ? renderToolbar(() => void prepare(), busy || disabled) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={disabled || busy} loading={busy} onPress={() => void prepare()}/>}
         {error ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.accent }]}>{error}</Text> : null}
-        {selected && !busy ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}><RudiButton full={false} label="Thử lại tệp đã chọn" variant="outline" onPress={() => void prepare(selected)}/><RudiButton full={false} label="Bỏ tệp đang chờ" variant="ghost" onPress={() => { setSelected(null); setError(null); }}/></View> : null}
-        {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" onPress={() => { generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); }}/> : null}
+        {selected && !busy ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}><RudiButton full={false} label="Thử lại tệp đã chọn" variant="outline" disabled={disabled} onPress={() => void prepare(selected)}/><RudiButton full={false} label="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} onPress={() => { if (disabledNow.current) return; setSelected(null); setError(null); }}/></View> : null}
+        {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" disabled={disabled} onPress={() => { if (disabledNow.current) return; generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); }}/> : null}
         {busy ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Lời viết vẫn ở đây trong lúc tệp được chuẩn bị.</Text> : null}
     </View>;
 }

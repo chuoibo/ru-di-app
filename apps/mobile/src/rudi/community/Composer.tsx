@@ -2,7 +2,7 @@ import { translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { docNhomCuaToi, type NhomTomTat } from "../../phien";
 import { useRudiSession } from "../session";
@@ -11,7 +11,8 @@ import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
 import { createPost, getPost, type Audience, type Media } from "./api";
 import { loiChuDe } from "./chu-de";
 import { CauTaiCho } from "../ui/CauTaiCho";
-import { MediaPicker } from "./MediaPicker";
+import { MediaPicker, type SelectedFile } from "./MediaPicker";
+import { boNhapBai, docNhapBai, ghiNhapBai, khoaNhapBai, phienNhapBai, type NhapBai } from "./ban-nhap";
 import { MentionPicker } from "./MentionPicker";
 import { coTuongNhom } from "../so/ban-tinh";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
@@ -27,7 +28,25 @@ const NGUOI_DOC: Record<Audience, [string, string]> = {
   group: ["Một nhóm", "Chỉ thành viên hiện tại của nhóm được xem."],
 };
 
+type DraftContent = { body: string; audience: Audience; topics: string; mentions: string[]; media: Media[]; group: string | null };
+// Retry equality follows the exact outgoing fields, before server normalization.
+function postContent(draft: DraftContent) {
+    return { body: draft.body, audience: draft.audience, topics: draft.topics.split(",").map((s) => s.trim()).filter(Boolean), mentions: draft.mentions, media_ids: draft.media.map((m) => m.id), context_id: draft.audience === "group" ? draft.group : null };
+}
+
+function draftSignature(draft: NhapBai | null) {
+    return draft ? JSON.stringify([draft.body, draft.audience, draft.topics, draft.mentions, draft.media, draft.group, draft.revision, draft.logical_id, draft.pendingFile]) : null;
+}
+
 export function Composer() {
+    const { phien } = useRudiSession();
+    const params = useLocalSearchParams<{ edit?: string; wall?: string }>();
+    const scope = khoaNhapBai(params.edit, Boolean(params.wall));
+    const lease = phien ? phienNhapBai(phien.person_id) : null;
+    return <ComposerForm key={JSON.stringify([phien?.person_id ?? null, scope, lease])} />;
+}
+
+function ComposerForm() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { phien } = useRudiSession();
@@ -38,41 +57,73 @@ export function Composer() {
         edit?: string;
         wall?: string;
     }>();
-    const [body, setBody] = useState("");
-    const [audience, setAudience] = useState<Audience>(params.wall ? "friends" : "public");
-    const [topics, setTopics] = useState("");
-    const [mentions, setMentions] = useState<string[]>([]);
-    const [media, setMedia] = useState<Media[]>([]);
+    const person = phien?.person_id ?? "";
+    const scope = khoaNhapBai(params.edit, Boolean(params.wall));
+    const [lease] = useState(() => phienNhapBai(person));
+    const [nhapCu, setNhapCu] = useState(() => docNhapBai(person, scope));
+    const [body, setBody] = useState(params.edit ? "" : nhapCu?.body ?? "");
+    const [audience, setAudience] = useState<Audience>(params.edit ? "public" : nhapCu?.audience ?? (params.wall ? "friends" : "public"));
+    const [topics, setTopics] = useState(params.edit ? "" : nhapCu?.topics ?? "");
+    const [mentions, setMentions] = useState<string[]>(params.edit ? [] : nhapCu?.mentions ?? []);
+    const [media, setMedia] = useState<Media[]>(params.edit ? [] : nhapCu?.media ?? []);
+    const [pendingFile, setPendingFile] = useState<SelectedFile | null>(params.edit ? null : nhapCu?.pendingFile ?? null);
     const [groupError, setGroupError] = useState<string | null>(null);
     const [groupLoading, setGroupLoading] = useState(false);
     const [groupRetry, setGroupRetry] = useState(0);
     const [groups, setGroups] = useState<NhomTomTat[]>([]);
-    const [group, setGroup] = useState<string | null>(null);
+    const [group, setGroup] = useState<string | null>(params.edit ? null : nhapCu?.group ?? null);
     const [audienceOpen, setAudienceOpen] = useState(false);
     const [topicsOpen, setTopicsOpen] = useState(false);
     const [mentionsOpen, setMentionsOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [revision, setRevision] = useState(0);
+    const [revision, setRevision] = useState(params.edit ? 0 : nhapCu?.revision ?? 0);
     const [editReady, setEditReady] = useState(!params.edit);
     const [loading, setLoading] = useState(Boolean(params.edit));
     const [retry, setRetry] = useState(0);
+    const [dirty, setDirty] = useState(!params.edit && nhapCu !== null);
+    const [conflict, setConflict] = useState(false);
     const sending = useRef(false);
-    const attempt = useRef(newAttempt().key);
+    const submitted = useRef(false);
+    const alive = useRef(true);
+    const [initialAttempt] = useState(() => nhapCu?.logical_id ?? newAttempt().key);
+    const attempt = useRef(initialAttempt);
+    const content = useRef<DraftContent>({ body, audience, topics, mentions, media, group });
+    const pendingFileNow = useRef(pendingFile);
+    const current = () => alive.current && lease !== null && phienNhapBai(person) === lease;
+    const snapshot = (): NhapBai => ({ ...content.current, revision, logical_id: attempt.current, pendingFile: pendingFileNow.current });
+    const saveDraft = () => {
+        if (current() && editReady && !submitted.current) ghiNhapBai(person, scope, snapshot(), lease);
+    };
+    useLayoutEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
     useEffect(() => {
-        if (!phien) return;
-        let current = true;
-
-        if (params.edit) {
-            setLoading(true); setEditReady(false); setError(null);
-            void getPost(phien.person_id, params.edit).then((p) => {
-                if (!current) return;
-                setBody(p.body); setAudience(p.audience); setTopics(p.topics.join(", ")); setMentions(p.mentions); setMedia(p.media); setRevision(p.revision); setGroup(p.context_id); setEditReady(true);
-            }).catch((e) => { if (current) setError(e instanceof Error ? e.message : "Chưa mở được bản viết."); }).finally(() => { if (current) setLoading(false); });
-        } else setLoading(false);
-        return () => { current = false; };
-    }, [phien, params.edit, retry]);
+        if (!phien || !params.edit) return;
+        let active = true;
+        setLoading(true); setEditReady(false); setError(null);
+        void getPost(person, params.edit).then((p) => {
+            if (!active || !current()) return;
+            // Read permission and the current base before revealing a saved edit.
+            const saved = nhapCu;
+            const next = { body: saved?.body ?? p.body, audience: saved?.audience ?? p.audience, topics: saved?.topics ?? p.topics.join(", "), mentions: saved?.mentions ?? p.mentions, media: saved?.media ?? p.media, group: saved ? saved.group : p.context_id };
+            content.current = next; pendingFileNow.current = saved?.pendingFile ?? null;
+            setBody(next.body); setAudience(next.audience); setTopics(next.topics); setMentions(next.mentions); setMedia(next.media); setRevision(saved?.revision ?? p.revision); setGroup(next.group); setPendingFile(saved?.pendingFile ?? null);
+            setConflict(saved !== null && (saved.revision !== p.revision || saved.audience !== p.audience || saved.group !== p.context_id));
+            setDirty(saved !== null); setEditReady(true);
+        }).catch((e) => { if (active && current()) setError(e instanceof Error ? e.message : "Chưa mở được bản viết."); }).finally(() => { if (active && current()) setLoading(false); });
+        return () => { active = false; };
+    }, [person, params.edit, retry]);
+    useEffect(() => {
+        if (!current() || !dirty || !editReady || submitted.current) return;
+        saveDraft();
+    }, [body, audience, topics, mentions, media, group, revision, pendingFile, dirty, editReady]);
+    const discardStaleDraft = () => {
+        if (!current() || sending.current) return;
+        boNhapBai(person, scope, lease);
+        setNhapCu(null); setDirty(false); setConflict(false);
+        attempt.current = newAttempt().key;
+        setRetry((n) => n + 1);
+    };
     useEffect(() => {
         if (!phien) return;
         let current = true; setGroupLoading(true); setGroupError(null);
@@ -80,12 +131,18 @@ export function Composer() {
         return () => { current = false; };
     }, [phien, groupRetry]);
     const send = async () => {
-        if (!phien || sending.current || loading || uploading || !body.trim() || loiChuDe(topics) || (audience === "group" && !group) || !editReady)
+        const draft = content.current;
+        if (!phien || !current() || conflict || sending.current || loading || uploading || !draft.body.trim() || loiChuDe(draft.topics) || (draft.audience === "group" && !draft.group) || !editReady)
             return;
         sending.current = true;
         setBusy(true);
         setError(null);
-        const input = { logical_id: attempt.current, body, audience, topics: topics.split(",").map((s) => s.trim()).filter(Boolean), mentions, media_ids: media.map((m) => m.id), context_id: audience === "group" ? group : null, revision };
+        const logical = attempt.current;
+        const input = { logical_id: logical, ...postContent(draft), revision };
+        // Publish before transport: an immediate ACK may precede the passive save.
+        const sentDraft = snapshot();
+        const sentSignature = draftSignature(sentDraft);
+        ghiNhapBai(person, scope, sentDraft, lease);
         try {
             const post = params.edit ? await translatedAsActor<{
                 id: string;
@@ -95,32 +152,50 @@ export function Composer() {
                 body: input,
                 attempt: newAttempt()
             }) : await createPost(phien.person_id, input);
+            // A remounted editor may add pending metadata without changing this payload ID.
+            if (draftSignature(docNhapBai(person, scope)) === sentSignature) boNhapBai(person, scope, lease, logical);
+            if (!current() || attempt.current !== logical) return;
+            submitted.current = true;
             router.replace(`/community/posts/${post.id}` as never);
         }
         catch (e) {
-            setError(e instanceof Error ? e.message : "Chưa gửi được bài. Bản viết vẫn ở đây.");
+            if (current()) setError(e instanceof Error ? e.message : "Chưa gửi được bài. Bản viết vẫn ở đây.");
         }
         finally {
-            sending.current = false;
-            setBusy(false);
+            if (current()) { sending.current = false; setBusy(false); }
         }
     };
-    const change = (update: () => void) => { attempt.current = newAttempt().key; update(); };
+    const change = (patch: Partial<DraftContent>) => {
+        if (!current() || sending.current) return false;
+        const next = { ...content.current, ...patch };
+        if (JSON.stringify(postContent(next)) !== JSON.stringify(postContent(content.current))) {
+            attempt.current = newAttempt().key;
+        }
+        // Keep explicit UI/metadata edits even when their outgoing payload is equal.
+        content.current = next; setDirty(true); saveDraft();
+        setBody(next.body); setAudience(next.audience); setTopics(next.topics); setMentions(next.mentions); setMedia(next.media); setGroup(next.group);
+        return true;
+    };
+    const rememberFile = (file: SelectedFile | null) => {
+        if (!current() || sending.current) return;
+        if (pendingFileNow.current === file) return;
+        pendingFileNow.current = file; setDirty(true); saveDraft(); setPendingFile(file);
+    };
     // The topic box checks itself as the server will (QA UI-133): the sentence
     // sits under the box while typing, and «Gửi» waits with the reason.
     const loiChuDeGo = loiChuDe(topics);
     if (!phien)
         return <RudiScreen><TopBar title="Kể một khoảnh khắc"/><Text style={[typography.body, { color: colors.ink }]}>Đăng nhập để viết câu chuyện của bạn.</Text></RudiScreen>;
-    const chooseAudience = (value: Audience) => change(() => { setAudience(value); setAudienceOpen(false); });
+    const chooseAudience = (value: Audience) => { if (change({ audience: value })) setAudienceOpen(false); };
     const choice = (value: Audience, title: string, detail: string) => <Pressable key={value} {...toggleState("radio", audience === value, () => chooseAudience(value))} disabled={busy} onPress={() => chooseAudience(value)} style={[styles.audienceChoice, { borderColor: colors.line }]}><View style={styles.audienceChoiceTitle}><Text style={[typography.label, styles.flex, { color: audience === value ? colors.accent : colors.ink }]}>{title}</Text>{audience === value ? <RudiIcon name="checkmark" color={colors.accent} size={20} /> : null}</View><Text style={[typography.note, { color: colors.inkSoft }]}>{detail}</Text></Pressable>;
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
-    const cannotSend = busy || uploading || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
+    const cannotSend = conflict || busy || uploading || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
     return <RudiScreen material="quiet" avoidKeyboard cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
-      <CauTaiCho cau={error} testID="cong-dong-loi-gui" />
+      <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
       <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
-      <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
+      <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
     <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => { Keyboard.dismiss(); setAudienceOpen(!audienceOpen); }} style={styles.author}>
       <AvatarNguoi name={phien.profile?.display_name ?? "Bạn"} personId={phien.person_id} size={44} />
@@ -138,19 +213,19 @@ export function Composer() {
         no «Lựa chọn khác» opening more choices that cannot be taken. */}
     {audienceOpen && !params.edit ? <View accessibilityRole="radiogroup" style={[styles.audienceOptions, { backgroundColor: colors.card, borderColor: colors.line }]}>{(Object.keys(NGUOI_DOC) as Audience[]).map((value) => choice(value, ...NGUOI_DOC[value]))}</View> : null}
     {params.edit ? <Text style={[typography.note, { color: colors.inkSoft }]} testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc như lúc đăng. Muốn đổi người đọc, mở «Thêm lựa chọn cho bài» (⋯) ở trang bài.</Text> : null}
-    {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change(() => setGroup(g.id))}/>)}</> : null}
+    {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change({ group: g.id })}/>)}</> : null}
     <View style={[styles.writing, expanded && styles.expandedWriting]}>
-      <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change(() => setBody(value))} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
+      <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View style={[styles.tools, { borderColor: colors.line }]}>
-      <MediaPicker compact person={phien.person_id} media={media} onChange={(v) => change(() => setMedia(v))} onBusy={setUploading} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
+      <MediaPicker compact initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={setUploading} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
         <ComposerTool icon="images-outline" label={picking ? "Đang chuẩn bị…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={() => { Keyboard.dismiss(); pick(); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => { Keyboard.dismiss(); setTopicsOpen(!topicsOpen); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />
       </View>} />
-      <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change(() => setMentions(v))}/>
-      {topicsOpen || topics || loiChuDeGo ? <Field error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change(() => setTopics(v))}/> : null}
+      <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change({ mentions: v })}/>
+      {topicsOpen || topics || loiChuDeGo ? <Field error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
     </View>
   </RudiScreen>;
 }

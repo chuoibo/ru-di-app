@@ -1,7 +1,7 @@
 import { ApiError, translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -28,9 +28,13 @@ export function PostDetail() {
     const [error, setError] = useState<string | null>(null);
     const [actions, setActions] = useState(false);
     const [report, setReport] = useState(reportParam === "1");
-    const [commentDraft, setCommentDraft] = useState<CommentDraft | null>(null);
+    const comments = useCommentHandoff(person, id);
+    const commentContext = JSON.stringify([person ?? null, id ?? null]);
+    const activePostContext = useRef(commentContext);
+    activePostContext.current = commentContext;
+    const [postContext, setPostContext] = useState<string | null>(null);
+    const commentPost = post && post.id === id && postContext === commentContext ? post : null;
     const read = useRef(0);
-    const [commentsOpen, setCommentsOpen] = useState(false);
     const working = useRef(false);
     const keepAttempt = useRef(newAttempt().key);
     const [nep, setNep] = useState(false);
@@ -46,17 +50,17 @@ export function PostDetail() {
     const load = useCallback(async () => { if (!person || !id)
         return; const serial = ++read.current; try {
         const result = await getPost(person, id);
-        if (read.current !== serial) return;
-        setPost(result);
+        if (read.current !== serial || activePostContext.current !== commentContext) return;
+        setPost(result); setPostContext(commentContext);
         setPermanent(false); setError(null);
     }
     catch (e) {
-        if (read.current !== serial) return;
+        if (read.current !== serial || activePostContext.current !== commentContext) return;
         const denied = e instanceof ApiError && (e.status === 403 || e.status === 404);
         setPermanent(denied); if (denied) setPost(null);
         setError(e instanceof Error ? e.message : "Chưa mở được bài.");
-    } }, [person, id]);
-    useEffect(() => { setPost(null); setCommentDraft(null); void load(); return () => { read.current++; }; }, [load]);
+    } }, [person, id, commentContext]);
+    useEffect(() => { setPost(null); setPostContext(null); void load(); return () => { read.current++; }; }, [load]);
     // A (re)connection re-reads the post in place: the card, the comment box
     // with what is being typed, and an open Nếp sheet with its draft all stay
     // (QA UI-134; ADR-0040 «phục hồi sau reconnect, không tự đẩy vị trí cuộn»).
@@ -144,7 +148,7 @@ export function PostDetail() {
             method: "DELETE",
             attempt: newAttempt()
         }); router.replace("/(tabs)/community" as never); }); }}/></> : <RudiButton label="Báo cáo bài" variant="ghost" onPress={() => { setActions(false); setReport(true); }}/>}</> : null}</Sheet>
-    <Sheet open={commentsOpen} onClose={() => setCommentsOpen(false)} accessibilityLabel="Bình luận">{person && post ? <Comments initialDraft={commentDraft} onDraftChange={setCommentDraft} person={person} post={post} /> : null}</Sheet>
+    {comments.phase !== "inline" && person && commentPost ? <Sheet key={comments.writer} open={comments.phase === "sheet"} onClose={comments.close} onClosed={comments.closed} accessibilityLabel="Bình luận"><Comments initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} /></Sheet> : null}
     <Sheet open={report} onClose={() => setReport(false)} accessibilityLabel="Báo cáo bài">{person ? <NoiDungBaoCao actorId={person} loai="post" targetId={id} onXong={() => setReport(false)} onThoi={() => setReport(false)}/> : null}</Sheet>
     <Sheet open={nep} onClose={() => { setNep(false); setLoiNep(null); }} accessibilityLabel="Gọi Nếp" avoidKeyboard showsVerticalScrollIndicator testID="community-nep-sheet" prioritizeFooter footer={editorFooter}>
       {person && post ? <View style={{ paddingRight: 8 }}>
@@ -156,6 +160,45 @@ export function PostDetail() {
     </Sheet>
   </>}>
     <View style={{ paddingHorizontal: 20 }}><TopBar title="Một câu chuyện"/><CauTaiCho cau={error} hanhDong={permanent ? undefined : { label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bai" />{permanent ? <RudiButton label="Về cộng đồng" variant="outline" onPress={() => router.replace("/(tabs)/community" as never)}/> : null}</View>
-    {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={() => setCommentsOpen(true)} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{!commentsOpen ? <Comments initialDraft={commentDraft} onDraftChange={setCommentDraft} person={person} post={post} expanded/> : null}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
+    {post && person ? <><PostCard detail post={post} person={person} active busy={busy} onLike={() => void act(async () => setPost(await likePost(person, id, !post.liked)))} onComment={comments.open} onMore={() => setActions(true)} onFollow={() => void act(async () => { await follow(person, "person", post.author_id, !post.following); await load(); })} onSave={() => void act(async () => { await feedback(person, id, "saved", !post.saved); await load(); })}/><View style={{ padding: 20, gap: 24 }}><RudiButton tone="ai" label="@Nếp · Giúp giữ khoảnh khắc" icon="sparkles-outline" variant="outline" onPress={() => setNep(true)}/>{comments.phase === "inline" && commentPost ? <Comments initialDraft={comments.draft} onDraftChange={comments.onDraftChange} person={person} post={commentPost} expanded/> : null}</View></> : !error ? <View style={{ padding: 20 }}><SkeletonLines lines={5}/></View> : null}
   </RudiScreen>;
+}
+
+
+type CommentPhase = "inline" | "sheet" | "closing";
+/** One writer remains alive through the sheet's real close completion. */
+function useCommentHandoff(person: string | undefined, post: string | undefined) {
+    const owner = useMemo(() => ({ live: false, writer: 0, phase: "inline" as CommentPhase, draft: null as CommentDraft | null }), [person, post]);
+    const active = useRef(owner);
+    active.current = owner;
+    const [surface, setSurface] = useState(() => ({ owner, phase: "inline" as CommentPhase, writer: 0 }));
+    const view = surface.owner === owner ? surface : { owner, phase: "inline" as CommentPhase, writer: 0 };
+    const writer = view.writer;
+    const current = useCallback(() => owner.live && active.current === owner, [owner]);
+    useLayoutEffect(() => {
+        owner.live = true;
+        return () => { owner.live = false; };
+    }, [owner]);
+    const onDraftChange = useCallback((draft: CommentDraft) => {
+        if (!current() || owner.writer !== writer || draft.person_id !== person || draft.post_id !== post) return;
+        owner.draft = draft;
+    }, [owner, writer, person, post, current]);
+    const open = useCallback(() => {
+        // Serialize closing: an old completion must never hide a reopened sheet.
+        if (!current() || !person || !post || owner.writer !== writer || owner.phase !== "inline") return;
+        owner.phase = "sheet"; owner.writer++;
+        setSurface({ owner, phase: owner.phase, writer: owner.writer });
+    }, [owner, writer, person, post, current]);
+    const close = useCallback(() => {
+        if (!current() || owner.writer !== writer || owner.phase !== "sheet") return;
+        owner.phase = "closing";
+        setSurface({ owner, phase: owner.phase, writer: owner.writer });
+    }, [owner, writer, current]);
+    const closed = useCallback(() => {
+        if (!current() || owner.writer !== writer || owner.phase !== "closing") return;
+        // Retire the sheet writer before the inline editor can publish.
+        owner.writer++; owner.phase = "inline";
+        setSurface({ owner, phase: owner.phase, writer: owner.writer });
+    }, [owner, writer, current]);
+    return { phase: view.phase, writer, draft: owner.draft, onDraftChange, open, close, closed };
 }
