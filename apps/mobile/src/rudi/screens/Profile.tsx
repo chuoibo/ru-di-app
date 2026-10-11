@@ -252,12 +252,12 @@ function ProfileSong({ phien }: { phien: Phien }) {
 export function FinanceScreen() {
   const session = useRudiSession();
   if (session.nguon.kieu === "live") {
-    return <TaiChinhLive actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
+    return <TaiChinhLive key={session.nguon.actorId} actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
   }
   // Signed in, in no group yet: the finance route is per PERSON, so it reads
   // the real (empty) ledger.
   if (session.phien !== null) {
-    return <TaiChinhLive actorId={session.phien.person_id} contextId={null} />;
+    return <TaiChinhLive key={session.phien.person_id} actorId={session.phien.person_id} contextId={null} />;
   }
   if (!session.phienDaDoc) return null;
   return <CuaDangNhap tiep="/finance" />;
@@ -272,13 +272,14 @@ export function FinanceScreen() {
  */
 function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string | null }) {
   const router = useRouter();
-  const { colors, dark, radius } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [lan, setLan] = useState(0);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let song = true;
+    setDu(null);
     setLoi(null);
     void layTaiChinh(actorId)
       .then((ketQua) => {
@@ -291,11 +292,11 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
     return () => {
       song = false;
     };
-  }, [actorId, lan]);
+  }, [actorId, lan]));
 
   if (loi !== null) {
     return (
-      <RudiScreen material="quiet" tone="split" testID="finance-screen">
+      <RudiScreen cot="form" material="quiet" tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
         <ErrorState body={loi} onRetry={() => setLan((n) => n + 1)} title="Chưa đọc được sổ" />
       </RudiScreen>
@@ -303,7 +304,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
   }
   if (du === null) {
     return (
-      <RudiScreen material="quiet" tone="split" testID="finance-screen">
+      <RudiScreen cot="form" material="quiet" tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="50%" lineHeight={28} lines={2} />
@@ -314,19 +315,24 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
   }
   const gioiHan = ghiChuGioiHan(du.movements);
   return (
-    <RudiScreen material="quiet" tone="split" testID="finance-screen">
+    <RudiScreen cot="form" material="quiet" tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
-      {/* The receipt's total is the reading anchor in the approved mockup.
-          Every amount remains a separate figure returned by the ledger. */}
+      {/* Separate ledger figures, with no total inferred on the client. */}
       <HoaDonGiay rangTren testID="trang-so-tai-chinh">
-        <View style={styles.dauHoaDon}>
-          <Text style={[typography.label, { color: colors.ink }]}>Phần chi của bạn</Text>
-          <Money size="display" tone="split" vnd={du.spend_vnd} adjustsFontSizeToFit style={styles.tongHoaDon} />
-          <Text style={[typography.caption, styles.moTaHoaDon, { color: colors.inkSoft }]}>{`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`}</Text>
-        </View>
-        <VachCat />
-        <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}đ`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
-        <DongTien cuoi nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
+        {([
+          { nhan: "Phần chi của bạn", vnd: du.spend_vnd, tone: "split" },
+          { nhan: "Còn phải trả", phu: `Đã trả ${formatVnd(du.settled_vnd)}đ`, vnd: du.outstanding_vnd, tone: du.outstanding_vnd > 0 ? "warn" : "ink" },
+          { nhan: "Sẽ nhận", phu: "Bạn đã ứng trước", vnd: du.receivable_vnd, tone: "split" },
+        ] as const).map((dong) => (
+          <View key={dong.nhan} style={[styles.dongSoTaiChinh, { borderBottomColor: colors.line }]}>
+            <View>
+              <Text style={[typography.label, { color: colors.ink }]}>{dong.nhan}</Text>
+              {"phu" in dong ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{dong.phu}</Text> : null}
+            </View>
+            <Money numberOfLines={0} size="label" style={styles.tienTaiChinhDayDu} tone={dong.tone} vnd={dong.vnd} />
+          </View>
+        ))}
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`}</Text>
       </HoaDonGiay>
       {/* Every figure is said once, on the page above; under it only where
           they come from and the way to the group's settlement. A section
@@ -335,7 +341,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
           B4 finish review). */}
       <ChuThichLe icon="calculator-outline">Các số trên đọc từ sổ cái, không phải số dư ngân hàng.</ChuThichLe>
       {contextId !== null ? (
-        <RudiButton compact full={false} icon="wallet-outline" label="Xem quyết toán" onPress={() => router.push(("/settlements/" + contextId) as never)} tone="split" variant="ghost" />
+        <RudiButton compact icon="wallet-outline" label="Xem quyết toán" onPress={() => router.push(("/settlements/" + contextId) as never)} tone="split" variant="ghost" />
       ) : null}
       {/* What has actually arrived, newest first: the movements the server
           always sent and the screen never showed. Each one a line on the
@@ -357,8 +363,8 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
                 {m.context_name || m.occasion ? (
                   <Text style={[typography.caption, { color: colors.inkSoft }]}>{[m.occasion, m.context_name].filter(Boolean).join(" · ")}</Text>
                 ) : null}
+                <Text style={[typography.label, styles.soMoc, { color: m.direction === "in" ? colors.split : colors.ink }]}>{tienCoDau(m)}</Text>
               </View>
-              <Text style={[typography.label, styles.soMoc, { color: m.direction === "in" ? colors.split : colors.ink }]}>{tienCoDau(m)}</Text>
             </View>
           ))}
         </View>
@@ -369,16 +375,15 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
 }
 
 const styles = StyleSheet.create({
-  dauHoaDon: { alignItems: "center", gap: 6, paddingVertical: 12 },
-  tongHoaDon: { maxWidth: "100%", fontSize: 36, lineHeight: 44 },
-  moTaHoaDon: { textAlign: "center" },
+  dongSoTaiChinh: { alignItems: "stretch", gap: 4, minWidth: 0, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  tienTaiChinhDayDu: { width: "100%", minWidth: 0 },
   mocTien: { flexDirection: "row", gap: 12, minHeight: 64 },
   cotMoc: { width: 14, alignItems: "center", paddingTop: 6 },
   chamMoc: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
   dayMoc: { width: 2, flex: 1, marginTop: 4 },
-  thanMoc: { gap: 2, paddingBottom: 16 },
+  thanMoc: { flex: 1, minWidth: 0, gap: 2, paddingBottom: 16 },
   ngayMoc: { lineHeight: 18 },
-  soMoc: { fontVariant: ["tabular-nums"], paddingTop: 16 },
+  soMoc: { maxWidth: "100%", fontVariant: ["tabular-nums"], paddingTop: 2 },
   flex: { flex: 1 },
   dem: { minWidth: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", paddingHorizontal: 7 },
   form: { maxWidth: 560 },

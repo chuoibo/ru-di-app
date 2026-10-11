@@ -90,7 +90,6 @@ export function DieuChinhDot({
   contextId,
   batchId,
   roster,
-  bang,
   links,
   docLaiBang,
   onTomTat,
@@ -99,13 +98,13 @@ export function DieuChinhDot({
   contextId: string;
   batchId: string;
   roster: ThanhVien[];
-  bang: NghiaVu[];
   links: Envelope[] | null;
-  docLaiBang: () => Promise<void>;
+  docLaiBang: () => Promise<readonly NghiaVu[] | null>;
   /** Told whenever the round's amendments are read, so the page head can say one is waiting. */
   onTomTat?: (tom: { dangMo: boolean; canToiTraLoi: boolean }) => void;
 }) {
   const { colors, radius } = useRudiTheme();
+  const [moPhu, setMoPhu] = useState(false);
   const [hoSo, setHoSo] = useState<HoSoDieuChinh | null>(null);
   const [linkDuyet, setLinkDuyet] = useState<LinkDuyet[] | null>(null);
   const [soan, setSoan] = useState<Soan | null>(null);
@@ -155,14 +154,17 @@ export function DieuChinhDot({
   // hold their review URL, which now opens their new share: the round's
   // stored links are brought up to date from it and from the new board.
   const sauKhiXong = async (id: string) => {
-    await docLaiBang();
     const hs = await doc();
     const xong = hs.dieuChinh.find((d) => d.id === id);
-    if (xong?.trangThai === "applied" && links !== null) {
-      const cua = await docLinkDuyet(xong.id);
-      if (cua !== null && cua.length > 0) await luuLinkDot(batchId, linkSauDieuChinh(links, cua, bang));
+    if (xong?.trangThai !== "applied" || links === null) {
       await docLaiBang();
+      return;
     }
+    const bangMoi = await docLaiBang();
+    if (bangMoi === null) throw new Error("Chưa đọc được bảng thu sau khi điều chỉnh. Hãy làm mới để kiểm tra lại.");
+    const cua = await docLinkDuyet(xong.id);
+    if (cua !== null && cua.length > 0) await luuLinkDot(batchId, linkSauDieuChinh(links, cua, bangMoi));
+    await docLaiBang();
   };
 
   if (hoSo === null) {
@@ -178,6 +180,15 @@ export function DieuChinhDot({
   const daXong = hoSo.dieuChinh.filter((d) => d.trangThai !== "proposed");
   const khoanDuocSua = hoSo.khoan.filter((k) => coTheDeXuat(hoSo, k, actorId));
   const ten = (id: string) => tenCua(roster, id);
+  // Only idle help/history can fold. Reads and summary effects stay mounted;
+  // an active proposal, draft, pending action or error always stays visible.
+  const canGap = mo === null && soan === null && !ban && loi === null;
+  const hienPhu = !canGap || moPhu;
+  // A read failure or a post-action reread failure may outlive its form.
+  const hienTraLoi = mo !== null && toiCanTraLoi(mo, actorId);
+  const loiNgoaiKhoi = loi !== null && (
+    loi.noi === "doc" || (loi.noi === "gui" && soan === null) || (loi.noi === "tra-loi" && !hienTraLoi)
+  ) ? loi.cau : null;
 
   const traLoi = (d: DieuChinh, dongY: boolean) =>
     chay("tra-loi", async () => {
@@ -214,111 +225,127 @@ export function DieuChinhDot({
 
   return (
     <>
-      <SectionHeader title="Sửa sau khi phát" />
-
-      {mo !== null ? (
-        <View style={[styles.the, { borderColor: colors.split, borderRadius: radius.base, backgroundColor: colors.card }]} testID="dieu-chinh-dang-mo">
-          <Text style={[typography.caption, { color: colors.split }]}>{cauTrangThaiDieuChinh(mo).toUpperCase()}</Text>
-          <Text style={[typography.h2, { color: colors.ink }]}>
-            {`${ten(mo.nguoiDeXuat)} đề xuất sửa «${moTaKhoan(hoSo.khoan.find((k) => k.expenseId === mo.expenseId))}»`}
-          </Text>
-          <Text style={[typography.body, { color: colors.inkSoft }]}>{`Lý do: ${mo.lyDo}`}</Text>
-          {mo.dong.map((d) => (
-            <View key={`${d.senderId}>${d.recipientId}`} style={[styles.dong, { borderBottomColor: colors.line }]}>
-              <Avatar name={ten(d.senderId)} personId={d.senderId} size={28} />
-              <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{`${ten(d.senderId)} → ${ten(d.recipientId)}`}</Text>
-              <View style={styles.cotPhai}>
-                <Text style={[typography.caption, styles.gach, { color: colors.inkSoft }]}>{d.cuVnd === 0 ? "chưa có" : `${d.cuVnd.toLocaleString("vi-VN")}đ`}</Text>
-                {d.moiVnd === 0 ? <Text style={[typography.label, { color: colors.ink }]}>bỏ lượt này</Text> : <Money size="label" tone="split" vnd={d.moiVnd} />}
-              </View>
-            </View>
-          ))}
-          {/* Who has answered, in three plain lines rather than a wall of
-              upper-case seals (UI review 05/10). */}
-          <View style={styles.ben}>
-            {(
-              [
-                ["Đã đồng ý", mo.ben.filter((b) => b.traLoi === "dong_y").map((b) => b.personId), colors.split],
-                ["Chưa trả lời", mo.choAi, colors.ink],
-                ["Không đồng ý", mo.ben.filter((b) => b.traLoi === "khong_dong_y").map((b) => b.personId), colors.warn],
-              ] as const
-            ).map(([nhan, ids, mau]) =>
-              danhTen(ids, ten) === null ? null : (
-                <Text key={nhan} style={[typography.body, { color: colors.ink }]}>
-                  <Text style={[typography.label, { color: mau }]}>{`${nhan}: `}</Text>
-                  {danhTen(ids, ten)}
-                </Text>
-              ),
-            )}
-          </View>
-          <ChuThichLe>{`Số mới chỉ áp dụng khi mọi người có tên ở trên đồng ý, chậm nhất ${ngay(mo.hetHan)}. Tới lúc đó, bảng thu ở trên vẫn là số đang tính.`}</ChuThichLe>
-          {toiCanTraLoi(mo, actorId) ? (
-            <View style={styles.cot}>
-              <StampButton disabled={ban} label="Đồng ý với số mới" loading={ban} onPress={() => void traLoi(mo, true)} size="vua" tone="split" />
-              <RudiButton disabled={ban} label="Không đồng ý" lyDo="Đang gửi câu trả lời" onPress={() => void traLoi(mo, false)} tone="warn" variant="ghost" />
-              <CauTaiCho cau={loiO("tra-loi")} />
-            </View>
-          ) : null}
-          {mo.nguoiDeXuat === actorId && linkDuyet !== null && linkDuyet.length > 0 ? (
-            <PhongBi testID="phong-bi-link-duyet">
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                Khách không có tài khoản trả lời qua link riêng. Link cũ của họ đã ngừng; link này mở ra đúng phần đề xuất, và sau đó là phần của họ.
+      {canGap ? (
+        <RudiButton
+          expanded={moPhu}
+          icon={moPhu ? "chevron-up" : "create-outline"}
+          label={moPhu ? "Gấp phần sửa sau khi phát" : "Sửa sau khi phát"}
+          onPress={() => setMoPhu((hien) => !hien)}
+          tone="split"
+          variant="ghost"
+        />
+      ) : <SectionHeader title="Sửa sau khi phát" />}
+      {hienPhu ? (
+        <>
+          <CauTaiCho cau={loiNgoaiKhoi} />
+          {mo !== null ? (
+            <View style={[styles.the, { borderColor: colors.split, borderRadius: radius.base, backgroundColor: colors.card }]} testID="dieu-chinh-dang-mo">
+              <Text style={[typography.caption, { color: colors.split }]}>{cauTrangThaiDieuChinh(mo).toUpperCase()}</Text>
+              <Text style={[typography.h2, { color: colors.ink }]}>
+                {`${ten(mo.nguoiDeXuat)} đề xuất sửa «${moTaKhoan(hoSo.khoan.find((k) => k.expenseId === mo.expenseId))}»`}
               </Text>
-              {linkDuyet.map((l) => (
-                <View key={l.senderId} style={styles.dong}>
-                  <Avatar name={ten(l.senderId)} personId={l.senderId} size={28} />
-                  <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{ten(l.senderId)}</Text>
-                  <RudiButton
-                    accessibilityLabel={daGui[l.senderId] ? `Gửi lại cho ${ten(l.senderId)}` : `Gửi cho ${ten(l.senderId)}`}
-                    compact
-                    full={false}
-                    icon="share-social-outline"
-                    label={daGui[l.senderId] ? "Gửi lại" : "Gửi"}
-                    onPress={() => void guiLink(l)}
-                    tone="split"
-                    variant="outline"
-                  />
+              <Text style={[typography.body, { color: colors.inkSoft }]}>{`Lý do: ${mo.lyDo}`}</Text>
+              {mo.dong.map((d) => (
+                <View key={`${d.senderId}>${d.recipientId}`} style={[styles.dongDieuChinh, { borderBottomColor: colors.line }]}>
+                  <View style={styles.dinhDanh}>
+                    <Avatar name={ten(d.senderId)} personId={d.senderId} size={28} />
+                    <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{`${ten(d.senderId)} → ${ten(d.recipientId)}`}</Text>
+                  </View>
+                  <View style={styles.dongSoMoi}>
+                    <Text style={[typography.caption, styles.gach, { color: colors.inkSoft }]}>{d.cuVnd === 0 ? "chưa có" : `${d.cuVnd.toLocaleString("vi-VN")}đ`}</Text>
+                    {d.moiVnd === 0 ? <Text style={[typography.label, { color: colors.ink }]}>bỏ lượt này</Text> : <Money numberOfLines={0} size="label" tone="split" style={styles.soDayDu} vnd={d.moiVnd} />}
+                  </View>
                 </View>
               ))}
-            </PhongBi>
-          ) : null}
-          {mo.nguoiDeXuat === actorId && linkDuyet === null && mo.choAi.length > 0 ? (
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Link duyệt của đề xuất này được tạo ở máy khác; máy này không lấy lại được.</Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      {mo === null && soan === null && khoanDuocSua.length > 0 ? (
-        <>
-          <Text style={[typography.body, { color: colors.inkSoft }]}>
-            Ghi sai một khoản sau khi đã phát? Đề xuất số đúng: chỉ người có lượt chuyển thay đổi mới cần đồng ý, và bảng thu chỉ đổi khi họ đồng ý hết.
-          </Text>
-          {khoanDuocSua.map((k) => (
-            <RudiButton
-              key={k.expenseId}
-              icon="create-outline"
-              label={`Đề xuất sửa «${moTaKhoan(k)}» · ${k.tongVnd.toLocaleString("vi-VN")}đ`}
-              onPress={() => setSoan({ khoan: k, lyDo: "", o: Object.fromEntries(Object.entries(phanBoBanDau(k, roster.map((r) => r.id))).map(([id, v]) => [id, String(v)])) })}
-              tone="split"
-              variant="outline"
-            />
-          ))}
-        </>
-      ) : null}
-
-      {soan !== null ? <SoanDeXuat ban={ban} loi={loiO("gui")} onGui={guiDeXuat} onThoi={() => setSoan(null)} roster={roster} soan={soan} setSoan={setSoan} /> : null}
-
-      {daXong.length > 0 ? (
-        <View style={styles.cot}>
-          {daXong.slice(0, 5).map((d) => (
-            <View key={d.id} style={[styles.dong, { borderBottomColor: colors.line }]}>
-              <Stamp label={cauTrangThaiDieuChinh(d)} tone={d.trangThai === "applied" ? "split" : "ink"} variant={d.trangThai === "applied" ? "ink" : "outline"} />
-              <Text numberOfLines={2} style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-                {`«${moTaKhoan(hoSo.khoan.find((k) => k.expenseId === d.expenseId))}» · ${d.lyDo}${d.xongLuc ? ` · ${ngay(d.xongLuc)}` : ""}`}
-              </Text>
+              {/* Who has answered, in three plain lines rather than a wall of
+                  upper-case seals (UI review 05/10). */}
+              <View style={styles.ben}>
+                {(
+                  [
+                    ["Đã đồng ý", mo.ben.filter((b) => b.traLoi === "dong_y").map((b) => b.personId), colors.split],
+                    ["Chưa trả lời", mo.choAi, colors.ink],
+                    ["Không đồng ý", mo.ben.filter((b) => b.traLoi === "khong_dong_y").map((b) => b.personId), colors.warn],
+                  ] as const
+                ).map(([nhan, ids, mau]) =>
+                  danhTen(ids, ten) === null ? null : (
+                    <Text key={nhan} style={[typography.body, { color: colors.ink }]}>
+                      <Text style={[typography.label, { color: mau }]}>{`${nhan}: `}</Text>
+                      {danhTen(ids, ten)}
+                    </Text>
+                  ),
+                )}
+              </View>
+              <ChuThichLe>{`Số mới chỉ áp dụng khi mọi người có tên ở trên đồng ý, chậm nhất ${ngay(mo.hetHan)}. Tới lúc đó, bảng thu ở trên vẫn là số đang tính.`}</ChuThichLe>
+              {hienTraLoi ? (
+                <View style={styles.cot}>
+                  <StampButton disabled={ban} label="Đồng ý với số mới" loading={ban} onPress={() => void traLoi(mo, true)} size="vua" tone="split" />
+                  <RudiButton disabled={ban} label="Không đồng ý" lyDo="Đang gửi câu trả lời" onPress={() => void traLoi(mo, false)} tone="warn" variant="ghost" />
+                  <CauTaiCho cau={loiO("tra-loi")} />
+                </View>
+              ) : null}
+              {mo.nguoiDeXuat === actorId && linkDuyet !== null && linkDuyet.length > 0 ? (
+                <PhongBi testID="phong-bi-link-duyet">
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                    Khách không có tài khoản trả lời qua link riêng. Link cũ của họ đã ngừng; link này mở ra đúng phần đề xuất, và sau đó là phần của họ.
+                  </Text>
+                  {linkDuyet.map((l) => (
+                    <View key={l.senderId} style={styles.dong}>
+                      <View style={styles.dinhDanh}>
+                        <Avatar name={ten(l.senderId)} personId={l.senderId} size={28} />
+                        <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{ten(l.senderId)}</Text>
+                      </View>
+                      <RudiButton
+                        accessibilityLabel={daGui[l.senderId] ? `Gửi lại cho ${ten(l.senderId)}` : `Gửi cho ${ten(l.senderId)}`}
+                        compact
+                        icon="share-social-outline"
+                        label={daGui[l.senderId] ? "Gửi lại" : "Gửi"}
+                        onPress={() => void guiLink(l)}
+                        tone="split"
+                        variant="outline"
+                      />
+                    </View>
+                  ))}
+                </PhongBi>
+              ) : null}
+              {mo.nguoiDeXuat === actorId && linkDuyet === null && mo.choAi.length > 0 ? (
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>Link duyệt của đề xuất này được tạo ở máy khác; máy này không lấy lại được.</Text>
+              ) : null}
             </View>
-          ))}
-        </View>
+          ) : null}
+
+          {mo === null && soan === null && khoanDuocSua.length > 0 ? (
+            <>
+              <Text style={[typography.body, { color: colors.inkSoft }]}>
+                Ghi sai một khoản sau khi đã phát? Đề xuất số đúng: chỉ người có lượt chuyển thay đổi mới cần đồng ý, và bảng thu chỉ đổi khi họ đồng ý hết.
+              </Text>
+              {khoanDuocSua.map((k) => (
+                <RudiButton
+                  key={k.expenseId}
+                  icon="create-outline"
+                  label={`Đề xuất sửa «${moTaKhoan(k)}» · ${k.tongVnd.toLocaleString("vi-VN")}đ`}
+                  onPress={() => setSoan({ khoan: k, lyDo: "", o: Object.fromEntries(Object.entries(phanBoBanDau(k, roster.map((r) => r.id))).map(([id, v]) => [id, String(v)])) })}
+                  tone="split"
+                  variant="outline"
+                />
+              ))}
+            </>
+          ) : null}
+
+          {soan !== null ? <SoanDeXuat ban={ban} loi={loiO("gui")} onGui={guiDeXuat} onThoi={() => setSoan(null)} roster={roster} soan={soan} setSoan={setSoan} /> : null}
+
+          {daXong.length > 0 ? (
+            <View style={styles.cot}>
+              {daXong.slice(0, 5).map((d) => (
+                <View key={d.id} style={[styles.dongDieuChinh, { borderBottomColor: colors.line }]}>
+                  <Stamp label={cauTrangThaiDieuChinh(d)} tone={d.trangThai === "applied" ? "split" : "ink"} variant={d.trangThai === "applied" ? "ink" : "outline"} />
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                    {`«${moTaKhoan(hoSo.khoan.find((k) => k.expenseId === d.expenseId))}» · ${d.lyDo}${d.xongLuc ? ` · ${ngay(d.xongLuc)}` : ""}`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
       ) : null}
     </>
   );
@@ -364,7 +391,7 @@ function SoanDeXuat({
         return (
           <View key={id} style={styles.dongNhap}>
             <Avatar name={tenCua(roster, id)} personId={id} size={28} />
-            <View style={styles.flex}>
+            <View style={styles.noiDungNhap}>
               <ONhapMuc
                 accessibilityLabel={`Phần của ${tenCua(roster, id)}, đồng`}
                 error={n === null ? "Số đồng nguyên, không âm." : null}
@@ -380,8 +407,8 @@ function SoanDeXuat({
         );
       })}
       <View style={styles.dong}>
-        <Text style={[typography.label, styles.flex, { color: colors.ink }]}>Tổng mới</Text>
-        {tongMoi === null ? <Text style={[typography.label, { color: colors.warn }]}>chưa tính được</Text> : <Money size="label" tone="split" vnd={tongMoi} />}
+        <Text style={[typography.label, { color: colors.ink }]}>Tổng mới</Text>
+        {tongMoi === null ? <Text style={[typography.label, { color: colors.warn }]}>chưa tính được</Text> : <Money numberOfLines={0} size="label" tone="split" style={styles.soDayDu} vnd={tongMoi} />}
       </View>
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{`Tổng cũ ${soan.khoan.tongVnd.toLocaleString("vi-VN")}đ.`}</Text>
       <ONhapMuc
@@ -402,11 +429,15 @@ function SoanDeXuat({
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   the: { gap: 10, padding: 16, borderWidth: 1.5 },
-  dong: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 44, paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth },
-  dongNhap: { flexDirection: "row", alignItems: "center", gap: 10 },
-  cotPhai: { alignItems: "flex-end", gap: 2 },
+  dong: { alignItems: "stretch", gap: 8, minWidth: 0, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  dongNhap: { alignItems: "stretch", gap: 6 },
+  noiDungNhap: { width: "100%", minWidth: 0 },
+  dinhDanh: { flexDirection: "row", alignItems: "flex-start", gap: 10, minWidth: 0 },
+  dongDieuChinh: { gap: 8, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  dongSoMoi: { alignItems: "stretch", gap: 4, minWidth: 0 },
+  soDayDu: { width: "100%", minWidth: 0 },
   gach: { textDecorationLine: "line-through" },
   ben: { gap: 4 },
   cot: { gap: 8 },
