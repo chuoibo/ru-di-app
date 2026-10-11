@@ -125,3 +125,22 @@ hoặc lớp bọc sâu hơn. Nhãn thêm món được căn giữa và có padd
 mà không đổi chiều rộng cứu layout, mở đủ ảnh gốc, kiểm tổng sau scroll cùng
 raw input/focus/IME, rồi hoàn tất các ô còn thiếu và review lại. Detector nguồn
 không chứng minh painted text; chưa đạt ≥8/10 và chưa có ship toàn M/toàn app.
+
+
+## Vòng native 64df — tiếp tục sửa số đo chữ
+
+Cả sáu ảnh gốc của vòng 100→130→200→100 đã được mở, cùng PID18488,
+320×640 và có scroll tới tổng cuối receipt. 130% vẫn cắt tiến độ/câu nguồn/
+nhãn thêm món; 200% cắt cả tên, tiền và CTA. Review độc lập tiếp tục yêu cầu
+fix. Vòng này dừng trước Next; chưa kiểm Settings return, tối, rộng hoặc
+downstream của nguồn này. Getter public đã trả available và khớp hệ thống;
+không được coi đó là bằng chứng paint. Harness Kotlin đạt9/9, canary và hai
+mutant đỏ đúng dự đoán; clean JS đạt1637/1637. Chúng chưa chứng minh native đẹp.
+
+Thử nghiệm kế tiếp gọi public ReactHost.onConfigurationChanged ngay trước
+requestLayout trong cùng lượt main Handler. Activity đã forward configuration
+theo đường thông thường; đây chỉ là thử lại thứ tự refresh metrics/layout,
+chưa xác định nguyên nhân cache và chưa bảo đảm sửa được paint. Không sửa
+cache/internal flags, không remount, không đổi mặc định chữ. Khi application
+không có ReactHost, giữ yêu cầu layout cũ. Phải build APK mới, xem ảnh thật
+100→130→200→100 và Settings return trước khi nhận credit hoặc đi tiếp ghi sổ.

@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewGroup
+import com.facebook.react.ReactApplication
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -27,6 +28,8 @@ class RudiFontScaleModule : Module() {
       val activity = appContext.currentActivity ?: return@Runnable
       if (activity.isFinishing || activity.isDestroyed) return@Runnable
       val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return@Runnable
+      val host = (activity.application as? ReactApplication)?.reactHost
+      host?.onConfigurationChanged(activity)
       content.requestLayout()
       for (i in 0 until content.childCount) {
         val child = content.getChildAt(i)
