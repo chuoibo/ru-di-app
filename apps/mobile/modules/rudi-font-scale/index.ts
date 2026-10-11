@@ -1,24 +1,12 @@
 import { requireOptionalNativeModule, type EventSubscription } from "expo-modules-core";
 import { Platform } from "react-native";
 
-export type FontScaleUnavailableReason =
-  | "unsupported-platform"
-  | "module-unavailable"
-  | "module-inactive"
-  | "context-unavailable"
-  | "observer-unavailable"
-  | "invalid-native-value"
-  | "read-failed"
-  | "subscription-failed";
+import type { FontScaleSnapshot, NativeFontMetrics } from "../../src/rudi/native-font-snapshot";
+export type { FontScaleSnapshot, FontScaleUnavailableReason, NativeFontMetrics } from "../../src/rudi/native-font-snapshot";
 
 /** The complete numeric SP vocabulary of the currently scoped bill UI. */
 export const BILL_SP_BASES = [-0.65, -0.3, -0.15, 0.4, 0.8, 1.6,
   11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 27, 28, 34] as const;
-
-export interface NativeFontMetrics {
-  density: number;
-  spToDp: readonly { base: number; dp: number }[];
-}
 
 /** An old binary or malformed optional table keeps the normal RN text path. */
 export function readNativeFontMetrics(value: unknown): NativeFontMetrics | undefined {
@@ -43,10 +31,6 @@ export function sameNativeFontMetrics(a: NativeFontMetrics | undefined, b: Nativ
     a.spToDp.length === b.spToDp.length && a.spToDp.every((row, i) =>
       Object.is(row.base, b.spToDp[i]?.base) && Object.is(row.dp, b.spToDp[i]?.dp)));
 }
-
-export type FontScaleSnapshot =
-  | { status: "available"; fontScale: number; fontMetrics?: NativeFontMetrics }
-  | { status: "unavailable"; reason: FontScaleUnavailableReason };
 
 type FontScaleNative = {
   getFontScale(): unknown;

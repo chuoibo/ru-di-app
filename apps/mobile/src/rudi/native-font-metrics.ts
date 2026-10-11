@@ -1,5 +1,5 @@
 import type { TextStyle } from "react-native";
-import type { NativeFontMetrics } from "../../modules/rudi-font-scale";
+import type { NativeFontMetrics } from "./native-font-snapshot";
 
 export interface OriginalTextMetrics {
   fontSize: number;

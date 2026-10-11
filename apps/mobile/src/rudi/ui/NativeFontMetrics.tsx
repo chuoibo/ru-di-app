@@ -3,7 +3,7 @@ import {
   StyleSheet, Text as RNText, TextInput as RNTextInput,
   type StyleProp, type TextProps, type TextInputProps, type TextStyle,
 } from "react-native";
-import type { FontScaleSnapshot, NativeFontMetrics } from "../../../modules/rudi-font-scale";
+import type { FontScaleSnapshot, NativeFontMetrics } from "../native-font-snapshot";
 import { resolveTextMetrics, type OriginalTextMetrics, type ScalingProps } from "../native-font-metrics";
 
 const MetricsContext = createContext<NativeFontMetrics | undefined>(undefined);
