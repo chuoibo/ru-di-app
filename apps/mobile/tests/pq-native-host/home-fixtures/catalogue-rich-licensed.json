@@ -1,0 +1,67 @@
+{
+  "places": [
+    {
+      "id": "synthetic-place-1",
+      "name": "Địa điểm tổng hợp kiểm thử — góc cà phê và xưởng thủ công có tên dài để kiểm cách xuống dòng",
+      "category": "cafe",
+      "kinds": [
+        "Cà phê",
+        "Xưởng thủ công"
+      ],
+      "rating": 4.6,
+      "rating_count": 156,
+      "distance_km": 1.6,
+      "price_min_vnd": 180000,
+      "price_max_vnd": 230000,
+      "address": "Địa chỉ tổng hợp kiểm thử",
+      "open_now": true,
+      "open_hours": "07:00 - 22:00",
+      "travel_minutes": 20,
+      "photo_count": 1,
+      "photo_url": "/places/synthetic-place-1/photos/synthetic-photo-1",
+      "photo_author": "Tác giả tổng hợp kiểm thử",
+      "photo_license": "CC BY-SA 4.0",
+      "flag": null,
+      "traits": [],
+      "group_fit": null,
+      "lat": null,
+      "lng": null,
+      "geo_precision": null,
+      "source": "osm",
+      "license": "ODbL-1.0",
+      "match": {
+        "score": 82,
+        "reason": "Lý do tổng hợp kiểm thử: có xưởng thủ công và mức chi trong dữ liệu kiểm thử.",
+        "source": "ai",
+        "verdict": "hop",
+        "factors": [
+          {
+            "label": "Mức chi kiểm thử",
+            "detail": "180.000đ – 230.000đ mỗi người"
+          }
+        ]
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "cafe",
+      "label": "Cà phê"
+    },
+    {
+      "id": "vui-choi",
+      "label": "Đi chơi"
+    }
+  ],
+  "destination": {
+    "id": "synthetic-city-1",
+    "name": "Thành phố kiểm thử — khu phố sáng tạo có tên rất dài"
+  },
+  "group": {
+    "basis": "chua-biet",
+    "interests": [],
+    "uncovered_interests": [],
+    "people": 0,
+    "people_answered": 0
+  }
+}

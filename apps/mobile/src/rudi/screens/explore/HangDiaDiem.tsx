@@ -86,7 +86,7 @@ interface CommonProps {
   onSave: () => void;
   testID?: string;
   saving?: boolean;
-  /** Retained for existing callers; phone leads now use the full media width. */
+  /** A short phone opens with the place name; the full-width media and facts follow. */
   compact?: boolean;
 }
 
@@ -147,14 +147,13 @@ function dauCon(dd: DiaDiemHienThi): string | null {
 }
 
 /**
- * The lead place, as a card (owner's mockup, 01/10): the picture — the
- * licensed photo, or the sketch of the kind of place when there is none —
- * edge to edge at the top with the heart on it; under it the name, the
- * subtitle on one line, the other facts as one quiet line, and two chips: the
- * reason in the AI tone and the price, whole (`tachGia`). The heart is the
- * card's sibling, not inside its tap, so a screen reader meets two controls.
+ * The lead place, as a card: a short phone groups the full name and
+ * subtitle above the picture; a larger viewport keeps them below it.
+ * The licensed photo or labelled category sketch stays full width, followed
+ * by the complete facts, grounded reason and price (`tachGia`). The heart
+ * is the card's sibling, not inside its tap, so there are two controls.
  */
-export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
+export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact = false }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
@@ -162,6 +161,8 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
   const tiLe = sizeClass === "compact" ? 16 / 9 : 21 / 9;
   const { gia } = tachGia(dd.facts);
   const dau = dauCon(dd);
+  const name = <Text numberOfLines={compact ? undefined : 2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>;
+  const sub = dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null;
   const chip = (mau: string, nen: string, icon: IconName, text: string) => (
     <View style={[styles.chipDan, { backgroundColor: nen, borderRadius: radius.control }]}>
       <Ionicons color={mau} importantForAccessibility="no" name={icon} size={13} />
@@ -174,10 +175,18 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
       {gia ? chip(colors.inkSoft, colors.ground, "pricetag-outline", gia) : null}
     </View>
   ) : null;
+  // Once identity moves to the header, an empty metadata slot needs no frame.
+  const hasDetails = !compact || Boolean(dd.anh === null && dau) || dd.facts.length > 0 || chips !== null;
   return (
     <View style={[styles.theDan, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [pressed && styles.pressed]}>
         <View>
+          {/* On a short phone, identity arrives before another picture. The
+              save control remains a sibling and owns its reserved corner. */}
+          {compact ? <View style={styles.tenDanGon}>
+            <View style={styles.nhanDanGon}>{name}</View>
+            {sub}
+          </View> : null}
           <View>
             {dd.anh === null ? (
               // No honest picture: the sketch of the KIND of place («ký hoạ trong
@@ -194,17 +203,13 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving }: CommonP
               />
             )}
           </View>
-          <View style={styles.chuDan}>
+          {hasDetails ? <View style={styles.chuDan}>
             {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
-            <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
-            {dd.sub ? (
-              <Text style={[typography.body, { color: colors.inkSoft }]}>
-                {dd.sub}
-              </Text>
-            ) : null}
+            {compact ? null : name}
+            {compact ? null : sub}
             <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
             {chips}
-          </View>
+          </View> : null}
         </View>
       </Pressable>
       <View style={styles.timTrenAnh}>
@@ -431,6 +436,10 @@ const styles = StyleSheet.create({
   theDan: { borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
   // The card is the frame: the sketch drops its own edge and corners.
   kyHoaTrongThe: { borderWidth: 0, borderRadius: 0 },
+  // The title row shares the heart's 48dp height. The subtitle spans the
+  // full inner width below both, so it never runs underneath the control.
+  tenDanGon: { minHeight: 68, paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
+  nhanDanGon: { minHeight: 48, justifyContent: "center", paddingRight: 60 },
   chuDan: { gap: 6, padding: 14 },
   hangChipDan: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 2 },
   chipDan: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, maxWidth: "100%" },

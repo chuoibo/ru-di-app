@@ -56,7 +56,6 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
-import { chuLon } from "../../adaptive";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -264,8 +263,10 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
   // A search session (a name, a question, an answer) keeps the top of the
   // screen for the results: the city's stage folds away.
-  const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
-  const compactLead = screenWidth < 600 && screenHeight < 700 && !chuLon(fontScale);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // Composition follows the viewport, so hot text scaling never moves the
+  // same place name between the header and the metadata below its picture.
+  const compactLead = screenWidth < 600 && screenHeight < 700;
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
@@ -303,12 +304,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
         >
           <Ionicons color={colors.accent} name="location" size={16} />
           {diemDen !== null ? (
-            <Text style={[typography.label, { color: colors.ink }]}>
+            <Text style={[typography.label, styles.tenViTri, { color: colors.ink }]}>
               {diemDen.name}
               <Text style={{ color: colors.accent }}> · đổi nơi khác</Text>
             </Text>
           ) : (
-            <Text style={[typography.label, { color: colors.ink }]}>
+            <Text style={[typography.label, styles.tenViTri, { color: colors.ink }]}>
               {trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
             </Text>
           )}
@@ -321,7 +322,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query.trim() === "" ? (
         <View style={styles.buuThiep}>
-          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 120 : 150} />
+          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 80 : 150} />
           <View pointerEvents="none" style={[styles.nhanMinhHoa, { backgroundColor: colors.card }]}>
             <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ hành trình</Text>
           </View>
@@ -535,7 +536,8 @@ const styles = StyleSheet.create({
   dau: { gap: 6, zIndex: 1 },
   buuThiep: { alignItems: "center", alignSelf: "center", marginTop: -12, overflow: "hidden", borderRadius: 8 },
   nhanMinhHoa: { position: "absolute", left: 10, bottom: 8, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
+  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, maxWidth: "100%", alignSelf: "flex-start" },
+  tenViTri: { flexShrink: 1, minWidth: 0 },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },
   // Keep a paper gutter between scrolling labels and Nếp's bookmark rail.

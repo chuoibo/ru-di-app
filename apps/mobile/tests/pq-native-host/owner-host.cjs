@@ -34,14 +34,27 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true } = {}) {
-  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps'].includes(surface));
-  const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {} } = {}) {
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps', 'explore'].includes(surface));
+  assert.equal(surface === 'explore', exploreIO !== null, 'Explore transport must be explicitly isolated to the Explore surface');
+  if (exploreIO !== null) {
+    assert.ok(Array.isArray(exploreIO.placeIds) && exploreIO.placeIds.length > 0, 'Explicit synthetic place-id allowlist');
+    assert.ok(exploreIO.placeIds.every(id => typeof id === 'string' && id.startsWith('synthetic-place-')));
+    assert.ok(Array.isArray(exploreIO.destinationIds));
+    assert.ok(exploreIO.destinationIds.every(id => typeof id === 'string' && id.startsWith('synthetic-city-')));
+    assert.ok((exploreIO.saved ?? []).every(id => exploreIO.placeIds.includes(id)));
+    assert.ok(exploreIO.storedDestination == null || exploreIO.destinationIds.includes(exploreIO.storedDestination));
+    assert.equal(explicitProvider, false, 'This composition host must not invent a metrics owner for Home');
+  }
+  const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { ...initialWindow }, exploreProps, exploreSaved: [...(exploreIO?.saved ?? [])], exploreStoredDestination: exploreIO?.storedDestination ?? null };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
   const commentsReadQueue = [], friendsReadQueue = [];
   const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
   const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [], keepReads = [], keepDeletes = [];
+  const exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [];
+  const exploreCatalogueRoutes = new Set(['/places', ...(exploreIO?.destinationIds ?? []).map(id => '/places?' + new URLSearchParams({ destination: id }).toString())]);
+  const exploreWriteRoutes = new Map((exploreIO?.placeIds ?? []).map(id => ['/people/me/saved-places/' + encodeURIComponent(id), id]));
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   const keepIds = new Set(['synthetic-keep-1', 'synthetic-keep-2']), keepAttempts = new Set();
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
@@ -110,6 +123,28 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     },
   };
   function parked(store, call) { const pending = deferred(); Object.assign(call, pending); store.push(call); return pending.promise; }
+  // Opt-in Home transport: actual catalogue/parser/save code executes above this boundary.
+  // Reads and writes are parked until the test explicitly supplies a response or failure.
+  async function exploreTransport(route, options, call) {
+    assert.equal(options.actorId, state.actor.person_id, 'Home reads/writes use the actual supplied session actor');
+    assert.deepEqual(Object.keys(options).sort(), ['actorId', 'method'], 'No unplanned query context/body/header payload');
+    const method = options.method;
+    if (exploreCatalogueRoutes.has(route) && method === 'GET') {
+      call.kind = 'exploreCatalogueRead'; return parked(exploreCatalogueReads, call);
+    }
+    if (route === '/people/me/saved-places' && method === 'GET') {
+      call.kind = 'exploreSavedRead'; exploreSavedReads.push(call);
+      return { saved: state.exploreSaved.map(id => ({ place_id: id })) };
+    }
+    const placeId = exploreWriteRoutes.get(route);
+    if (placeId !== undefined && (method === 'PUT' || method === 'DELETE')) {
+      call.kind = 'exploreSavedWrite'; call.placeId = placeId;
+      const response = await parked(exploreSavedWrites, call);
+      state.exploreSaved = method === 'PUT' ? [...new Set([...state.exploreSaved, placeId])] : state.exploreSaved.filter(id => id !== placeId);
+      return response;
+    }
+    throw new Error(`Unexpected synthetic Explore transport ${method} ${route}`);
+  }
   const api = {
     BASE_URL: 'https://synthetic.invalid', LOI_KHONG_NOI_DUOC: 'Synthetic transport refusal',
     ApiError: class ApiError extends Error { constructor(status, message) { super(message); this.status = status; } },
@@ -120,6 +155,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token, duongDanAnhDaiDien: id => `/people/${id}/avatar`,
     translatedAsActor: async (_errors, route, options = {}) => {
       const method = options.method ?? 'GET'; const call = { route, options, kind: 'transport' }; calls.push(call);
+      if (surface === 'explore') return exploreTransport(route, options, call);
       // This opt-in surface has no generic route fallbacks or real I/O.
       if (surface === 'keeps') {
         assert.equal(state.actor.person_id, 'synthetic-A', 'Keeps uses the exact fixture actor');
@@ -198,6 +234,10 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
       throw new Error(`Unexpected synthetic transport ${method} ${route}`);
     },
   };
+  if (surface === 'explore') api.translatedAnonymous = async (_errors, route, options = {}) => {
+    const call = { route, options, kind: 'unexpectedExploreAnonymousRead' }; calls.push(call);
+    throw new Error(`Unexpected anonymous transport in authenticated Explore fixture ${options.method ?? 'GET'} ${route}`);
+  };
   const adapters = {
     'apps/mobile/src/api': api,
     'apps/mobile/src/phien': { khoiPhucPhien: () => Promise.resolve(state.actor), dangXuat: async () => {}, quenPhienDaThuHoi: async () => {}, docNhomCuaToi: async () => [] },
@@ -211,7 +251,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
     'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
     'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
-    'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'detail' ? `/community/posts/${state.params.id}` : surface === 'keeps' ? '/community/keeps' : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
+    'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'explore' ? '/explore' : surface === 'detail' ? `/community/posts/${state.params.id}` : surface === 'keeps' ? '/community/keeps' : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
     'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
     'react-native-safe-area-context': { SafeAreaView: visual('RNSafeAreaView'), useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
     '@expo/vector-icons': { Ionicons: visual('RNIonicons') }, 'react-native-svg': svg,
@@ -220,13 +260,22 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     'expo-image-picker': { launchImageLibraryAsync: (...args) => { const pending = deferred(); picks.push({ ...pending, args }); return pending.promise; } },
     'expo-image-manipulator': { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: async (...args) => { nativeHostCalls.push({ kind: 'manipulateAsync', args }); return { uri: 'file:///synthetic-clean.jpg', width: 32, height: 32 }; } },
   };
+  if (surface === 'explore') externals['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      async getItem(key) { assert.equal(key, 'rudi.diem-den.v1'); exploreStorage.push({ method: 'getItem', key }); return state.exploreStoredDestination; },
+      async removeItem(key) { assert.equal(key, 'rudi.diem-den.v1'); exploreStorage.push({ method: 'removeItem', key }); state.exploreStoredDestination = null; },
+      async setItem() { throw new Error('Unexpected destination write: selection belongs to a separate route'); },
+    },
+  };
   class SyntheticSocket { constructor(url) { this.url = url; sockets.push(this); } send(value) { nativeHostCalls.push({ socket: value }); } close() { this.closed = true; } }
   const globals = {
-    console, process: { env: {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
+    console, process: { env: surface === 'explore' ? { EXPO_PUBLIC_API_URL: api.BASE_URL } : {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
     setTimeout: callback => { const id = ++timerId; timers.set(id, callback); return id; }, clearTimeout: id => timers.delete(id),
     requestAnimationFrame: callback => { const id = ++timerId; (nativeGeometry ? frames : timers).set(id, callback); if (nativeGeometry) frameCalls.push({ kind: 'request', id }); return id; },
     cancelAnimationFrame: id => { timers.delete(id); frames.delete(id); if (nativeGeometry) frameCalls.push({ kind: 'cancel', id }); },
     fetch: async (uri, options) => {
+      if (surface === 'explore') throw new Error(`Unexpected synthetic Explore fetch ${uri}`);
       if (surface === 'keeps') throw new Error('Keeps has no synthetic fetch route');
       if (String(uri).startsWith('file:///')) return { blob: async () => ({ size: 8, type: 'image/jpeg', slice() { return { size: 8, type: 'image/jpeg', close() {} }; }, close() {} }) };
       if (uri === api.BASE_URL + '/v2/community/media') { const response = await parked(uploads, { uri, options }); return { ok: true, json: async () => response }; }
@@ -260,7 +309,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const metrics = load('apps/mobile/src/rudi/ui/NativeFontMetrics');
   const comments = load('apps/mobile/src/rudi/community/Comments');
   const Field = load('apps/mobile/src/rudi/ui/Field').Field;
-  const Component = surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const Component = surface === 'explore' ? load('apps/mobile/src/rudi/screens/explore/ExploreLive').ExploreLiveScreen : surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
   const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
   const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
   function BoundaryProbe() {
@@ -273,6 +322,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     let element;
     if (surface === 'comments') element = React.createElement(Component, { person: state.actor.person_id, post: state.post, onDraftChange: draft => drafts.push(draft), ...state.commentsProps });
     else if (surface === 'boundary') element = React.createElement(comments.CommunityFontMetrics, null, React.createElement(BoundaryProbe));
+    else if (surface === 'explore') element = React.createElement(Component, { ...state.exploreProps, phien: state.actor });
     else element = React.createElement(Component);
     if (state.explicitProvider) element = React.createElement(metrics.NativeFontMetricsProvider, { snapshot: state.nativeFont }, element);
     const content = React.createElement(Session.RudiSessionProvider, null, React.createElement(SessionProbe), state.show ? element : null);
@@ -300,10 +350,13 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   }
   const h = {
     state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage,
+    exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
+    exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,
     get root() { return root; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,
-    input() { return one('RNTextInput', props => props.testID === (surface === 'boundary' ? 'owner-probe-input' : surface === 'composer' ? 'community-body' : 'community-comment-input')); },
+    input() { return one('RNTextInput', props => surface === 'explore' ? props.accessibilityLabel === 'Ô tìm địa điểm' : props.testID === (surface === 'boundary' ? 'owner-probe-input' : surface === 'composer' ? 'community-body' : 'community-comment-input')); },
     text(match = () => true) { return hosts('RNText', props => typeof match === 'string' ? props.children === match : match(props)); },
     textContent() { return hosts('RNText').map(node => node.props.children).filter(value => typeof value === 'string').join('\n'); },
     owner(name) { const values = root.root.findAll(node => typeof node.type === 'function' && node.type.name === name); assert.equal(values.length, 1, `One ${name} owner`); return values[0]; },
