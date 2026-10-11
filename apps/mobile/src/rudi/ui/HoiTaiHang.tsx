@@ -16,8 +16,9 @@ import { AccessibilityInfo, findNodeHandle, Platform, StyleSheet, Text, View } f
 
 import { typography, useRudiTheme } from "../theme";
 import { RudiButton } from "../ui";
+import { Text as NativeMetricText } from "./NativeFontMetrics";
 
-export function HoiTaiHang({ cau, nhan, onDongY, onThoi, dangLam = false, testID }: {
+export function HoiTaiHang({ cau, nhan, onDongY, onThoi, dangLam = false, testID, nativeMetrics = false }: {
   /** The question and what it costs, one or two sentences. */
   cau: string;
   /** The action, a verb: «Xoá», «Bỏ quyền», «Từ chối». */
@@ -26,9 +27,12 @@ export function HoiTaiHang({ cau, nhan, onDongY, onThoi, dangLam = false, testID
   onThoi: () => void;
   dangLam?: boolean;
   testID?: string;
+  /** Use the surface owner's metrics; no observer is created here. */
+  nativeMetrics?: boolean;
 }) {
   const { colors } = useRudiTheme();
   const khoi = useRef<View>(null);
+  const CopyText = nativeMetrics ? NativeMetricText : Text;
   useEffect(() => {
     const dich = khoi.current;
     if (dich === null) return;
@@ -42,7 +46,7 @@ export function HoiTaiHang({ cau, nhan, onDongY, onThoi, dangLam = false, testID
   }, []);
   return (
     <View accessibilityLiveRegion="polite" ref={khoi} style={styles.khoi} testID={testID}>
-      <Text style={[typography.note, { color: colors.ink }]}>{cau}</Text>
+      <CopyText style={[typography.note, { color: colors.ink }]}>{cau}</CopyText>
       <View style={styles.nut}>
         <RudiButton compact full={false} label={nhan} loading={dangLam} onPress={onDongY} tone="warn" variant="outline" />
         <RudiButton compact full={false} label="Thôi" onPress={onThoi} variant="ghost" />

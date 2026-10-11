@@ -35,14 +35,15 @@ function snapshot(scale = 1, lineHeight) {
 }
 
 function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true } = {}) {
-  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer'].includes(surface));
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps'].includes(surface));
   const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
   const commentsReadQueue = [], friendsReadQueue = [];
   const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
-  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [];
+  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [], keepReads = [], keepDeletes = [];
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
+  const keepIds = new Set(['synthetic-keep-1', 'synthetic-keep-2']), keepAttempts = new Set();
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
   const visual = name => React.forwardRef(function NativeBoundary(props, ref) { return React.createElement(name, { ...props, ref }); });
   const Native = {};
@@ -112,10 +113,50 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const api = {
     BASE_URL: 'https://synthetic.invalid', LOI_KHONG_NOI_DUOC: 'Synthetic transport refusal',
     ApiError: class ApiError extends Error { constructor(status, message) { super(message); this.status = status; } },
-    thongDiepNguoiDoc: () => 'Synthetic refusal', newAttempt: () => ({ key: `synthetic-attempt-${++attempt}` }),
+    thongDiepNguoiDoc: () => 'Synthetic refusal', newAttempt: () => {
+      const key = `synthetic-attempt-${++attempt}`;
+      return surface === 'keeps' ? { key, at: Date.parse('2026-10-01T00:00:00Z') + attempt } : { key };
+    },
     datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token, duongDanAnhDaiDien: id => `/people/${id}/avatar`,
     translatedAsActor: async (_errors, route, options = {}) => {
       const method = options.method ?? 'GET'; const call = { route, options, kind: 'transport' }; calls.push(call);
+      // This opt-in surface has no generic route fallbacks or real I/O.
+      if (surface === 'keeps') {
+        assert.equal(state.actor.person_id, 'synthetic-A', 'Keeps uses the exact fixture actor');
+        assert.equal(options.actorId, 'synthetic-A');
+        if (route === '/v2/community/keeps' && method === 'GET') {
+          assert.equal(options.method, 'GET', 'Keeps reads use an explicit method');
+          assert.equal(Object.keys(options).sort().join(','), 'actorId,method', 'Exact Keeps GET options');
+          call.kind = 'readKeeps';
+          const pending = deferred(); Object.assign(call, pending);
+          call.resolve = value => {
+            assert.equal(Object.keys(value).join(','), 'keeps', 'Exact synthetic Keeps page shape');
+            assert.equal(Array.isArray(value.keeps), true);
+            const ids = value.keeps.map(row => row.id);
+            assert.equal(new Set(ids).size, ids.length, 'Fixture IDs are unique');
+            for (const row of value.keeps) {
+              assert.equal(keepIds.has(row.id), true, 'Only the two synthetic keep IDs');
+              assert.equal(Object.keys(row).sort().join(','), 'ai_generated,body,created_at,id');
+              assert.equal(typeof row.body, 'string'); assert.equal(typeof row.ai_generated, 'boolean');
+              assert.equal(typeof row.created_at, 'string'); assert.equal(Number.isFinite(Date.parse(row.created_at)), true);
+            }
+            pending.resolve(value);
+          };
+          keepReads.push(call); return pending.promise;
+        }
+        const id = route.slice('/v2/community/keeps/'.length);
+        if (method === 'DELETE' && route === '/v2/community/keeps/' + id && keepIds.has(id)) {
+          assert.equal(Object.keys(options).sort().join(','), 'actorId,attempt,method', 'Exact Keeps DELETE options');
+          assert.equal(Object.keys(options.attempt ?? {}).sort().join(','), 'at,key', 'Attempt retains the actual API shape');
+          assert.match(options.attempt?.key ?? '', /^synthetic-attempt-[1-9][0-9]*$/);
+          assert.equal(Number.isSafeInteger(options.attempt.at), true);
+          assert.equal(options.attempt.at, Date.parse('2026-10-01T00:00:00Z') + Number(options.attempt.key.slice('synthetic-attempt-'.length)), 'Exact synthetic attempt identity');
+          assert.equal(keepAttempts.has(options.attempt.key), false, 'Each transport retry has a fresh attempt');
+          keepAttempts.add(options.attempt.key);
+          call.kind = 'deleteKeep'; return parked(keepDeletes, call);
+        }
+        throw new Error(`Unexpected synthetic Keeps transport ${method} ${route}`);
+      }
       if (route.startsWith('/people/avatars?')) return { avatars: {} };
       if (route.startsWith('/friends')) return [];
       if (/^\/people\/[^/]+\/friends$/.test(route) && method === 'GET') {
@@ -170,7 +211,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
     'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
     'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
-    'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'detail' ? `/community/posts/${state.params.id}` : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
+    'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'detail' ? `/community/posts/${state.params.id}` : surface === 'keeps' ? '/community/keeps' : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
     'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
     'react-native-safe-area-context': { SafeAreaView: visual('RNSafeAreaView'), useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
     '@expo/vector-icons': { Ionicons: visual('RNIonicons') }, 'react-native-svg': svg,
@@ -186,6 +227,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     requestAnimationFrame: callback => { const id = ++timerId; (nativeGeometry ? frames : timers).set(id, callback); if (nativeGeometry) frameCalls.push({ kind: 'request', id }); return id; },
     cancelAnimationFrame: id => { timers.delete(id); frames.delete(id); if (nativeGeometry) frameCalls.push({ kind: 'cancel', id }); },
     fetch: async (uri, options) => {
+      if (surface === 'keeps') throw new Error('Keeps has no synthetic fetch route');
       if (String(uri).startsWith('file:///')) return { blob: async () => ({ size: 8, type: 'image/jpeg', slice() { return { size: 8, type: 'image/jpeg', close() {} }; }, close() {} }) };
       if (uri === api.BASE_URL + '/v2/community/media') { const response = await parked(uploads, { uri, options }); return { ok: true, json: async () => response }; }
       throw new Error(`Unexpected synthetic fetch ${uri}`);
@@ -218,7 +260,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const metrics = load('apps/mobile/src/rudi/ui/NativeFontMetrics');
   const comments = load('apps/mobile/src/rudi/community/Comments');
   const Field = load('apps/mobile/src/rudi/ui/Field').Field;
-  const Component = surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const Component = surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
   const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
   const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
   function BoundaryProbe() {
@@ -257,7 +299,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     return node;
   }
   const h = {
-    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     get root() { return root; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,

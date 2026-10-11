@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-na
 import { typography, useRudiTheme, type RudiTone } from "../theme";
 import { RudiButton } from "../ui";
 import { khongMoCoi } from "./chu";
+import { Text as NativeMetricText } from "./NativeFontMetrics";
 
 /**
  * Five different silences, never one «nothing here».
@@ -37,6 +38,8 @@ export interface EmptyStateProps {
   layout?: "full" | "inline";
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Use the surface owner's metrics; defaults to the original RN copy. */
+  nativeMetrics?: boolean;
 }
 
 export function EmptyState({
@@ -50,9 +53,11 @@ export function EmptyState({
   layout = "full",
   style,
   testID,
+  nativeMetrics = false,
 }: EmptyStateProps) {
   const { colors, space } = useRudiTheme();
   const full = layout === "full";
+  const CopyText = nativeMetrics ? NativeMetricText : Text;
   return (
     <View
       testID={testID ?? `empty-${kind}`}
@@ -60,13 +65,13 @@ export function EmptyState({
       style={[full ? styles.full : styles.inline, { gap: space.sm, paddingVertical: full ? space.xl : space.md }, style]}
     >
       {illustration ? <View style={{ marginBottom: space.xs }}>{illustration}</View> : null}
-      <Text style={[full ? typography.h1 : typography.h2, { color: colors.ink, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
+      <CopyText style={[full ? typography.h1 : typography.h2, { color: colors.ink, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
         {title}
-      </Text>
+      </CopyText>
       {body ? (
-        <Text style={[typography.body, { color: colors.inkSoft, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
+        <CopyText style={[typography.body, { color: colors.inkSoft, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
           {khongMoCoi(body)}
-        </Text>
+        </CopyText>
       ) : null}
       {action || secondary ? (
         <View style={[styles.actions, full && styles.fullActions, { gap: space.sm, marginTop: full ? space.md : space.xs, alignSelf: full ? "center" : "flex-start" }]}>
