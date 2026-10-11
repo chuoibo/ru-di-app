@@ -14,7 +14,7 @@ function sameSnapshot(a: FontScaleSnapshot, b: FontScaleSnapshot): boolean {
   return a.status === "unavailable" && b.status === "unavailable" && a.reason === b.reason;
 }
 
-/** M alone observes configuration without replacing its draft or window hooks. */
+/** A surface observes configuration without replacing its draft or window hooks. */
 export function useBillFontScale(): FontScaleSnapshot {
   const [snapshot, setSnapshot] = useState<FontScaleSnapshot>(readFontScale);
 
@@ -41,3 +41,5 @@ export function useBillFontScale(): FontScaleSnapshot {
 
   return snapshot;
 }
+
+export const useNativeFontScale = useBillFontScale;

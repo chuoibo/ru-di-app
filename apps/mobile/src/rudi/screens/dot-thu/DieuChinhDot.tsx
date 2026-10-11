@@ -19,7 +19,8 @@
  * «Đã điều chỉnh» on the ones that changed the board (spec L557).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "../../ui/NativeFontMetrics";
 
 import { attemptFor, ApiError, thongDiepNguoiDoc, type Attempt, type Envelope } from "../../../api";
 import { tenCua, type ThanhVien } from "../../chia-bill/hoa-don";

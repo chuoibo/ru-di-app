@@ -11,7 +11,9 @@ import { caHaiDongY } from "../to-giay/so-doi-map";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 
 import { ApiError, BASE_URL, attemptFor, type Attempt } from "../../api";
 import { docQuyetToanLive, dongChiTieuChung, dongHeroQuyetToan, tenCua, type QuyetToanLive } from "../doc-live";
@@ -39,6 +41,11 @@ function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string
 }
 
 export function SettlementScreen() {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><SettlementPage /></NativeFontMetricsProvider>;
+}
+
+function SettlementPage() {
   const session = useRudiSession();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();

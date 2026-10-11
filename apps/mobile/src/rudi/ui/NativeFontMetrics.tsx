@@ -11,7 +11,7 @@ type Paragraph = { mode: "native" } | { mode: "manual"; original: OriginalTextMe
 const ParagraphContext = createContext<Paragraph | undefined>(undefined);
 const NATIVE: Paragraph = { mode: "native" };
 
-/** Always mounted above the bill, including its footer; no global RN defaults. */
+/** Always mounted above the surface, including its footer; no global RN defaults. */
 export function NativeFontMetricsProvider({ snapshot, children }: { snapshot: FontScaleSnapshot; children: ReactNode }) {
   const metrics = snapshot.status === "available" ? snapshot.fontMetrics : undefined;
   return <MetricsContext.Provider value={metrics}>{children}</MetricsContext.Provider>;

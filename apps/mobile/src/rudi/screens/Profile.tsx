@@ -18,7 +18,9 @@ import { HoaDonGiay, VachCat } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatVnd } from "../../../../../packages/shared/money.mjs";
@@ -250,6 +252,11 @@ function ProfileSong({ phien }: { phien: Phien }) {
  * while this one still showed the fixture's 3.840.000đ in the same launch.
  */
 export function FinanceScreen() {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><FinancePage /></NativeFontMetricsProvider>;
+}
+
+function FinancePage() {
   const session = useRudiSession();
   if (session.nguon.kieu === "live") {
     return <TaiChinhLive key={session.nguon.actorId} actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;

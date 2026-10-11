@@ -27,7 +27,9 @@
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 
 import { chiaSe, type KetQuaChiaSe } from "../../web/chia-se";
 
@@ -94,6 +96,11 @@ function daVeRoi(trangThai: NghiaVu["trangThai"]): boolean {
 }
 
 export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: string }) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><DotThuPage phien={phien} batchId={batchId} /></NativeFontMetricsProvider>;
+}
+
+function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
   const router = useRouter();
   const { colors, dark, radius } = useRudiTheme();
   const contextId = phien.context_id;
