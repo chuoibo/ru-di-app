@@ -39,9 +39,11 @@ function sendErrorExpression(source) {
 /** Follow the refusal's document binding instead of its former inline action. */
 function assertNepErrorDocument(source) {
   const sf = ts.createSourceFile("PostDetail.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  function nodes(root, predicate) {
+  function nodes(root, predicate, rendered = false) {
     const found = [];
     function visit(node) {
+      // Callback bodies and attributes are not rendered document children.
+      if (rendered && (ts.isFunctionLike(node) || ts.isJsxAttribute(node) || ts.isJsxSpreadAttribute(node))) return;
       if (predicate(node)) found.push(node);
       ts.forEachChild(node, visit);
     }
@@ -62,14 +64,17 @@ function assertNepErrorDocument(source) {
     return attr && ts.isStringLiteral(attr) && attr.text === value;
   }
   const editor = variable("editorContent");
-  const errors = nodes(editor, (node) => ts.isJsxSelfClosingElement(node) && node.tagName.getText(sf) === "CauTaiCho" && literalAttribute(node, "testID", "cong-dong-loi-nep"));
+  const errors = nodes(editor, (node) => ts.isJsxSelfClosingElement(node) && node.tagName.getText(sf) === "CauTaiCho" && literalAttribute(node, "testID", "cong-dong-loi-nep"), true);
   assert.equal(errors.length, 1, "một lỗi Nếp trong tài liệu editor");
   assert.ok(errors[0].attributes.properties.every(ts.isJsxAttribute), "lỗi Nếp không bị spread ghi đè");
   const copy = attribute(errors[0], "cau");
   assert.ok(copy && ts.isJsxExpression(copy) && copy.expression && ts.isIdentifier(copy.expression) && copy.expression.text === "loiNep", "lỗi Nếp lấy loiNep tại chỗ (UI-138)");
   const sheets = nodes(sf, (node) => ts.isJsxElement(node) && node.openingElement.tagName.getText(sf) === "Sheet" && literalAttribute(node.openingElement, "accessibilityLabel", "Gọi Nếp"));
   assert.equal(sheets.length, 1, "một sheet Nếp");
-  const documentReferences = sheets[0].children.flatMap((child) => nodes(child, (node) => ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && node.expression.text === "editorContent"));
+  assert.ok(sheets[0].openingElement.attributes.properties.every(ts.isJsxAttribute), "sheet Nếp không bị spread ghi đè");
+  const footer = attribute(sheets[0].openingElement, "footer");
+  assert.ok(footer && ts.isJsxExpression(footer) && footer.expression && ts.isIdentifier(footer.expression) && footer.expression.text === "editorFooter", "sheet Nếp gắn đúng CTA editorFooter, không gắn tài liệu lỗi vào footer");
+  const documentReferences = sheets[0].children.flatMap((child) => nodes(child, (node) => ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && node.expression.text === "editorContent", true));
   assert.equal(documentReferences.length, 1, "sheet Nếp render đúng tài liệu có câu lỗi");
   const footerReferences = nodes(variable("editorFooter"), (node) => ts.isIdentifier(node) && node.text === "editorContent");
   assert.equal(footerReferences.length, 0, "tài liệu lỗi không chuyển vào CTA cố định");
@@ -159,6 +164,10 @@ test("chi tiết bài, bình luận, ô soạn: lỗi tại chỗ, nối lại k
   // A different error value or a detached document must still fail UI-138.
   assert.throws(() => assertNepErrorDocument(ct.replace("cau={loiNep}", "cau={error}")), /lỗi Nếp lấy loiNep/);
   assert.throws(() => assertNepErrorDocument(ct.replace("        {editorContent}\n", "        {null}\n")), /sheet Nếp render đúng tài liệu/);
+  // A callback-only reference cannot stand in for rendered children.
+  assert.throws(() => assertNepErrorDocument(ct.replace("        {editorContent}\n", "        <View onLayout={() => <>{editorContent}</>} />\n")), /sheet Nếp render đúng tài liệu/);
+  // Verify the actual Sheet slot, not an unused footer declaration.
+  assert.throws(() => assertNepErrorDocument(ct.replace("prioritizeFooter footer={editorFooter}", "prioritizeFooter footer={editorContent}")), /sheet Nếp gắn đúng CTA editorFooter/);
   const bl = doc("Comments.tsx");
   assert.match(bl, /<CauTaiCho cau=\{error\} hanhDong=\{\{ label: "Thử lại", onPress: \(\) => void load\(\) \}\}/, "UI-148");
   assert.doesNotMatch(bl, /setItems\(\[\]\);\s*void load\(\)/);
