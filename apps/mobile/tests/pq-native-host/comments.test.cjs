@@ -55,11 +55,12 @@ async function withCase(run, overrides = {}) {
     '../theme': { typography: { body: { fontSize: 17, lineHeight: 24 } }, useRudiTheme: () => ({ colors: {} }) },
     ...nativeMetricsBoundary({ dependency: appRequire, React, native, repo, sourceRoot }),
     '../ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton' },
+    '../ui/RudiIcon': { RudiIcon: 'RudiIcon' }, '../ui/PressScale': { PressScale: 'PressScale' },
     '../ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' },
     '../ui/Skeleton': { SkeletonLines: 'SkeletonLines' },
     '../ui/HoiTaiHang': { HoiTaiHang: 'HoiTaiHang' },
     '../ui/CauTaiCho': { CauTaiCho: 'CauTaiCho' },
-    './MediaPicker': { MediaPicker: props => React.createElement('MediaPicker', props, props.renderLayout?.(null, null)) },
+    './MediaPicker': { MediaPicker: props => React.createElement('MediaPicker', props, props.renderLayout?.(null, null, { preview: null, notice: null, busy: false, pending: props.initialFile != null })) },
     './MentionPicker': { MentionPicker: 'MentionPicker' },
     './useCommunityStream': { useCommunityStream: (person, posts, callback) => { streams.push({ person, posts, callback }); } },
   };
@@ -80,7 +81,14 @@ async function withCase(run, overrides = {}) {
     draft() { return drafts.at(-1); },
     async update(next) { props = { ...props, ...next }; await act(async () => root.update(React.createElement(Comments, props))); },
     async unmount() { const old = root; root = null; await act(async () => old.unmount()); },
-    async press(label) { await act(async () => this.button(label).props.onPress()); },
+    async press(label) {
+      if (label === 'Xóa' && !this.hosts('RudiButton').some(node => node.props.label === label)) {
+        const choices = this.hosts('PressScale').filter(node => node.props.accessibilityLabel === 'Thêm lựa chọn cho bình luận');
+        assert.equal(choices.length, 1, 'one actual comment choices control');
+        await act(async () => choices[0].props.onPress());
+      }
+      await act(async () => this.button(label).props.onPress());
+    },
     async body(value) { await act(async () => this.one('Field').props.onChangeText(value)); },
     async sync() { const callback = streams.at(-1).callback; await act(async () => callback({ kind: 'sync', cursor: 1 })); },
     async changed() { const callback = streams.at(-1).callback; await act(async () => callback({ kind: 'post.changed', cursor: 2 })); },

@@ -36,7 +36,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
   };
   const reanimated = {
     __esModule: true,
-    default: { View: 'AnimatedView' }, ReduceMotion: { Always: 'always', Never: 'never' }, Easing: { bezier: (...x) => x }, useReducedMotion: () => reduced,
+    default: { View: 'AnimatedView', createAnimatedComponent: component => component }, ReduceMotion: { Always: 'always', Never: 'never' }, Easing: { bezier: (...x) => x }, useReducedMotion: () => reduced,
     useSharedValue(initial) {
       const holder = React.useRef(null);
       if (!holder.current) { let value = initial; const id = ++sharedId; const shared = {};
@@ -55,7 +55,7 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
     'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return { getFontScale: () => state.nativeFont, addListener: (event, callback) => { assert.equal(event, 'onFontScaleChanged'); fontListeners.add(callback); return { remove: () => fontListeners.delete(callback) }; } }; } },
     'react-native-reanimated': reanimated, 'react-native-gesture-handler': { Gesture: { Pan: gesture }, GestureDetector: 'GestureDetector' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
-    '@expo/vector-icons': { Ionicons: 'Ionicons' }, 'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
+    '@expo/vector-icons': { Ionicons: 'Ionicons' }, 'react-native-svg': { __esModule: true, default: 'Svg', Circle: 'Circle', Path: 'Path' }, 'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
     'expo-router': { useLocalSearchParams: () => ({ id: state.id }), useRouter: () => ({ push() {}, replace() {} }) },
     'expo-image': { Image: 'Image' }, 'expo-image-picker': { launchImageLibraryAsync: (...args) => park(picks, args) },
     'expo-image-manipulator': { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: () => Promise.resolve({ uri: 'file:///synthetic-clean.jpg', width: 32, height: 32 }) },
@@ -129,7 +129,8 @@ async function withCase(run, { reduced = false, strict = false, actualField = fa
     async postTo(id) { await act(async () => { state.id = id; root.update(app()); }); },
     async reply() { const n = root.root.findAllByType('Pressable').find(p => p.findAllByType('Text').some(t => t.props.children === 'Trả lời')); assert.ok(n); await act(async () => n.props.onPress()); },
     async mentions(value) { await act(async () => root.root.findByType('MentionPicker').props.onChange(value)); },
-    async pendingFile() { await act(async () => h.button('Thêm ảnh').props.onPress()); await h.finish(picks.at(-1), { canceled: false, assets: [{ uri: 'file:///synthetic-pending.jpg', width: 32, height: 32, type: 'image', mimeType: 'image/jpeg' }] }); await h.fail(uploads.at(-1), new Error('Synthetic upload offline')); },
+    async openTools() { const disclosure = root.root.findAllByType('Pressable').find(node => /^(Thêm vào bình luận|Đóng công cụ bình luận)$/.test(node.props.accessibilityLabel)); if (disclosure && !disclosure.props.accessibilityState?.expanded) await act(async () => disclosure.props.onPress()); },
+    async pendingFile() { await h.openTools(); await act(async () => h.button('Thêm ảnh').props.onPress()); await h.finish(picks.at(-1), { canceled: false, assets: [{ uri: 'file:///synthetic-pending.jpg', width: 32, height: 32, type: 'image', mimeType: 'image/jpeg' }] }); await h.fail(uploads.at(-1), new Error('Synthetic upload offline')); },
     async unmount() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } },
   };
   await act(async () => { root = Renderer.create(app()); });
@@ -255,13 +256,13 @@ test('QL02 attachment recovery and tags may scroll while native input and send r
   await withCase(async h => {
     await h.open(); await h.bodyTo('Synthetic layout recovery'); await h.pendingFile();
     const details = h.detailsScroll(); assert.ok(details, 'attachment details have a separate bounded viewport');
-    assert.equal(flatStyle(details.props.style).maxHeight, 96);
+    assert.equal(flatStyle(details.props.style).maxHeight, 72);
     assert.equal(details.props.keyboardShouldPersistTaps, 'handled'); assert.equal(details.props.showsVerticalScrollIndicator, true);
-    assert.equal(isInside(h.button('Thử lại tệp đã chọn'), details), true);
-    assert.equal(isInside(h.button('Bỏ tệp đang chờ'), details), true);
+    assert.equal(isInside(h.button('Thử lại tệp đã chọn'), details), false, 'retry stays outside clipped attachment details');
+    assert.equal(isInside(h.button('Bỏ tệp đang chờ'), details), false, 'discard stays outside clipped attachment details');
     assert.equal(isInside(h.field(), details), false); assert.equal(isInside(h.sendButton(), details), false);
     assert.equal(isInside(h.sendButton(), h.referenceScroll()), false, 'thread cannot absorb send when attachments are present');
-    await act(async () => h.button('Gắn bạn bè').props.onPress()); await h.mentions(['synthetic-B']);
+    await h.openTools(); await act(async () => h.button('Gắn bạn bè').props.onPress()); await h.mentions(['synthetic-B']);
     const mention = h.root.root.findByType('MentionPicker'); assert.equal(isInside(mention, h.detailsScroll()), true); assert.equal(mention.props.expanded, true);
     const input = h.field(), writer = h.writer(); await h.resize(310); await h.resize(844);
     assert.equal(h.field() === input, true, 'native IME layout does not replace EditText'); assert.equal(h.writer() === writer, true);

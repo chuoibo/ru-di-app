@@ -34,13 +34,13 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren } = {}) {
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [] } = {}) {
   assert.ok(['comments', 'detail', 'feed', 'boundary'].includes(surface));
-  const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
+  const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
-  const commentsReadQueue = [];
-  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], nativeHostCalls = [];
+  const commentsReadQueue = [], friendsReadQueue = [];
+  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [];
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
   const visual = name => React.forwardRef(function NativeBoundary(props, ref) { return React.createElement(name, { ...props, ref }); });
@@ -112,6 +112,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
       const method = options.method ?? 'GET'; const call = { route, options, kind: 'transport' }; calls.push(call);
       if (route.startsWith('/people/avatars?')) return { avatars: {} };
       if (route.startsWith('/friends')) return [];
+      if (/^\/people\/[^/]+\/friends$/.test(route) && method === 'GET') {
+        call.kind = 'readFriends'; friendReads.push(call);
+        const queued = friendsReadQueue.shift();
+        if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
+        return { friends: state.friends };
+      }
       if (route.startsWith('/v2/community/feed?')) { call.kind = 'readFeed'; return { posts: state.feedPosts, next_cursor: null, personalized: false }; }
       if (route === '/v2/community/preferences' && method === 'GET') return { asked: true, personalized: false };
       if (route === '/v2/community/notifications') return { notifications: [] };
@@ -123,6 +129,9 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
         return { comments: [commentRow()], pending: [], next_cursor: null };
       }
       if (route.endsWith('/comments') && method === 'POST') { call.kind = 'comment'; return parked(writes, call); }
+      if (/^\/v2\/community\/posts\/[^/]+\/comments\/[^/]+$/.test(route) && method === 'DELETE') {
+        call.kind = 'deleteComment'; return parked(deletes, call);
+      }
       if (/^\/v2\/community\/posts\/[^/]+$/.test(route) && method === 'GET') {
         call.kind = 'getPost'; gets.push(call);
         if (postDeferredRemaining) { postDeferredRemaining = false; const pending = deferred(); Object.assign(call, pending); return pending.promise; }
@@ -213,7 +222,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   function hosts(kind, match = () => true) { assert.ok(root, 'mounted host'); return root.root.findAll(node => node.type === kind && match(node.props)); }
   function one(kind, match) { const values = hosts(kind, match); assert.equal(values.length, 1, `One ${kind} host`); return values[0]; }
   const h = {
-    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     get root() { return root; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,
@@ -233,13 +242,24 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     async invokeRetired(index = retiredCallbacks.length - 1) { assert.ok(retiredCallbacks[index]); await act(async () => retiredCallbacks[index]()); },
     async change(value) { await act(async () => h.input().props.onChangeText(value)); },
     async focus() { await act(async () => h.input().props.onFocus?.({ nativeEvent: { synthetic: true } })); },
-    async pressAccessibility(label) { await act(async () => one('RNPressable', props => props.accessibilityLabel === label).props.onPress()); },
+    async pressAccessibility(label) {
+      // A legacy semantic tool step now follows the actual disclosure UI first.
+      const commentTool = ['comments', 'detail'].includes(surface) && (label === 'Thêm ảnh' || label.startsWith('Gắn bạn bè'));
+      if (commentTool && hosts('RNPressable', props => props.accessibilityLabel === label).length === 0) {
+        const disclosure = one('RNPressable', props => /^(Thêm vào bình luận|Đóng công cụ bình luận)$/.test(props.accessibilityLabel));
+        if (disclosure.props.disabled) return false;
+        if (!disclosure.props.accessibilityState?.expanded) await act(async () => disclosure.props.onPress());
+      }
+      await act(async () => one('RNPressable', props => props.accessibilityLabel === label).props.onPress());
+      return true;
+    },
     async pressText(label) { const values = hosts('RNPressable').filter(node => node.findAllByType('RNText').some(text => text.props.children === label)); assert.equal(values.length, 1, `One pressable ${label}`); await act(async () => values[0].props.onPress()); },
     async openComments(index = 0) { const values = h.cards(); assert.ok(values[index], 'actual PostCard exists'); await act(async () => values[index].props.onComment()); },
     async closeComments() { await act(async () => h.commentSheet().props.onClose()); },
     closeAnimation() { const panel = h.panel(); const ids = [panel.props.style].flat(Infinity).flatMap(style => style?.syntheticSharedIds ?? []); const event = timings.filter(item => ids.includes(item.shared) && item.target === 0).at(-1); assert.ok(event?.callback, 'actual Sheet native completion'); return event; },
     async completeClose(event = h.closeAnimation(), finished = true) { await act(async () => event.callback(finished)); },
     deferCommentsRead() { const queued = { ...deferred(), started: false }; commentsReadQueue.push(queued); return queued; },
+    deferFriendsRead() { const queued = { ...deferred(), started: false }; friendsReadQueue.push(queued); return queued; },
     async resolvePost(value = state.post, index = gets.findIndex(call => typeof call.resolve === 'function')) { assert.ok(gets[index]?.resolve, 'deferred actual getPost transport'); await act(async () => gets[index].resolve(value)); },
     async rejectPost(error, index = gets.findIndex(call => typeof call.reject === 'function')) { assert.ok(gets[index]?.reject); await act(async () => gets[index].reject(error)); },
     async send() { const button = one('RNPressable', props => /^(Gửi bình luận|Đang gửi…)$/.test(props.accessibilityLabel)); assert.equal(Boolean(button.props.disabled), false, 'send is enabled'); await act(async () => button.props.onPress()); },

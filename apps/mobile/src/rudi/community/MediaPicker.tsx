@@ -13,6 +13,16 @@ import { cauLoiTep, LoiTep } from "./loi-tep";
 
 export type SelectedFile = { asset: ImagePicker.ImagePickerAsset; uploaded?: Media & { state?: string } };
 
+export type MediaPickerLayoutParts = {
+    preview: ReactNode;
+    notice: ReactNode;
+    busy: boolean;
+    pending: boolean;
+    retry?: () => void;
+    discard?: () => void;
+    stop?: () => void;
+};
+
 export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, disabled = false, canEdit, renderToolbar, renderLayout }: {
     person: string;
     media: Media[];
@@ -30,7 +40,7 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
     /** Keep a composer's tools together while previews/errors retain full width. */
     renderToolbar?: (pick: () => void, busy: boolean) => ReactNode;
     /** A compact editor can scroll attachment details while keeping its tools visible. */
-    renderLayout?: (details: ReactNode, toolbar: ReactNode) => ReactNode;
+    renderLayout?: (details: ReactNode, toolbar: ReactNode, parts: MediaPickerLayoutParts) => ReactNode;
 }) {
     const { colors } = useRudiTheme();
     const [busy, setBusy] = useState(false);
@@ -109,11 +119,28 @@ export function MediaPicker({ person, media, onChange, video = true, onBusy, ini
             }
         </View>)}</ScrollView> : null;
     const toolbar = renderToolbar ? renderToolbar(() => void prepare(), busy || disabled) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} loading={busy} onPress={() => void prepare()}/>;
+    const discard = () => { if (editsBlocked() || working.current) return; setSelected(null); setError(null); };
+    const stop = () => { if (editsBlocked()) return; generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); };
+    const retry = selected && !busy ? () => void prepare(selected) : undefined;
     const recovery = <>
         {error ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.accent }]}>{error}</Text> : null}
-        {selected && !busy ? <View style={{ flexDirection: "row", gap: 8 }}><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Thử lại" accessibilityLabel="Thử lại tệp đã chọn" variant="outline" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => void prepare(selected)}/></View><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Bỏ chọn" accessibilityLabel="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => { if (editsBlocked() || working.current) return; setSelected(null); setError(null); }}/></View></View> : null}
-        {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={() => { if (editsBlocked()) return; generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); }}/> : null}
+        {selected && !busy ? <View style={{ flexDirection: "row", gap: 8 }}><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Thử lại" accessibilityLabel="Thử lại tệp đã chọn" variant="outline" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={retry}/></View><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Bỏ chọn" accessibilityLabel="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={discard}/></View></View> : null}
+        {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={stop}/> : null}
         {busy ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Lời viết vẫn ở đây trong lúc tệp được chuẩn bị.</Text> : null}
     </>;
-    return renderLayout ? renderLayout(media.length || error || selected || busy ? <View style={{ gap: 8 }}>{previews}{recovery}</View> : null, toolbar) : <View style={{ gap: 12 }}>{previews}{toolbar}{recovery}</View>;
+    // Presentation can keep recovery targets outside its bounded details scroll.
+    const parts: MediaPickerLayoutParts = {
+        preview: media.length ? <View style={{ gap: 8 }}>{media.map((m, index) => <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: 64, height: 64, borderRadius: 8 }}/> : <View style={{ width: 64 }}/>}
+            <Text style={[typography.note, { color: colors.inkSoft, flex: 1, minWidth: 0 }]}>{m.type.startsWith("image/") ? "Ảnh đã sẵn sàng" : "Tệp đã sẵn sàng"}</Text>
+            <IconButton quiet icon="close" accessibilityLabel={`Bỏ tệp đính kèm ${index + 1}`} disabled={disabled || busy} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
+        </View>)}</View> : null,
+        notice: error ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null,
+        busy,
+        pending: selected !== null,
+        retry,
+        discard: selected && !busy ? discard : undefined,
+        stop: phase === "processing" ? stop : undefined,
+    };
+    return renderLayout ? renderLayout(media.length || error || selected || busy ? <View style={{ gap: 8 }}>{previews}{recovery}</View> : null, toolbar, parts) : <View style={{ gap: 12 }}>{previews}{toolbar}{recovery}</View>;
 }

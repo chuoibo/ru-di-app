@@ -43,6 +43,7 @@ async function withCase(run, initialDraft = null) {
     'expo-image-manipulator': { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: (...args) => { manipulations.push(args); return Promise.resolve({ uri: 'file:///synthetic-only-clean.jpg', width: 32, height: 32 }); } },
     'expo-router': { useRouter: () => ({ push() {} }) }, '../theme': { typography: { body: { fontSize: 17, lineHeight: 24 } }, useRudiTheme: () => ({ colors: {} }) },
     ...nativeMetricsBoundary({ dependency, React, native, repo, sourceRoot }),
+    '../ui/RudiIcon': { RudiIcon: 'RudiIcon' }, '../ui/PressScale': { PressScale: 'PressScale' },
     '../ui': { Field: 'Field', IconButton: 'IconButton', RudiButton: 'RudiButton' }, '../ui/AvatarNguoi': { AvatarNguoi: 'AvatarNguoi' },
     '../ui/Skeleton': { SkeletonLines: 'SkeletonLines' }, '../ui/HoiTaiHang': { HoiTaiHang: 'HoiTaiHang' },
     '../ui/CauTaiCho': { CauTaiCho: 'CauTaiCho' }, './MentionPicker': { MentionPicker: 'MentionPicker' },
@@ -71,7 +72,8 @@ async function withCase(run, initialDraft = null) {
     send() { return [...this.hosts('RudiButton'), ...this.hosts('IconButton')].find(n => /^(Gửi bình luận|Đang gửi…)$/.test(n.props.accessibilityLabel ?? n.props.label)); },
     draft() { return drafts.at(-1); },
     async body(value) { await act(async () => h.one('Field').props.onChangeText(value)); },
-    async press(label) { const button = h.button(label); if (button.props.disabled) return false; await act(async () => button.props.onPress()); return true; },
+    async openTools() { const disclosure = h.hosts('PressScale').find(node => /^(Thêm vào bình luận|Đóng công cụ bình luận)$/.test(node.props.accessibilityLabel)); if (!disclosure) return true; if (disclosure.props.disabled) return false; if (!disclosure.props.accessibilityState?.expanded) await act(async () => disclosure.props.onPress()); return true; },
+    async press(label) { if (label === 'Thêm ảnh' && ![...h.hosts('RudiButton'), ...h.hosts('IconButton')].some(node => node.props.accessibilityLabel === label)) { if (!await h.openTools()) return false; } const button = h.button(label); if (button.props.disabled) return false; await act(async () => button.props.onPress()); return true; },
     async sendNow() { const button = h.send(); if (button.props.disabled) return false; await act(async () => button.props.onPress()); return true; },
     async finish(call, value) { await act(async () => call.resolve(value)); },
     async fail(call, error) { await act(async () => call.reject(error)); },
@@ -93,7 +95,7 @@ test('real picker cannot start during send; ACK then old picker cancellation lea
     // r1 ACK remounts the picker; its invalidated finally suppresses idle.
     if (h.picks[0]) await h.finish(h.picks[0], { canceled: true, assets: [] });
     await h.body('Synthetic next draft');
-    assert.equal(h.button('Thêm ảnh').props.disabled, false, 'new real picker is idle');
+    await h.openTools(); assert.equal(h.button('Thêm ảnh').props.disabled, false, 'new real picker is idle');
     assert.equal(h.send().props.disabled, false, `next send must be enabled; reason=${h.send().props.lyDo}`);
     assert.equal(h.picks.length, 0, 'native picker never launched during pending send');
   });
@@ -118,7 +120,7 @@ test('real picker requires explicit pending discard before send and retains newe
 test('synchronous picker busy signal prevents stale send handler before React state rerender', async () => {
   await withCase(async h => {
     await h.finish(h.reads[0], page()); await h.body('Synthetic picker-first draft');
-    const pick = h.button('Thêm ảnh').props.onPress, send = h.send().props.onPress;
+    await h.openTools(); const pick = h.button('Thêm ảnh').props.onPress, send = h.send().props.onPress;
     await act(async () => { pick(); send(); });
     assert.equal(h.picks.length, 1); assert.equal(h.writes.length, 0, 'send observes immediate onBusy signal');
     await h.finish(h.picks[0], { canceled: true, assets: [] }); assert.equal(h.send().props.disabled, false);
@@ -128,8 +130,8 @@ test('synchronous picker busy signal prevents stale send handler before React st
 test('real picker retained handlers cannot add/remove existing or pending files once enclosing send disables it', async () => {
   await withCase(async h => {
     await h.finish(h.reads[0], page());
-    const oldPick = h.button('Thêm ảnh').props.onPress, oldRemove = h.button('Bỏ tệp đính kèm 1').props.onPress, oldDrop = h.button('Bỏ tệp đang chờ').props.onPress, oldRetry = h.button('Thử lại tệp đã chọn').props.onPress;
-    await h.press('Bỏ tệp đang chờ'); await h.sendNow(); const snapshot = h.draft();
+    const oldRemove = h.button('Bỏ tệp đính kèm 1').props.onPress, oldDrop = h.button('Bỏ tệp đang chờ').props.onPress, oldRetry = h.button('Thử lại tệp đã chọn').props.onPress;
+    await h.press('Bỏ tệp đang chờ'); await h.openTools(); const oldPick = h.button('Thêm ảnh').props.onPress; await h.sendNow(); const snapshot = h.draft();
     assert.equal(h.button('Bỏ tệp đính kèm 1').props.disabled, true);
     await act(async () => { oldPick(); oldRemove(); oldDrop(); oldRetry(); });
     assert.equal(h.picks.length, 0); assert.equal(h.uploads.length, 0); assert.deepEqual(h.draft().media, snapshot.media); assert.deepEqual(h.draft().pendingFile, snapshot.pendingFile); assert.equal(h.draft().logical_id, snapshot.logical_id);
@@ -142,7 +144,7 @@ test('real picker retained handlers cannot add/remove existing or pending files 
 test('QF01 same-turn send refuses retained picker before disabled rerender and leaves the next draft usable', async () => {
   await withCase(async h => {
     await h.finish(h.reads[0], page()); await h.body('Synthetic send-first race');
-    const send = h.send().props.onPress, pick = h.button('Thêm ảnh').props.onPress;
+    await h.openTools(); const send = h.send().props.onPress, pick = h.button('Thêm ảnh').props.onPress;
     await act(async () => { send(); pick(); }); assert.equal(h.writes.length, 1);
     assert.equal(h.picks.length, 0, 'immediate parent submission guard prevents native picker launch');
     await h.finish(h.writes[0], { id: 'synthetic-race-comment' }); await h.finish(h.reads[1], page());
@@ -168,7 +170,7 @@ test('QR01 failed comment upload cannot be silently omitted and retry restores t
     await h.finish(h.reads[0], page()); await h.body('Synthetic comment with image');
     await h.press('Thêm ảnh'); await h.finish(h.picks[0], { canceled: false, assets: [selectedFile().asset] });
     await h.fail(h.uploads[0], new TypeError('java.io.FileNotFoundException /private/synthetic-native.jpg'));
-    assert.equal(h.send().props.disabled, true); assert.equal(h.hosts('Text').find(n => n.props.testID === 'community-comment-send-reason')?.props.children ?? h.send().props.lyDo, 'Thử lại hoặc bỏ ảnh đang chờ.');
+    assert.equal(h.send().props.disabled, true); assert.equal(h.hosts('Text').filter(n => n.props.testID === 'community-comment-send-reason').length, 0, 'the readable upload error replaces a repeated pending helper');
     const rendered = h.hosts('Text').map(n => n.props.children).filter(v => typeof v === 'string').join(' ');
     assert.match(rendered, /Chưa chuẩn bị được tệp/); assert.doesNotMatch(rendered, /java\.|private|native.jpg/);
     const before = h.draft(); await act(async () => h.send().props.onPress()); assert.equal(h.writes.length, 0); assert.deepEqual(h.draft(), before);
@@ -200,7 +202,7 @@ test('QF02 same-turn send refuses retired pending retry/drop callbacks before pr
 
 test('QF03 retired comment editor cannot launch a native picker from a retained handler', async () => {
   await withCase(async h => {
-    await h.finish(h.reads[0], page()); const pick = h.button('Thêm ảnh').props.onPress;
+    await h.finish(h.reads[0], page()); await h.openTools(); const pick = h.button('Thêm ảnh').props.onPress;
     await h.unmount(); await act(async () => pick()); assert.equal(h.picks.length, 0, 'retired parent rejects the retained picker launch');
   });
 });
@@ -209,7 +211,7 @@ test('QF03 retired comment editor cannot launch a native picker from a retained 
 test('QF04 comment permission changes retain admitted upload ownership and restore send without a stranded busy flag', async () => {
   await withCase(async h => {
     await h.finish(h.reads[0], page()); await h.body('Synthetic permission-cycle draft');
-    const retainedSend = h.send().props.onPress, retainedPick = h.button('Thêm ảnh').props.onPress;
+    await h.openTools(); const retainedSend = h.send().props.onPress, retainedPick = h.button('Thêm ảnh').props.onPress;
     await h.press('Thêm ảnh'); await h.finish(h.picks[0], { canceled: false, assets: [selectedFile().asset] });
     assert.equal(h.uploads.length, 1);
     await h.permission(false);

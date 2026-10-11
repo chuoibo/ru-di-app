@@ -201,19 +201,20 @@ test('LP10 actual Comments metadata stays beside avatar and own text converts wi
     const nearestView = node => { for (let parent = node.parent; parent; parent = parent.parent) if (parent.type === 'RNView') return parent; return null; };
     const author = () => h.one('RNText', props => props.children === 'Synthetic author');
     const column = nearestView(author()); assert.ok(column, 'author has a real native metadata column');
-    const row = nearestView(column); assert.ok(row, 'metadata column sits beside avatar in a real native row');
+    const main = nearestView(column), row = nearestView(main); assert.ok(row, 'metadata sits in the main column beside avatar');
     const authorHost = author(), timeHost = column.findAllByType('RNText')[1];
     const bodyHost = textHost(h, 'Synthetic server comment'), headerHost = textHost(h, 'Bình luận');
-    const reasonHost = h.one('RNText', props => props.testID === 'community-comment-send-reason');
-    assert.equal(reasonHost.props.children, 'Viết vài chữ trước khi gửi.', 'empty actual comment context exposes send reason');
+    assert.equal(h.hosts('RNText', props => props.testID === 'community-comment-send-reason').length, 0, 'idle placeholder and disabled send need no duplicated visual helper');
     for (const value of [snapshot(1), snapshot(2), snapshot(1)]) {
       await h.nativeFont(value);
       const large = value.fontScale === 2;
       assert.equal(author() === authorHost, true, 'metadata is not replaced by font changes');
       const currentColumn = nearestView(author()); assert.equal(currentColumn === column, true);
       const columnStyle = flatten(currentColumn.props.style);
-      assert.equal(columnStyle.flex, 1); assert.equal(columnStyle.minWidth, 0); assert.equal(columnStyle.gap, 2);
-      assert.equal(columnStyle.flexDirection ?? 'column', 'column');
+      assert.equal(flatten(main.props.style).flex, 1); assert.equal(flatten(main.props.style).minWidth, 0);
+      assert.equal(columnStyle.gap, large ? 2 : 8);
+      assert.equal(columnStyle.flexDirection, large ? 'column' : 'row');
+      assert.equal(columnStyle.alignItems, large ? 'flex-start' : 'baseline');
       const labels = currentColumn.findAllByType('RNText');
       assert.equal(labels.length, 2, 'metadata contains exactly author then time');
       assert.equal(labels[0] === authorHost, true); assert.equal(typeof labels[1].props.children, 'string');
@@ -222,9 +223,9 @@ test('LP10 actual Comments metadata stays beside avatar and own text converts wi
       convertedText(h, 'Synthetic author', large ? 23.25 : 14, large ? 31.75 : 19);
       convertedText(h, labels[1].props.children, large ? 21.5 : 13, large ? 30.25 : 18);
       assert.equal(convertedText(h, 'Bình luận', large ? 34.25 : 21, large ? 43 : 27) === headerHost, true, 'heading host stays mounted');
-      assert.equal(convertedText(h, reasonHost.props.children, large ? 21.5 : 13, large ? 30.25 : 18) === reasonHost, true, 'send reason host stays mounted');
+      assert.equal(h.hosts('RNText', props => props.testID === 'community-comment-send-reason').length, 0, 'hot metrics do not add an idle helper');
       assert.equal(nearestView(labels[1]) === currentColumn, true, 'timestamp shares metadata column with author');
-      assert.equal(nearestView(currentColumn) === row, true);
+      assert.equal(nearestView(currentColumn) === main, true); assert.equal(nearestView(main) === row, true);
       assert.equal(flatten(row.props.style).flexDirection, 'row'); assert.equal(flatten(row.props.style).alignItems, 'flex-start');
       const avatar = row.findAllByType('RNView').filter(node => node.props.accessibilityLabel === 'Synthetic author');
       assert.equal(avatar.length, 1, 'one actual avatar is beside metadata');
