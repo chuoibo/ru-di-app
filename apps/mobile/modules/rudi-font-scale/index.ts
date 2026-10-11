@@ -1,7 +1,7 @@
 import { requireOptionalNativeModule, type EventSubscription } from "expo-modules-core";
 import { Platform } from "react-native";
 
-import type { FontScaleSnapshot, NativeFontMetrics } from "../../src/rudi/native-font-snapshot";
+import type { FontScaleSnapshot, FontScaleUnavailableReason, NativeFontMetrics } from "../../src/rudi/native-font-snapshot";
 export type { FontScaleSnapshot, FontScaleUnavailableReason, NativeFontMetrics } from "../../src/rudi/native-font-snapshot";
 
 /** The complete numeric SP vocabulary of the currently scoped bill UI. */
