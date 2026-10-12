@@ -2,8 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
-import { Text } from "../ui/NativeFontMetrics";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../ui/NativeFontMetrics";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
@@ -65,6 +65,14 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   onSave?: () => void; busy?: boolean; detail?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const ownedMetrics = useNativeFontMetricsOwner();
+  const authorMetrics = useNativeStandaloneTextMetrics(typography.title);
+  // Use the surface's effective metrics; Android's window value can lag a hot change.
+  // An owned but unusable table keeps the author readable without a child observer.
+  const spaciousAuthor = authorMetrics !== null
+    ? (authorMetrics.fontSize ?? typography.title.fontSize) >= typography.title.fontSize * 1.25
+    : ownedMetrics || fontScale >= 1.25;
   // The album pages one picture the width of the post's column at a time,
   // 4:3 like the owner's mockup. Its 4:3 room is held from the first render
   // (`khungAlbum`): drawn only once measured, a card the list remounts above
@@ -87,11 +95,15 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
     return () => clearTimeout(hen);
   }, [daChiaSe]);
   return <View testID={`community-post-${post.id}`} style={[styles.post, { borderBottomColor: colors.line }]}>
-    <View style={styles.identity}>
+    <View style={[styles.identity, spaciousAuthor && styles.identityStack]}>
+      <View style={[styles.authorMain, spaciousAuthor && styles.authorMainStack]}>
       <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><AvatarNguoi personId={post.author_id} name={post.author} size={42} /></Pressable>
       <View style={styles.identityText}><Text style={[typography.title, { color: colors.ink }]}>{post.author}</Text><Text style={[typography.caption, { color: colors.inkFaint }]}>{relativeTime(post.created_at)} · {post.audience === "public" ? "Cộng đồng" : post.audience === "friends" ? "Bạn bè" : post.audience === "group" ? "Trong nhóm" : "Chỉ mình tôi"}</Text></View>
+      </View>
+      <View style={[styles.identityActions, spaciousAuthor && styles.identityActionsStack]}>
       {post.author_id !== person ? <Pressable accessibilityRole="button" accessibilityLabel={post.following ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"} onPress={onFollow} disabled={busy} aria-disabled={busy} style={styles.follow}><Ionicons name={post.following ? "checkmark" : "add"} size={20} color={colors.accent} /></Pressable> : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Thêm lựa chọn cho bài" onPress={onMore} style={styles.follow}><Ionicons name="ellipsis-horizontal" size={20} color={colors.inkSoft} /></Pressable>
+      </View>
     </View>
     {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, styles.statusText, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
     <Pressable style={styles.readTarget} accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded && biCat) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
@@ -128,8 +140,15 @@ const styles = StyleSheet.create({
   // The screen gutter (`space.md`), the same as Khám phá's header and Địa điểm,
   // so switching sections does not shift the column.
   post: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, gap: 14 },
-  avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
-  identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
+  avatarTarget: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center" },
+  identity: { flexDirection: "row", alignItems: "flex-start", gap: 8, width: "100%", minWidth: 0 },
+  identityStack: { flexDirection: "column", gap: 0 },
+  authorMain: { flexDirection: "row", alignItems: "flex-start", gap: 10, flexGrow: 1, flexShrink: 1, flexBasis: "auto", width: "auto", minWidth: 0 },
+  authorMainStack: { flexGrow: 0, flexShrink: 0, width: "100%" },
+  identityText: { flex: 1, minWidth: 0, gap: 2 },
+  identityActions: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", flexGrow: 0, flexShrink: 0, flexBasis: "auto" },
+  identityActionsStack: { alignSelf: "flex-end" },
+  follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: typography.body.lineHeight }, readTarget: { minHeight: 48, justifyContent: "center" }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 }, statusText: { flex: 1, minWidth: 0 },
   khungAlbum: { width: "100%", aspectRatio: TI_LE_ALBUM }, album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
   albumNavigation: { position: "absolute", right: 8, bottom: 8, flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, maxWidth: "100%" },
