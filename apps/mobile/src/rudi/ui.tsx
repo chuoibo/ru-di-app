@@ -1138,6 +1138,7 @@ export function ListRow({
   tone = "accent",
   onPress,
   chevron = true,
+  iconTreatment = "tile",
 }: {
   icon: IconName;
   title: string;
@@ -1147,6 +1148,8 @@ export function ListRow({
   onPress?: () => void;
   /** False for a row that acts on the spot (copy, reply): a chevron promises somewhere to go. */
   chevron?: boolean;
+  /** Plain ink keeps navigation quiet within a screen's existing groups. */
+  iconTreatment?: "tile" | "plain";
 }) {
   const { colors } = useRudiTheme();
   return (
@@ -1157,8 +1160,8 @@ export function ListRow({
       pressedScale={0.985}
       style={styles.listRow}
     >
-      <View style={[styles.listIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
-        <RudiIcon color={toneColor(colors, tone)} name={icon} size={20} />
+      <View style={[styles.listIcon, { backgroundColor: iconTreatment === "plain" ? "transparent" : toneSoftColor(colors, tone) }]}>
+        <RudiIcon color={iconTreatment === "plain" ? colors.inkSoft : toneColor(colors, tone)} name={icon} size={20} />
       </View>
       <View style={styles.listText}>
         <Text style={[typography.label, { color: colors.ink }]}>{title}</Text>

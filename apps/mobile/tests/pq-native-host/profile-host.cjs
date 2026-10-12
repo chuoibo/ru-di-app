@@ -40,8 +40,8 @@ function profileFixture(overrides = {}) {
 function journeyFixture() {
   return { routes: [], active_run: null, earned_badges: [], candidates: [], chapters: [], mp4_credits: { granted: 0, used: 0, available: 0 }, suggestion_preview: { checkins: 0, distinct_destinations: 0, photo_days: 0, story_days: 0, shared_outings: 0 } };
 }
-function createHost({ surface = 'profile', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], profile = {}, savedPlaces = [], invitations = [], deferProfile = false, deferSaved = false, placeNames = {} } = {}) {
-  assert.ok(['comments', 'detail', 'feed', 'boundary', 'profile'].includes(surface));
+function createHost({ surface = 'profile', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], profile = {}, savedPlaces = [], invitations = [], deferProfile = false, deferSaved = false, placeNames = {}, initialTheme = 'he-thong', systemScheme = 'light' } = {}) {
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'profile', 'settings'].includes(surface));
   const state = { profile: profileFixture(profile), savedPlaces: [...savedPlaces], invitations: [...invitations], placeNames: { ...placeNames }, journey: journeyFixture(), actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
@@ -253,6 +253,35 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
       throw new Error(`Unexpected synthetic fetch ${uri}`);
     },
   };
+  // Only the Settings surface replaces these I/O/package seams. Existing
+  // Profile/comments/detail/feed/boundary surfaces retain their exact adapters.
+  const settingsIo = surface === 'settings' ? require('./settings-boundaries.cjs').createSettingsBoundary({ state, api, profileRead, routes, initialTheme, systemScheme }) : null;
+  if (settingsIo) {
+    Object.assign(adapters, {
+      'apps/mobile/src/api': settingsIo.api,
+      'apps/mobile/src/phien': settingsIo.session,
+      'apps/mobile/src/danh-tinh': settingsIo.danhTinh,
+      'apps/mobile/src/rudi/kho': settingsIo.kho,
+    });
+    Native.Appearance = settingsIo.appearance;
+    Native.AccessibilityInfo = settingsIo.accessibility;
+    Native.Keyboard = settingsIo.closed('Keyboard', { dismiss() { settingsIo.nativeTrace.push({ kind: 'keyboard', method: 'dismiss' }); }, addListener: name => settingsIo.forbidden('keyboard-event', name) });
+    Native.BackHandler = settingsIo.closed('BackHandler', { addEventListener: name => settingsIo.forbidden('back-event', name) });
+    Native.AppState = settingsIo.closed('AppState', { currentState: 'active', addEventListener: name => settingsIo.forbidden('app-event', name) });
+    Native.Share = settingsIo.closed('Share', { dismissedAction: 'dismissedAction', share: () => settingsIo.forbidden('share', 'share') });
+    externals['react-native'] = settingsIo.closed('react-native', Native);
+    externals['expo-router'] = settingsIo.closed('expo-router', { ...externals['expo-router'], usePathname: () => '/settings', useRouter: () => settingsIo.router });
+    const font = settingsIo.nativeFont(nativeFontModule);
+    externals['expo-modules-core'] = settingsIo.closed('expo-modules-core', { requireOptionalNativeModule(name) { settingsIo.optionalModule(name); return font; } });
+    externals['@react-native-async-storage/async-storage'] = settingsIo.asyncStorage;
+    externals['expo-image-picker'] = settingsIo.imagePicker;
+    externals['expo-image-manipulator'] = settingsIo.imageManipulator;
+    externals['expo-file-system'] = settingsIo.fileSystem;
+    externals['expo-haptics'] = settingsIo.closed('expo-haptics', { ImpactFeedbackStyle: { Medium: 'medium' }, NotificationFeedbackType: { Success: 'success' }, selectionAsync: () => settingsIo.forbidden('haptic', 'selectionAsync'), impactAsync: () => settingsIo.forbidden('haptic', 'impactAsync'), notificationAsync: () => settingsIo.forbidden('haptic', 'notificationAsync') });
+    globals.fetch = async uri => settingsIo.forbidden('fetch', uri);
+    globals.WebSocket = class UnexpectedSettingsSocket { constructor(url) { settingsIo.forbidden('socket', url); } };
+    settingsIo.fontSnapshot(initialSnapshot);
+  }
   function load(relative) {
     relative = relative.replace(/\\/g, '/').replace(/\.(tsx?|js)$/, '');
     if (Object.hasOwn(adapters, relative)) return adapters[relative];
@@ -272,6 +301,7 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     assert.deepEqual((output.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error).map(item => ({ code: item.code, start: item.start, message: ts.flattenDiagnosticMessageText(item.messageText, '\n') })), [], `Syntax diagnostics: ${relative}`);
     function req(specifier) {
       if (Object.hasOwn(externals, specifier)) return externals[specifier];
+      if (settingsIo && !specifier.startsWith('.')) return settingsIo.forbidden('external-import', specifier);
       assert.ok(specifier.startsWith('.'), `Unmapped external boundary ${specifier} from ${relative}`);
       return load(path.posix.normalize(path.posix.join(path.posix.dirname(relative), specifier)));
     }
@@ -283,7 +313,8 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
   const comments = load('apps/mobile/src/rudi/community/Comments');
   const Field = load('apps/mobile/src/rudi/ui/Field').Field;
   const NepProvider = surface === 'profile' ? load('apps/mobile/src/rudi/nep/NepProvider').NepProvider : null;
-  const Component = surface === 'profile' ? load('apps/mobile/src/rudi/screens/Profile').ProfileScreen : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const GiaoDienProvider = surface === 'settings' ? load('apps/mobile/src/rudi/ui/GiaoDienProvider').GiaoDienProvider : null;
+  const Component = surface === 'settings' ? load('apps/mobile/src/rudi/screens/cai-dat/CaiDatScreen').CaiDatScreen : surface === 'profile' ? load('apps/mobile/src/rudi/screens/Profile').ProfileScreen : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
   const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
   const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
   function BoundaryProbe() {
@@ -300,12 +331,13 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     if (state.explicitProvider) element = React.createElement(metrics.NativeFontMetricsProvider, { snapshot: state.nativeFont }, element);
     const application = surface === 'profile' ? React.createElement(NepProvider, null, state.show ? element : null) : state.show ? element : null;
     const content = React.createElement(Session.RudiSessionProvider, null, React.createElement(SessionProbe), application);
-    return strict ? React.createElement(React.StrictMode, null, content) : content;
+    const themed = surface === 'settings' ? React.createElement(GiaoDienProvider, null, content) : content;
+    return strict ? React.createElement(React.StrictMode, null, themed) : themed;
   }
   function hosts(kind, match = () => true) { assert.ok(root, 'mounted host'); return root.root.findAll(node => node.type === kind && match(node.props)); }
   function one(kind, match) { const values = hosts(kind, match); assert.equal(values.length, 1, `One ${kind} host`); return values[0]; }
   const h = {
-    state, consumed, consumedHashes, profileReads, profileWrites, sessionWrites, savedReads, storageCalls, boundaryViolations, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    state, consumed, consumedHashes, profileReads, profileWrites, sessionWrites, savedReads, storageCalls, boundaryViolations, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet, settingsIo,
     get root() { return root; },
     get session() { return session; },
     apiError(message, status = 422) { return new api.ApiError(status, message); },
@@ -326,7 +358,8 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     callsFor(kind) { return calls.filter(call => call.kind === kind); },
     async mount() { await act(async () => { root = Renderer.create(React.createElement(App), { createNodeMock: element => ({ id: ++nodeId, kind: element.type, focus() { focused = this; }, blur() { if (focused === this) focused = null; }, scrollTo(options) { nativeHostCalls.push({ kind: 'scrollTo', options }); }, scrollToOffset(options) { nativeHostCalls.push({ kind: 'scrollToOffset', options }); }, getNativeScrollRef() { return this; }, measureInWindow(callback) { callback(0, 0, 390, 400); } }) }); }); },
     async update(callback = () => {}) { await act(async () => { callback(state); root.update(React.createElement(App, { tick: ++state.tick })); }); },
-    async nativeFont(value) { await act(async () => { state.nativeFont = value; [...listeners].forEach(callback => callback()); if (state.explicitProvider) root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    async nativeFont(value) { await act(async () => { settingsIo?.fontSnapshot(value); state.nativeFont = value; [...listeners].forEach(callback => callback()); if (state.explicitProvider) root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    async systemScheme(value) { assert.ok(settingsIo, 'Settings-only appearance fixture'); await act(async () => settingsIo.setSystemScheme(value)); },
     async invokeRetired(index = retiredCallbacks.length - 1) { assert.ok(retiredCallbacks[index]); await act(async () => retiredCallbacks[index]()); },
     async change(value) { await act(async () => h.input().props.onChangeText(value)); },
     async focus() { await act(async () => h.input().props.onFocus?.({ nativeEvent: { synthetic: true } })); },
@@ -358,11 +391,12 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     async finish(call, value) { assert.ok(call?.resolve); await act(async () => call.resolve(value)); },
     async fail(call, error) { assert.ok(call?.reject); await act(async () => call.reject(error)); },
     async actorTo(id) { await act(async () => { state.actor = person(id); session.datPhien(state.actor); root.update(React.createElement(App, { tick: ++state.tick })); }); },
-    async dispose() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } timers.clear(); assert.deepEqual(boundaryViolations, [], 'No unknown synthetic native/storage boundary requests'); },
+    async dispose() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } timers.clear(); assert.deepEqual(boundaryViolations, [], 'No unknown synthetic native/storage boundary requests'); settingsIo?.assertClean({ disposed: true }); },
   };
   return h;
 }
 
 function createProfileHost(options = {}) { return createHost({ ...options, surface: 'profile' }); }
+function createSettingsHost(options = {}) { return createHost({ ...options, surface: 'settings' }); }
 
-module.exports = { createProfileHost, snapshot, flatten, act, sourceRoot };
+module.exports = { createProfileHost, createSettingsHost, snapshot, flatten, act, sourceRoot };

@@ -170,10 +170,11 @@ function ProfileContent({ phien }: { phien: Phien }) {
       <HanhTrinhTeaser personId={personId} />
       </> : <>
       <View style={styles.menuGroups}>
-        <View style={styles.menuGroup}>
+        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Kết nối &amp; gu</Text>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="people-outline"
               onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
               subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời đang chờ` : undefined}
@@ -187,8 +188,9 @@ function ProfileContent({ phien }: { phien: Phien }) {
               }
             />
           </View>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="sparkles-outline"
               onPress={() => router.push("/personalization")}
               subtitle={tomTat(soThich)}
@@ -196,28 +198,31 @@ function ProfileContent({ phien }: { phien: Phien }) {
             />
           </View>
         </View>
-        <View style={styles.menuGroup}>
+        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Sổ của bạn</Text>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
-            <ListRow icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
+          <View style={styles.hangMenu}>
+            <ListRow iconTreatment="plain" icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
           </View>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="wallet-outline"
               onPress={() => router.push("/finance")}
               title="Tài chính của tôi"
               tone="split"
             />
           </View>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="ribbon-outline"
               onPress={() => router.push("/achievements")}
               title="Hành trình"
             />
           </View>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="bookmark-outline"
               onPress={() => setPanel("saved")}
               subtitle={soLuuHien === null ? undefined : `${soLuuHien} địa điểm`}
@@ -225,10 +230,11 @@ function ProfileContent({ phien }: { phien: Phien }) {
             />
           </View>
         </View>
-        <View style={styles.menuGroup}>
+        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Quản lý</Text>
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="settings-outline"
               onPress={() => router.push("/settings" as never)}
               title="Cài đặt"
@@ -238,8 +244,9 @@ function ProfileContent({ phien }: { phien: Phien }) {
               words: `_dang-xuat-neu-co.yaml` walks through them on every OTP
               table, and moving them into Settings would break the evidence of
               every other slice. */}
-          <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <View style={styles.hangMenu}>
             <ListRow
+              iconTreatment="plain"
               icon="shield-checkmark-outline"
               onPress={() => setPanel("account")}
               title="Tài khoản"
@@ -416,7 +423,7 @@ const styles = StyleSheet.create({
   profileTabIndicator: { position: "absolute", bottom: 0, width: 32, height: 2, borderRadius: 1 },
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
   menuGroups: { paddingTop: 12, gap: 16 },
-  menuGroup: { gap: 0 },
+  menuGroup: { gap: 0, borderBottomWidth: StyleSheet.hairlineWidth },
   menuHeading: { marginBottom: 4 },
   hero: { gap: 10 },
   heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },
@@ -424,7 +431,7 @@ const styles = StyleSheet.create({
   dauLich: { minWidth: 64, alignItems: "center" },
   ngay: { fontFamily: displayFace.extraBold, fontSize: 32, lineHeight: 36, letterSpacing: -1, fontVariant: ["tabular-nums"] },
   pressed: { opacity: 0.75 },
-  hangMenu: { borderBottomWidth: StyleSheet.hairlineWidth },
+  hangMenu: { minWidth: 0 },
   hangSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   transactionIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },

@@ -250,38 +250,42 @@ function ComposerForm() {
     return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard focusBottomInset={focusBottomInset} cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
-      <RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.line } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
+      <RudiButton compact label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.card } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
     </View>}>
+    <View style={styles.authorCluster}>
     <Pressable accessibilityRole="button" accessibilityLabel={`Người đọc: ${audienceLabel}`} accessibilityState={{ expanded: audienceOpen, disabled: Boolean(params.edit) || busy }} disabled={Boolean(params.edit) || busy} onPress={() => { Keyboard.dismiss(); setAudienceOpen(!audienceOpen); }} style={styles.author}>
       <AvatarNguoi name={phien.profile?.display_name ?? "Bạn"} personId={phien.person_id} size={44} />
       <View style={styles.authorText}>
         <Text style={[typography.title, { color: colors.ink }]}>{phien.profile?.display_name ?? "Bạn"}</Text>
-        <View style={styles.audienceTrigger}>
+        <View style={[styles.audienceTrigger, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
           <RudiIcon name={audience === "public" ? "globe-outline" : audience === "only_me" ? "lock-closed-outline" : "people-outline"} color={colors.inkSoft} size={16} />
           <Text style={[typography.caption, styles.audienceLabel, { color: colors.inkSoft }]}>{audienceLabel}</Text>
           <RudiIcon name={params.edit ? "lock-closed-outline" : "chevron-down"} color={colors.inkSoft} size={16} />
         </View>
       </View>
     </Pressable>
-    <Text style={[typography.note, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
+    <Text style={[typography.note, styles.authorDescription, fontScale >= 1.5 && styles.authorDescriptionWide, { color: colors.inkSoft }]}>{audience === "public" ? "Bài được duyệt trước khi xuất hiện trên cộng đồng." : NGUOI_DOC[audience][1]}</Text>
     {/* An edit keeps who reads the story: only that choice is shown, locked,
         with where the change is made (QA UI-091 on Cộng đồng, TC-N14-SUA-KHOA);
         no «Lựa chọn khác» opening more choices that cannot be taken. */}
     {audienceOpen && !params.edit ? <View accessibilityRole="radiogroup" style={[styles.audienceOptions, { backgroundColor: colors.card, borderColor: colors.line }]}>{(Object.keys(NGUOI_DOC) as Audience[]).map((value) => choice(value, ...NGUOI_DOC[value]))}</View> : null}
     {params.edit ? <Text style={[typography.note, { color: colors.inkSoft }]} testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc như lúc đăng. Muốn đổi người đọc, mở «Thêm lựa chọn cho bài» (⋯) ở trang bài.</Text> : null}
+    </View>
     {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change({ group: g.id })}/>)}</> : null}
-    <View style={[styles.writing, expanded && styles.expandedWriting]}>
+    <View style={[styles.stage, expanded && styles.expandedStage]}>
+    <View style={[styles.writing, expanded && styles.expandedWriting, { borderColor: colors.line }]}>
       <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
-    <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={[styles.tools, { borderColor: colors.line }]}>
-      <MediaPicker compact disabled={busy} canEdit={() => current() && !sending.current} initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={(v) => { if (current()) { uploadingNow.current = v; setUploading(v); } }} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack]}>
+    <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={styles.tools}>
+      <MediaPicker compact disabled={busy} canEdit={() => current() && !sending.current} initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={(v) => { if (current()) { uploadingNow.current = v; setUploading(v); } }} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack, { backgroundColor: colors.card, borderColor: colors.line }]}>
         <ComposerTool icon="images-outline" label={picking ? "Đang chuẩn bị…" : "Ảnh/video"} accessibilityLabel="Thêm ảnh hoặc video" disabled={busy || picking} onPress={() => { Keyboard.dismiss(); pick(); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="pricetag-outline" label="Chủ đề" accessibilityLabel={topics ? "Sửa chủ đề" : "Chủ đề"} expanded={topicsOpen} selected={Boolean(topics) || topicsOpen} onPress={() => { Keyboard.dismiss(); setTopicsOpen(!topicsOpen); }} stacked={fontScale >= 1.5} />
         <ComposerTool icon="at-outline" label={mentions.length ? `Gắn bạn (${mentions.length})` : "Gắn bạn"} accessibilityLabel="Tag bạn bè" expanded={mentionsOpen} selected={mentions.length > 0 || mentionsOpen} onPress={() => { Keyboard.dismiss(); setMentionsOpen(!mentionsOpen); }} stacked={fontScale >= 1.5} />
       </View>} />
       <MentionPicker hideTrigger expanded={mentionsOpen} onExpandedChange={setMentionsOpen} person={phien.person_id} selected={mentions} onChange={(v) => change({ mentions: v })}/>
       {topicsOpen || topics || loiChuDeGo ? <Field nativeMetrics oRef={topicsInput} onLayout={measureTopics} onFocus={() => { if (current()) { topicsFocusedNow.current = true; setTopicsFocused(true); measureTopics(); } }} onBlur={() => { topicsFocusedNow.current = false; if (current()) setTopicsFocused(false); }} error={loiChuDeGo} helper={loiChuDeGo === null ? "Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy." : undefined} label="Chủ đề" placeholder="Cà phê, đi bộ, Đà Lạt…" value={topics} onChangeText={(v) => change({ topics: v })}/> : null}
+    </View>
     </View>
   </RudiScreen></NativeFontMetricsProvider>;
 }
@@ -302,7 +306,7 @@ function ComposerBodyInput(props: TextInputProps) {
 
 function ComposerTool({ icon, label, accessibilityLabel, onPress, selected, expanded, disabled, stacked }: { icon: IconName; label: string; accessibilityLabel: string; onPress: () => void; selected?: boolean; expanded?: boolean; disabled?: boolean; stacked: boolean }) {
   const { colors } = useRudiTheme();
-  return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.tool, stacked && styles.toolWide, { opacity: disabled ? 0.5 : pressed ? 0.65 : 1 }]}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded, disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.tool, stacked && styles.toolWide, { backgroundColor: selected ? colors.accentSoft : "transparent", opacity: disabled ? 0.5 : pressed ? 0.65 : 1 }]}>
     <RudiIcon name={icon} color={selected ? colors.accent : colors.inkSoft} size={stacked ? 21 : 18} />
     <Text style={[typography.caption, styles.toolLabel, stacked && styles.flex, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
   </Pressable>;
@@ -310,24 +314,29 @@ function ComposerTool({ icon, label, accessibilityLabel, onPress, selected, expa
 
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
-  footer: { gap: 10 },
-  author: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
-  authorText: { flex: 1, minWidth: 0, gap: 4 },
-  audienceTrigger: { flexDirection: "row", alignItems: "center", gap: 6 },
+  footer: { gap: 8 },
+  authorCluster: { gap: 4 },
+  author: { flexDirection: "row", alignItems: "flex-start", gap: 12, minHeight: 56 },
+  authorText: { flex: 1, minWidth: 0, gap: 2 },
+  authorDescription: { marginLeft: 56 },
+  authorDescriptionWide: { marginLeft: 0 },
+  audienceTrigger: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", maxWidth: "100%", gap: 6, minHeight: 24, paddingHorizontal: 6, paddingVertical: 2, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6 },
   audienceLabel: { flexShrink: 1, minWidth: 0 },
   audienceOptions: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
   audienceChoice: { minHeight: 64, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   audienceChoiceTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
-  writing: { gap: 8 },
+  stage: { gap: 8, flexGrow: 0 },
+  expandedStage: { flexGrow: 1 },
+  writing: { gap: 4, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
   expandedContent: { flexGrow: 1 },
   expandedWriting: { flexGrow: 1 },
   expandedBody: { flexGrow: 1 },
   body: { textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: typography.body.lineHeight },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
-  tools: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 8 },
-  toolRow: { flexDirection: "row", gap: 8 },
+  tools: { gap: 8 },
+  toolRow: { flexDirection: "row", gap: 4, padding: 4, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
   toolStack: { flexDirection: "column" },
-  tool: { flex: 1, flexDirection: "row", minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8 },
+  tool: { flex: 1, flexDirection: "row", minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8 },
   toolLabel: { flexShrink: 1, minWidth: 0 },
   toolWide: { flex: 0, flexDirection: "row", justifyContent: "flex-start", minHeight: 48, paddingHorizontal: 4, gap: 12 },
 });
