@@ -438,7 +438,7 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
       onEndReachedThreshold={0.4}
       onScroll={(e) => { if (dangTruoc.current) viTriCuon.current = e.nativeEvent.contentOffset.y; }}
       scrollEventThrottle={64}
-      ListHeaderComponent={<View style={styles.intro}>
+      ListHeaderComponent={<View style={[styles.intro, Boolean(dau) && posts.length > 0 && styles.populatedIntro]}>
         {/* Khám phá › Cộng đồng, in the mockup's order: the search field as on
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
@@ -503,6 +503,8 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 32 },
   // 16 like the posts and Khám phá's header above, so one gutter runs down the screen.
   intro: { padding: 16, gap: 16 },
+  // The first post already separates a populated feed from its tabs by 24dp.
+  populatedIntro: { paddingBottom: 0 },
   consent: { marginHorizontal: 16, paddingVertical: 8, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
   consentCopy: { gap: 3 },
   consentBody: { fontSize: 15, lineHeight: 22 },

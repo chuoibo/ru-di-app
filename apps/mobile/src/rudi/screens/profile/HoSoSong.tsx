@@ -11,9 +11,9 @@
  * Editing goes through `PATCH /people/me` and the card re-reads the server's
  * answer rather than trusting the form.
  *
- * UI v2 (đợt 7): a footprint, not a trophy page -- initial, name, one line,
- * and the five counts as compact facts on the paper. The form sits on the
- * page too, with the error next to the field it is about.
+ * The profile reads as a person's page: identity, their own words, then
+ * connections and journey records in two short paragraphs. The form keeps
+ * its draft and field-local errors in the same mounted owner.
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
@@ -193,13 +193,8 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     );
   }
 
-  const soDem = [
-    { id: "friends", value: hoSo.counts.friends, label: "bạn bè", columnShare: 50 },
-    { id: "contexts", value: hoSo.counts.contexts, label: "nhóm", columnShare: 50 },
-    { id: "outings", value: hoSo.counts.outings, label: "kèo", columnShare: 24 },
-    { id: "places", value: hoSo.counts.places_checked_in, label: "nơi đã tới", columnShare: 34 },
-    { id: "memories", value: hoSo.counts.memories, label: "khoảnh khắc", columnShare: 42 },
-  ];
+  const socialSummary = `Quanh bạn · ${hoSo.counts.friends} bạn bè, ${hoSo.counts.contexts} nhóm.`;
+  const journeySummary = `Hành trình · ${hoSo.counts.outings} kèo, ${hoSo.counts.places_checked_in} điểm check-in, ${hoSo.counts.memories} khoảnh khắc.`;
   // An unusable owned snapshot keeps a conservative stack without a child observer.
   const largeText = bodyMetrics !== null
     ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
@@ -240,18 +235,14 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
     </View>
-    <View testID="profile-counts" style={[styles.counts, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]}>
-      {/* Connections and footprints share one paper, with stable cells through font changes. */}
-      {[soDem.slice(0, 2), soDem.slice(2)].map((counts, index) => (
-        <View key={index === 0 ? "connections" : "footprints"} testID={index === 0 ? "profile-counts-social" : "profile-counts-experiences"} style={[styles.countGroup, largeText && styles.countGroupStack, index > 0 && styles.countGroupFollowing, index > 0 && { borderTopColor: colors.line }]}>
-          {counts.map((count) => (
-            <View key={count.id} accessible accessibilityLabel={`${count.value} ${count.label}`} testID={`profile-count-${count.id}`} style={[styles.countItem, largeText ? styles.countItemStack : styles.countItemColumn, !largeText && { width: `${count.columnShare}%` as const }]}>
-              <Text style={[typography.title, styles.countValue, { color: colors.ink }]}>{count.value}</Text>
-              <Text style={[typography.note, styles.countLabel, { color: colors.inkSoft }]}>{count.label}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
+    <View testID="profile-counts" style={[styles.story, { borderLeftColor: colors.lineStrong }]}>
+      {/* Keep each paragraph native-metric compatible; inline values inherit its type size. */}
+      <Text accessible accessibilityLabel={socialSummary} testID="profile-counts-social" style={[typography.note, styles.storyParagraph, { color: colors.inkSoft }]}>
+        Quanh bạn · <Text accessible={false} testID="profile-count-friends" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.friends}</Text> bạn bè, <Text accessible={false} testID="profile-count-contexts" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.contexts}</Text> nhóm.
+      </Text>
+      <Text accessible accessibilityLabel={journeySummary} testID="profile-counts-experiences" style={[typography.note, styles.storyParagraph, { color: colors.inkSoft }]}>
+        Hành trình · <Text accessible={false} testID="profile-count-outings" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.outings}</Text> kèo, <Text accessible={false} testID="profile-count-places" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.places_checked_in}</Text> điểm check-in, <Text accessible={false} testID="profile-count-memories" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.memories}</Text> khoảnh khắc.
+      </Text>
     </View>
   </View>;
 }
@@ -259,15 +250,9 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
 const styles = StyleSheet.create({
   passport: { gap: 12 },
   identityBlock: { gap: 8 },
-  counts: { gap: 8, width: "100%", minWidth: 0, padding: 12, borderWidth: StyleSheet.hairlineWidth },
-  countGroup: { flexDirection: "row", columnGap: 12, rowGap: 8, width: "100%", minWidth: 0 },
-  countGroupStack: { flexDirection: "column" },
-  countGroupFollowing: { paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth },
-  countItem: { flexDirection: "row", alignItems: "baseline", columnGap: 4, maxWidth: "100%", minWidth: 0 },
-  countItemColumn: { flexGrow: 0, flexShrink: 1, flexBasis: "auto", alignSelf: "auto" },
-  countItemStack: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", alignSelf: "stretch", width: "100%" },
-  countValue: { flexGrow: 0, flexShrink: 1, flexBasis: "auto", maxWidth: "100%", minWidth: 0, fontVariant: ["tabular-nums"] },
-  countLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 0, maxWidth: "100%", minWidth: 0 },
+  story: { width: "100%", minWidth: 0, gap: 8, paddingLeft: 12, borderLeftWidth: 2 },
+  storyParagraph: { width: "100%", maxWidth: "100%", minWidth: 0 },
+  storyValue: { fontWeight: "700", fontVariant: ["tabular-nums"] },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },

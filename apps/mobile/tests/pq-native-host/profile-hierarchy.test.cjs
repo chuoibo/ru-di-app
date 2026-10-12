@@ -174,93 +174,89 @@ test('PH03 edit action invalidates measured width from effective metrics despite
 });
 
 test('PH04 actual profile hierarchy keeps server facts routes null-zero semantics and tab identity', async () => {
+  // Read the actual rendered host children, including nested numeric Text spans.
+  // The profile host does not implement Android text flattening or TalkBack focus.
+  const readNativeText = node => typeof node === 'string' || typeof node === 'number'
+    ? String(node) : node.children.map(readNativeText).join('');
+  const paragraphsUnder = container => container.findAllByType('RNText').filter(node => {
+    for (let parent = node.parent; parent && parent !== container; parent = parent.parent) {
+      if (parent.type === 'RNText') return false;
+    }
+    return true;
+  });
+  const readStory = (h, container) => {
+    const paragraphs = paragraphsUnder(container);
+    assert.equal(paragraphs.length, 2, 'five facts read as two whole native paragraphs instead of detached dashboard values and labels');
+    const fields = h.state.profile.counts;
+    const prose = [
+      `Quanh bạn · ${fields.friends} bạn bè, ${fields.contexts} nhóm.`,
+      `Hành trình · ${fields.outings} kèo, ${fields.places_checked_in} điểm check-in, ${fields.memories} khoảnh khắc.`,
+    ];
+    assert.deepEqual(paragraphs.map(readNativeText), prose, 'actual visible words retain all five exact server counts and nouns in reading order');
+    assert.deepEqual(paragraphs.map(node => node.props.accessibilityLabel), prose, 'two accessible paragraphs announce the same facts as their visible words');
+    const perParagraph = paragraphs.map(paragraph => paragraph.findAllByType('RNText').filter(node => node !== paragraph));
+    assert.deepEqual(perParagraph.map(spans => spans.length), [2, 3], 'two connection values and three journey values remain inline with their nouns');
+    const spans = perParagraph.flat();
+    assert.deepEqual(spans.map(node => node.props.children), [fields.friends, fields.contexts, fields.outings, fields.places_checked_in, fields.memories], 'actual inline values remain numbers from the five distinct server fields');
+    return { paragraphs, spans };
+  };
   await withHost({ deferSaved: true }, async h => {
     const original = h.owner('HoSoSong');
     const title = text(h, 'Cá nhân');
     assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
     const counts = h.one('RNView', props => props.testID === 'profile-counts');
-    const expected = [
-      ['friends', h.state.profile.counts.friends, 'bạn bè'],
-      ['contexts', h.state.profile.counts.contexts, 'nhóm'],
-      ['outings', h.state.profile.counts.outings, 'kèo'],
-      ['places', h.state.profile.counts.places_checked_in, 'nơi đã tới'],
-      ['memories', h.state.profile.counts.memories, 'khoảnh khắc'],
-    ];
-    const facts = counts.findAllByType('RNText');
-    assert.equal(facts.length, 10, 'five server facts each expose a separate value and label');
-    const factCell = fact => nearest(fact, 'RNView', () => true);
-    const cellGroup = cell => nearest(cell, 'RNView', () => true);
-    const cells = [...new Set(facts.map(factCell))];
-    const groups = [...new Set(cells.map(cellGroup))];
-    assert.equal(cells.length, 5, 'one native fact cell per server field');
-    assert.equal(groups.length, 2, 'five server facts belong to two actual native group parents');
-    assert.deepEqual(groups.map(group => cells.filter(cell => cellGroup(cell) === group).length), [2, 3], 'two connections and three footprints keep their semantic bands');
-    const normalShares = { friends: 50, contexts: 50, outings: 24, places: 34, memories: 42 };
+    const { paragraphs, spans } = readStory(h, counts);
+    const ids = ['friends', 'contexts', 'outings', 'places', 'memories'];
     const colors = h.load('apps/mobile/src/rudi/theme').mauSang;
-    const checkCounts = (stacked, metricScale) => {
-      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same count container through hot metrics');
+    const countReads = h.profileReads.length, ioCalls = h.calls.length;
+    const checkCounts = metricScale => {
+      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same story container through hot metrics');
       const paper = flatten(counts.props.style);
       assert.equal(paper.width, '100%'); assert.equal(paper.minWidth, 0);
-      assert.equal(paper.gap, 8); assert.equal(paper.padding, 12);
-      assert.equal(paper.backgroundColor, colors.card); assert.equal(paper.borderColor, colors.line);
-      assert.equal(paper.borderWidth, 0.5);
-      assert.equal(paper.flexWrap, undefined, 'facts do not depend on intrinsic wrapping');
-      const currentFacts = counts.findAllByType('RNText');
-      const currentCells = [...new Set(currentFacts.map(factCell))];
-      const currentGroups = [...new Set(currentCells.map(cellGroup))];
-      assert.equal(currentFacts.length, 10, 'all five value/label pairs remain through hot metrics');
-      assert.equal(currentCells.length, 5); assert.equal(currentGroups.length, 2);
-      assert.deepEqual(currentFacts.map(node => node.props.children), expected.flatMap(([, value, label]) => [value, label]));
-      assert.deepEqual(currentCells.map(node => node.props.accessibilityLabel), expected.map(([, value, label]) => `${value} ${label}`));
-      assert.deepEqual(currentGroups.map(group => currentCells.filter(cell => cellGroup(cell) === group).length), [2, 3]);
-      for (let index = 0; index < groups.length; index += 1) {
-        assert.equal(currentGroups[index] === groups[index], true, 'same two group parents through hot metrics');
-        assert.equal(groups[index].props.testID, index === 0 ? 'profile-counts-social' : 'profile-counts-experiences');
-        const style = flatten(groups[index].props.style);
-        assert.equal(style.flexDirection, stacked ? 'column' : 'row');
-        assert.equal(style.width, '100%'); assert.equal(style.minWidth, 0);
-        assert.equal(style.columnGap, 12); assert.equal(style.rowGap, 8);
-        assert.equal(style.borderTopWidth, index === 0 ? undefined : 0.5);
-        assert.equal(style.paddingTop, index === 0 ? undefined : 8);
-        if (index > 0) assert.equal(style.borderTopColor, colors.line);
+      assert.equal(paper.gap, 8); assert.equal(paper.paddingLeft, 12);
+      assert.equal(paper.borderLeftWidth, 2); assert.equal(paper.borderLeftColor, colors.lineStrong);
+      assert.equal(paper.backgroundColor, undefined); assert.equal(paper.borderWidth, undefined); assert.equal(paper.padding, undefined, 'story has a margin line instead of a card of fixed fact cells');
+      assert.equal(paper.height, undefined); assert.equal(paper.maxHeight, undefined);
+      assert.equal(counts.props.onPress, undefined); assert.equal(counts.findAllByType('RNPressable').length, 0, 'facts do not invent actions');
+      const current = readStory(h, counts);
+      for (let index = 0; index < current.paragraphs.length; index += 1) {
+        const paragraph = current.paragraphs[index], style = flatten(paragraph.props.style);
+        assert.equal(paragraph === paragraphs[index], true, 'same two native paragraph hosts through hot metrics');
+        assert.equal(nearest(paragraph, 'RNView', () => true) === counts, true, 'each paragraph is a direct native text root in the story');
+        assert.equal(paragraph.props.testID, index === 0 ? 'profile-counts-social' : 'profile-counts-experiences');
+        assert.equal(paragraph.props.accessible, true); assert.equal(paragraph.props.onPress, undefined);
+        assert.equal(style.width, '100%'); assert.equal(style.maxWidth, '100%'); assert.equal(style.minWidth, 0);
+        assert.equal(style.height, undefined); assert.equal(style.maxHeight, undefined);
+        assert.equal(style.color, colors.inkSoft); assert.equal(style.fontWeight, '400');
+        assert.equal(style.fontSize, metricScale === 2 ? 21.5 : 13);
+        assert.equal(style.lineHeight, metricScale === 2 ? 30.25 : 18);
+        assert.equal(paragraph.props.allowFontScaling, metricScale === null ? undefined : false);
+        assert.equal(paragraph.props.numberOfLines, undefined); assert.equal(paragraph.props.adjustsFontSizeToFit, undefined);
+        assert.equal(paragraph.props.maxFontSizeMultiplier, undefined, 'prose retains its inherited scaling policy');
       }
-      for (let index = 0; index < cells.length; index += 1) {
-        const cell = currentCells[index], style = flatten(cell.props.style);
-        assert.equal(cell === cells[index], true, 'same five native fact cells through hot metrics');
-        assert.equal(cellGroup(cell) === groups[index < 2 ? 0 : 1], true, 'same semantic band ancestor');
-        assert.equal(cell.props.testID, `profile-count-${expected[index][0]}`);
-        assert.equal(cell.props.accessible, true); assert.equal(cell.props.onPress, undefined, 'facts do not invent actions');
-        assert.equal(style.flexDirection, 'row'); assert.equal(style.alignItems, 'baseline');
-        assert.equal(style.columnGap, 4); assert.equal(style.maxWidth, '100%'); assert.equal(style.minWidth, 0);
-        assert.equal(style.flexBasis, 'auto', 'both axes use definite widths instead of a resolved prior-axis basis');
-        assert.equal(style.flexGrow, 0); assert.equal(style.flexShrink, stacked ? 0 : 1, 'row cells share their band gutter deficit');
-        assert.equal(style.width, stacked ? '100%' : `${normalShares[expected[index][0]]}%`, 'row cells retain definite shares for their fixed labels; large text owns the full width');
-        assert.equal(style.alignSelf, stacked ? 'stretch' : 'auto');
-        const pair = cell.findAllByType('RNText');
-        assert.equal(pair.length, 2, 'each actual fact cell contains its value and label');
-        for (let part = 0; part < pair.length; part += 1) {
-          const leaf = pair[part], leafStyle = flatten(leaf.props.style);
-          assert.equal(leaf === facts[index * 2 + part], true, 'same ten native Text hosts through hot metrics');
-          assert.equal(factCell(leaf) === cell, true, 'value and label retain their native fact cell');
-          assert.equal(leafStyle.maxWidth, '100%'); assert.equal(leafStyle.minWidth, 0);
-          assert.equal(leaf.props.numberOfLines, undefined); assert.equal(leaf.props.adjustsFontSizeToFit, undefined);
-          assert.equal(leaf.props.maxFontSizeMultiplier, undefined, 'facts keep the inherited scaling policy');
-          assert.equal(leaf.props.allowFontScaling, metricScale === null ? undefined : false);
-          assert.equal(leafStyle.fontSize, part === 0 ? metricScale === 2 ? 28.75 : 17 : metricScale === 2 ? 21.5 : 13);
-          assert.equal(leafStyle.lineHeight, part === 0 ? metricScale === 2 ? 37.5 : 23 : metricScale === 2 ? 30.25 : 18);
-        }
-        assert.deepEqual([...flatten(pair[0].props.style).fontVariant], ['tabular-nums']);
-        assert.equal(flatten(pair[0].props.style).color, colors.ink);
-        assert.equal(flatten(pair[1].props.style).color, colors.inkSoft);
+      for (let index = 0; index < current.spans.length; index += 1) {
+        const span = current.spans[index], style = flatten(span.props.style);
+        assert.equal(span === spans[index], true, 'same five inline native value hosts through hot metrics');
+        assert.equal(nearest(span, 'RNText', () => true) === paragraphs[index < 2 ? 0 : 1], true, 'each value stays inside its semantic paragraph');
+        assert.equal(span.props.testID, `profile-count-${ids[index]}`);
+        assert.equal(span.props.accessible, false); assert.equal(span.props.onPress, undefined);
+        assert.equal(style.fontWeight, '700'); assert.equal(style.color, colors.ink);
+        assert.deepEqual([...style.fontVariant], ['tabular-nums']);
+        assert.equal(style.width, undefined, 'inline numbers do not reinstate allocated fact columns');
+        assert.equal(style.fontSize, metricScale === null ? undefined : metricScale === 2 ? 21.5 : 13);
+        assert.equal(style.lineHeight, metricScale === null ? undefined : metricScale === 2 ? 30.25 : 18);
+        assert.equal(span.props.allowFontScaling, metricScale === null ? undefined : false, 'inline values inherit the original paragraph metrics once, or RN fallback');
+        assert.equal(span.props.numberOfLines, undefined); assert.equal(span.props.adjustsFontSizeToFit, undefined); assert.equal(span.props.maxFontSizeMultiplier, undefined);
       }
-      assert.equal(h.owner('HoSoSong') === original, true, 'same profile owner through count layout changes');
+      assert.equal(h.owner('HoSoSong') === original, true, 'same profile owner through prose metrics changes');
+      assert.equal(h.profileReads.length, countReads); assert.equal(h.calls.length, ioCalls, 'metrics changes issue no profile transport');
       ownership(h, 1);
     };
-    checkCounts(false, 1);
-    for (const [value, stacked, metricScale] of [[snapshot(2), true, 2], [snapshot(), false, 1], [snapshot(2), true, 2], [snapshot(), false, 1], [unavailable(), true, null], [snapshot(), false, 1]]) {
+    checkCounts(1);
+    for (const [value, metricScale] of [[snapshot(2), 2], [snapshot(), 1], [snapshot(2), 2], [snapshot(), 1], [unavailable(), null], [snapshot(), 1]]) {
       await h.nativeFont(value);
-      assert.equal(h.state.window.fontScale, 1, 'native snapshot drives layout despite stale window scale');
-      checkCounts(stacked, metricScale);
+      assert.equal(h.state.window.fontScale, 1, 'native snapshot drives prose metrics despite stale window scale');
+      checkCounts(metricScale);
     }
     assert.equal(h.profileWrites.length, 0, 'count layout does not save profile');
     assert.equal(h.sessionWrites.length, 0, 'count layout does not mutate session');
@@ -288,8 +284,32 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
   });
   await withHost({ profile: { display_name: 'Synthetic long name for profile layout audit', bio: 'Synthetic long bio for layout audit', city: null, counts: { friends: 0, contexts: 123, outings: 456, places_checked_in: 789, memories: 0 } }, invitations: [{ state: 'pending' }, { state: 'accepted' }, { state: 'pending' }] }, async h => {
     const longCounts = h.one('RNView', props => props.testID === 'profile-counts');
-    assert.deepEqual(longCounts.findAllByType('RNText').map(node => node.props.children), [0, 'bạn bè', 123, 'nhóm', 456, 'kèo', 789, 'nơi đã tới', 0, 'khoảnh khắc']);
-    assert.deepEqual(longCounts.findAll(node => node.type === 'RNView' && node.props.accessible === true).map(node => node.props.accessibilityLabel), ['0 bạn bè', '123 nhóm', '456 kèo', '789 nơi đã tới', '0 khoảnh khắc']);
+    const original = h.owner('HoSoSong');
+    const { paragraphs, spans } = readStory(h, longCounts);
+    assert.deepEqual(paragraphs.map(readNativeText), ['Quanh bạn · 0 bạn bè, 123 nhóm.', 'Hành trình · 456 kèo, 789 điểm check-in, 0 khoảnh khắc.'], 'zero and longer counts keep their full nouns and values');
+    const countReads = h.profileReads.length, ioCalls = h.calls.length;
+    for (const [value, metricScale] of [[snapshot(2), 2], [snapshot(), 1], [unavailable(), null], [snapshot(), 1]]) {
+      await h.nativeFont(value);
+      const current = readStory(h, longCounts);
+      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === longCounts, true);
+      assert.equal(h.owner('HoSoSong') === original, true);
+      for (let index = 0; index < paragraphs.length; index += 1) {
+        const paragraph = current.paragraphs[index], style = flatten(paragraph.props.style);
+        assert.equal(paragraph === paragraphs[index], true, 'zero/long prose hosts stay mounted at 200% and fallback');
+        assert.equal(style.width, '100%'); assert.equal(style.fontSize, metricScale === 2 ? 21.5 : 13); assert.equal(style.lineHeight, metricScale === 2 ? 30.25 : 18);
+        assert.equal(paragraph.props.accessible, true); assert.equal(paragraph.props.allowFontScaling, metricScale === null ? undefined : false);
+        assert.equal(paragraph.props.numberOfLines, undefined); assert.equal(paragraph.props.adjustsFontSizeToFit, undefined); assert.equal(paragraph.props.maxFontSizeMultiplier, undefined);
+      }
+      for (let index = 0; index < spans.length; index += 1) {
+        const span = current.spans[index], style = flatten(span.props.style);
+        assert.equal(span === spans[index], true, 'zero remains a mounted numeric span');
+        assert.equal(style.fontSize, metricScale === null ? undefined : metricScale === 2 ? 21.5 : 13);
+        assert.equal(style.lineHeight, metricScale === null ? undefined : metricScale === 2 ? 30.25 : 18);
+        assert.equal(span.props.allowFontScaling, metricScale === null ? undefined : false);
+      }
+      assert.equal(h.state.window.fontScale, 1); assert.equal(h.profileReads.length, countReads); assert.equal(h.calls.length, ioCalls);
+      ownership(h, 1);
+    }
     assert.equal(h.text('Synthetic long name for profile layout audit').length, 1);
     assert.equal(h.text('Synthetic long bio for layout audit').length, 1);
     assert.equal(h.textContent().includes('null'), false, 'missing city is not printed as text');
