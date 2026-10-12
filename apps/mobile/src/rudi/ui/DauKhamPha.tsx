@@ -26,12 +26,13 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
  * as the community's own header does (B7): beside two 48dp buttons the words
  * had 180 of 288dp and «Địa điểm» was cut to its last letters.
  */
-export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode; nativeMetrics?: boolean }) {
+export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false, inlineActions = false }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode; nativeMetrics?: boolean; inlineActions?: boolean }) {
   const { colors } = useRudiTheme();
   const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const cuon = useRef<ScrollView>(null);
   // The words stay first in reading order; only the controls' place on screen changes.
-  const hep = useWindowDimensions().width < 360 && phai !== undefined;
+  // A single overflow target leaves the section words on the same row.
+  const hep = useWindowDimensions().width < 360 && phai !== undefined && !inlineActions;
   // When large text makes the words outgrow the row, the open section is the
   // one in view: Cộng đồng, the second word, scrolls itself in. Asked again
   // once the row knows its own width (on the web the content size arrives
@@ -49,7 +50,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false }: { muc
         onLayout={hienMucMo}
         ref={cuon}
         showsHorizontalScrollIndicator={false}
-        style={styles.cuon}
+        style={[styles.cuon, inlineActions && styles.cuonInline]}
       >
         <View {...TABLIST} style={styles.danhSach}>
           {MUC.map((m) => {
@@ -81,6 +82,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false }: { muc
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center", gap: 8 },
   cuon: { flexGrow: 1, flexShrink: 1 },
+  cuonInline: { flexBasis: 0, minWidth: 0 },
   cuonTrong: { flexGrow: 1 },
   danhSach: { flexDirection: "row", gap: 24 },
   muc: { minHeight: 48, alignItems: "center", justifyContent: "center", paddingTop: 6, gap: 4 },

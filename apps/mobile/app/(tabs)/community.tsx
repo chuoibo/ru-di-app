@@ -15,5 +15,5 @@ export default function CommunityTab() {
   // Cộng đồng is the section in view: the Khám phá column reopens it.
   useFocusEffect(useCallback(() => ghiMucKhamPha("community"), []));
   // In the route file on purpose: the guide's extractor reads community -> explore here.
-  return <CommunityScreen dau={(phai) => <DauKhamPha muc="community" onDoiMuc={() => router.navigate("/explore")} phai={phai} />} />;
+  return <CommunityScreen dau={(phai) => <DauKhamPha nativeMetrics inlineActions muc="community" onDoiMuc={() => router.navigate("/explore")} phai={phai} />} />;
 }

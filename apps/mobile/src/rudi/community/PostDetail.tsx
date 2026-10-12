@@ -157,6 +157,7 @@ function PostDetailContent() {
       variant={hasDraft ? "ghost" : "solid"}
       compact={hasDraft}
       full={!hasDraft}
+      labelAlign={hasDraft ? "left" : "center"}
       style={hasDraft ? { alignSelf: "flex-start", maxWidth: "100%" } : undefined}
       disabled={busy || !request.trim()}
       lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined}

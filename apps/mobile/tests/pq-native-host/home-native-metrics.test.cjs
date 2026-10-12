@@ -208,11 +208,30 @@ test('HC13 actual rating paragraph uses nonlinear native metrics with a sibling 
 });
 
 test('HC14 opted-in wide Compare keeps keyed cards images hearts and content through native-only font changes while direction adapts', async () => {
+  const hierarchy = (open, expected, explanation) => {
+    const title = leaf(open, expected[0]), titleStyle = flatten(title.props.style);
+    assert.equal(titleStyle.minHeight, undefined, 'one-line names do not reserve a second line pitch');
+    assert.equal(titleStyle.height, undefined); assert.equal(titleStyle.maxHeight, undefined);
+    assert.equal(title.props.maxFontSizeMultiplier, undefined); assert.notEqual(title.props.adjustsFontSizeToFit, true);
+    const copy = ancestor(title, 'RNView'), copyStyle = flatten(copy.props.style);
+    assert.equal(within(copy, open), true, 'copy remains inside the actual open action');
+    assert.equal(copyStyle.gap, 4, 'identity and factual lines form one compact reading stack');
+    assert.equal(copyStyle.height, undefined); assert.equal(copyStyle.maxHeight, undefined);
+    assert.deepEqual(copy.findAllByType('RNText').map(node => semantic(node.props.children)), expected, 'identity, subtitle and facts precede the complete explanation');
+    if (explanation) {
+      const reason = leaf(copy, explanation), line = ancestor(reason, 'RNView'), separation = ancestor(line, 'RNView');
+      assert.equal(within(separation, copy), true); assert.equal(flatten(separation.props.style).marginTop, 4, 'explanation has one distinct 8dp transition after the 4dp stack gap');
+      assert.equal(reason.props.numberOfLines, undefined, 'the grounded explanation is never truncated');
+      assert.equal(reason.props.maxFontSizeMultiplier, undefined); assert.notEqual(reason.props.adjustsFontSizeToFit, true);
+    }
+    return copy;
+  };
   await home({ initialWindow: { ...window100, width: 768, height: 1024 } }, async h => {
     const pair = compare(h), frame = h.one('RNView', props => props.testID === 'explore-compare');
     assert.equal(flatten(frame.props.style).flexDirection, 'row');
     const rows = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceRow; assert.equal(pair.findAllByType(rows).length, 0);
     const candidates = pair.props.items.map(item => ({ item, open: h.one('RNPressable', props => props.accessibilityLabel === `Mở ${item.name}`), heart: saved(h, false, item.name), title: leaf(pair, item.name), image: one(pair.findAllByType('RNExpoImage').filter(node => node.props.source?.uri?.includes(`/places/${item.id}/photos/`)), 'actual candidate photo') }));
+    for (const candidate of candidates) candidate.copy = hierarchy(candidate.open, [candidate.item.name, subtitle, rating, hours, price, reason], reason);
     const before = counters(h);
     for (const scale of [2, 1]) {
       await h.nativeFont(snapshot(scale)); assert.equal(h.state.window.fontScale, 1); assert.equal(compare(h) === pair, true, "actual wide Compare identity remains stable");
@@ -222,11 +241,49 @@ test('HC14 opted-in wide Compare keeps keyed cards images hearts and content thr
         assert.equal(saved(h, false, candidate.item.name) === candidate.heart, true, "actual keyed heart remains stable"); assert.equal(leaf(pair, candidate.item.name) === candidate.title, true, "actual keyed title host remains stable");
         assert.equal(one(pair.findAllByType('RNExpoImage').filter(node => node.props.source?.uri?.includes(`/places/${candidate.item.id}/photos/`)), 'same candidate photo') === candidate.image, true, "actual keyed image host remains stable");
         assert.equal(candidate.title.props.numberOfLines, scale === 2 ? undefined : 2); converted(h, candidate.title, { fontSize: 17, lineHeight: 23, letterSpacing: -0.15 });
+        assert.equal(hierarchy(candidate.open, [candidate.item.name, subtitle, rating, hours, price, reason], reason) === candidate.copy, true, 'the compact copy stack survives native-only changes');
+        for (const copy of [subtitle, rating, hours, price]) converted(h, leaf(candidate.open, copy), { fontSize: 13, lineHeight: 18 });
+        converted(h, leaf(candidate.open, reason), { fontSize: 14, lineHeight: 19 });
       }
       noFontIO(h, before); assert.equal(h.observation().subscriptions, 1);
     }
     consumed(h);
   });
+  // Actual shared Compare, with unequal names and optional metadata, under the real inherited owner.
+  const longName = 'Một địa điểm với tên dài để đọc trọn ở chế độ chữ lớn', longReason = 'Hợp sở thích đã chọn: có chỗ ngồi ngoài trời, đi bộ được và vẫn giữ nguyên lời giải thích dài này.';
+  const items = [{ id: 'synthetic-rhythm-1', name: longName, sub: subtitle, facts: [{ icon: 'star', text: '4.6 (156)' }, { icon: 'navigate-outline', text: '1.6 km' }, { icon: 'time-outline', text: hours }, { icon: 'wallet-outline', text: price }], glyph: 'cafe-outline', loai: 'cafe', anh: null, badge: null, lyDo: longReason }, { id: 'synthetic-rhythm-2', name: 'Tên ngắn', sub: '', facts: [], glyph: 'cafe-outline', loai: 'cafe', anh: null, badge: null }];
+  const opened = [], savedIds = [];
+  const render = opted => ({ React, load }) => React.createElement(load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceCompare, { items, nativeMetrics: opted, largeText: opted ? true : undefined, daLuu: () => false, onOpen: id => opened.push(id), onSave: id => savedIds.push(id) });
+  const h = createHost({ surface: 'boundary', nativeGeometry: true, explicitProvider: true, initialSnapshot: snapshot(2), initialWindow: { ...window100, width: 768 }, boundaryChildren: render(false) });
+  try {
+    h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem'); await h.mount();
+    const pair = compare(h), Row = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceRow;
+    const open = item => h.one('RNPressable', props => props.accessibilityLabel === `Mở ${item.name}`);
+    const check = (opted = true) => {
+      // The unchanged raw paragraph keeps its decorative icon's no-break separator.
+      hierarchy(open(items[0]), [longName, subtitle, opted ? rating : ` ${rating}`, hours, price, longReason], longReason);
+      hierarchy(open(items[1]), ['Tên ngắn']);
+    };
+    assert.equal(pair.findAllByType(Row).length, 0, 'default normal-window wide Compare remains the original raw-text branch');
+    check(false); raw(leaf(pair, longName), 17, 23); raw(leaf(pair, longReason), 14, 19);
+    assert.equal(leaf(pair, longName).props.numberOfLines, 2, 'existing normal-width title line policy is unchanged');
+    await h.update(state => { state.boundaryChildren = render(true); });
+    assert.equal(compare(h) === pair, true); check();
+    const title = leaf(pair, longName), reasonHost = leaf(pair, longReason), input = h.input(), ref = h.native.node(input), before = counters(h);
+    assert.equal(title.props.numberOfLines, undefined); converted(h, title, { fontSize: 17, lineHeight: 23, letterSpacing: -0.15 });
+    for (const unavailable of [{ status: 'unavailable', reason: 'module-inactive' }, { status: 'available', fontScale: 2 }]) {
+      await h.nativeFont(unavailable); check(); assert.equal(leaf(pair, longName) === title, true); assert.equal(leaf(pair, longReason) === reasonHost, true);
+      raw(title, 17, 23); raw(reasonHost, 14, 19); assert.equal(title.props.numberOfLines, undefined); noFontIO(h, before);
+    }
+    await h.nativeFont(snapshot(2)); check(); converted(h, title, { fontSize: 17, lineHeight: 23, letterSpacing: -0.15 });
+    assert.equal(h.input() === input, true); assert.equal(h.native.node(input) === ref, true); noFontIO(h, before);
+    assert.deepEqual(plain(h.observation()), { live: 0, subscriptions: 0, removals: 0, reads: 0, maxLive: 0 }, 'inherited available and unavailable owners never add child observers');
+    await press(open(items[0])); await press(saved(h, false, longName)); assert.deepEqual(opened, [items[0].id]); assert.deepEqual(savedIds, [items[0].id]);
+    await h.update(state => { state.window = { ...state.window, width: 320 }; });
+    assert.equal(pair.findAllByType(Row).length, 2, 'phone uses the existing actual PlaceRow branch');
+    for (const item of items) { assert.equal(leaf(pair, item.name).props.numberOfLines, undefined); assert.equal(saved(h, false, item.name).props.accessibilityRole, 'button'); }
+    assert.equal(leaf(pair, longReason).props.numberOfLines, undefined); assert.equal(h.calls.length, 0); assert.equal(h.exploreStorage.length, 0); assert.equal(h.attemptCount(), 0);
+  } finally { await h.dispose(); }
 });
 
 

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text as RNText, View } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
 import { EASING, durationFor } from "../motion";
 import { typography, useRudiTheme } from "../theme";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
+import { Text as NativeMetricText } from "./NativeFontMetrics";
 
 export type MucChuTab<T extends string> = { id: T; nhan: string };
 
@@ -113,14 +114,18 @@ export function HangChuTab<T extends string>({
   chon,
   onChon,
   giamChuyenDong = false,
+  nativeMetrics = false,
 }: {
   muc: readonly MucChuTab<T>[];
   chon: T | null;
   onChon: (id: T) => void;
   /** Reduce Motion: the rule jumps to the picked tab instead of sliding. */
   giamChuyenDong?: boolean;
+  /** Use the surface owner without a child metrics observer. */
+  nativeMetrics?: boolean;
 }) {
   const { colors } = useRudiTheme();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   // Out to the screen's edges only where the column is the screen.
   const tran = useAdaptiveLayout().sizeClass === "compact";
   const le = tran ? LE : 0;
@@ -210,9 +215,9 @@ export function HangChuTab<T extends string>({
                 }}
                 style={styles.tab}
               >
-                <Text numberOfLines={1} style={[typography.label, { color: dangChon ? colors.ink : colors.inkSoft }]}>
+                <CopyText numberOfLines={1} style={[typography.label, { color: dangChon ? colors.ink : colors.inkSoft }]}>
                   {m.nhan}
-                </Text>
+                </CopyText>
                 <View style={[styles.gach, { backgroundColor: dangChon && gach === null ? colors.ink : "transparent" }]} />
               </Pressable>
             );

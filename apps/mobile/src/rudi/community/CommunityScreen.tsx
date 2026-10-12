@@ -20,6 +20,7 @@ import { Sheet } from "../ui/Sheet";
 import { NBSP } from "../ui/chu";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
+import { PressScale } from "../ui/PressScale";
 import { docGiaoDienAsync } from "../kho";
 import { feedback, follow, likePost, mergePosts, readFeed, type FeedMode, type Post, type Preferences } from "./api";
 import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, traVeCho, type ThongBao } from "./bang-tin";
@@ -307,13 +308,18 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
     return <RudiScreen material="quiet" header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
   // A mode with a tab names itself in the row; only the hidden posts need a title.
   const tieuDeRieng = mode === "hidden" ? "Những bài bạn đã ẩn" : !dau && mode === "mine" ? "Những điều bạn đã kể" : !dau && mode === "saved" ? "Để dành cho một ngày" : null;
-  const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={() => { setCoMoi(false); router.push("/community/notifications" as never); }} style={styles.icon}>
+  const moThongBao = () => { setCoMoi(false); router.push("/community/notifications" as never); };
+  const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={moThongBao} style={styles.icon}>
     <Ionicons name="notifications-outline" size={24} color={colors.ink}/>
     {coMoi ? <View style={[styles.cham, { backgroundColor: colors.accent, borderColor: colors.ground }]} /> : null}
   </Pressable>;
   const nutCaiDat = <Pressable accessibilityRole="button" accessibilityLabel="Cài đặt bảng tin" onPress={() => setSettings(true)} style={styles.icon}><Ionicons name="options-outline" size={24} color={colors.ink}/></Pressable>;
-  const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
-  return <RudiScreen material="quiet" header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
+  const nutBangTin = <PressScale accessibilityRole="button" accessibilityLabel={coMoi ? "Tuỳ chọn Cộng đồng, có thông báo mới" : "Tuỳ chọn Cộng đồng"} accessibilityState={{ expanded: settings }} onPress={() => setSettings(true)} pressedScale={0.94} style={styles.icon}>
+    <Ionicons name="ellipsis-horizontal" size={24} color={colors.ink}/>
+    {coMoi ? <View style={[styles.cham, { backgroundColor: colors.accent, borderColor: colors.ground }]} /> : null}
+  </PressScale>;
+  const oTim = <SearchField nativeMetrics accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
+  return <RudiScreen material="quiet" header={dau?.(nutBangTin)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
       <View style={styles.caiDat}>
       <View style={styles.caiDatDau}>
@@ -321,6 +327,7 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
       <Text style={[typography.note, { color: colors.inkSoft }]}>Chỉ dùng lượt xem và tương tác trong cộng đồng để gợi ý bài. Bạn luôn có thể đổi ý.</Text>
       </View>
       <View style={styles.caiDatNut}>
+      {dau ? <FeedAction icon="notifications-outline" label={coMoi ? "Thông báo · có điều mới" : "Thông báo"} chevron onPress={() => { dongCaiDat(); moThongBao(); }} /> : null}
       <FeedAction icon="options-outline" label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} checked={Boolean(prefs?.personalized)} onPress={() => void consent(!prefs?.personalized)} />
       <FeedAction icon="eye-off-outline" label="Bài đã ẩn" chevron onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
       <FeedAction icon="bookmark-outline" label="Điều mình muốn giữ" chevron onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
@@ -435,7 +442,7 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
         {/* Khám phá › Cộng đồng, in the mockup's order: the search field as on
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
-        {dau ? <HangChuTab giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
+        {dau ? <HangChuTab nativeMetrics giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
         {/* Named once there is a list to name: over an empty one the title and
             the empty state's own heading stacked at one rank, and over the
             skeleton it swapped for that heading when the list came back empty

@@ -377,14 +377,15 @@ export function PlaceCompare({
         // The same facts the rows print, so the two really compare; the price
         // band (found by what it is, QA UI-021) gets its own line, never cut.
         const { gia: cuoiFact } = tachGia(dd.facts);
+        // Names use their natural height; facts stay together before the full reason.
         const chu = (
-          <>
-            <CopyText numberOfLines={nativeMetrics && xepDoc ? undefined : 2} style={[typography.title, { minHeight: typography.title.lineHeight * 2, color: colors.ink }]}>{dd.name}</CopyText>
-            {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
+          <View style={styles.ungVienChu}>
+            <CopyText numberOfLines={nativeMetrics && xepDoc ? undefined : 2} style={[typography.title, { color: colors.ink }]}>{dd.name}</CopyText>
             {dd.sub ? <CopyText numberOfLines={nativeMetrics && xepDoc ? undefined : 2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</CopyText> : null}
             <DongSuThat nativeMetrics={nativeMetrics} facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={nativeMetrics && xepDoc ? undefined : 2} />
             {cuoiFact ? <CopyText style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</CopyText> : null}
-          </>
+            {dd.lyDo ? <View style={styles.ungVienLyDo}><LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /></View> : null}
+          </View>
         );
 
         return (
@@ -470,6 +471,9 @@ const styles = StyleSheet.create({
   ungVien: { width: "50%", flexGrow: 0, flexShrink: 1, flexBasis: "auto", minWidth: 0 },
   ungVienDoc: { width: "100%", flexShrink: 0 },
   ungVienPress: { gap: 6 },
+  // Facts read together; an uncapped match explanation follows at its own pace.
+  ungVienChu: { gap: 4 },
+  ungVienLyDo: { marginTop: 4 },
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
   leadGonDau: { alignSelf: "flex-start" },

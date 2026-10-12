@@ -470,3 +470,96 @@ test('QV08 generated review keeps consent secondary and Save primary without aut
     assert.deepEqual(h.routes, ['/community/keeps']); assert.equal(h.nepRequests.length, 2);
   });
 });
+
+// Effective Text alignment only; native wrapped-line pixels remain a separate check.
+test('QV09 regeneration text aligns left while initial consent and default Save stay centered through hot metrics', async () => {
+  await withNep({}, async h => {
+    const request = 'QC_QV09 request Aà😀\n\nC', generated = 'QC_QV09 generated Aà😀\n\nC';
+    const Button = h.load('apps/mobile/src/rudi/ui').RudiButton;
+    const core = node => ancestor(node, at => at.type === Button, 'actual RudiButton owns the aligned label');
+    await change(h, request);
+    const first = button(h, requestAction), firstCopy = textWithin(first, requestAction);
+    assert.equal(flatten(firstCopy.props.style).textAlign, 'center', 'initial consent retains the centered primary label');
+    assert.equal(first.findAllByType('RNLinearGradient').length, 1);
+    assert.equal(flatten(first.props.style).width, '100%'); assert.equal(flatten(first.props.style).minHeight, 52);
+    const retainedFirst = first.props.onPress;
+    await press(first); payload(h, h.nepRequests[0], request);
+    assert.equal(flatten(textWithin(button(h, 'Nếp đang viết…'), 'Nếp đang viết…').props.style).textAlign, 'center');
+    await act(async () => retainedFirst()); assert.equal(h.nepRequests.length, 1, 'initial pending consent keeps its existing working lock');
+    await h.finish(h.nepRequests[0], { draft: generated });
+    const id = 'community-nep-draft', parts = document(h, id), controller = h.owner('PostDetailContent');
+    const native = input(h, id), nativeField = field(h, id), requestNative = input(h), requestField = field(h);
+    const consent = button(h, requestAction), consentCopy = textWithin(consent, requestAction), consentCore = core(consent);
+    const save = button(h, draftAction), saveCopy = textWithin(save, draftAction), saveCore = core(save);
+    let savePhase = { busy: false, native: save, copy: saveCopy };
+    const reads = h.callsFor('readComments').length, gets = h.callsFor('getPost').length;
+    const review = (value, fontValue, busy = false) => {
+      const callLabel = busy ? 'Nếp đang viết…' : requestAction;
+      const call = button(h, callLabel), fixedSave = button(h, draftAction);
+      const callCopy = textWithin(call, callLabel), fixedSaveCopy = textWithin(fixedSave, draftAction);
+      assert.equal(flatten(callCopy.props.style).textAlign, 'left', 'regeneration aligns every rendered consent line to the left');
+      assert.equal(flatten(fixedSaveCopy.props.style).textAlign, 'center', 'default Save keeps the shared centered label contract');
+      assert.equal(core(fixedSave).props.labelAlign, undefined, 'Save exercises the existing default button surface');
+      assert.equal(core(call).props.variant, 'ghost'); assert.equal(core(call).props.compact, true); assert.equal(core(call).props.full, false);
+      assert.equal(flatten(call.props.style).alignSelf, 'flex-start'); assert.equal(flatten(call.props.style).maxWidth, '100%');
+      assert.equal(flatten(call.props.style).minWidth, 48); assert.equal(flatten(call.props.style).minHeight, 48);
+      assert.equal(call.findAllByType('RNLinearGradient').length, 0); assert.equal(inside(call, parts.scroll), true);
+      assert.equal(inside(fixedSave, parts.footer), true); assert.equal(flatten(fixedSave.props.style).width, '100%');
+      assert.equal(flatten(fixedSave.props.style).minHeight, 52); assert.equal(core(fixedSave).props.variant, 'solid');
+      assert.equal(call.props.disabled, busy); assert.equal(fixedSave.props.disabled, busy);
+      for (const copy of [callCopy, fixedSaveCopy]) {
+        const usable = fontValue.status === 'available', style = flatten(copy.props.style);
+        assert.equal(style.fontSize, usable && fontValue.fontScale === 2 ? 23.25 : 14);
+        assert.equal(style.lineHeight, usable && fontValue.fontScale === 2 ? 31.75 : 19);
+        assert.equal(copy.props.allowFontScaling, usable ? false : undefined);
+        assert.equal(copy.props.numberOfLines, undefined); assert.equal(copy.props.ellipsizeMode, undefined);
+        assert.equal(copy.props.maxFontSizeMultiplier, undefined); assert.equal(copy.props.adjustsFontSizeToFit, undefined);
+      }
+      assert.equal(call === consent, true); assert.equal(callCopy === consentCopy, true, 'alignment does not replace the native consent label');
+      assert.equal(core(call) === consentCore, true); assert.equal(core(fixedSave) === saveCore, true);
+      // A disabled reason can add the existing RudiButton wrapper at a busy transition.
+      if (savePhase.busy !== busy) savePhase = { busy, native: fixedSave, copy: fixedSaveCopy };
+      assert.equal(fixedSave === savePhase.native, true, 'native Save stays mounted within each busy phase');
+      assert.equal(fixedSaveCopy === savePhase.copy, true, 'hot metrics retain the native Save label within each busy phase');
+      assert.equal(input(h, id) === native, true); assert.equal(field(h, id) === nativeField, true);
+      assert.equal(input(h) === requestNative, true); assert.equal(field(h) === requestField, true);
+      assert.equal(input(h, id).props.value, value); assert.equal(input(h).props.value, request);
+      assert.equal(input(h, id).props.editable, !busy); assert.equal(input(h).props.editable, !busy);
+      assert.equal(h.owner('PostDetailContent') === controller, true);
+      const current = document(h, id);
+      for (const name of ['scroll', 'footer', 'editor', 'scope']) assert.equal(current[name] === parts[name], true);
+      assert.equal(h.state.window.fontScale, 1); metrics(h, id, fontValue, draftLabel); ownership(h, 1);
+      assert.equal(h.callsFor('readComments').length, reads); assert.equal(h.callsFor('getPost').length, gets);
+    };
+    review(generated, font(1));
+    for (const value of [font(2), unavailable(), font(1)]) {
+      await h.nativeFont(value); review(generated, value);
+      assert.equal(h.nepRequests.length, 1); assert.equal(h.keepWrites.length, 0, 'font alignment changes perform no transport');
+    }
+    const edited = 'QC_QV09 edited Aà😀\n\nC';
+    await act(async () => native.props.onFocus({})); await change(h, edited, id); review(edited, font(1));
+    const retainedRegenerate = consent.props.onPress;
+    await press(consent); assert.equal(h.nepRequests.length, 2); payload(h, h.nepRequests[1], request);
+    review(edited, font(1), true);
+    await h.nativeFont(font(2)); review(edited, font(2), true);
+    await act(async () => retainedRegenerate()); assert.equal(h.nepRequests.length, 2, 'left-aligned regeneration retains the existing duplicate-operation lock');
+    const regenerated = 'QC_QV09 regenerated';
+    await h.finish(h.nepRequests[1], { draft: regenerated }); review(regenerated, font(2));
+    const currentSave = button(h, draftAction), retainedSave = currentSave.props.onPress;
+    await press(currentSave); review(regenerated, font(2), true);
+    assert.equal(h.keepWrites.length, 1); assert.equal(h.nepRequests.length, 2);
+    const write = h.keepWrites[0];
+    assert.equal(write.route, '/v2/community/keeps'); assert.equal(write.options.method, 'POST'); assert.equal(write.options.actorId, 'synthetic-A');
+    assert.deepEqual(plain(write.options.body), { logical_id: write.options.body.logical_id, post_id: 'synthetic-post-1', body: regenerated, ai_generated: true });
+    assert.match(write.options.body.logical_id, /^synthetic-attempt-/); assert.match(write.options.attempt.key, /^synthetic-attempt-/);
+    await act(async () => retainedSave()); assert.equal(h.keepWrites.length, 1, 'default centered Save keeps its existing duplicate-operation lock');
+    assert.deepEqual(h.routes, []);
+    for (const relative of ['apps/mobile/src/rudi/ui', 'apps/mobile/src/rudi/community/PostDetail']) {
+      const file = h.consumed.get(relative); assert.ok(file, `actual alignment source consumed: ${relative}`);
+      assert.equal(fs.realpathSync(file).startsWith(fs.realpathSync(sourceRoot) + path.sep), true);
+      assert.equal(h.consumedHashes.get(relative), crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
+    }
+    await h.finish(write, { id: 'synthetic-keep-1' });
+    assert.deepEqual(h.routes, ['/community/keeps']); assert.equal(h.nepRequests.length, 2);
+  });
+});

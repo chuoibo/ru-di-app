@@ -195,6 +195,7 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     assert.equal(cells.length, 5, 'one native fact cell per server field');
     assert.equal(groups.length, 2, 'five server facts belong to two actual native group parents');
     assert.deepEqual(groups.map(group => cells.filter(cell => cellGroup(cell) === group).length), [2, 3], 'two connections and three footprints keep their semantic bands');
+    const normalShares = { friends: 50, contexts: 50, outings: 24, places: 34, memories: 42 };
     const colors = h.load('apps/mobile/src/rudi/theme').mauSang;
     const checkCounts = (stacked, metricScale) => {
       assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same count container through hot metrics');
@@ -233,7 +234,7 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
         assert.equal(style.columnGap, 4); assert.equal(style.maxWidth, '100%'); assert.equal(style.minWidth, 0);
         assert.equal(style.flexBasis, 'auto', 'both axes use definite widths instead of a resolved prior-axis basis');
         assert.equal(style.flexGrow, 0); assert.equal(style.flexShrink, stacked ? 0 : 1, 'row cells share their band gutter deficit');
-        assert.equal(style.width, stacked ? '100%' : `${100 / (index < 2 ? 2 : 3)}%`, 'row cells declare half or one third of their own semantic band');
+        assert.equal(style.width, stacked ? '100%' : `${normalShares[expected[index][0]]}%`, 'row cells retain definite shares for their fixed labels; large text owns the full width');
         assert.equal(style.alignSelf, stacked ? 'stretch' : 'auto');
         const pair = cell.findAllByType('RNText');
         assert.equal(pair.length, 2, 'each actual fact cell contains its value and label');

@@ -34,8 +34,10 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {}, inheritedExploreMetrics = false, inboxIO = null, inheritedInboxMetrics = false, inboxView = 'screen', inboxStoryProps = {} } = {}) {
-  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps', 'explore', 'inbox'].includes(surface));
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {}, inheritedExploreMetrics = false, inboxIO = null, inheritedInboxMetrics = false, inboxView = 'screen', inboxStoryProps = {}, communityIO = null, communityView = 'tab' } = {}) {
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps', 'explore', 'inbox', 'community'].includes(surface));
+  assert.equal(surface === 'community', communityIO !== null, 'Community transport requires its own explicit fixture boundary');
+  if (surface === 'community') { assert.ok(['tab', 'standalone', 'defaults'].includes(communityView)); assert.equal(explicitProvider, false, 'Community owns its existing metrics provider'); assert.equal(nativeGeometry, true); }
   assert.equal(surface === 'inbox', inboxIO !== null, 'Inbox requires its own explicit synthetic I/O boundary');
   assert.equal(inheritedInboxMetrics && surface !== 'inbox', false);
   if (surface === 'inbox') {
@@ -123,7 +125,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     return chain;
   }
   const nativeFontModule = {
-    getFontScale() { getterReads += 1; return state.nativeFont; },
+    getFontScale() { getterReads += 1; if (community) community.fontSnapshot(state.nativeFont); return state.nativeFont; },
     addListener(name, callback) {
       assert.equal(name, 'onFontScaleChanged'); subscriptions += 1; listeners.add(callback); callbacks.push(callback); maxLive = Math.max(maxLive, listeners.size);
       let live = true;
@@ -131,7 +133,13 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     },
   };
   function parked(store, call) { const pending = deferred(); Object.assign(call, pending); store.push(call); return pending.promise; }
+  const community = surface === 'community' ? require('./community-boundaries.cjs').createCommunityBoundary({ state, parked, io: communityIO }) : null;
   const inbox = surface === 'inbox' ? require('./inbox-boundaries.cjs').createInboxBoundary({ React, state, parked, io: inboxIO }) : null;
+  if (community) {
+    Native.AppState.addEventListener = (name, callback) => community.listen('app', name, callback);
+    Native.BackHandler.addEventListener = (name, callback) => community.listen('back', name, callback);
+    Native.AccessibilityInfo.addEventListener = (name, callback) => community.listen('accessibility', name, callback);
+  }
   if (inbox) Native.AppState.addEventListener = (name, callback) => {
     assert.equal(name, 'change'); inbox.appState.add(callback); return { remove() { inbox.appState.delete(callback); } };
   };
@@ -162,11 +170,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     ApiError: class ApiError extends Error { constructor(status, message) { super(message); this.status = status; } },
     thongDiepNguoiDoc: () => 'Synthetic refusal', newAttempt: () => {
       const key = `synthetic-attempt-${++attempt}`;
-      return surface === 'keeps' || surface === 'inbox' ? { key, at: Date.parse('2026-10-01T00:00:00Z') + attempt } : { key };
+      return surface === 'keeps' || surface === 'inbox' || community ? { key, at: Date.parse('2026-10-01T00:00:00Z') + attempt } : { key };
     },
     datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token, duongDanAnhDaiDien: id => `/people/${id}/avatar`,
     translatedAsActor: async (_errors, route, options = {}) => {
       const method = options.method ?? 'GET'; const call = { route, options, kind: 'transport' }; calls.push(call);
+      if (community) return community.transport(route, options, call);
       if (inbox) return inbox.transport(route, options, call);
       if (surface === 'explore') return exploreTransport(route, options, call);
       // This opt-in surface has no generic route fallbacks or real I/O.
@@ -257,6 +266,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     'apps/mobile/src/danh-tinh': { ngheThuHoiPhien: callback => { state.revoke = callback; return () => { state.revoke = null; }; }, tokenPhienHienTai: () => state.token, headerNguoiGoi: () => ({ Authorization: 'Bearer synthetic-only' }) },
     'apps/mobile/src/rudi/kho': { xoaPhienAsync: async () => {}, docGiaoDienAsync: async () => null, ghiGiaoDienAsync: async () => {} },
   };
+  if (community) {
+    adapters['apps/mobile/src/rudi/kho'] = community.storage;
+    adapters['apps/mobile/src/phien'] = community.session;
+    api.translatedAnonymous = async (_errors, route) => community.forbidden('anonymous', route);
+    api.goiNhiPhan = async (...args) => community.forbidden('binary', args[0]);
+  }
   if (inbox) {
     delete adapters['apps/mobile/src/phien']; // Actual session/wire helpers execute; only the hook below is supplied.
     adapters['apps/mobile/src/rudi/session'] = inbox.sessionBoundary;
@@ -265,10 +280,11 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     api.goiNhiPhan = async (...args) => inbox.forbidden('binary', args[0]);
   }
   const router = { canGoBack: () => false, back() { if (inbox) inbox.forbidden('navigation', 'back'); }, push: value => { if (inbox) inbox.navigation('push', value); routes.push(value); }, replace: value => { if (inbox) inbox.navigation('replace', value); routes.push(value); } };
+  if (community) for (const method of ['push', 'replace', 'navigate', 'back']) router[method] = value => { community.navigation(method, value); routes.push(value); };
   const svg = new Proxy({ __esModule: true, default: visual('RNSvg') }, { get(target, key) { if (key in target) return target[key]; target[key] = visual(`RNSvg${String(key)}`); return target[key]; } });
   const externals = {
     react: React, 'react/jsx-runtime': dependency('react/jsx-runtime'), 'react-native': Native, 'react-native-reanimated': reanimated,
-    'expo-modules-core': { requireOptionalNativeModule: name => { if (inbox && name !== 'RudiFontScale') return inbox.optionalModule(name); assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
+    'expo-modules-core': { requireOptionalNativeModule: name => { if (community) community.optionalModule(name); if (inbox && name !== 'RudiFontScale') return inbox.optionalModule(name); assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
     'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
     'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
     'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'inbox' ? '/messages' : surface === 'explore' ? '/explore' : surface === 'detail' ? `/community/posts/${state.params.id}` : surface === 'keeps' ? '/community/keeps' : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
@@ -291,6 +307,12 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     Native.AccessibilityInfo.announceForAccessibility = text => { nativeHostCalls.push({ kind: 'inbox.announce', text }); };
     Native.Share.share = async () => inbox.forbidden('share', 'sheet');
   }
+  if (community) {
+    for (const method of ['selectionAsync', 'impactAsync', 'notificationAsync']) externals['expo-haptics'][method] = async (...args) => community.haptic(method, args);
+    externals['expo-image-picker'] = { launchImageLibraryAsync: async () => community.forbidden('picker', 'launch') };
+    externals['expo-image-manipulator'] = { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: async () => community.forbidden('manipulator', 'run') };
+    Native.Share.share = async () => community.forbidden('share', 'sheet');
+  }
   if (surface === 'explore') externals['@react-native-async-storage/async-storage'] = {
     __esModule: true,
     default: {
@@ -307,13 +329,14 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
       setItem(...args) { exploreStorage.push({ method: 'setItem', args }); throw new Error('Unexpected boundary destination storage setItem'); },
     },
   };
-  class SyntheticSocket { constructor(url) { if (inbox) inbox.forbidden('socket', url); this.url = url; sockets.push(this); } send(value) { nativeHostCalls.push({ socket: value }); } close() { this.closed = true; } }
+  class SyntheticSocket { constructor(url) { if (inbox) inbox.forbidden('socket', url); if (community) community.socket(this, url); this.url = url; sockets.push(this); } send(value) { if (community) community.send(this, value); nativeHostCalls.push({ socket: value }); } close() { this.closed = true; } }
   const globals = {
     console, process: { env: surface === 'explore' ? { EXPO_PUBLIC_API_URL: api.BASE_URL } : {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
     setTimeout: callback => { const id = ++timerId; timers.set(id, callback); return id; }, clearTimeout: id => timers.delete(id),
     requestAnimationFrame: callback => { const id = ++timerId; (nativeGeometry ? frames : timers).set(id, callback); if (nativeGeometry) frameCalls.push({ kind: 'request', id }); return id; },
     cancelAnimationFrame: id => { timers.delete(id); frames.delete(id); if (nativeGeometry) frameCalls.push({ kind: 'cancel', id }); },
     fetch: async (uri, options) => {
+      if (community) return community.forbidden('fetch', uri);
       if (inbox) return inbox.forbidden('fetch', uri);
       if (surface === 'explore') throw new Error(`Unexpected synthetic Explore fetch ${uri}`);
       if (surface === 'keeps') throw new Error('Keeps has no synthetic fetch route');
@@ -349,9 +372,16 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const metrics = load('apps/mobile/src/rudi/ui/NativeFontMetrics');
   const comments = load('apps/mobile/src/rudi/community/Comments');
   const Field = load('apps/mobile/src/rudi/ui/Field').Field;
-  const Component = surface === 'inbox' ? (inboxView === 'story' ? load('apps/mobile/src/rudi/screens/story/StoryRail').StoryRail : load('apps/mobile/src/rudi/screens/groups/Conversations').ConversationsScreen) : surface === 'explore' ? load('apps/mobile/src/rudi/screens/explore/ExploreLive').ExploreLiveScreen : surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const Component = surface === 'community' ? (communityView === 'tab' ? load('apps/mobile/app/(tabs)/community').default : load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen) : surface === 'inbox' ? (inboxView === 'story' ? load('apps/mobile/src/rudi/screens/story/StoryRail').StoryRail : load('apps/mobile/src/rudi/screens/groups/Conversations').ConversationsScreen) : surface === 'explore' ? load('apps/mobile/src/rudi/screens/explore/ExploreLive').ExploreLiveScreen : surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
   const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
   const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
+  const CommunityHeader = community ? load('apps/mobile/src/rudi/ui/DauKhamPha').DauKhamPha : null;
+  const CommunityTabs = community ? load('apps/mobile/src/rudi/ui/HangChuTab').HangChuTab : null;
+  function CommunityDefaultsProbe() {
+    return React.createElement(comments.CommunityFontMetrics, null,
+      React.createElement(CommunityHeader, { muc: 'community', onDoiMuc: () => community.forbidden('probe', 'navigation') }),
+      React.createElement(CommunityTabs, { muc: [{ id: 'one', nhan: 'Một' }, { id: 'two', nhan: 'Hai' }], chon: 'one', onChon: () => community.forbidden('probe', 'tab') }));
+  }
   function BoundaryProbe() {
     const [value, setValue] = React.useState('Synthetic boundary draft');
     const owned = metrics.useNativeFontMetricsOwner();
@@ -362,7 +392,8 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   function App() {
     if (inbox) inbox.useActor(); // A session-hook boundary, not a substituted app component.
     let element;
-    if (inbox) element = React.createElement(Component, inboxView === 'story' ? { personId: state.actor.person_id, ...inboxStoryProps } : { phien: state.actor });
+    if (community && communityView === 'defaults') element = React.createElement(CommunityDefaultsProbe);
+    else if (inbox) element = React.createElement(Component, inboxView === 'story' ? { personId: state.actor.person_id, ...inboxStoryProps } : { phien: state.actor });
     else if (surface === 'comments') element = React.createElement(Component, { person: state.actor.person_id, post: state.post, onDraftChange: draft => drafts.push(draft), ...state.commentsProps });
     else if (surface === 'boundary') element = React.createElement(comments.CommunityFontMetrics, null, React.createElement(BoundaryProbe));
     else if (surface === 'explore') element = React.createElement(Component, { ...state.exploreProps, phien: state.actor });
@@ -394,7 +425,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   }
   const h = {
     state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
-    inbox,
+    inbox, community,
     exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage,
     exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
     exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,

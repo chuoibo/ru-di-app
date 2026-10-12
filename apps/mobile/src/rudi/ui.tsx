@@ -604,6 +604,7 @@ type ButtonProps = {
   loading?: boolean;
   compact?: boolean;
   full?: boolean;
+  labelAlign?: "left" | "center";
   style?: StyleProp<ViewStyle>;
   /** When the visible label is not enough on its own («Nhắn tin» on a row
    *  that names somebody): the sentence a screen reader, and Maestro, get. */
@@ -639,6 +640,7 @@ export function RudiButton({
   loading = false,
   compact = false,
   full = true,
+  labelAlign = "center",
   style,
   accessibilityLabel,
   expanded,
@@ -676,7 +678,7 @@ export function RudiButton({
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
       {!loading && icon ? <RudiIcon color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
-      <Text style={[typography.label, styles.buttonLabel, full && styles.buttonLabelFull, { color: foreground }]}>
+      <Text style={[typography.label, styles.buttonLabel, full && styles.buttonLabelFull, { color: foreground, textAlign: labelAlign }]}>
         {label}
       </Text>
     </>

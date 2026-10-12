@@ -194,11 +194,11 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   }
 
   const soDem = [
-    { id: "friends", value: hoSo.counts.friends, label: "bạn bè" },
-    { id: "contexts", value: hoSo.counts.contexts, label: "nhóm" },
-    { id: "outings", value: hoSo.counts.outings, label: "kèo" },
-    { id: "places", value: hoSo.counts.places_checked_in, label: "nơi đã tới" },
-    { id: "memories", value: hoSo.counts.memories, label: "khoảnh khắc" },
+    { id: "friends", value: hoSo.counts.friends, label: "bạn bè", columnShare: 50 },
+    { id: "contexts", value: hoSo.counts.contexts, label: "nhóm", columnShare: 50 },
+    { id: "outings", value: hoSo.counts.outings, label: "kèo", columnShare: 24 },
+    { id: "places", value: hoSo.counts.places_checked_in, label: "nơi đã tới", columnShare: 34 },
+    { id: "memories", value: hoSo.counts.memories, label: "khoảnh khắc", columnShare: 42 },
   ];
   // An unusable owned snapshot keeps a conservative stack without a child observer.
   const largeText = bodyMetrics !== null
@@ -245,7 +245,7 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
       {[soDem.slice(0, 2), soDem.slice(2)].map((counts, index) => (
         <View key={index === 0 ? "connections" : "footprints"} testID={index === 0 ? "profile-counts-social" : "profile-counts-experiences"} style={[styles.countGroup, largeText && styles.countGroupStack, index > 0 && styles.countGroupFollowing, index > 0 && { borderTopColor: colors.line }]}>
           {counts.map((count) => (
-            <View key={count.id} accessible accessibilityLabel={`${count.value} ${count.label}`} testID={`profile-count-${count.id}`} style={[styles.countItem, largeText ? styles.countItemStack : styles.countItemColumn, !largeText && { width: `${100 / counts.length}%` as const }]}>
+            <View key={count.id} accessible accessibilityLabel={`${count.value} ${count.label}`} testID={`profile-count-${count.id}`} style={[styles.countItem, largeText ? styles.countItemStack : styles.countItemColumn, !largeText && { width: `${count.columnShare}%` as const }]}>
               <Text style={[typography.title, styles.countValue, { color: colors.ink }]}>{count.value}</Text>
               <Text style={[typography.note, styles.countLabel, { color: colors.inkSoft }]}>{count.label}</Text>
             </View>
