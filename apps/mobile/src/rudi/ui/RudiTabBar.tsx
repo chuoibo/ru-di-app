@@ -231,6 +231,7 @@ function TabBarContent({ state, descriptors, navigation, observedFontScale }: Ta
 
 const styles = StyleSheet.create({
   bar: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "stretch",
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -243,15 +244,17 @@ const styles = StyleSheet.create({
   },
   danhSach: { flex: 1, flexDirection: "row", alignItems: "stretch" },
   danhSachRail: { flexDirection: "column", alignItems: "stretch" },
-  item: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
+  // Reset the prior rail height and main-axis allocation when this host becomes a strip slot.
+  item: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%", minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   // No `flex` here: react-native-web writes `flex: 0` as `flex-basis: 0`,
   // which outranks `height`, so every rail tab was 48 dp on the web while the
   // indicator stepped by 72 (QA UI-004).
-  railItem: { height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
-  oDauRail: { height: HANG_DAU_RAIL },
+  // Clear strip growth and its zero basis while retaining the rail height as the basis.
+  railItem: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
+  oDauRail: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", height: HANG_DAU_RAIL },
   logoRail: { height: HANG_LOGO_RAIL, alignItems: "center", justifyContent: "center" },
   label: { alignSelf: "stretch", fontSize: 12, lineHeight: 14, textAlign: "center" },
-  dauThanh: { position: "absolute", top: 0, alignItems: "stretch" },
+  dauThanh: { position: "absolute", top: 0, height: "auto", alignItems: "stretch" },
   dauRail: { position: "absolute", left: 0, right: 0, height: HANG_DAU_RAIL, alignItems: "stretch" },
   indicator: { position: "absolute", top: 0, height: 6, alignItems: "center", backgroundColor: "transparent" },
   tape: { width: 28, height: 4, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },

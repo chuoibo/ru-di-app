@@ -226,3 +226,111 @@ test('TB04 rail indicator follows actual label rows while real tab and create ac
     actual(h); await cleanedObserver(h, 5);
   });
 });
+
+
+// Actual hosts expose constraints only: this round trip does not emulate native Yoga caches.
+test('TB05 mounted phone rail phone resets all five strip allocations and the Create height through hot native fonts', async () => {
+  await withHost({}, async h => {
+    const list = () => h.one('RNView', props => props.role === 'tablist');
+    const firstNativeParent = node => {
+      for (let current = node.parent; current; current = current.parent) {
+        if (typeof current.type === 'string' && current.type.startsWith('RN')) return current;
+      }
+      throw new Error('Expected actual native parent');
+    };
+    const slots = () => list().findAll(node =>
+      (node.type === 'RNPressable' || node.type === 'RNView') && firstNativeParent(node) === list());
+    const blank = () => {
+      const matches = slots().filter(node => node.type === 'RNView' && node.props['aria-hidden'] === true &&
+        node.props.pointerEvents === 'none' && node.props.importantForAccessibility === 'no-hide-descendants');
+      assert.equal(matches.length, 1, 'one actual hidden stamp allocation in the tablist');
+      return matches[0];
+    };
+    const before = remember(h), beforeList = list(), beforeBlank = blank();
+    const beforeStampFrame = nearest(stamp(h), 'RNView');
+    const order = rail => {
+      const expected = rail
+        ? [blank(), ...destinations.map(value => tab(h, value))]
+        : [tab(h, 'Khám phá'), tab(h, 'Lên plan'), blank(), tab(h, 'Tin nhắn'), tab(h, 'Cá nhân')];
+      const actualSlots = slots();
+      assert.equal(actualSlots.length, 5, 'the actual tablist owns exactly five allocations');
+      expected.forEach((node, index) => assert.equal(actualSlots[index] === node, true, 'actual five-slot order follows the current axis'));
+      assert.equal(firstNativeParent(stamp(h)) === list(), false, 'Create remains outside the tablist');
+    };
+    const retained = () => {
+      sameHosts(h, before);
+      assert.equal(list() === beforeList, true, 'same mounted tablist through axis changes');
+      assert.equal(blank() === beforeBlank, true, 'same mounted hidden stamp allocation through axis changes');
+      assert.equal(nearest(stamp(h), 'RNView') === beforeStampFrame, true, 'same mounted Create overlay frame');
+    };
+    const rail = rowHeight => {
+      order(true); retained();
+      assert.equal(flatten(bar(h).props.style).width, 104, 'rail keeps its existing width');
+      assert.equal(flatten(list().props.style).flexDirection, 'column');
+      destinations.forEach(value => assert.equal(flatten(tab(h, value).props.style).height, rowHeight, 'rail destination keeps measured row reserve'));
+      assert.equal(flatten(blank().props.style).height, 96, 'hidden rail stamp allocation keeps its existing height');
+      assert.equal(flatten(stamp(h).props.style).height, 96, 'Create keeps its existing rail height');
+      assert.equal(flatten(nearest(stamp(h), 'RNView').props.style).height, 96, 'Create overlay keeps its existing rail height');
+      for (const [name, node] of [
+        ...destinations.map(value => [value, tab(h, value)]),
+        ['hidden stamp slot', blank()], ['Create', stamp(h)],
+      ]) {
+        const style = flatten(node.props.style);
+        assert.equal(style.flexGrow, 0, 'TB05 rail clears strip growth for ' + name);
+        assert.equal(style.flexShrink, 0, 'rail preserves declared row height for ' + name);
+        assert.equal(style.flexBasis, 'auto', 'rail uses its declared height as the basis for ' + name);
+        assert.equal(style.flex, undefined, 'rail avoids the historical zero flex shorthand for ' + name);
+      }
+    };
+    const phone = (barHeight, size, pitch) => {
+      order(false); retained();
+      assert.equal(flatten(bar(h).props.style).width, '100%', 'TB05 phone bar explicitly resets prior rail width to full parent width');
+      assert.equal(flatten(bar(h).props.style).height, barHeight, 'phone keeps its native-font reserve and safe area');
+      assert.equal(flatten(list().props.style).flexDirection, 'row');
+      for (const node of slots()) {
+        const style = flatten(node.props.style), name = node === blank() ? 'hidden stamp slot' : node.props.accessibilityLabel;
+        assert.equal(style.flexBasis, 0, 'TB05 zero phone basis for ' + name);
+        assert.equal(style.flexGrow, 1, 'equal phone growth for ' + name);
+        assert.equal(style.flexShrink, 1, 'phone allocation may shrink for ' + name);
+        assert.equal(style.minWidth, 0, 'no prior rail minimum width for ' + name);
+        assert.equal(style.height, '100%', 'explicit phone cross-axis height for ' + name);
+        assert.equal(style.flex, undefined, 'no shorthand hides phone basis for ' + name);
+        assert.equal(style.width, undefined, 'no fixed phone slot width for ' + name);
+        assert.equal(style.maxWidth, undefined, 'no fixed phone slot maximum for ' + name);
+        assert.equal(style.minHeight, 48, 'existing target minimum for ' + name);
+      }
+      const create = flatten(stamp(h).props.style);
+      assert.equal(create.height, '100%', 'TB05 Create resets prior rail height to the phone allocation');
+      assert.equal(create.flexBasis, 0, 'Create explicitly resets prior main-axis allocation');
+      assert.equal(create.flexGrow, 1); assert.equal(create.flexShrink, 1); assert.equal(create.minWidth, 0);
+      assert.equal(create.flex, undefined); assert.equal(create.minHeight, 48);
+      const overlay = flatten(nearest(stamp(h), 'RNView').props.style);
+      assert.equal(overlay.height, 'auto', 'Create overlay clears its prior fixed rail height');
+      assert.equal(overlay.top, 0); assert.equal(overlay.bottom, 12);
+      assert.equal(overlay.left, '40%'); assert.equal(overlay.width, '20%', 'Create overlays exactly the middle allocation');
+      assert.equal(h.state.window.fontScale, 1, 'window fontScale stays stale during native notifications');
+      textMetrics(h, size, pitch, true);
+    };
+    order(false); ownership(h, 1, 2); textMetrics(h, 12, 14, true);
+    await h.update(() => { h.state.window = { ...h.state.window, width: 768, height: 1024 }; });
+    rail(72); ownership(h, 1, 2);
+    await h.nativeFont(snapshot(2));
+    rail(73); textMetrics(h, 20.25, 23.25, true); ownership(h, 1, 3);
+    await h.update(() => { h.state.window = { ...h.state.window, width: 320, height: 640 }; });
+    phone(113, 20.25, 23.25); ownership(h, 1, 3);
+    await h.nativeFont(snapshot()); phone(76, 12, 14); ownership(h, 1, 4);
+    await h.nativeFont(snapshot(2)); phone(113, 20.25, 23.25); ownership(h, 1, 5);
+    await h.nativeFont(snapshot()); phone(76, 12, 14); ownership(h, 1, 6);
+    await h.update(() => { h.state.window = { ...h.state.window, width: 768, height: 1024 }; });
+    rail(72); ownership(h, 1, 6);
+    await h.update(() => { h.state.window = { ...h.state.window, width: 320, height: 640 }; });
+    phone(76, 12, 14); ownership(h, 1, 6);
+    await h.pressAccessibility('Cá nhân');
+    assert.equal(h.tabEvents.at(-1).target, 'route-profile'); assert.deepEqual(h.navigations, [], 'focused real tab still emits without navigating');
+    await h.pressAccessibility('Lên plan');
+    assert.equal(h.tabEvents.at(-1).target, 'route-plan'); assert.deepEqual(h.navigations, ['plan']);
+    await act(async () => stamp(h).props.onPress({ nativeEvent: {} }));
+    assert.deepEqual(h.routes, ['/create?tu=profile'], 'restored actual Create handler keeps tab context');
+    actual(h); await cleanedObserver(h, 6);
+  });
+});

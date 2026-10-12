@@ -10,6 +10,29 @@ Rule lâu dài ở [AGENTS.md](../../../AGENTS.md#cổng-chất-lượng-thị-g
 là checkpoint lịch sử `811c893f`, không mô tả trạng thái quyền hoặc Android hiện tại.
 Không đổi nhãn ảnh/capture lịch sử thành source mới.
 
+## Điểm hiện tại 12/10 — bốn phần sửa, chờ kiểm bản gộp trên Android
+
+**Chưa nghiệm thu toàn frontend hoặc độ đẹp.** Base `a2ac74f1d316026b3699cce1f02fe1d140881964` đã qua clean9/9:242 tệp Node,1.856/1.856 ca; Go guide98,199,549s. [Clean đúng base](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a2ac74f1/clean-checks.json). Bốn phần dưới đã tích hợp đúng byte vào feature branch; clean đúng checkpoint mới và native AFTER còn **PENDING tại lúc ghi checkpoint này**.
+
+Root mở37 PNG a2ac,35 đủ điều kiện; loại bundling42% và Home-return còn refresh spinner. [Review ảnh thực và các sửa nghĩa capture](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-a2ac74f1-root-review-20261012-r1/root-review.json). Home phone đọc được100/200 tại các frame đã mở, giữ Cafe query/focus/IME. Native BEFORE vẫn RED: heart hàng lớn ở trái; fallback Compare màn rộng cắt nhãn/có dải trắng; hot100→200→100 giữ cột574/26; tablet→phone cắt Cá nhân còn8px; Inbox200 cắt search/story/tên/preview. Capture tên Save-offline/refusal thực tế đã lưu thành công, **không chứng minh offline hoặc từ chối**. Chưa kết luận nguyên nhân Yoga/cache hay đẹp toàn màn.
+
+Các controls riêng dùng cùng harness trong từng bộ, giữ174 ca kế thừa:
+
+| Phần sửa | Candidate / identity | Canary | Hai mutants | Receipt thực |
+|---|---|---|---|---|
+| Khung địa điểm, vị trí nút lưu | 176/176;176/176 | 174/176,HC15–16 | 175/176 HC15;175/176 HC16 | [Home](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-home-card-frame-frozen-20261012-r1/actual-controls-summary-20261012-r1.json) |
+| Tab khi đổi phone/rail | 175/175;175/175 | 174/175,TB05 | 174/175 TB05;174/175 TB05 | [Tabs](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-bottom-tabs-rail-reset-frozen-20261012-r1/actual-controls-summary-20261012-r1.json) |
+| Tin nhắn và story | 182/182;182/182 | 175/182,IB01–07 | 179/182 IB01/02/05;179/182 IB01/02/03 | [Inbox r2](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-inbox-native-metrics-frozen-20261012-r2/actual-controls-summary-20261012-r1.json) |
+| Thứ bậc nút Nếp/Save | 175/175;175/175 | 174/175,QV08 | 174/175 QV08;174/175 QV08 | [Q](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-q-action-hierarchy-frozen-20261012-r1/actual-controls-summary-20261012-r1.json) |
+
+Cả20 controls khớp counts/IDs dự đoán,0skip/cancel/todo/stop và sampled scope OOM/kill0. Thời gian/peak mẫu/minhost: Home192,703s/181,121MiB/24,109GiB; Tabs190,202s/174,434MiB/24,195GiB; Inbox207,207s/178,789MiB/24,219GiB; Q191,206s/182,012MiB/24,219GiB. Canary Inbox IB01 đỏ đầu ở owner thiếu, không gọi cả bảy finding là conversion witnesses. Host kiểm ràng buộc bố cục, ownership/locks/transport; không chứng minh Yoga, pixel fit, caret/IME hay độ đẹp native.
+
+[Inbox first RED giữ nguyên](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-inbox-native-metrics-frozen-20261012-r1/first-red-root-review-20261012-r1.json):180 pass/1 fail/1 cancel trên182. R4 chỉ sửa test driver: tìm nút qua actual EmptyState→RudiButton→Pressable, capture refresh Promise rồi hoàn tất I/O và await cùng Promise. Không đổi production hoặc nới assertions để xanh. Token seam cập nhật trước actor theo actual session contract; vẫn không execute Session boot/auth headers/crypto. Story promise actor cũ còn parked, không nhận actor-race proof.
+
+[Đối chiếu bản gộp](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-four-slice-integration-review-20261012-r1/INTEGRATION.json):6 production +6 harness,1093 source/37 harness, đúng byte bốn candidate đã kiểm. Tổng scoped dự kiến174+2+1+8+1=186 ca/24 tệp; toàn Node dự kiến243 tệp/1.868 ca. Không cộng totals của bốn bộ chồng base hoặc ghi số dự kiến thành kết quả bản gộp.
+
+Native a2ac planned stop02:10:44UTC; emulator/Metro/watch OFF trong kiểm mã, core/legacy giữ nguyên. [Stop receipt](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a2ac74f1/planned-native-stop.json):1.512 host/303 guest/301PSS samples, PID2934 duy nhất, hostmin20,479GiB/guestmin661,344MiB/PSSmax702,306MiB, sampled OOM/kill0. Không là soak hoặc bảo đảm liên tục. Tiếp theo clean đúng checkpoint mới rồi root mở AFTER Home/Compare100→200→100, tab phone→rail→phone, Inbox sáng/tối100/200 và Q draft/IME. Cá nhân vẫn cần gom thống kê và thao tác phụ cho gọn; Cộng đồng cần BEFORE mới trước chỉnh tiếp. Crash4ef, toàn A–S, thẩm mỹ, crypto/iOS/TalkBack/motion và main vẫn còn mở.
+
 ## Nguồn và giới hạn lịch sử 08/10
 
 Hai emulator riêng `5558`/`5560`, 320×640 portrait, native Rust/JNI thật; tài khoản và

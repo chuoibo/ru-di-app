@@ -360,3 +360,113 @@ test('QV07 retry follows the recorded failed operation and preserves keep identi
     assert.deepEqual(h.routes, []); ownership(h, 1);
   });
 });
+
+test('QV08 generated review keeps consent secondary and Save primary without automatic regeneration', async () => {
+  await withNep({}, async h => {
+    const request = 'QC_QV08 request Aà😀\n\nC', generated = 'QC_QV08 generated Aà😀\n\nC';
+    const Button = h.load('apps/mobile/src/rudi/ui').RudiButton;
+    const core = node => ancestor(node, at => at.type === Button, 'actual RudiButton owns the native action');
+    const gradients = node => node.findAllByType('RNLinearGradient').length;
+    await change(h, request);
+    const firstParts = document(h), first = button(h, requestAction), firstCore = core(first);
+    assert.equal(inside(first, firstParts.footer), true);
+    assert.equal(inside(first, firstParts.scroll), false);
+    assert.equal(gradients(first), 1, 'first explicit consent remains the primary gradient action');
+    assert.equal(flatten(first.props.style).width, '100%');
+    assert.equal(flatten(first.props.style).minHeight, 52);
+    assert.equal(flatten(first.props.style).minWidth, 48);
+    assert.equal(first.props.accessibilityRole, 'button'); assert.equal(first.props.disabled, false);
+    assert.equal(h.nepRequests.length, 0); assert.equal(h.keepWrites.length, 0);
+    const firstInput = input(h), retainedConsent = first.props.onPress;
+    await press(first); assert.equal(h.nepRequests.length, 1); payload(h, h.nepRequests[0], request);
+    for (const value of [font(2), font(1)]) {
+      await h.nativeFont(value);
+      const pending = button(h, 'Nếp đang viết…');
+      assert.equal(core(pending) === firstCore, true); assert.equal(pending === first, true);
+      assert.equal(flatten(pending.props.style).width, '100%');
+      assert.equal(flatten(pending.props.style).minHeight, 52);
+      assert.equal(pending.props.disabled, true); assert.equal(input(h) === firstInput, true);
+      assert.equal(input(h).props.value, request); assert.equal(input(h).props.editable, false);
+      metrics(h, 'community-nep-request', value, requestLabel); ownership(h, 1);
+    }
+    await act(async () => retainedConsent()); assert.equal(h.nepRequests.length, 1, 'pending initial consent cannot duplicate the request');
+    await h.finish(h.nepRequests[0], { draft: generated });
+    const id = 'community-nep-draft', parts = document(h, id);
+    const native = input(h, id), nativeField = field(h, id), requestNative = input(h), requestField = field(h);
+    const controller = h.owner('PostDetailContent');
+    const consent = button(h, requestAction), consentCore = core(consent), saveCore = core(button(h, draftAction));
+    function review(value, fontValue, busy = false) {
+      const current = document(h, id), call = button(h, busy ? 'Nếp đang viết…' : requestAction), save = button(h, draftAction);
+      assert.equal(gradients(call), 0, 'generated review must not paint regeneration as the primary action');
+      assert.equal(core(call).props.variant, 'ghost'); assert.equal(core(call).props.compact, true);
+      assert.equal(core(call).props.full, false);
+      const callStyle = flatten(call.props.style);
+      if (busy) {
+        assert.equal(callStyle.borderStyle, 'dashed'); assert.equal(callStyle.borderWidth, 1.5, 'pending consent retains the existing readable disabled treatment');
+      } else {
+        assert.equal(callStyle.backgroundColor, 'transparent'); assert.equal(callStyle.borderColor, 'transparent');
+      }
+      assert.equal(callStyle.minHeight, 48); assert.equal(callStyle.minWidth, 48);
+      assert.equal(callStyle.width, undefined); assert.equal(callStyle.alignSelf, 'flex-start');
+      assert.equal(callStyle.maxWidth, '100%', 'secondary consent is constrained by the same document width');
+      assert.equal(inside(call, current.scroll), true); assert.equal(inside(call, current.footer), false);
+      assert.equal(core(save).props.variant, 'solid', 'Save owns the primary treatment after a draft exists');
+      assert.equal(inside(save, current.footer), true); assert.equal(inside(save, current.scroll), false);
+      assert.equal(flatten(save.props.style).width, '100%'); assert.equal(flatten(save.props.style).minHeight, 52);
+      const disabled = busy || !value.trim();
+      assert.equal(save.props.disabled, disabled); assert.equal(gradients(save), disabled ? 0 : 1, 'enabled fixed Save paints the primary gradient');
+      assert.equal(call.props.disabled, busy); assert.equal(call.props.accessibilityRole, 'button');
+      for (const [action, label] of [[call, busy ? 'Nếp đang viết…' : requestAction], [save, draftAction]]) {
+        const copy = textWithin(action, label), style = flatten(copy.props.style);
+        assert.equal(copy.props.allowFontScaling, false);
+        assert.equal(style.fontSize, fontValue.fontScale === 2 ? 23.25 : 14);
+        assert.equal(style.lineHeight, fontValue.fontScale === 2 ? 31.75 : 19);
+        assert.equal(copy.props.numberOfLines, undefined); assert.equal(copy.props.ellipsizeMode, undefined);
+      }
+      assert.equal(input(h, id) === native, true); assert.equal(field(h, id) === nativeField, true);
+      assert.equal(input(h) === requestNative, true); assert.equal(field(h) === requestField, true);
+      assert.equal(input(h, id).props.value, value); assert.equal(input(h).props.value, request);
+      assert.equal(input(h, id).props.editable, !busy); assert.equal(input(h).props.editable, !busy);
+      assert.equal(core(call) === consentCore, true); assert.equal(core(save) === saveCore, true);
+      assert.equal(h.owner('PostDetailContent') === controller, true);
+      for (const name of ['scroll', 'footer', 'editor', 'scope']) assert.equal(current[name] === parts[name], true, `same review ${name} host`);
+      metrics(h, id, fontValue, draftLabel); ownership(h, 1);
+      assert.equal(h.state.window.fontScale, 1, 'native metrics change without a window-scale rerender');
+    }
+    review(generated, font(1));
+    for (const value of [font(2), font(1)]) {
+      await h.nativeFont(value); review(generated, value);
+      assert.equal(button(h, requestAction) === consent, true, 'hot metrics retain the secondary native action');
+      assert.equal(h.nepRequests.length, 1); assert.equal(h.keepWrites.length, 0);
+    }
+    await act(async () => native.props.onFocus({}));
+    await change(h, '', id); review('', font(1));
+    textWithin(parts.footer, 'Viết nội dung ghi chép trước khi lưu.');
+    for (const value of [font(2), font(1)]) { await h.nativeFont(value); review('', value); }
+    assert.equal(h.nepRequests.length, 1); assert.equal(h.keepWrites.length, 0, 'clearing or metrics cannot submit either operation');
+    const edited = 'QC_QV08 edited Aà😀\n\nC'; await change(h, edited, id); review(edited, font(1));
+    const regenerate = button(h, requestAction), retainedRegenerate = regenerate.props.onPress;
+    await press(regenerate);
+    assert.equal(h.nepRequests.length, 2, 'only the explicit secondary consent starts regeneration');
+    payload(h, h.nepRequests[1], request);
+    assert.notEqual(h.nepRequests[1].options.attempt.key, h.nepRequests[0].options.attempt.key);
+    review(edited, font(1), true); assert.equal(h.keepWrites.length, 0);
+    await h.nativeFont(font(2)); review(edited, font(2), true);
+    await act(async () => retainedRegenerate()); assert.equal(h.nepRequests.length, 2, 'the unchanged working guard blocks retained regeneration');
+    const regenerated = 'QC_QV08 regenerated Aà😀\n\nC';
+    await h.finish(h.nepRequests[1], { draft: regenerated }); review(regenerated, font(2));
+    await h.nativeFont(font(1)); review(regenerated, font(1));
+    const save = button(h, draftAction), retainedSave = save.props.onPress;
+    await press(save); review(regenerated, font(1), true);
+    assert.equal(h.nepRequests.length, 2); assert.equal(h.keepWrites.length, 1);
+    const write = h.keepWrites[0];
+    assert.equal(write.route, '/v2/community/keeps'); assert.equal(write.options.method, 'POST');
+    assert.equal(write.options.actorId, 'synthetic-A');
+    assert.deepEqual(plain(write.options.body), { logical_id: write.options.body.logical_id, post_id: 'synthetic-post-1', body: regenerated, ai_generated: true });
+    assert.match(write.options.body.logical_id, /^synthetic-attempt-/); assert.match(write.options.attempt.key, /^synthetic-attempt-/);
+    await act(async () => retainedSave()); assert.equal(h.keepWrites.length, 1, 'the primary treatment preserves the retained-save lock');
+    assert.deepEqual(h.routes, []);
+    await h.finish(write, { id: 'synthetic-keep-1' });
+    assert.deepEqual(h.routes, ['/community/keeps']); assert.equal(h.nepRequests.length, 2);
+  });
+});

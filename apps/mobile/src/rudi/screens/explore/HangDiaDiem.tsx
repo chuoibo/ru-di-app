@@ -114,14 +114,31 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
 }
 
 /** Generic category artwork is labelled, never presented as the venue itself. */
-export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean }) {
+export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false, fillFrame = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean; fillFrame?: boolean }) {
   const { colors } = useRudiTheme();
   const CopyText = nativeMetrics ? NativeMetricText : RNText;
-  const [measured, setMeasured] = useState(width ?? 280);
+  const [measured, setMeasured] = useState({ width: width ?? 280, height });
   const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
   return (
-    <View onLayout={(e) => setMeasured(e.nativeEvent.layout.width)} style={{ width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}>
-      <AssetIllustration name={scene} width={width ?? measured} height={height} />
+    <View
+      onLayout={(e) => {
+        const { width: nextWidth, height: nextHeight } = e.nativeEvent.layout;
+        if (fillFrame) {
+          if (!Number.isFinite(nextWidth) || nextWidth <= 0 || !Number.isFinite(nextHeight) || nextHeight <= 0) return;
+          setMeasured((current) => current.width === nextWidth && current.height === nextHeight ? current : { width: nextWidth, height: nextHeight });
+        } else {
+          setMeasured((current) => Object.is(current.width, nextWidth) ? current : { ...current, width: nextWidth });
+        }
+      }}
+      style={fillFrame ? [StyleSheet.absoluteFill, { backgroundColor: colors.paper, overflow: "hidden" }] : { width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}
+    >
+      {/* The frame owns layout; numeric dimensions choose raster resolution only. */}
+      <AssetIllustration
+        name={scene}
+        width={fillFrame ? measured.width : width ?? measured.width}
+        height={fillFrame ? measured.height : height}
+        style={fillFrame ? [StyleSheet.absoluteFill, { width: "100%", height: "100%" }] : undefined}
+      />
       <View pointerEvents="none" style={{ position: "absolute", left: width !== undefined && width < 100 ? 6 : 10, bottom: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card }}>
         <CopyText style={[typography.caption, { color: colors.ink }]}>Minh hoạ</CopyText>
       </View>
@@ -293,7 +310,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving, nativeMetr
         {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</CopyText> : null}
         {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
       </Pressable>
-      <View style={[styles.rowHeart, chuLonHon && styles.rowHeartLarge]}>
+      <View style={chuLonHon ? styles.rowHeartLarge : styles.rowHeart}>
       <IconButton
         accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
         icon={daLuu ? "heart" : "heart-outline"}
@@ -352,6 +369,7 @@ export function PlaceCompare({
   const { sizeClass } = useAdaptiveLayout();
   // An opted-in wide pair changes direction rather than replacing its place controllers.
   if (width < 600 || (!nativeMetrics && xepDoc)) return <View testID={testID}>{items.map((dd) => <PlaceRow key={dd.id} dd={dd} daLuu={daLuu(dd.id)} onOpen={() => onOpen(dd.id)} onSave={() => onSave(dd.id)} saving={saving?.(dd.id)} nativeMetrics={nativeMetrics} largeText={largeText} />)}</View>;
+  const mediaRatio = xepDoc ? 2 : sizeClass === "compact" ? 4 / 3 : 16 / 7;
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -374,13 +392,13 @@ export function PlaceCompare({
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
+                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} fillFrame={nativeMetrics} loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
                 overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                 // The credit is the frame's own line now, printed under the
                 // picture instead of after the facts: it was the one call site
                 // that handed this frame a bare address (review 08/09, F31).
                 nguon={dd.anh === null ? null : { loai: "danh-muc", anh: dd.anh }}
-                ratio={xepDoc ? 2 : sizeClass === "compact" ? 4 / 3 : 16 / 7}
+                ratio={mediaRatio}
               />
               {chu}
             </Pressable>
@@ -477,7 +495,7 @@ const styles = StyleSheet.create({
   rowMain: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   rowMainLarge: { flexDirection: "column" },
   rowHeart: { position: "absolute", top: 20, left: 36 },
-  rowHeartLarge: { left: undefined, right: 10, top: 24 },
+  rowHeartLarge: { position: "absolute", right: 10, top: 24 },
   rowPrice: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   rowPress: { gap: 10, minHeight: 88 },
   thumb: { width: 88, height: 88, overflow: "hidden", flexShrink: 0 },

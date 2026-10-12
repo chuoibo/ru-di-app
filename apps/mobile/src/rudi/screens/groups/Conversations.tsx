@@ -18,7 +18,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Pressable, StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
@@ -32,7 +34,7 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
 import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
-import { Heading, IconButton, RudiButton, RudiScreen, SearchField } from "../../ui";
+import { Field, IconButton, RudiButton, RudiScreen } from "../../ui";
 import { khopTenCuocTroChuyen } from "../../nhom/tim-cuoc-tro-chuyen";
 import { EmptyState } from "../../ui/EmptyState";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -60,6 +62,16 @@ function tenTacGia(tin: { author_id: string | null; author_display_name: string 
 }
 
 export function ConversationsScreen({ phien }: { phien: Phien }) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <ConversationsContent phien={phien} /> : <ObserveConversationMetrics phien={phien} />;
+}
+
+function ObserveConversationMetrics({ phien }: { phien: Phien }) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><ConversationsContent phien={phien} /></NativeFontMetricsProvider>;
+}
+
+function ConversationsContent({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const { datPhien } = useRudiSession();
@@ -192,18 +204,21 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   };
 
   const matching = trang.pha === "xong" ? loiMoiTruoc(trang.nhom).filter((nhom) => khopTenCuocTroChuyen(tenCuocTroChuyen(nhom), query)) : [];
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // An unusable inherited owner keeps the readable reflow without a child observer.
+  const largeText = bodyMetrics === null || (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25;
 
   return (
     <RudiScreen material="quiet" cot="doc" bottomInset="tab" onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" />
+          <Text accessibilityRole="header" style={[typography.h1, { color: colors.ink }]}>Tin nhắn</Text>
         </View>
         <IconButton accessibilityLabel="Tạo nhóm" icon="add" onPress={() => router.push("/groups/new")} quiet />
       </View>
-      <SearchField accessibilityLabel="Tìm cuộc trò chuyện" placeholder="Tìm người hoặc nhóm" value={query} onChangeText={setQuery} autoCorrect={false} trailing={query ? <IconButton accessibilityLabel="Xoá tìm kiếm" icon="close" onPress={() => setQuery("")} quiet /> : undefined} />
+      <Field nativeMetrics icon="search-outline" returnKeyType="search" accessibilityLabel="Tìm cuộc trò chuyện" placeholder="Tìm người hoặc nhóm" value={query} onChangeText={setQuery} autoCorrect={false} trailing={query ? <IconButton accessibilityLabel="Xoá tìm kiếm" icon="close" onPress={() => setQuery("")} quiet /> : undefined} />
       {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
-      <StoryRail personId={phien.person_id} />
+      <StoryRail nativeMetrics personId={phien.person_id} />
       {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -215,6 +230,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách nhóm" /> : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
+          nativeMetrics
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
           body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
           illustration={<AssetIllustration name="spot-keeps" width={220} height={170} />}
@@ -260,31 +276,33 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                       <GaySo ten={tenCuocTroChuyen(nhom)} theme={nhom.theme} />
                     )
                   )}
-                  <View style={styles.hangChu}>
-                    <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
-                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-                      {duocMoi && !laPair(nhom)
-                        ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
-                        : nhom.unavailable === true
-                          ? "Không còn nhận tin"
-                          : laPair(nhom)
-                            ? "Nhắn riêng"
-                            : `${nhom.member_count} thành viên`}
-                      {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
-                    </Text>
-                    <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
-                      {nhom.last_message
-                        ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
-                        : "Chưa có tin nhắn nào."}
-                    </Text>
-                  </View>
-                  <View style={styles.meta}>
-                  {nhom.last_message && Number.isFinite(Date.parse(nhom.last_message.created_at)) ? <Text style={[typography.note, { color: colors.inkSoft }]}>{gioPhut(nhom.last_message.created_at)}</Text> : null}
-                  {nhom.unread_count > 0 ? (
-                    <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
-                      <Text style={[typography.caption, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+                  <View style={[styles.hangNoi, largeText && styles.hangNoiDoc]}>
+                    <View style={[styles.hangChu, largeText && styles.hangChuDoc]}>
+                      <Text numberOfLines={largeText ? undefined : 2} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
+                      <Text numberOfLines={largeText ? undefined : 1} style={[typography.note, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "400" }]}>
+                        {nhom.last_message
+                          ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
+                          : "Chưa có tin nhắn nào."}
+                      </Text>
+                      <Text numberOfLines={largeText ? undefined : 1} style={[typography.note, { color: colors.inkFaint }]}>
+                        {duocMoi && !laPair(nhom)
+                          ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
+                          : nhom.unavailable === true
+                            ? "Không còn nhận tin"
+                            : laPair(nhom)
+                              ? "Nhắn riêng"
+                              : `${nhom.member_count} thành viên`}
+                        {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
+                      </Text>
                     </View>
-                  ) : null}
+                    <View style={[styles.meta, largeText && styles.metaDoc]}>
+                      {nhom.last_message && Number.isFinite(Date.parse(nhom.last_message.created_at)) ? <Text style={[typography.note, styles.gio, { color: colors.inkSoft }]}>{gioPhut(nhom.last_message.created_at)}</Text> : null}
+                      {nhom.unread_count > 0 ? (
+                        <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
+                          <Text style={[typography.caption, styles.soChuaDoc, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
                 </Pressable>
                 {duocMoi && hoiTuChoi !== nhom.id ? (
@@ -314,6 +332,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   // Asked in the row, like every answer that removes something.
                   <View style={styles.hoi}>
                     <HoiTaiHang
+                      nativeMetrics
                       cau={`Từ chối lời mời vào ${tenCuocTroChuyen(nhom)}? Nếu đổi ý, bạn cần được mời lại.`}
                       dangLam={dangBam === nhom.id}
                       nhan="Từ chối"
@@ -342,7 +361,7 @@ function GaySo({ ten, theme }: { ten: string; theme?: string }) {
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.gayKhung}>
       <View style={[styles.gay, { backgroundColor: mau.bubble, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
         <View style={[styles.gayBanLe, { backgroundColor: phuMau(colors.ink, dark ? 0.3 : 0.22) }]} />
-        <Text style={[typography.title, { color: mau.bubbleInk }]}>{chu}</Text>
+        <Text allowFontScaling={false} style={[typography.title, { color: mau.bubbleInk }]}>{chu}</Text>
         <View style={[styles.gayNhan, { backgroundColor: colors.card }]} />
       </View>
     </View>
@@ -358,14 +377,20 @@ const styles = StyleSheet.create({
   dau: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   khongTimThay: { gap: 8, paddingVertical: 24 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
+  hangChinh: { flexDirection: "row", alignItems: "flex-start", gap: 12, minHeight: 56 },
   // Answers start under the text column (avatar 44 + gap 12).
   traLoi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, paddingLeft: 56 },
   hoi: { gap: 4, paddingLeft: 56 },
   khongThut: { paddingLeft: 0 },
   hinh: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  hangChu: { flex: 1, minWidth: 0, gap: 2 },
-  meta: { alignItems: "flex-end", gap: 6 },
-  chuaDoc: { minWidth: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
+  hangNoi: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  hangNoiDoc: { flexDirection: "column" },
+  hangChu: { flex: 1, minWidth: 0, gap: 4 },
+  hangChuDoc: { flex: 0, alignSelf: "stretch" },
+  meta: { alignItems: "flex-end", flexShrink: 0, gap: 6 },
+  metaDoc: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  gio: { fontVariant: ["tabular-nums"] },
+  chuaDoc: { minWidth: 26, minHeight: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4 },
+  soChuaDoc: { textAlign: "center", fontVariant: ["tabular-nums"] },
   bam: { opacity: 0.7 },
 });

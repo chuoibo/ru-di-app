@@ -152,7 +152,16 @@ function PostDetailContent() {
     // A generated draft keeps the original request editable above it, so asking
     // again never silently replaces the person's input.
     const requestField = <Field testID="community-nep-request" nativeMetrics label="Bạn muốn Nếp giúp gì?" value={request} onChangeText={setRequest} editable={!busy} multiline placeholder="Viết một lời ngắn để giữ khoảnh khắc này…" />;
-    const requestAction = <RudiButton label={busy ? "Nếp đang viết…" : "Đồng ý chia sẻ và gọi Nếp"} disabled={busy || !request.trim()} lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined} onPress={() => void goiNep()} />;
+    const requestAction = <RudiButton
+      label={busy ? "Nếp đang viết…" : "Đồng ý chia sẻ và gọi Nếp"}
+      variant={hasDraft ? "ghost" : "solid"}
+      compact={hasDraft}
+      full={!hasDraft}
+      style={hasDraft ? { alignSelf: "flex-start", maxWidth: "100%" } : undefined}
+      disabled={busy || !request.trim()}
+      lyDo={!busy && !request.trim() ? "Viết một lời nhờ cho Nếp trước." : undefined}
+      onPress={() => void goiNep()}
+    />;
     const draftField = <>
       <Text style={[typography.caption, { color: colors.ai }]}>Bản nháp do Nếp viết</Text>
       <Field testID="community-nep-draft" nativeMetrics label="Sửa lại theo ý bạn" value={draft} editable={!busy} onChangeText={(value) => { setDraft(value); keepAttempt.current = newAttempt().key; }} multiline />
@@ -161,7 +170,7 @@ function PostDetailContent() {
       await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/keeps", { actorId: person!, method: "POST", attempt: newAttempt(), body: { logical_id: keepAttempt.current, post_id: id, body: draft, ai_generated: true } });
       setNep(false); router.push("/community/keeps" as never);
     }, "save");
-    const draftAction = <RudiButton label="Lưu ghi chép riêng" variant="outline" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void saveDraft()} />;
+    const draftAction = <RudiButton label="Lưu ghi chép riêng" variant="solid" disabled={busy || !draft.trim()} lyDo={busy ? "Chờ yêu cầu hiện tại xong." : !draft.trim() ? "Viết nội dung ghi chép trước khi lưu." : undefined} onPress={() => void saveDraft()} />;
     // Only the decision stays outside overflow. A long editor or refusal can
     // scroll without pushing that decision below the keyboard-sized panel.
     const editorContent = person && post ? <View testID="community-nep-editor" style={{ flexShrink: 0, gap: 8, paddingBottom: 4 }}>

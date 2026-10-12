@@ -228,3 +228,102 @@ test('HC14 opted-in wide Compare keeps keyed cards images hearts and content thr
     consumed(h);
   });
 });
+
+
+test('HC15 actual phone PlaceRow keeps a self-contained right heart frame through native 100→200→100 without replacing controls or input', async () => {
+  await home({}, async h => {
+    const Row = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceRow;
+    const row = compare(h).findAllByType(Row)[0]; assert.ok(row, 'actual phone comparison row');
+    const placeName = row.props.dd.name, heart = saved(h, false, placeName), placement = ancestor(heart, 'RNView');
+    const title = leaf(row, placeName), input = h.input(), inputRef = h.native.node(input);
+    await h.native.focus(input); await h.change('kiểm thử'); const before = counters(h);
+    const check = large => {
+      const style = flatten(placement.props.style), target = flatten(heart.props.style);
+      assert.equal(style.position, 'absolute', 'heart placement stays outside row flow');
+      assert.equal(Object.hasOwn(style, 'width'), false, 'the placement frame has no width competing with its horizontal anchor');
+      assert.equal(Object.hasOwn(style, 'left'), !large, 'large placement must not inherit a left constraint, including an undefined override');
+      assert.equal(Object.hasOwn(style, 'right'), large);
+      assert.equal(style.left, large ? undefined : 36); assert.equal(style.right, large ? 10 : undefined);
+      assert.equal(style.top, large ? 24 : 20); assert.equal(target.width, 48); assert.equal(target.height, 48);
+      assert.equal(within(heart, row), true); assert.equal(within(heart, h.one('RNPressable', props => props.accessibilityLabel === `Mở ${placeName}`)), false, 'Save remains a sibling of Open');
+    };
+    check(false);
+    for (const scale of [2, 1]) {
+      await h.nativeFont(snapshot(scale)); assert.equal(h.state.window.fontScale, 1, 'native owner, not stale window scale, chooses the row direction');
+      assert.equal(compare(h).findAllByType(Row)[0] === row, true, 'actual row owner remains stable');
+      assert.equal(saved(h, false, placeName) === heart, true, 'actual heart remains stable'); assert.equal(ancestor(heart, 'RNView') === placement, true, 'actual placement host remains stable');
+      assert.equal(leaf(row, placeName) === title, true, 'actual title host remains stable'); assert.equal(h.input() === input, true); assert.equal(h.native.node(input) === inputRef, true);
+      assert.equal(inputRef.isFocused(), true); assert.equal(input.props.value, 'kiểm thử'); check(scale === 2);
+      converted(h, title, { fontSize: 17, lineHeight: 23, letterSpacing: -0.15 }); noFontIO(h, before);
+    }
+    assert.equal(h.observation().subscriptions, 1); consumed(h);
+  });
+});
+
+test('HC16 actual wide comparison fallback fills its own ratio frame and retained raster hints cannot become parent layout through hot font return', async () => {
+  await home({ initialWindow: { ...window100, width: 768, height: 1024 } }, async h => {
+    const pair = compare(h), Media = h.load('apps/mobile/src/rudi/ui/MediaSlot').MediaSlot;
+    const Artwork = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceArtwork;
+    const Illustration = h.load('apps/mobile/src/rudi/asset-pack/react-native/AssetIllustration').AssetIllustration;
+    const slots = pair.findAllByType(Media); assert.equal(slots.length, 2);
+    const fixtures = [];
+    for (const slot of slots) {
+      const licensed = one(slot.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'actual licensed comparison image');
+      await act(async () => licensed.props.onError());
+      const artwork = one(slot.findAllByType(Artwork), 'actual failed-media artwork'), illustration = one(artwork.findAllByType(Illustration), 'actual raster illustration');
+      const image = one(illustration.findAllByType('RNExpoImage'), 'actual local artwork image'), root = ancestor(image, 'RNView'), label = leaf(artwork, 'Minh hoạ'), labelBox = ancestor(label, 'RNView');
+      const frame = one(slot.findAllByType('RNView').filter(node => flatten(node.props.style)?.aspectRatio !== undefined), 'actual MediaSlot ratio frame');
+      fixtures.push({ slot, artwork, illustration, image, root, label, labelBox, frame, retainedLayout: root.props.onLayout });
+    }
+    const before = counters(h);
+    const check = (fixture, scale) => {
+      const { slot, artwork, illustration, image, root, label, labelBox, frame } = fixture;
+      assert.equal(slot.findAllByType(Artwork)[0] === artwork, true, 'failed-media fallback controller survives font changes');
+      assert.equal(artwork.findAllByType(Illustration)[0] === illustration, true); assert.equal(illustration.findAllByType('RNExpoImage')[0] === image, true); assert.equal(leaf(artwork, 'Minh hoạ') === label, true);
+      assert.equal(slot.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string').length, 0, 'font-only changes cannot reset actual failed-media state');
+      const bounds = flatten(root.props.style), picture = flatten(image.props.style), media = flatten(frame.props.style), tag = flatten(labelBox.props.style);
+      assert.equal(media.width, '100%'); assert.equal(media.aspectRatio, scale === 2 ? 2 : 16 / 7);
+      assert.equal(bounds.position, 'absolute', 'fallback consumes the MediaSlot frame instead of adding an intrinsic fixed-height box');
+      for (const edge of ['left', 'right', 'top', 'bottom']) { assert.equal(bounds[edge], 0); assert.equal(picture[edge], 0); }
+      assert.equal(Object.hasOwn(bounds, 'width'), false); assert.equal(Object.hasOwn(bounds, 'height'), false);
+      assert.equal(picture.position, 'absolute'); assert.equal(picture.width, '100%', 'numeric raster width cannot feed back into the comparison column'); assert.equal(picture.height, '100%', 'numeric raster height cannot leave bands or clip the label');
+      assert.equal(tag.position, 'absolute'); assert.equal(tag.bottom, 8); assert.equal(tag.paddingVertical, 2); assert.equal(within(label, root), true); assert.equal(within(root, frame), true);
+      converted(h, label, { fontSize: 13, lineHeight: 18 });
+      assert.equal(Number.isFinite(illustration.props.width) && illustration.props.width > 0, true); assert.equal(Number.isFinite(illustration.props.height) && illustration.props.height > 0, true);
+    };
+    for (const scale of [1, 2, 1]) {
+      if (scale !== 1 || flatten(fixtures[0].frame.props.style).aspectRatio === 2) await h.nativeFont(snapshot(scale));
+      assert.equal(compare(h) === pair, true); assert.equal(h.state.window.fontScale, 1);
+      for (const fixture of fixtures) {
+        check(fixture, scale);
+        // Native layout dimensions are an explicit boundary fixture, not a Yoga calculation.
+        const width = scale === 2 ? 616 : 300, height = width / (scale === 2 ? 2 : 16 / 7);
+        await act(async () => fixture.root.props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width, height } } }));
+        assert.equal(fixture.illustration.props.width, width); assert.equal(fixture.illustration.props.height, height);
+        const tag = flatten(fixture.labelBox.props.style), line = flatten(fixture.label.props.style).lineHeight;
+        assert.equal(height - tag.bottom - 2 * tag.paddingVertical - line >= 0, true, 'the supplied native frame has room for one declared label line pitch');
+        for (const invalid of [{ width: NaN, height }, { width: Infinity, height }, { width: 0, height }, { width, height: -1 }, { width, height: NaN }]) {
+          await act(async () => fixture.root.props.onLayout({ nativeEvent: { layout: invalid } }));
+          assert.equal(fixture.illustration.props.width, width); assert.equal(fixture.illustration.props.height, height);
+        }
+        check(fixture, scale);
+      }
+      noFontIO(h, before);
+    }
+    // A prior-render finite callback can change only raster hints, never native layout constraints.
+    for (const fixture of fixtures) {
+      await act(async () => fixture.retainedLayout({ nativeEvent: { layout: { width: 616, height: 308 } } }));
+      assert.equal(fixture.illustration.props.width, 616); assert.equal(fixture.illustration.props.height, 308); check(fixture, 1);
+    }
+    noFontIO(h, before); assert.equal(h.observation().subscriptions, 1); consumed(h);
+  });
+  const h = createHost({ surface: 'boundary', initialSnapshot: snapshot(2), boundaryChildren: ({ React, load }) => React.createElement(load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceArtwork, { loai: 'cafe' }) });
+  try {
+    h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem'); await h.mount();
+    const artwork = component(h, 'apps/mobile/src/rudi/screens/explore/HangDiaDiem', 'PlaceArtwork'), image = one(artwork.findAllByType('RNExpoImage'), 'actual default artwork image'), frame = ancestor(image, 'RNView');
+    assert.equal(flatten(frame.props.style).width, '100%'); assert.equal(flatten(frame.props.style).height, 180); assert.equal(flatten(frame.props.style).position, undefined);
+    await act(async () => frame.props.onLayout({ nativeEvent: { layout: { width: 300, height: 131.25 } } }));
+    assert.equal(flatten(image.props.style).width, 300); assert.equal(flatten(image.props.style).height, 180); assert.equal(flatten(image.props.style).position, undefined);
+    raw(leaf(artwork, 'Minh hoạ'), 13, 18); assert.equal(h.exploreStorage.length, 0);
+  } finally { await h.dispose(); }
+});
