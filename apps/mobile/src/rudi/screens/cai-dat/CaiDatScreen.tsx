@@ -12,7 +12,7 @@
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
 import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
@@ -31,8 +31,20 @@ import { congTac } from "../../ui/cong-tac";
 import { SkeletonLines } from "../../ui/Skeleton";
 import { toggleState } from "../../../ui/a11y";
 import { useGiaoDien } from "../../ui/GiaoDienProvider";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 
 export function CaiDatScreen() {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <CaiDatContent /> : <ObserveSettingsMetrics />;
+}
+
+function ObserveSettingsMetrics() {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><CaiDatContent /></NativeFontMetricsProvider>;
+}
+
+function CaiDatContent() {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
@@ -104,8 +116,7 @@ export function CaiDatScreen() {
 
   return (
     <RudiScreen material="quiet" cot="form" testID="cai-dat-screen">
-      <TopBar />
-      <Text style={[typography.h1, { color: colors.ink }]}>Cài đặt</Text>
+      <TopBar title="Cài đặt" />
       {loading && !hoSo ? <SkeletonLines lines={3}/> : null}
       {loi !== null && hoSo === null ? <CauTaiCho cau={loi} hanhDong={{ label: "Thử lại", onPress: () => { setLoi(null); void nap(); } }} /> : null}
       <View style={styles.nhomGiaoDien}>

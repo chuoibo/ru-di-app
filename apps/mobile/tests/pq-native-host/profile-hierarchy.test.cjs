@@ -174,90 +174,99 @@ test('PH03 edit action invalidates measured width from effective metrics despite
 });
 
 test('PH04 actual profile hierarchy keeps server facts routes null-zero semantics and tab identity', async () => {
-  // Read the actual rendered host children, including nested numeric Text spans.
-  // The profile host does not implement Android text flattening or TalkBack focus.
-  const readNativeText = node => typeof node === 'string' || typeof node === 'number'
-    ? String(node) : node.children.map(readNativeText).join('');
-  const paragraphsUnder = container => container.findAllByType('RNText').filter(node => {
-    for (let parent = node.parent; parent && parent !== container; parent = parent.parent) {
-      if (parent.type === 'RNText') return false;
+  // Actual source and native host props only: no Yoga, glyph fit or TalkBack simulation.
+  const fields = [
+    ['friends', 'friends', 'bạn bè'], ['contexts', 'contexts', 'nhóm'],
+    ['outings', 'outings', 'kèo'], ['places', 'places_checked_in', 'điểm check-in'],
+    ['memories', 'memories', 'khoảnh khắc'],
+  ];
+  const readFacts = (h, container) => {
+    const groups = container.findAllByType('RNView').filter(node => /^profile-fact-/.test(node.props.testID ?? ''));
+    assert.deepEqual(groups.map(node => node.props.testID), fields.map(([id]) => `profile-fact-${id}`), 'five actual fact groups keep their reading order');
+    assert.equal(container.findAllByType('RNPressable').length, 0, 'server facts do not invent actions');
+    const values = [], nouns = [], words = [];
+    for (let index = 0; index < fields.length; index += 1) {
+      const [id, field, noun] = fields[index], group = groups[index];
+      const expected = h.state.profile.counts[field];
+      assert.equal(group.props.accessible, true);
+      assert.equal(group.props.accessibilityLabel, `${expected} ${noun}`, 'each accessible group announces its exact server count and full noun');
+      assert.equal(group.props.onPress, undefined);
+      const visible = group.findAllByType('RNText');
+      assert.equal(visible.length, 2, 'one numeric and one noun native text host per fact');
+      const [value, label] = visible;
+      assert.equal(value.props.testID, `profile-count-${id}`);
+      assert.equal(value.props.children, expected, 'the numeric host retains the distinct server field without abbreviation or fixture substitution');
+      assert.equal(label.props.testID, `profile-label-${id}`); assert.equal(label.props.children, noun);
+      assert.equal(value.props.accessible, false); assert.equal(label.props.accessible, false, 'the grouped fact avoids duplicate text focus');
+      const wordGroup = nearest(value, 'RNView', () => true);
+      assert.equal(nearest(label, 'RNView', () => true) === wordGroup, true, 'value and noun remain siblings');
+      assert.equal(nearest(value, 'RNView', props => props.testID === group.props.testID) === group, true);
+      values.push(value); nouns.push(label); words.push(wordGroup);
     }
-    return true;
-  });
-  const readStory = (h, container) => {
-    const paragraphs = paragraphsUnder(container);
-    assert.equal(paragraphs.length, 2, 'five facts read as two whole native paragraphs instead of detached dashboard values and labels');
-    const fields = h.state.profile.counts;
-    const prose = [
-      `Quanh bạn · ${fields.friends} bạn bè, ${fields.contexts} nhóm.`,
-      `Hành trình · ${fields.outings} kèo, ${fields.places_checked_in} điểm check-in, ${fields.memories} khoảnh khắc.`,
-    ];
-    assert.deepEqual(paragraphs.map(readNativeText), prose, 'actual visible words retain all five exact server counts and nouns in reading order');
-    assert.deepEqual(paragraphs.map(node => node.props.accessibilityLabel), prose, 'two accessible paragraphs announce the same facts as their visible words');
-    const perParagraph = paragraphs.map(paragraph => paragraph.findAllByType('RNText').filter(node => node !== paragraph));
-    assert.deepEqual(perParagraph.map(spans => spans.length), [2, 3], 'two connection values and three journey values remain inline with their nouns');
-    const spans = perParagraph.flat();
-    assert.deepEqual(spans.map(node => node.props.children), [fields.friends, fields.contexts, fields.outings, fields.places_checked_in, fields.memories], 'actual inline values remain numbers from the five distinct server fields');
-    return { paragraphs, spans };
+    return { groups, values, nouns, words };
   };
-  await withHost({ deferSaved: true }, async h => {
-    const original = h.owner('HoSoSong');
-    const title = text(h, 'Cá nhân');
-    assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
+  const io = h => ({
+    transport: h.calls.length, profileReads: h.profileReads.length, profileWrites: h.profileWrites.length,
+    sessionWrites: h.sessionWrites.length, storage: h.storageCalls.length,
+    nonfontNativeIO: h.nativeHostCalls.length, sockets: h.sockets.length, picks: h.picks.length, uploads: h.uploads.length,
+  });
+  const exerciseFacts = async (h, { normalStack = false } = {}) => {
+    await h.update(state => { state.window = { ...state.window, width: 320 }; });
+    const original = h.owner('HoSoSong'), content = h.owner('ProfileContent');
     const counts = h.one('RNView', props => props.testID === 'profile-counts');
-    const { paragraphs, spans } = readStory(h, counts);
-    const ids = ['friends', 'contexts', 'outings', 'places', 'memories'];
-    const colors = h.load('apps/mobile/src/rudi/theme').mauSang;
-    const countReads = h.profileReads.length, ioCalls = h.calls.length;
-    const checkCounts = metricScale => {
-      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same story container through hot metrics');
+    const initial = readFacts(h, counts), beforeIO = io(h);
+    const check = (metricScale, spacious) => {
+      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same fact container through hot metrics');
       const paper = flatten(counts.props.style);
       assert.equal(paper.width, '100%'); assert.equal(paper.minWidth, 0);
-      assert.equal(paper.gap, 8); assert.equal(paper.paddingLeft, 12);
-      assert.equal(paper.borderLeftWidth, 2); assert.equal(paper.borderLeftColor, colors.lineStrong);
-      assert.equal(paper.backgroundColor, undefined); assert.equal(paper.borderWidth, undefined); assert.equal(paper.padding, undefined, 'story has a margin line instead of a card of fixed fact cells');
+      assert.equal(paper.flexDirection, spacious ? 'column' : 'row', 'large or unavailable metrics use the full-width reading flow');
       assert.equal(paper.height, undefined); assert.equal(paper.maxHeight, undefined);
-      assert.equal(counts.props.onPress, undefined); assert.equal(counts.findAllByType('RNPressable').length, 0, 'facts do not invent actions');
-      const current = readStory(h, counts);
-      for (let index = 0; index < current.paragraphs.length; index += 1) {
-        const paragraph = current.paragraphs[index], style = flatten(paragraph.props.style);
-        assert.equal(paragraph === paragraphs[index], true, 'same two native paragraph hosts through hot metrics');
-        assert.equal(nearest(paragraph, 'RNView', () => true) === counts, true, 'each paragraph is a direct native text root in the story');
-        assert.equal(paragraph.props.testID, index === 0 ? 'profile-counts-social' : 'profile-counts-experiences');
-        assert.equal(paragraph.props.accessible, true); assert.equal(paragraph.props.onPress, undefined);
-        assert.equal(style.width, '100%'); assert.equal(style.maxWidth, '100%'); assert.equal(style.minWidth, 0);
-        assert.equal(style.height, undefined); assert.equal(style.maxHeight, undefined);
-        assert.equal(style.color, colors.inkSoft); assert.equal(style.fontWeight, '400');
-        assert.equal(style.fontSize, metricScale === 2 ? 21.5 : 13);
-        assert.equal(style.lineHeight, metricScale === 2 ? 30.25 : 18);
-        assert.equal(paragraph.props.allowFontScaling, metricScale === null ? undefined : false);
-        assert.equal(paragraph.props.numberOfLines, undefined); assert.equal(paragraph.props.adjustsFontSizeToFit, undefined);
-        assert.equal(paragraph.props.maxFontSizeMultiplier, undefined, 'prose retains its inherited scaling policy');
+      const current = readFacts(h, counts);
+      if (!spacious) {
+        const shares = current.groups.map(group => flatten(group.props.style).width);
+        assert.equal(shares.every(share => typeof share === 'string' && /^\d+(\.\d+)?%$/.test(share)), true, 'normal facts use finite proportional allocations');
+        const allocated = shares.map(share => Number.parseFloat(share));
+        assert.equal(allocated.every(share => share > 0 && share === allocated[0]), true, 'normal allocations are equal and positive');
+        assert.equal(allocated.reduce((sum, share) => sum + share, 0) <= 100, true, 'five normal allocations fit within their declared container');
       }
-      for (let index = 0; index < current.spans.length; index += 1) {
-        const span = current.spans[index], style = flatten(span.props.style);
-        assert.equal(span === spans[index], true, 'same five inline native value hosts through hot metrics');
-        assert.equal(nearest(span, 'RNText', () => true) === paragraphs[index < 2 ? 0 : 1], true, 'each value stays inside its semantic paragraph');
-        assert.equal(span.props.testID, `profile-count-${ids[index]}`);
-        assert.equal(span.props.accessible, false); assert.equal(span.props.onPress, undefined);
-        assert.equal(style.fontWeight, '700'); assert.equal(style.color, colors.ink);
-        assert.deepEqual([...style.fontVariant], ['tabular-nums']);
-        assert.equal(style.width, undefined, 'inline numbers do not reinstate allocated fact columns');
-        assert.equal(style.fontSize, metricScale === null ? undefined : metricScale === 2 ? 21.5 : 13);
-        assert.equal(style.lineHeight, metricScale === null ? undefined : metricScale === 2 ? 30.25 : 18);
-        assert.equal(span.props.allowFontScaling, metricScale === null ? undefined : false, 'inline values inherit the original paragraph metrics once, or RN fallback');
-        assert.equal(span.props.numberOfLines, undefined); assert.equal(span.props.adjustsFontSizeToFit, undefined); assert.equal(span.props.maxFontSizeMultiplier, undefined);
+      for (let index = 0; index < fields.length; index += 1) {
+        const group = current.groups[index], groupStyle = flatten(group.props.style);
+        assert.equal(group === initial.groups[index], true, 'same accessible fact group');
+        assert.equal(current.words[index] === initial.words[index], true, 'same words container while reflowing');
+        assert.equal(groupStyle.height, undefined); assert.equal(groupStyle.maxHeight, undefined);
+        if (spacious) assert.equal(groupStyle.width, '100%', 'each large/fallback fact receives a whole reading row');
+        for (const [host, previous, baseSize, baseHeight, largeSize, largeHeight] of [
+          [current.values[index], initial.values[index], 17, 23, 28.75, 37.5],
+          [current.nouns[index], initial.nouns[index], 13, 18, 21.5, 30.25],
+        ]) {
+          const style = flatten(host.props.style);
+          assert.equal(host === previous, true, 'numeric and noun native hosts stay mounted');
+          assert.equal(style.fontSize, metricScale === 2 ? largeSize : baseSize);
+          assert.equal(style.lineHeight, metricScale === 2 ? largeHeight : baseHeight);
+          assert.equal(host.props.allowFontScaling, metricScale === null ? undefined : false, 'usable table converts once; unavailable metrics preserve RN scaling');
+          assert.equal(host.props.numberOfLines, undefined); assert.equal(host.props.adjustsFontSizeToFit, undefined);
+          assert.equal(host.props.maxFontSizeMultiplier, undefined); assert.equal(host.props.onPress, undefined);
+          assert.equal(style.height, undefined); assert.equal(style.maxHeight, undefined, 'full words may grow vertically');
+        }
       }
-      assert.equal(h.owner('HoSoSong') === original, true, 'same profile owner through prose metrics changes');
-      assert.equal(h.profileReads.length, countReads); assert.equal(h.calls.length, ioCalls, 'metrics changes issue no profile transport');
-      ownership(h, 1);
+      assert.equal(h.owner('HoSoSong') === original, true); assert.equal(h.owner('ProfileContent') === content, true);
+      assert.equal(h.state.window.width, 320); assert.equal(h.state.window.fontScale, 1, 'native table drives hot metrics while the window stays stale');
+      assert.deepEqual(io(h), beforeIO, 'font changes issue no product transport, write, storage or nonfont native I/O');
+      assert.equal(h.boundaryViolations.length, 0); ownership(h, 1); actual(h);
     };
-    checkCounts(1);
-    for (const [value, metricScale] of [[snapshot(2), 2], [snapshot(), 1], [snapshot(2), 2], [snapshot(), 1], [unavailable(), null], [snapshot(), 1]]) {
-      await h.nativeFont(value);
-      assert.equal(h.state.window.fontScale, 1, 'native snapshot drives prose metrics despite stale window scale');
-      checkCounts(metricScale);
+    check(1, normalStack);
+    for (const [value, metricScale, spacious] of [
+      [snapshot(2), 2, true], [snapshot(), 1, false], [snapshot(2), 2, true], [snapshot(), 1, false],
+      [unavailable(), null, true], [{ status: 'available', fontScale: 2 }, null, true], [snapshot(), 1, false],
+    ]) {
+      await h.nativeFont(value); check(metricScale, spacious || normalStack);
     }
+    return { original, counts };
+  };
+  await withHost({ deferSaved: true }, async h => {
+    const title = text(h, 'Cá nhân');
+    assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
+    const { original } = await exerciseFacts(h);
     assert.equal(h.profileWrites.length, 0, 'count layout does not save profile');
     assert.equal(h.sessionWrites.length, 0, 'count layout does not mutate session');
     assert.equal(h.root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'AssetIllustration' && node.props.name === 'decor-cover').length, 0);
@@ -282,34 +291,9 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     await h.pressText('Tài khoản'); assert.equal(h.text('Đăng xuất').length > 0, true);
     await h.pressAccessibility('Quay lại'); ownership(h, 1); actual(h);
   });
-  await withHost({ profile: { display_name: 'Synthetic long name for profile layout audit', bio: 'Synthetic long bio for layout audit', city: null, counts: { friends: 0, contexts: 123, outings: 456, places_checked_in: 789, memories: 0 } }, invitations: [{ state: 'pending' }, { state: 'accepted' }, { state: 'pending' }] }, async h => {
-    const longCounts = h.one('RNView', props => props.testID === 'profile-counts');
-    const original = h.owner('HoSoSong');
-    const { paragraphs, spans } = readStory(h, longCounts);
-    assert.deepEqual(paragraphs.map(readNativeText), ['Quanh bạn · 0 bạn bè, 123 nhóm.', 'Hành trình · 456 kèo, 789 điểm check-in, 0 khoảnh khắc.'], 'zero and longer counts keep their full nouns and values');
-    const countReads = h.profileReads.length, ioCalls = h.calls.length;
-    for (const [value, metricScale] of [[snapshot(2), 2], [snapshot(), 1], [unavailable(), null], [snapshot(), 1]]) {
-      await h.nativeFont(value);
-      const current = readStory(h, longCounts);
-      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === longCounts, true);
-      assert.equal(h.owner('HoSoSong') === original, true);
-      for (let index = 0; index < paragraphs.length; index += 1) {
-        const paragraph = current.paragraphs[index], style = flatten(paragraph.props.style);
-        assert.equal(paragraph === paragraphs[index], true, 'zero/long prose hosts stay mounted at 200% and fallback');
-        assert.equal(style.width, '100%'); assert.equal(style.fontSize, metricScale === 2 ? 21.5 : 13); assert.equal(style.lineHeight, metricScale === 2 ? 30.25 : 18);
-        assert.equal(paragraph.props.accessible, true); assert.equal(paragraph.props.allowFontScaling, metricScale === null ? undefined : false);
-        assert.equal(paragraph.props.numberOfLines, undefined); assert.equal(paragraph.props.adjustsFontSizeToFit, undefined); assert.equal(paragraph.props.maxFontSizeMultiplier, undefined);
-      }
-      for (let index = 0; index < spans.length; index += 1) {
-        const span = current.spans[index], style = flatten(span.props.style);
-        assert.equal(span === spans[index], true, 'zero remains a mounted numeric span');
-        assert.equal(style.fontSize, metricScale === null ? undefined : metricScale === 2 ? 21.5 : 13);
-        assert.equal(style.lineHeight, metricScale === null ? undefined : metricScale === 2 ? 30.25 : 18);
-        assert.equal(span.props.allowFontScaling, metricScale === null ? undefined : false);
-      }
-      assert.equal(h.state.window.fontScale, 1); assert.equal(h.profileReads.length, countReads); assert.equal(h.calls.length, ioCalls);
-      ownership(h, 1);
-    }
+  await withHost({ profile: { display_name: 'Synthetic long name for profile layout audit', bio: 'Synthetic long bio for layout audit', city: null, counts: { friends: 0, contexts: 1234567, outings: 456789, places_checked_in: 7890123, memories: 0 } }, invitations: [{ state: 'pending' }, { state: 'accepted' }, { state: 'pending' }] }, async h => {
+    // This known long-count fixture must use whole rows even at ordinary font size.
+    await exerciseFacts(h, { normalStack: true });
     assert.equal(h.text('Synthetic long name for profile layout audit').length, 1);
     assert.equal(h.text('Synthetic long bio for layout audit').length, 1);
     assert.equal(h.textContent().includes('null'), false, 'missing city is not printed as text');

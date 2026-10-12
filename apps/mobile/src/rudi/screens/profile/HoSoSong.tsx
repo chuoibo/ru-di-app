@@ -12,12 +12,13 @@
  * answer rather than trusting the form.
  *
  * The profile reads as a person's page: identity, their own words, then
- * connections and journey records in two short paragraphs. The form keeps
+ * connections and journey records along a small journal route. The form keeps
  * its draft and field-local errors in the same mounted owner.
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Keyboard, PixelRatio, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
@@ -193,12 +194,19 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     );
   }
 
-  const socialSummary = `Quanh bạn · ${hoSo.counts.friends} bạn bè, ${hoSo.counts.contexts} nhóm.`;
-  const journeySummary = `Hành trình · ${hoSo.counts.outings} kèo, ${hoSo.counts.places_checked_in} điểm check-in, ${hoSo.counts.memories} khoảnh khắc.`;
+  const facts = [
+    { id: "friends", value: hoSo.counts.friends, label: "bạn bè", icon: "person-add-outline" as const },
+    { id: "contexts", value: hoSo.counts.contexts, label: "nhóm", icon: "people-outline" as const },
+    { id: "outings", value: hoSo.counts.outings, label: "kèo", icon: "calendar-outline" as const },
+    { id: "places", value: hoSo.counts.places_checked_in, label: "điểm check-in", icon: "location-outline" as const },
+    { id: "memories", value: hoSo.counts.memories, label: "khoảnh khắc", icon: "image-outline" as const },
+  ];
   // An unusable owned snapshot keeps a conservative stack without a child observer.
   const largeText = bodyMetrics !== null
     ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
     : metricsOwned || chuLon(fontScale);
+  // Longer integer counts use the reading flow rather than overflowing a small milestone.
+  const storyStack = largeText || facts.some((fact) => String(fact.value).length > 4);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
   const editMetricsKey = editLabelMetrics === null
     ? JSON.stringify([metricsOwned ? "owned-fallback" : "unowned", fontScale])
@@ -235,14 +243,20 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
     </View>
-    <View testID="profile-counts" style={[styles.story, { borderLeftColor: colors.lineStrong }]}>
-      {/* Keep each paragraph native-metric compatible; inline values inherit its type size. */}
-      <Text accessible accessibilityLabel={socialSummary} testID="profile-counts-social" style={[typography.note, styles.storyParagraph, { color: colors.inkSoft }]}>
-        Quanh bạn · <Text accessible={false} testID="profile-count-friends" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.friends}</Text> bạn bè, <Text accessible={false} testID="profile-count-contexts" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.contexts}</Text> nhóm.
-      </Text>
-      <Text accessible accessibilityLabel={journeySummary} testID="profile-counts-experiences" style={[typography.note, styles.storyParagraph, { color: colors.inkSoft }]}>
-        Hành trình · <Text accessible={false} testID="profile-count-outings" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.outings}</Text> kèo, <Text accessible={false} testID="profile-count-places" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.places_checked_in}</Text> điểm check-in, <Text accessible={false} testID="profile-count-memories" style={[styles.storyValue, { color: colors.ink }]}>{hoSo.counts.memories}</Text> khoảnh khắc.
-      </Text>
+    <View testID="profile-counts" style={[styles.story, storyStack && styles.storyStack]}>
+      {/* This line relates the five facts; it does not encode progress or completed outings. */}
+      {!storyStack ? <Svg pointerEvents="none" accessible={false} focusable={false} aria-hidden width="100%" height={24} viewBox="0 0 100 24" preserveAspectRatio="none" style={styles.storyRoute}>
+        <Path d="M10 12C18 12 22 5 30 5S42 20 50 20S62 8 70 8S82 16 90 16" fill="none" stroke={colors.lineStrong} strokeOpacity={0.45} strokeWidth={0.5} strokeDasharray="1.4 1.4" />
+      </Svg> : <View pointerEvents="none" accessible={false} style={[styles.storySpine, { borderLeftColor: colors.line }]} />}
+      {facts.map((fact, index) => <View accessible accessibilityLabel={`${fact.value} ${fact.label}`} key={fact.id} testID={`profile-fact-${fact.id}`} style={[styles.storyFact, storyStack && styles.storyFactRow]}>
+        <View accessible={false} importantForAccessibility="no-hide-descendants" style={[styles.storyIcon, { backgroundColor: colors.ground }]}>
+          <RudiIcon name={fact.icon} color={index === 2 ? colors.accent : colors.inkSoft} size={20} />
+        </View>
+        <View style={[styles.storyWords, storyStack && styles.storyWordsRow]}>
+          <Text accessible={false} testID={`profile-count-${fact.id}`} style={[typography.title, styles.storyValue, !storyStack && styles.storyCentered, { color: colors.ink }]}>{fact.value}</Text>
+          <Text accessible={false} testID={`profile-label-${fact.id}`} style={[typography.note, styles.storyLabel, !storyStack && styles.storyCentered, { color: colors.inkSoft }]}>{fact.label}</Text>
+        </View>
+      </View>)}
     </View>
   </View>;
 }
@@ -250,9 +264,18 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
 const styles = StyleSheet.create({
   passport: { gap: 12 },
   identityBlock: { gap: 8 },
-  story: { width: "100%", minWidth: 0, gap: 8, paddingLeft: 12, borderLeftWidth: 2 },
-  storyParagraph: { width: "100%", maxWidth: "100%", minWidth: 0 },
-  storyValue: { fontWeight: "700", fontVariant: ["tabular-nums"] },
+  story: { width: "100%", minWidth: 0, flexDirection: "row", paddingVertical: 4 },
+  storyStack: { flexDirection: "column", gap: 8 },
+  storyRoute: { position: "absolute", left: 0, top: 4 },
+  storySpine: { position: "absolute", left: 12, top: 28, bottom: 28, borderLeftWidth: 1 },
+  storyFact: { width: "20%", minWidth: 0, alignItems: "center", gap: 4 },
+  storyFactRow: { width: "100%", flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
+  storyIcon: { width: 24, height: 24, alignItems: "center", justifyContent: "center", borderRadius: 12, flexShrink: 0 },
+  storyWords: { width: "100%", minWidth: 0, gap: 2 },
+  storyWordsRow: { width: "auto", flex: 1, flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 8, rowGap: 2 },
+  storyValue: { fontVariant: ["tabular-nums"], maxWidth: "100%", minWidth: 0, flexShrink: 1 },
+  storyLabel: { minWidth: 0, flexShrink: 1 },
+  storyCentered: { textAlign: "center" },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
