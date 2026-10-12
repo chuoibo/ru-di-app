@@ -247,7 +247,7 @@ function ComposerForm() {
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
     const cannotSend = conflict || busy || uploading || pendingFile !== null || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
-    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard focusBottomInset={focusBottomInset} cot="form" contentStyle={expanded ? styles.expandedContent : undefined} bottomInset={16} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
+    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard focusBottomInset={focusBottomInset} cot="form" contentStyle={styles.content} bottomInset={0} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
       <RudiButton compact label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.card } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
@@ -272,9 +272,9 @@ function ComposerForm() {
     {params.edit ? <Text style={[typography.note, { color: colors.inkSoft }]} testID="cong-dong-nguoi-doc-khoa">Bản sửa giữ người đọc như lúc đăng. Muốn đổi người đọc, mở «Thêm lựa chọn cho bài» (⋯) ở trang bài.</Text> : null}
     </View>
     {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change({ group: g.id })}/>)}</> : null}
-    <View style={[styles.stage, expanded && styles.expandedStage]}>
-    <View style={[styles.writing, expanded && styles.expandedWriting, { borderColor: colors.line }]}>
-      <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, expanded && styles.expandedBody, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
+    <View style={styles.stage}>
+    <View style={[styles.writing, { borderColor: colors.line }]}>
+      <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={styles.tools}>
@@ -325,13 +325,11 @@ const styles = StyleSheet.create({
   audienceOptions: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
   audienceChoice: { minHeight: 64, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   audienceChoiceTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
-  stage: { gap: 8, flexGrow: 0 },
-  expandedStage: { flexGrow: 1 },
-  writing: { gap: 4, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
-  expandedContent: { flexGrow: 1 },
-  expandedWriting: { flexGrow: 1 },
-  expandedBody: { flexGrow: 1 },
-  body: { textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: typography.body.lineHeight },
+  // Free height belongs to the writing canvas at every width; long tools stay scrollable.
+  content: { flexGrow: 1, flexShrink: 0, flexBasis: "auto" },
+  stage: { gap: 8, flexGrow: 1, flexShrink: 0, flexBasis: "auto" },
+  writing: { gap: 4, flexGrow: 1, flexShrink: 0, flexBasis: "auto", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
+  body: { flexGrow: 1, flexShrink: 0, flexBasis: "auto", textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: typography.body.lineHeight },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
   tools: { gap: 8 },
   toolRow: { flexDirection: "row", gap: 4, padding: 4, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },

@@ -126,9 +126,6 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
   // Unusable native metrics keep a generous layout without inventing font scale.
   const largeText = bodyMetrics === null || (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25;
-  // Large text: the search box takes the whole line and the assistant button
-  // drops under it. The placeholder here is thirty characters; it draws itself
-  // on one line now (F44), and the full width is what keeps most of it legible.
   const motion = useMotion();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [daLuu, setDaLuu] = useState<string[]>([]);
@@ -357,7 +354,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
         </View>
         {/* The assistant stands beside the search, not above the places: one
             tap drops a sample question in so the person sees what to ask. */}
-        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={bamHoi} selected tone="ai" />
+        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={bamHoi} selected tone="ai" style={styles.hoiAi} />
       </View>
       {choGui ? (
         <Text style={[typography.caption, { color: colors.ai }]}>Sửa câu cho đúng ý bạn, rồi chạm ✦ hoặc Enter để hỏi Rủ Đi AI.</Text>
@@ -556,7 +553,8 @@ const styles = StyleSheet.create({
   nhanMinhHoa: { position: "absolute", left: 10, bottom: 8, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, maxWidth: "100%", alignSelf: "flex-start" },
   tenViTri: { flexShrink: 1, minWidth: 0 },
-  timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  timRow: { flexDirection: "row", alignItems: "stretch", gap: 8 },
+  hoiAi: { height: "auto", minHeight: 48, alignSelf: "stretch" },
   khung: { gap: 12 },
   // Keep a paper gutter between scrolling labels and Nếp's bookmark rail.
   cuonLoai: { marginLeft: -16 },

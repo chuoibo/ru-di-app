@@ -740,6 +740,7 @@ export function IconButton({
   tone = "accent",
   tron = false,
   glyphOffsetX = 0,
+  style,
 }: {
   icon: IconName;
   assetIcon?: AssetIconName;
@@ -761,6 +762,8 @@ export function IconButton({
   tone?: RudiTone;
   /** Optical alignment of the drawn glyph, without moving its 48dp target. */
   glyphOffsetX?: number;
+  /** Layout inside the owning row; defaults remain a 48dp square. */
+  style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useRudiTheme();
   // ADR-0038 §2.2: a primary icon with nothing to act on yet (send, with the
@@ -801,6 +804,7 @@ export function IconButton({
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
         tatSolid && { borderColor: colors.lineStrong, borderStyle: "dashed" as const, borderWidth: 1.5 },
         tron && styles.iconButtonTron,
+        style,
       ]}
     >
       {loading ? <ActivityIndicator color={glyph} size="small" /> : <View pointerEvents="none" style={glyphOffsetX ? { transform: [{ translateX: glyphOffsetX }] } : undefined}><RudiIcon assetIcon={assetIcon} assetSize={24} color={glyph} name={icon} size={22} /></View>}
