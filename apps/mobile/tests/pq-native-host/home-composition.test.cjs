@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { test, after } = require('node:test');
-const { createHost, act, sourceRoot } = require('./owner-host.cjs');
+const { createHost, act, sourceRoot, flatten } = require('./owner-host.cjs');
 const emptyWire = require('./home-fixtures/catalogue-empty-facts.json');
 const richWire = require('./home-fixtures/catalogue-rich-licensed.json');
 const unlicensedWire = require('./home-fixtures/catalogue-unlicensed.json');
@@ -34,10 +34,23 @@ function textValue(value) {
 }
 const semantic = value => textValue(value).replace(/\u00a0/g, ' ').replace(/\u2060/g, '');
 function textWithin(node, value) { return exactly(node.findAllByType('RNText').filter(leaf => semantic(leaf.props.children) === value), `one full native text: ${value}`); }
-function uncapped(node, message) {
+function uncapped(node, message, h) {
   assert.equal(node.props.numberOfLines, undefined, `${message}: no line cap`);
   assert.equal(node.props.maxFontSizeMultiplier, undefined, `${message}: no font cap`);
-  assert.notEqual(node.props.allowFontScaling, false, `${message}: raw native text retains scaling`);
+  if (node.props.allowFontScaling === false) {
+    const wrapper = nearest(node, h.metrics.Text);
+    const provider = nearest(node, h.metrics.NativeFontMetricsProvider);
+    const snapshot = provider.props.snapshot;
+    assert.equal(snapshot.status, 'available', `${message}: manual text has an actual usable owner`);
+    assert.ok(snapshot.fontMetrics?.spToDp?.length, `${message}: no invented native conversion`);
+    const original = flatten(wrapper.props.style), effective = flatten(node.props.style);
+    for (const key of ['fontSize', 'lineHeight', 'letterSpacing']) {
+      if (typeof original[key] !== 'number') continue;
+      const entry = snapshot.fontMetrics.spToDp.find(item => item.base === original[key]);
+      assert.ok(entry, `${message}: native table contains original ${key}`);
+      assert.equal(effective[key], entry.dp, `${message}: manual ${key} is the exact native table value`);
+    }
+  }
   assert.notEqual(node.props.adjustsFontSizeToFit, true, `${message}: no shrink to fit`);
 }
 function lead(h) { return exactly(h.root.root.findAllByType(h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceLead), 'one actual PlaceLead owner'); }
@@ -57,7 +70,7 @@ function composition(h, compact) {
   const media = exactly(owner.findAllByType(mediaType), 'actual card media owner');
   const mediaWrap = nearest(media, 'RNView');
   if (compact) {
-    uncapped(name, 'compact title'); uncapped(sub, 'compact subtitle');
+    uncapped(name, 'compact title', h); uncapped(sub, 'compact subtitle', h);
     const titleRow = nearest(name, 'RNView'), header = nearest(sub, 'RNView');
     assert.notEqual(titleRow, header, 'subtitle receives the full header width beneath the title/heart row');
     assert.equal(nearest(titleRow, 'RNView'), header, 'name and subtitle share the same identity header');
@@ -89,7 +102,11 @@ function actual(h) {
   const parser = 'apps/mobile/src/screens/kham-pha/places';
   assert.ok(h.consumed.get(parser), 'actual wire parser is consumed, not replaced');
   assert.equal(h.consumedHashes.get(parser), crypto.createHash('sha256').update(fs.readFileSync(h.consumed.get(parser))).digest('hex'));
-  assert.equal(h.root.root.findAllByType(h.metrics.NativeFontMetricsProvider).length, 0, 'this Home seam does not invent a metrics owner');
+  assert.equal(h.state.explicitProvider, false, 'default Home seam adds no external metrics provider');
+  const actualOwner = h.load('apps/mobile/src/rudi/community/Comments').CommunityFontMetrics;
+  assert.equal(h.root.root.findAllByType(actualOwner).length, 1, 'the actual Home surface owns native metrics');
+  assert.equal(h.root.root.findAllByType(h.metrics.NativeFontMetricsProvider).length, 1, 'the provider comes from the actual surface owner');
+  assert.equal(h.observation().subscriptions, 1, 'one native subscription across the complete actual Home graph');
 }
 async function withHome(options, run) {
   const h = createHost({ surface: 'explore', initialWindow: longWindow, exploreIO: { placeIds: [placeId], destinationIds: [cityId], saved: [] }, ...options });
@@ -213,8 +230,8 @@ test('HC06 actual licensed media keeps complete facts and credit through native 
     const facts = allNativeText(parts.owner);
     for (const text of ['4.6 (156) · 1.6 km', 'Đang mở, 07:00 - 22:00', '180.000đ – 230.000đ mỗi người', fullReason]) assert.equal(facts.includes(text), true, `complete semantic fact: ${text}`);
     const reason = textWithin(parts.owner, fullReason), price = textWithin(parts.owner, '180.000đ – 230.000đ mỗi người');
-    uncapped(reason, 'grounded reason'); uncapped(price, 'whole price with unit');
-    for (const node of parts.owner.findAllByType('RNText').filter(node => semantic(node.props.children).includes('4.6 (156)') || semantic(node.props.children).includes('07:00 - 22:00'))) uncapped(node, 'complete fact line');
+    uncapped(reason, 'grounded reason', h); uncapped(price, 'whole price with unit', h);
+    for (const node of parts.owner.findAllByType('RNText').filter(node => semantic(node.props.children).includes('4.6 (156)') || semantic(node.props.children).includes('07:00 - 22:00'))) uncapped(node, 'complete fact line', h);
     const MediaSlot = h.load('apps/mobile/src/rudi/ui/MediaSlot').MediaSlot;
     const media = exactly(parts.owner.findAllByType(MediaSlot), 'actual licensed MediaSlot');
     const expectedUri = 'https://synthetic.invalid/places/synthetic-place-1/photos/synthetic-photo-1';

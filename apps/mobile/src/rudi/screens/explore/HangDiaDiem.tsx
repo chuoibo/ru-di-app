@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextStyle } from "react-native";
+import { Pressable, StyleSheet, Text as RNText, View, useWindowDimensions, type TextStyle } from "react-native";
 
 import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
+import { Text as NativeMetricText } from "../../ui/NativeFontMetrics";
 import { IconButton, Inline, type IconName } from "../../ui";
 import { MediaSlot } from "../../ui/MediaSlot";
 import { khoaNguon, veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
@@ -88,6 +89,10 @@ interface CommonProps {
   saving?: boolean;
   /** A short phone opens with the place name; the full-width media and facts follow. */
   compact?: boolean;
+  /** Use only the existing surface owner; keep other callers on their original RN path. */
+  nativeMetrics?: boolean;
+  /** Supplied by that owner; absent preserves the original window-based layout. */
+  largeText?: boolean;
 }
 
 /**
@@ -109,15 +114,16 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
 }
 
 /** Generic category artwork is labelled, never presented as the venue itself. */
-export function PlaceArtwork({ loai, width, height = 180 }: { loai?: string; width?: number; height?: number }) {
+export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean }) {
   const { colors } = useRudiTheme();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const [measured, setMeasured] = useState(width ?? 280);
   const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
   return (
     <View onLayout={(e) => setMeasured(e.nativeEvent.layout.width)} style={{ width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}>
       <AssetIllustration name={scene} width={width ?? measured} height={height} />
       <View pointerEvents="none" style={{ position: "absolute", left: width !== undefined && width < 100 ? 6 : 10, bottom: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card }}>
-        <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ</Text>
+        <CopyText style={[typography.caption, { color: colors.ink }]}>Minh hoạ</CopyText>
       </View>
     </View>
   );
@@ -130,13 +136,15 @@ export function PlaceArtwork({ loai, width, height = 180 }: { loai?: string; wid
  * ellipsis here would hide the one fact the row exists to show (finish
  * review 11/09). The spark is decoration and stays out of the a11y tree.
  */
-function LyDo({ text, dong }: { text: string; dong?: number }) {
+function LyDo({ text, dong, nativeMetrics = false, largeText }: { text: string; dong?: number; nativeMetrics?: boolean; largeText?: boolean }) {
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
+  const large = largeText ?? chuLon(fontScale);
   return (
     <Inline gap={5}>
       <Ionicons color={colors.ai} importantForAccessibility="no" name="sparkles" size={13} />
-      <Text numberOfLines={dong === undefined ? undefined : chuLon(fontScale) ? dong + 1 : dong} style={[typography.label, styles.flex1, { color: colors.ai }]}>{text}</Text>
+      <CopyText numberOfLines={dong === undefined ? undefined : large ? dong + 1 : dong} style={[typography.label, styles.flex1, { color: colors.ai }]}>{text}</CopyText>
     </Inline>
   );
 }
@@ -153,20 +161,21 @@ function dauCon(dd: DiaDiemHienThi): string | null {
  * by the complete facts, grounded reason and price (`tachGia`). The heart
  * is the card's sibling, not inside its tap, so there are two controls.
  */
-export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact = false }: CommonProps) {
+export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact = false, nativeMetrics = false }: CommonProps) {
   const { colors, radius } = useRudiTheme();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
   // is a screenful of photograph before the first name, so the frame widens.
   const tiLe = sizeClass === "compact" ? 16 / 9 : 21 / 9;
   const { gia } = tachGia(dd.facts);
   const dau = dauCon(dd);
-  const name = <Text numberOfLines={compact ? undefined : 2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>;
-  const sub = dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null;
+  const name = <CopyText numberOfLines={compact ? undefined : 2} style={[typography.h2, { color: colors.ink }]}>{dd.name}</CopyText>;
+  const sub = dd.sub ? <CopyText style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</CopyText> : null;
   const chip = (mau: string, nen: string, icon: IconName, text: string) => (
     <View style={[styles.chipDan, { backgroundColor: nen, borderRadius: radius.control }]}>
       <Ionicons color={mau} importantForAccessibility="no" name={icon} size={13} />
-      <Text style={[typography.label, styles.chuChipDan, { color: mau }]}>{text}</Text>
+      <CopyText style={[typography.label, styles.chuChipDan, { color: mau }]}>{text}</CopyText>
     </View>
   );
   const chips = dd.lyDo || gia ? (
@@ -191,11 +200,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
             {dd.anh === null ? (
               // No honest picture: the sketch of the KIND of place («ký hoạ trong
               // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-              <PlaceArtwork loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
+              <PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
             ) : (
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork loai={dd.loai} height={180} />}
+                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={180} />}
                 nguon={{ loai: "danh-muc", anh: dd.anh }}
                 overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
                 radius={0}
@@ -207,7 +216,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
             {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
             {compact ? null : name}
             {compact ? null : sub}
-            <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
+            <DongSuThat nativeMetrics={nativeMetrics} facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
             {chips}
           </View> : null}
         </View>
@@ -227,15 +236,16 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
   );
 }
 
-export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonProps) {
+export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving, nativeMetrics = false, largeText }: CommonProps) {
   const { colors, radius } = useRudiTheme();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const { fontScale } = useWindowDimensions();
   // The facts that decide come first and whole: rating, distance and hours on
   // one line that may wrap, the price band with its unit on its own line, never
   // cut (review 08/09 F04; QA UI-021: found by what it is, not by position).
   // The seal sits beside the name at 1.0 and under the facts once the text is big.
   const { gia: cuoiFact } = tachGia(dd.facts);
-  const chuLonHon = chuLon(fontScale);
+  const chuLonHon = largeText ?? chuLon(fontScale);
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
   const [hong, setHong] = useState(false);
@@ -255,18 +265,18 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
-          <PlaceArtwork loai={dd.loai} width={chuLonHon ? undefined : 88} height={chuLonHon ? 132 : 88} />
+          <PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} width={chuLonHon ? undefined : 88} height={chuLonHon ? 132 : 88} />
         )}
         <View style={[styles.rowText, chuLonHon && styles.rowTextLarge]}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
           <View style={styles.rowTen}>
-            <Text style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
+            <CopyText style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</CopyText>
             {dauCon(dd) && !chuLonHon ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
           </View>
-          {dd.sub ? <Text style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
+          {dd.sub ? <CopyText style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</CopyText> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
-          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkSoft} />
+          <DongSuThat nativeMetrics={nativeMetrics} facts={dd.facts} kieu={typography.caption} mau={colors.inkSoft} />
           {/* The price band is never cut: it wraps when it must («200.000đ –
               250.000đ mỗi n…» at 1.3, QA 23/09; 9 rows in 10 at 390, UI-021). */}
           {dauCon(dd) && chuLonHon ? <Stamp label={dauCon(dd) as string} style={styles.rowBadgeDuoi} tone="ai" /> : null}
@@ -274,14 +284,14 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving }: CommonPr
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
           {/* A failed picture is a state the reader is told about, not only the screen reader (finish review 08/09). */}
-          {ve.canhBao !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{ve.canhBao}</Text> : null}
+          {ve.canhBao !== null ? <CopyText style={[typography.caption, { color: colors.warn }]}>{ve.canhBao}</CopyText> : null}
           {ve.ghiCong !== null ? (
-            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text>
+            <CopyText numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</CopyText>
           ) : null}
         </View>
         </View>
-        {cuoiFact ? <Text style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</Text> : null}
-        {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
+        {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</CopyText> : null}
+        {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
       </Pressable>
       <View style={[styles.rowHeart, chuLonHon && styles.rowHeartLarge]}>
       <IconButton
@@ -320,6 +330,8 @@ export function PlaceCompare({
   onSave,
   testID,
   saving,
+  nativeMetrics = false,
+  largeText,
 }: {
   items: readonly [DiaDiemHienThi, DiaDiemHienThi];
   daLuu: (id: string) => boolean;
@@ -327,15 +339,19 @@ export function PlaceCompare({
   onSave: (id: string) => void;
   saving?: (id: string) => boolean;
   testID?: string;
+  nativeMetrics?: boolean;
+  largeText?: boolean;
 }) {
   const { colors } = useRudiTheme();
   const { fontScale, width } = useWindowDimensions();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   // Two columns compare across; once the text is big enough that a half-width
   // column cannot hold a name and a price whole, the two stack and compare
   // down the same fields in the same order (review 08/09 F04).
-  const xepDoc = chuLon(fontScale);
+  const xepDoc = largeText ?? chuLon(fontScale);
   const { sizeClass } = useAdaptiveLayout();
-  if (width < 600 || xepDoc) return <View testID={testID}>{items.map((dd) => <PlaceRow key={dd.id} dd={dd} daLuu={daLuu(dd.id)} onOpen={() => onOpen(dd.id)} onSave={() => onSave(dd.id)} saving={saving?.(dd.id)} />)}</View>;
+  // An opted-in wide pair changes direction rather than replacing its place controllers.
+  if (width < 600 || (!nativeMetrics && xepDoc)) return <View testID={testID}>{items.map((dd) => <PlaceRow key={dd.id} dd={dd} daLuu={daLuu(dd.id)} onOpen={() => onOpen(dd.id)} onSave={() => onSave(dd.id)} saving={saving?.(dd.id)} nativeMetrics={nativeMetrics} largeText={largeText} />)}</View>;
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -345,11 +361,11 @@ export function PlaceCompare({
         const { gia: cuoiFact } = tachGia(dd.facts);
         const chu = (
           <>
-            <Text numberOfLines={2} style={[typography.title, { minHeight: typography.title.lineHeight * 2, color: colors.ink }]}>{dd.name}</Text>
-            {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
-            {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-            <DongSuThat facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={2} />
-            {cuoiFact ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
+            <CopyText numberOfLines={nativeMetrics && xepDoc ? undefined : 2} style={[typography.title, { minHeight: typography.title.lineHeight * 2, color: colors.ink }]}>{dd.name}</CopyText>
+            {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
+            {dd.sub ? <CopyText numberOfLines={nativeMetrics && xepDoc ? undefined : 2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</CopyText> : null}
+            <DongSuThat nativeMetrics={nativeMetrics} facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={nativeMetrics && xepDoc ? undefined : 2} />
+            {cuoiFact ? <CopyText style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</CopyText> : null}
           </>
         );
 
@@ -358,7 +374,7 @@ export function PlaceCompare({
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
+                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
                 overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                 // The credit is the frame's own line now, printed under the
                 // picture instead of after the facts: it was the one call site
@@ -394,13 +410,20 @@ export function PlaceCompare({
  * the words' own ink, inline and held to the rating by a no-break space; then
  * whether it is open, and its hours. A screen reader hears the words alone.
  */
-function DongSuThat({ facts, kieu, mau, soDong }: { facts: readonly { icon: string; text: string }[]; kieu: TextStyle; mau: string; soDong?: number }) {
+function DongSuThat({ facts, kieu, mau, soDong, nativeMetrics = false }: { facts: readonly { icon: string; text: string }[]; kieu: TextStyle; mau: string; soDong?: number; nativeMetrics?: boolean }) {
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const { dau, gio } = chiaDongSuThat(facts);
   const sao = moDauBangSao(facts);
   return (
     <>
-      {dau ? (
-        <Text accessibilityLabel={sao ? dau : undefined} numberOfLines={soDong} style={[kieu, { color: mau }]}>
+      {dau ? nativeMetrics && sao ? (
+        // Keep decoration outside the paragraph so its factual copy can use owner metrics.
+        <View style={styles.factLine}>
+          <Ionicons accessible={false} allowFontScaling={false} importantForAccessibility="no" color={mau} name="star" size={12} />
+          <CopyText accessibilityLabel={dau} numberOfLines={soDong} style={[kieu, styles.factCopy, { color: mau }]}>{dau}</CopyText>
+        </View>
+      ) : (
+        <CopyText accessibilityLabel={sao ? dau : undefined} numberOfLines={soDong} style={[kieu, { color: mau }]}>
           {sao ? (
             <>
               <Ionicons color={mau} name="star" size={12} />
@@ -408,18 +431,20 @@ function DongSuThat({ facts, kieu, mau, soDong }: { facts: readonly { icon: stri
             </>
           ) : null}
           {dau}
-        </Text>
+        </CopyText>
       ) : null}
       {gio ? (
-        <Text numberOfLines={soDong} style={[kieu, { color: mau }]}>
+        <CopyText numberOfLines={soDong} style={[kieu, { color: mau }]}>
           {gio}
-        </Text>
+        </CopyText>
       ) : null}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  factLine: { flexDirection: "row", alignItems: "baseline", gap: 4 },
+  factCopy: { flex: 1, minWidth: 0 },
   soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   soSanhDoc: { flexDirection: "column", gap: 20 },
   rowBadgeDuoi: { alignSelf: "flex-start", marginTop: 4 },

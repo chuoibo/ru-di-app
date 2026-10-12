@@ -24,7 +24,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type TextInput } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type TextInput } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -56,6 +56,8 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
+import { CommunityFontMetrics } from "../../community/Comments";
+import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
@@ -114,9 +116,16 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
   };
 }
 
-export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau }) {
+export function ExploreLiveScreen(props: { phien: Phien; dau?: DungDau }) {
+  return <CommunityFontMetrics><ExploreLiveContent {...props} /></CommunityFontMetrics>;
+}
+
+function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // Unusable native metrics keep a generous layout without inventing font scale.
+  const largeText = bodyMetrics === null || (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25;
   // Large text: the search box takes the whole line and the assistant button
   // drops under it. The placeholder here is thirty characters; it draws itself
   // on one line now (F44), and the full width is what keeps most of it legible.
@@ -333,6 +342,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
       <View style={styles.timRow}>
         <View style={styles.flex}>
           <SearchField
+            nativeMetrics
             accessibilityLabel="Ô tìm địa điểm"
             oRef={oTim}
             onChangeText={(t) => {
@@ -446,6 +456,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           </View>
           {thanhPhoRong ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Đổi điểm đến", onPress: () => router.push("/destinations") }}
               body="Danh mục của Rủ Đi chưa có chỗ nào ở đây. Chọn một điểm đến khác để xem chỗ hay."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -455,6 +466,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             />
           ) : rong && giongCauHoi ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Hỏi Rủ Đi AI", onPress: () => void hoi() }}
               body="Câu này giống một câu hỏi hơn một cái tên. Để Rủ Đi AI tìm theo ý câu này."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -465,6 +477,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             />
           ) : rong ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Xóa lọc", onPress: boTim }}
               body="Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -476,6 +489,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             <Animated.View entering={hienRa} key={khoaKetQua} style={styles.ketQua}>
               {dan !== undefined ? (
                 <PlaceLead
+                  nativeMetrics
                   compact={compactLead}
                   daLuu={daLuu.includes(dan.id)}
                   dd={hienThiDiaDiem(dan)}
@@ -486,6 +500,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
               ) : null}
               {soSanh !== null ? (
                 <PlaceCompare
+                  nativeMetrics
+                  largeText={largeText}
                   daLuu={(id) => daLuu.includes(id)}
                   items={[hienThiDiaDiem(soSanh[0]), hienThiDiaDiem(soSanh[1])]}
                   onOpen={(id) => router.push(`/places/${id}` as never)}
@@ -501,6 +517,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                 <ResponsiveRow gap={0} minItemWidth={300}>
                   {conLai.slice(0, soHang).map((place) => (
                     <PlaceRow
+                      nativeMetrics
+                      largeText={largeText}
                       daLuu={daLuu.includes(place.id)}
                       dd={hienThiDiaDiem(place)}
                       key={place.id}

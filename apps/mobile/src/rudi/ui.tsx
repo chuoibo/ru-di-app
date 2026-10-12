@@ -824,7 +824,7 @@ export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) 
   return <FieldCore {...props} leading={icon ? <RudiIcon color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
 };
 
-export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & Pick<FieldCoreProps, "oRef" | "trailing">) {
+export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & Pick<FieldCoreProps, "oRef" | "trailing" | "nativeMetrics">) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 

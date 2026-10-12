@@ -34,7 +34,7 @@ function snapshot(scale = 1, lineHeight) {
   return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
 }
 
-function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {} } = {}) {
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {}, inheritedExploreMetrics = false } = {}) {
   assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps', 'explore'].includes(surface));
   assert.equal(surface === 'explore', exploreIO !== null, 'Explore transport must be explicitly isolated to the Explore surface');
   if (exploreIO !== null) {
@@ -44,8 +44,9 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     assert.ok(exploreIO.destinationIds.every(id => typeof id === 'string' && id.startsWith('synthetic-city-')));
     assert.ok((exploreIO.saved ?? []).every(id => exploreIO.placeIds.includes(id)));
     assert.ok(exploreIO.storedDestination == null || exploreIO.destinationIds.includes(exploreIO.storedDestination));
-    assert.equal(explicitProvider, false, 'This composition host must not invent a metrics owner for Home');
+    assert.equal(inheritedExploreMetrics ? explicitProvider : !explicitProvider, true, 'Home inherited provider is explicit opt-in; default host cannot invent one');
   }
+  assert.equal(inheritedExploreMetrics && surface !== 'explore', false, 'Inherited Home provider seam is limited to Home');
   const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { ...initialWindow }, exploreProps, exploreSaved: [...(exploreIO?.saved ?? [])], exploreStoredDestination: exploreIO?.storedDestination ?? null };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
@@ -268,6 +269,14 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
       async setItem() { throw new Error('Unexpected destination write: selection belongs to a separate route'); },
     },
   };
+  if (surface === 'boundary') externals['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      getItem(...args) { exploreStorage.push({ method: 'getItem', args }); throw new Error('Unexpected boundary destination storage getItem'); },
+      removeItem(...args) { exploreStorage.push({ method: 'removeItem', args }); throw new Error('Unexpected boundary destination storage removeItem'); },
+      setItem(...args) { exploreStorage.push({ method: 'setItem', args }); throw new Error('Unexpected boundary destination storage setItem'); },
+    },
+  };
   class SyntheticSocket { constructor(url) { this.url = url; sockets.push(this); } send(value) { nativeHostCalls.push({ socket: value }); } close() { this.closed = true; } }
   const globals = {
     console, process: { env: surface === 'explore' ? { EXPO_PUBLIC_API_URL: api.BASE_URL } : {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
@@ -340,6 +349,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     const node = { id: ++nodeId, kind: element.type,
       focus() { focused = this; }, blur() { if (focused === this) focused = null; }, isFocused() { return focused === this; },
       scrollTo(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollTo', target: this.id, options } : { kind: 'scrollTo', options }); },
+      scrollToEnd(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollToEnd', target: this.id, options } : { kind: 'scrollToEnd', options }); },
       scrollToOffset(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollToOffset', target: this.id, options } : { kind: 'scrollToOffset', options }); },
       getNativeScrollRef() { return this; },
       measure(callback) { measure('measure', this, callback); },
@@ -354,6 +364,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
     exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,
     get root() { return root; },
+    attemptCount() { return attempt; },
     observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
     hosts, one,
     input() { return one('RNTextInput', props => surface === 'explore' ? props.accessibilityLabel === 'Ô tìm địa điểm' : props.testID === (surface === 'boundary' ? 'owner-probe-input' : surface === 'composer' ? 'community-body' : 'community-comment-input')); },

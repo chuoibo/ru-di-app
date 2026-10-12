@@ -1,8 +1,9 @@
 import { useRef, type ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text as RNText, View, useWindowDimensions } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
 import { typography, useRudiTheme } from "../theme";
+import { Text as NativeMetricText } from "./NativeFontMetrics";
 import type { MucKhamPha } from "./thanh-tab";
 
 /** How a Khám phá screen asks its route for the header, with its own right-hand control. */
@@ -25,8 +26,9 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
  * as the community's own header does (B7): beside two 48dp buttons the words
  * had 180 of 288dp and «Địa điểm» was cut to its last letters.
  */
-export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode }) {
+export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode; nativeMetrics?: boolean }) {
   const { colors } = useRudiTheme();
+  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const cuon = useRef<ScrollView>(null);
   // The words stay first in reading order; only the controls' place on screen changes.
   const hep = useWindowDimensions().width < 360 && phai !== undefined;
@@ -62,9 +64,9 @@ export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc:
                 }}
                 style={styles.muc}
               >
-                <Text numberOfLines={1} style={[typography.h2, { color: chon ? colors.ink : colors.inkFaint }]}>
+                <CopyText numberOfLines={1} style={[typography.h2, { color: chon ? colors.ink : colors.inkFaint }]}>
                   {m.nhan}
-                </Text>
+                </CopyText>
                 <View style={[styles.bang, { backgroundColor: chon ? colors.accent : "transparent" }]} />
               </Pressable>
             );
