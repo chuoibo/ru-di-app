@@ -194,9 +194,11 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
   }
 
   const soDem = [
-    `${hoSo.counts.friends} bạn bè`, `${hoSo.counts.contexts} nhóm`,
-    `${hoSo.counts.outings} kèo`, `${hoSo.counts.places_checked_in} nơi đã tới`,
-    `${hoSo.counts.memories} khoảnh khắc`,
+    { id: "friends", value: hoSo.counts.friends, label: "bạn bè" },
+    { id: "contexts", value: hoSo.counts.contexts, label: "nhóm" },
+    { id: "outings", value: hoSo.counts.outings, label: "kèo" },
+    { id: "places", value: hoSo.counts.places_checked_in, label: "nơi đã tới" },
+    { id: "memories", value: hoSo.counts.memories, label: "khoảnh khắc" },
   ];
   // An unusable owned snapshot keeps a conservative stack without a child observer.
   const largeText = bodyMetrics !== null
@@ -232,42 +234,46 @@ export function HoSoSong({ phien, onEditorChange }: { phien: Phien; onEditorChan
       </View>
     </View>
     {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
-    </View>
-    <View style={styles.footprint}>
-    <View testID="profile-counts" style={styles.counts}>
-      {/* Social activity and experiences keep their own readable columns. */}
-      <View testID="profile-counts-social" style={[styles.countGroup, largeText && styles.countGroupStack]}>
-        {soDem.slice(0, 3).map((count) => <Text key={count} style={[typography.note, styles.countText, largeText ? styles.countTextStack : styles.countTextColumn, { color: colors.inkSoft }]}>{count}</Text>)}
-      </View>
-      <View testID="profile-counts-experiences" style={[styles.countGroup, largeText && styles.countGroupStack]}>
-        {soDem.slice(3).map((count) => <Text key={count} style={[typography.note, styles.countText, largeText ? styles.countTextStack : styles.countTextColumn, { color: colors.inkSoft }]}>{count}</Text>)}
-      </View>
-    </View>
-    <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+    <PressScale accessibilityRole="button" accessibilityLabel={editLabel} onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { borderRadius: radius.control }]}>
       <RudiIcon color={colors.accent} name="create-outline" size={EDIT_ACTION.icon} style={styles.editIcon} />
-      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelWidth !== undefined && { width: editLabelWidth }, { color: colors.accent }]}>{editLabel}</Text>
+      <Text style={[typography.label, styles.editLabel, largeText && styles.editLabelLarge, editLabelWidth !== undefined && { width: editLabelWidth }, { color: colors.inkSoft }]}>{editLabel}</Text>
     </PressScale>
     {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
+    </View>
+    <View testID="profile-counts" style={[styles.counts, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]}>
+      {/* Connections and footprints share one paper, with stable cells through font changes. */}
+      {[soDem.slice(0, 2), soDem.slice(2)].map((counts, index) => (
+        <View key={index === 0 ? "connections" : "footprints"} testID={index === 0 ? "profile-counts-social" : "profile-counts-experiences"} style={[styles.countGroup, largeText && styles.countGroupStack, index > 0 && styles.countGroupFollowing, index > 0 && { borderTopColor: colors.line }]}>
+          {counts.map((count) => (
+            <View key={count.id} accessible accessibilityLabel={`${count.value} ${count.label}`} testID={`profile-count-${count.id}`} style={[styles.countItem, largeText ? styles.countItemStack : styles.countItemColumn, !largeText && { width: `${100 / counts.length}%` as const }]}>
+              <Text style={[typography.title, styles.countValue, { color: colors.ink }]}>{count.value}</Text>
+              <Text style={[typography.note, styles.countLabel, { color: colors.inkSoft }]}>{count.label}</Text>
+            </View>
+          ))}
+        </View>
+      ))}
     </View>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  passport: { gap: 12, paddingBottom: 12 },
+  passport: { gap: 12 },
   identityBlock: { gap: 8 },
-  footprint: { gap: 8 },
-  counts: { gap: 4, width: "100%", minWidth: 0 },
-  countGroup: { flexDirection: "row", columnGap: 12, rowGap: 4, width: "100%", minWidth: 0 },
+  counts: { gap: 8, width: "100%", minWidth: 0, padding: 12, borderWidth: StyleSheet.hairlineWidth },
+  countGroup: { flexDirection: "row", columnGap: 12, rowGap: 8, width: "100%", minWidth: 0 },
   countGroupStack: { flexDirection: "column" },
-  countText: { maxWidth: "100%", minWidth: 0 },
-  countTextColumn: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
-  countTextStack: { alignSelf: "stretch", width: "100%" },
+  countGroupFollowing: { paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth },
+  countItem: { flexDirection: "row", alignItems: "baseline", columnGap: 4, maxWidth: "100%", minWidth: 0 },
+  countItemColumn: { flexGrow: 0, flexShrink: 1, flexBasis: "auto", alignSelf: "auto" },
+  countItemStack: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", alignSelf: "stretch", width: "100%" },
+  countValue: { flexGrow: 0, flexShrink: 1, flexBasis: "auto", maxWidth: "100%", minWidth: 0, fontVariant: ["tabular-nums"] },
+  countLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 0, maxWidth: "100%", minWidth: 0 },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
   avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { alignSelf: "flex-start", minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: EDIT_ACTION.gap, borderWidth: EDIT_ACTION.border, paddingHorizontal: EDIT_ACTION.paddingHorizontal, paddingVertical: EDIT_ACTION.paddingVertical },
+  editAction: { alignSelf: "flex-start", minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: EDIT_ACTION.gap, borderWidth: EDIT_ACTION.border, borderColor: "transparent", backgroundColor: "transparent", paddingHorizontal: EDIT_ACTION.paddingHorizontal, paddingVertical: EDIT_ACTION.paddingVertical },
   editIcon: { flexShrink: 0 },
   editLabel: { flexShrink: 0 },
   editLabelLarge: { flexShrink: 1, minWidth: 0 },

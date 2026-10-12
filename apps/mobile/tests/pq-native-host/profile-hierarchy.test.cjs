@@ -179,48 +179,87 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     const title = text(h, 'Cá nhân');
     assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
     const counts = h.one('RNView', props => props.testID === 'profile-counts');
-    const expected = [`${h.state.profile.counts.friends} bạn bè`, `${h.state.profile.counts.contexts} nhóm`, `${h.state.profile.counts.outings} kèo`, `${h.state.profile.counts.places_checked_in} nơi đã tới`, `${h.state.profile.counts.memories} khoảnh khắc`];
+    const expected = [
+      ['friends', h.state.profile.counts.friends, 'bạn bè'],
+      ['contexts', h.state.profile.counts.contexts, 'nhóm'],
+      ['outings', h.state.profile.counts.outings, 'kèo'],
+      ['places', h.state.profile.counts.places_checked_in, 'nơi đã tới'],
+      ['memories', h.state.profile.counts.memories, 'khoảnh khắc'],
+    ];
     const facts = counts.findAllByType('RNText');
-    const factGroup = fact => nearest(fact, 'RNView', () => true);
-    const groups = [...new Set(facts.map(factGroup))];
+    assert.equal(facts.length, 10, 'five server facts each expose a separate value and label');
+    const factCell = fact => nearest(fact, 'RNView', () => true);
+    const cellGroup = cell => nearest(cell, 'RNView', () => true);
+    const cells = [...new Set(facts.map(factCell))];
+    const groups = [...new Set(cells.map(cellGroup))];
+    assert.equal(cells.length, 5, 'one native fact cell per server field');
     assert.equal(groups.length, 2, 'five server facts belong to two actual native group parents');
-    assert.deepEqual(groups.map(group => facts.filter(fact => factGroup(fact) === group).length), [3, 2], 'social activity and experiences own separate columns');
-    const checkCounts = stacked => {
+    assert.deepEqual(groups.map(group => cells.filter(cell => cellGroup(cell) === group).length), [2, 3], 'two connections and three footprints keep their semantic bands');
+    const colors = h.load('apps/mobile/src/rudi/theme').mauSang;
+    const checkCounts = (stacked, metricScale) => {
       assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true, 'same count container through hot metrics');
-      assert.equal(flatten(counts.props.style).width, '100%');
-      assert.equal(flatten(counts.props.style).gap, 4);
-      assert.equal(flatten(counts.props.style).flexWrap, undefined, 'facts do not depend on intrinsic wrapping');
+      const paper = flatten(counts.props.style);
+      assert.equal(paper.width, '100%'); assert.equal(paper.minWidth, 0);
+      assert.equal(paper.gap, 8); assert.equal(paper.padding, 12);
+      assert.equal(paper.backgroundColor, colors.card); assert.equal(paper.borderColor, colors.line);
+      assert.equal(paper.borderWidth, 0.5);
+      assert.equal(paper.flexWrap, undefined, 'facts do not depend on intrinsic wrapping');
       const currentFacts = counts.findAllByType('RNText');
-      const currentGroups = [...new Set(currentFacts.map(factGroup))];
-      assert.equal(currentGroups.length, 2, 'two actual group parents remain through hot metrics');
+      const currentCells = [...new Set(currentFacts.map(factCell))];
+      const currentGroups = [...new Set(currentCells.map(cellGroup))];
+      assert.equal(currentFacts.length, 10, 'all five value/label pairs remain through hot metrics');
+      assert.equal(currentCells.length, 5); assert.equal(currentGroups.length, 2);
+      assert.deepEqual(currentFacts.map(node => node.props.children), expected.flatMap(([, value, label]) => [value, label]));
+      assert.deepEqual(currentCells.map(node => node.props.accessibilityLabel), expected.map(([, value, label]) => `${value} ${label}`));
+      assert.deepEqual(currentGroups.map(group => currentCells.filter(cell => cellGroup(cell) === group).length), [2, 3]);
       for (let index = 0; index < groups.length; index += 1) {
         assert.equal(currentGroups[index] === groups[index], true, 'same two group parents through hot metrics');
+        assert.equal(groups[index].props.testID, index === 0 ? 'profile-counts-social' : 'profile-counts-experiences');
         const style = flatten(groups[index].props.style);
         assert.equal(style.flexDirection, stacked ? 'column' : 'row');
         assert.equal(style.width, '100%'); assert.equal(style.minWidth, 0);
-        assert.equal(style.columnGap, 12); assert.equal(style.rowGap, 4);
+        assert.equal(style.columnGap, 12); assert.equal(style.rowGap, 8);
+        assert.equal(style.borderTopWidth, index === 0 ? undefined : 0.5);
+        assert.equal(style.paddingTop, index === 0 ? undefined : 8);
+        if (index > 0) assert.equal(style.borderTopColor, colors.line);
       }
-      assert.deepEqual(currentFacts.map(node => node.props.children), expected);
-      assert.equal(currentFacts.every(node => flatten(node.props.style).maxWidth === '100%'), true);
-      for (let index = 0; index < facts.length; index += 1) {
-        assert.equal(currentFacts[index] === facts[index], true, 'same five native Text hosts through hot metrics');
-        assert.equal(factGroup(currentFacts[index]) === groups[index < 3 ? 0 : 1], true, 'same fact group ancestor');
-        const style = flatten(currentFacts[index].props.style);
-        assert.equal(style.minWidth, 0);
-        assert.equal(style.flexBasis, stacked ? undefined : 0, 'zero row basis must be absent from a vertical group');
-        assert.equal(style.flexGrow, stacked ? undefined : 1);
-        assert.equal(style.flexShrink, stacked ? undefined : 1);
-        assert.equal(style.width, stacked ? '100%' : undefined);
-        assert.equal(style.alignSelf, stacked ? 'stretch' : undefined);
+      for (let index = 0; index < cells.length; index += 1) {
+        const cell = currentCells[index], style = flatten(cell.props.style);
+        assert.equal(cell === cells[index], true, 'same five native fact cells through hot metrics');
+        assert.equal(cellGroup(cell) === groups[index < 2 ? 0 : 1], true, 'same semantic band ancestor');
+        assert.equal(cell.props.testID, `profile-count-${expected[index][0]}`);
+        assert.equal(cell.props.accessible, true); assert.equal(cell.props.onPress, undefined, 'facts do not invent actions');
+        assert.equal(style.flexDirection, 'row'); assert.equal(style.alignItems, 'baseline');
+        assert.equal(style.columnGap, 4); assert.equal(style.maxWidth, '100%'); assert.equal(style.minWidth, 0);
+        assert.equal(style.flexBasis, 'auto', 'both axes use definite widths instead of a resolved prior-axis basis');
+        assert.equal(style.flexGrow, 0); assert.equal(style.flexShrink, stacked ? 0 : 1, 'row cells share their band gutter deficit');
+        assert.equal(style.width, stacked ? '100%' : `${100 / (index < 2 ? 2 : 3)}%`, 'row cells declare half or one third of their own semantic band');
+        assert.equal(style.alignSelf, stacked ? 'stretch' : 'auto');
+        const pair = cell.findAllByType('RNText');
+        assert.equal(pair.length, 2, 'each actual fact cell contains its value and label');
+        for (let part = 0; part < pair.length; part += 1) {
+          const leaf = pair[part], leafStyle = flatten(leaf.props.style);
+          assert.equal(leaf === facts[index * 2 + part], true, 'same ten native Text hosts through hot metrics');
+          assert.equal(factCell(leaf) === cell, true, 'value and label retain their native fact cell');
+          assert.equal(leafStyle.maxWidth, '100%'); assert.equal(leafStyle.minWidth, 0);
+          assert.equal(leaf.props.numberOfLines, undefined); assert.equal(leaf.props.adjustsFontSizeToFit, undefined);
+          assert.equal(leaf.props.maxFontSizeMultiplier, undefined, 'facts keep the inherited scaling policy');
+          assert.equal(leaf.props.allowFontScaling, metricScale === null ? undefined : false);
+          assert.equal(leafStyle.fontSize, part === 0 ? metricScale === 2 ? 28.75 : 17 : metricScale === 2 ? 21.5 : 13);
+          assert.equal(leafStyle.lineHeight, part === 0 ? metricScale === 2 ? 37.5 : 23 : metricScale === 2 ? 30.25 : 18);
+        }
+        assert.deepEqual([...flatten(pair[0].props.style).fontVariant], ['tabular-nums']);
+        assert.equal(flatten(pair[0].props.style).color, colors.ink);
+        assert.equal(flatten(pair[1].props.style).color, colors.inkSoft);
       }
       assert.equal(h.owner('HoSoSong') === original, true, 'same profile owner through count layout changes');
       ownership(h, 1);
     };
-    checkCounts(false);
-    for (const [value, stacked] of [[snapshot(2), true], [unavailable(), true], [snapshot(), false]]) {
+    checkCounts(false, 1);
+    for (const [value, stacked, metricScale] of [[snapshot(2), true, 2], [snapshot(), false, 1], [snapshot(2), true, 2], [snapshot(), false, 1], [unavailable(), true, null], [snapshot(), false, 1]]) {
       await h.nativeFont(value);
       assert.equal(h.state.window.fontScale, 1, 'native snapshot drives layout despite stale window scale');
-      checkCounts(stacked);
+      checkCounts(stacked, metricScale);
     }
     assert.equal(h.profileWrites.length, 0, 'count layout does not save profile');
     assert.equal(h.sessionWrites.length, 0, 'count layout does not mutate session');
@@ -247,12 +286,100 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     await h.pressAccessibility('Quay lại'); ownership(h, 1); actual(h);
   });
   await withHost({ profile: { display_name: 'Synthetic long name for profile layout audit', bio: 'Synthetic long bio for layout audit', city: null, counts: { friends: 0, contexts: 123, outings: 456, places_checked_in: 789, memories: 0 } }, invitations: [{ state: 'pending' }, { state: 'accepted' }, { state: 'pending' }] }, async h => {
-    assert.deepEqual(h.one('RNView', props => props.testID === 'profile-counts').findAllByType('RNText').map(node => node.props.children), ['0 bạn bè', '123 nhóm', '456 kèo', '789 nơi đã tới', '0 khoảnh khắc']);
+    const longCounts = h.one('RNView', props => props.testID === 'profile-counts');
+    assert.deepEqual(longCounts.findAllByType('RNText').map(node => node.props.children), [0, 'bạn bè', 123, 'nhóm', 456, 'kèo', 789, 'nơi đã tới', 0, 'khoảnh khắc']);
+    assert.deepEqual(longCounts.findAll(node => node.type === 'RNView' && node.props.accessible === true).map(node => node.props.accessibilityLabel), ['0 bạn bè', '123 nhóm', '456 kèo', '789 nơi đã tới', '0 khoảnh khắc']);
     assert.equal(h.text('Synthetic long name for profile layout audit').length, 1);
     assert.equal(h.text('Synthetic long bio for layout audit').length, 1);
     assert.equal(h.textContent().includes('null'), false, 'missing city is not printed as text');
     assert.equal(h.text('2 lời mời đang chờ').length, 1, 'pending invitation count is server-derived');
     await h.pressText('Bạn bè'); assert.equal(h.routes.at(-1), '/friends?muc=da-nhan');
     actual(h);
+  });
+});
+
+// Placement and effective style contracts only; this host does not lay out a 320dp screen.
+test('PH05 profile keeps its quiet labeled edit in identity through hot metrics and retained draft', async () => {
+  await withHost({}, async h => {
+    await h.update(state => { state.window = { ...state.window, width: 320 }; });
+    const original = h.owner('HoSoSong'), content = h.owner('ProfileContent');
+    const counts = h.one('RNView', props => props.testID === 'profile-counts');
+    const passport = nearest(counts, 'RNView', props => typeof props.onLayout === 'function');
+    const identity = nearest(text(h, h.state.profile.bio), 'RNView', () => true);
+    const edit = h.one('RNPressable', props => props.accessibilityLabel === 'Chỉnh hồ sơ');
+    const label = text(h, 'Chỉnh hồ sơ');
+    const avatar = h.one('RNPressable', props => props.accessibilityLabel === 'Đổi ảnh đại diện');
+    const colors = h.load('apps/mobile/src/rudi/theme').mauSang;
+    const PressScale = h.load('apps/mobile/src/rudi/ui/PressScale').PressScale;
+    const RudiIcon = h.load('apps/mobile/src/rudi/ui/RudiIcon').RudiIcon;
+    const countReads = h.profileReads.length, ioCalls = h.calls.length;
+    const checkEdit = (control, visibleLabel, expectedLabel, metricScale, expectedIdentity) => {
+      assert.equal(nearest(control, 'RNView', () => true) === expectedIdentity, true, 'quiet edit belongs to identity before the fact paper');
+      assert.equal(nearest(expectedIdentity, 'RNView', props => typeof props.onLayout === 'function') === passport, true, 'identity stays in the measured passport');
+      assert.equal(control.props.accessibilityRole, 'button'); assert.equal(control.props.accessibilityLabel, expectedLabel);
+      assert.equal(typeof control.props.onPress, 'function');
+      const style = flatten(control.props.style);
+      assert.equal(style.minWidth, 48); assert.equal(style.minHeight, 48, 'quiet edit keeps a 48dp minimum target');
+      assert.equal(style.maxWidth, '100%'); assert.equal(style.alignSelf, 'flex-start');
+      assert.equal(style.height, undefined); assert.equal(style.maxHeight, undefined, 'quiet action can grow with its label');
+      assert.equal(style.borderWidth, 1, 'transparent border preserves the finite label measurement budget');
+      assert.equal(style.backgroundColor, 'transparent', 'quiet edit leaves the identity paper visible');
+      assert.equal(style.borderColor, 'transparent');
+      assert.equal(style.paddingHorizontal, 14); assert.equal(style.paddingVertical, 10); assert.equal(style.gap, 9);
+      assert.equal(style.flexDirection, 'row'); assert.equal(style.alignItems, 'center');
+      const visible = control.findAllByType('RNText');
+      assert.equal(visible.length, 1); assert.equal(visible[0] === visibleLabel, true);
+      assert.equal(visibleLabel.props.children, expectedLabel);
+      const labelStyle = flatten(visibleLabel.props.style);
+      assert.equal(labelStyle.color, colors.inkSoft, 'edit label uses the quiet ink token');
+      assert.equal(visibleLabel.props.allowFontScaling, metricScale === null ? undefined : false);
+      assert.equal(labelStyle.fontSize, metricScale === 2 ? 23.25 : 14);
+      assert.equal(labelStyle.lineHeight, metricScale === 2 ? 31.75 : 19);
+      assert.equal(visibleLabel.props.numberOfLines, undefined); assert.equal(visibleLabel.props.adjustsFontSizeToFit, undefined);
+      const scaleOwners = h.root.root.findAllByType(PressScale).filter(node => node.props.accessibilityLabel === expectedLabel);
+      assert.equal(scaleOwners.length, 1); assert.equal(scaleOwners[0].props.pressedScale, 0.98);
+      const icons = control.findAllByType(RudiIcon);
+      assert.equal(icons.length, 1); assert.equal(icons[0].props.name, 'create-outline');
+      assert.equal(icons[0].props.color, colors.accent); assert.equal(icons[0].props.size, 18);
+      assert.equal(flatten(icons[0].props.style).flexShrink, 0);
+      assert.equal(h.owner('HoSoSong') === original, true); assert.equal(h.owner('ProfileContent') === content, true);
+      ownership(h, 1);
+    };
+    checkEdit(edit, label, 'Chỉnh hồ sơ', 1, identity);
+    assert.equal(identity.findAllByType('RNView').includes(counts), false, 'fact paper follows identity instead of enclosing the action');
+    const passportViews = passport.findAllByType('RNView');
+    assert.equal(passportViews.indexOf(identity) < passportViews.indexOf(counts), true, 'identity precedes the fact paper in the actual host tree');
+    assert.equal(nearest(avatar, 'RNView', () => true).findAllByType('RNPressable').includes(edit), false, 'edit does not share the avatar/name row');
+    for (const [value, metricScale] of [[snapshot(2), 2], [unavailable(), null], [snapshot(), 1]]) {
+      await h.nativeFont(value);
+      assert.equal(h.state.window.width, 320); assert.equal(h.state.window.fontScale, 1, 'window font scale remains deliberately stale');
+      assert.equal(h.one('RNView', props => props.testID === 'profile-counts') === counts, true);
+      assert.equal(nearest(text(h, h.state.profile.bio), 'RNView', () => true) === identity, true);
+      assert.equal(h.one('RNPressable', props => props.accessibilityLabel === 'Chỉnh hồ sơ') === edit, true, 'same native edit host through metrics changes');
+      assert.equal(text(h, 'Chỉnh hồ sơ') === label, true, 'same visible edit label through metrics changes');
+      assert.equal(h.one('RNPressable', props => props.accessibilityLabel === 'Đổi ảnh đại diện') === avatar, true);
+      checkEdit(edit, label, 'Chỉnh hồ sơ', metricScale, identity);
+      assert.equal(h.profileReads.length, countReads); assert.equal(h.calls.length, ioCalls, 'metrics changes issue no profile transport');
+      assert.equal(h.profileWrites.length, 0); assert.equal(h.sessionWrites.length, 0);
+    }
+    await h.pressAccessibility('Chỉnh hồ sơ');
+    assert.equal(h.profileInputs().length, 3, 'actual quiet action opens the existing editor');
+    await h.changeProfile(labels[0], syntheticDraft[0]);
+    await h.pressAccessibility('Quay lại');
+    const resume = h.one('RNPressable', props => props.accessibilityLabel === 'Sửa tiếp hồ sơ');
+    const resumedLabel = text(h, 'Sửa tiếp hồ sơ');
+    const retainedNote = text(h, 'Bản sửa chưa lưu vẫn còn đây.');
+    const resumedIdentity = nearest(retainedNote, 'RNView', () => true);
+    assert.equal(retainedNote.props.accessibilityLiveRegion, 'polite');
+    assert.equal(nearest(resume, 'RNView', () => true) === resumedIdentity, true, 'retained draft hint and resume action stay in identity');
+    assert.equal(flatten(resume.props.style).minWidth, 48); assert.equal(flatten(resume.props.style).minHeight, 48);
+    assert.equal(flatten(resume.props.style).backgroundColor, 'transparent'); assert.equal(flatten(resume.props.style).borderColor, 'transparent');
+    assert.equal(flatten(resumedLabel.props.style).color, colors.inkSoft);
+    await h.pressAccessibility('Sửa tiếp hồ sơ');
+    assert.equal(h.profileInput(labels[0]).props.value, syntheticDraft[0], 'quiet resume action keeps the existing retained draft');
+    await h.pressText('Huỷ');
+    assert.equal(h.profileWrites.length, 0); assert.equal(h.sessionWrites.length, 0);
+    assert.equal(h.owner('HoSoSong') === original, true); assert.equal(h.owner('ProfileContent') === content, true);
+    ownership(h, 1); actual(h);
   });
 });

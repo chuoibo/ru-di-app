@@ -152,7 +152,7 @@ function TabBarContent({ state, descriptors, navigation, observedFontScale }: Ta
         {...tabState(focused)}
         accessibilityLabel={label}
         onPress={onPress}
-        style={layout.rail ? [styles.railItem, { height: geometry.rail }] : styles.item}
+        style={layout.rail ? [styles.railItem, { height: geometry.rail }] : [styles.item, { width: `${100 / columns}%` }]}
       >
         <RudiIcon color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
         {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
@@ -168,7 +168,7 @@ function TabBarContent({ state, descriptors, navigation, observedFontScale }: Ta
   items.splice(
     viTriDau,
     0,
-    <View aria-hidden importantForAccessibility="no-hide-descendants" key="o-dau" pointerEvents="none" style={layout.rail ? styles.oDauRail : styles.item} />,
+    <View aria-hidden importantForAccessibility="no-hide-descendants" key="o-dau" pointerEvents="none" style={layout.rail ? styles.oDauRail : [styles.item, { width: `${100 / columns}%` }]} />,
   );
 
   const bottom = Math.max(insets.bottom, 10);
@@ -242,10 +242,10 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
     height: "100%",
   },
-  danhSach: { flex: 1, flexDirection: "row", alignItems: "stretch" },
-  danhSachRail: { flexDirection: "column", alignItems: "stretch" },
-  // Reset the prior rail height and main-axis allocation when this host becomes a strip slot.
-  item: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%", minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
+  // Definite list and slot widths bypass a flex basis cached on the prior axis.
+  danhSach: { width: "100%", flexGrow: 0, flexShrink: 0, flexBasis: "auto", flexDirection: "row", alignItems: "stretch" },
+  danhSachRail: { width: "100%", flexGrow: 0, flexShrink: 0, flexBasis: "auto", flexDirection: "column", alignItems: "stretch" },
+  item: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", minWidth: 0, height: "100%", minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   // No `flex` here: react-native-web writes `flex: 0` as `flex-basis: 0`,
   // which outranks `height`, so every rail tab was 48 dp on the web while the
   // indicator stepped by 72 (QA UI-004).

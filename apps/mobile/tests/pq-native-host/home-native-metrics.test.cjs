@@ -327,3 +327,71 @@ test('HC16 actual wide comparison fallback fills its own ratio frame and retaine
     raw(leaf(artwork, 'Minh hoạ'), 13, 18); assert.equal(h.exploreStorage.length, 0);
   } finally { await h.dispose(); }
 });
+
+
+test('HC17 actual retained wide Compare axes declare fresh width containment while media controllers query and refs survive native100 200 100', async () => {
+  await home({ initialWindow: { ...window100, width: 768, height: 1024 } }, async h => {
+    const pair = compare(h), frame = h.one('RNView', props => props.testID === 'explore-compare');
+    const Media = h.load('apps/mobile/src/rudi/ui/MediaSlot').MediaSlot;
+    const Artwork = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceArtwork;
+    const Row = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceRow;
+    const input = h.input(), inputRef = h.native.node(input), initialOwner = owner(h);
+    const candidates = pair.props.items.map(item => {
+      const open = h.one('RNPressable', props => props.accessibilityLabel === `Mở ${item.name}`);
+      const host = ancestor(open, 'RNView'), media = one(open.findAllByType(Media), 'one actual candidate MediaSlot');
+      const image = one(media.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'one actual candidate licensed image');
+      return { item, open, host, media, image, heart: saved(h, false, item.name), title: leaf(pair, item.name) };
+    });
+    assert.equal(candidates.length, 2);
+    await act(async () => candidates[0].image.props.onError());
+    const artwork = one(candidates[0].media.findAllByType(Artwork), 'actual first media failed fallback');
+    const fallbackImage = one(artwork.findAllByType('RNExpoImage'), 'actual fallback raster');
+    const artworkRoot = ancestor(fallbackImage, 'RNView'), label = leaf(artwork, 'Minh hoạ');
+    // Retain the prior stacked frame's numeric raster hints on purpose. They must not allocate columns.
+    await act(async () => artworkRoot.props.onLayout({ nativeEvent: { layout: { width: 616, height: 308 } } }));
+    await h.native.focus(input); await h.change('kiểm thử'); const before = counters(h);
+    const check = stacked => {
+      assert.equal(compare(h) === pair, true); assert.equal(owner(h) === initialOwner, true);
+      assert.equal(h.one('RNView', props => props.testID === 'explore-compare') === frame, true);
+      assert.equal(flatten(frame.props.style).flexDirection, stacked ? 'column' : 'row');
+      assert.equal(pair.findAllByType(Row).length, 0, 'font changes keep the same wide branch');
+      const gap = flatten(frame.props.style).gap; assert.equal(gap, stacked ? 20 : 16);
+      assert.equal(h.input() === input, true); assert.equal(h.native.node(input) === inputRef, true); assert.equal(inputRef.isFocused(), true); assert.equal(input.props.value, 'kiểm thử');
+      for (const candidate of candidates) {
+        assert.equal(h.one('RNPressable', props => props.accessibilityLabel === `Mở ${candidate.item.name}`) === candidate.open, true);
+        assert.equal(ancestor(candidate.open, 'RNView') === candidate.host, true, 'same keyed candidate allocation host');
+        assert.equal(one(candidate.open.findAllByType(Media), 'same actual MediaSlot') === candidate.media, true);
+        assert.equal(saved(h, false, candidate.item.name) === candidate.heart, true); assert.equal(leaf(pair, candidate.item.name) === candidate.title, true);
+        assert.equal(within(candidate.heart, candidate.host), true); assert.equal(within(candidate.heart, candidate.open), false, 'heart stays a sibling of Open');
+        const style = flatten(candidate.host.props.style);
+        assert.equal(style.flexBasis, 'auto', 'HC17 candidate auto basis uses definite width instead of a prior-axis resolved basis');
+        assert.equal(style.flex, undefined, 'no positive shorthand resolves auto basis back to zero');
+        assert.equal(style.flexGrow, 0); assert.equal(style.flexShrink, stacked ? 0 : 1, 'HC17 wide candidates must share the gap deficit');
+        assert.equal(style.width, stacked ? '100%' : '50%', 'HC17 candidate declares its current-axis width');
+        assert.equal(style.minWidth, 0); assert.equal(style.height, undefined, 'height stays intrinsic to complete content');
+        assert.equal(candidate.title.props.numberOfLines, stacked ? undefined : 2); converted(h, candidate.title, { fontSize: 17, lineHeight: 23, letterSpacing: -0.15 });
+      }
+      // Arithmetic of declared constraints at an explicit 616dp boundary fixture, not a Yoga result.
+      const container = 616, percentage = Number.parseFloat(flatten(candidates[0].host.props.style).width);
+      const basis = container * percentage / 100;
+      if (stacked) assert.equal(basis, container, 'declared stacked width contains the whole frame');
+      else {
+        const deficit = candidates.length * basis + gap - container;
+        assert.equal(deficit, 16); assert.equal(candidates.every(candidate => flatten(candidate.host.props.style).flexShrink === 1), true);
+        const allocated = basis - deficit / candidates.length;
+        assert.equal(allocated, 300); assert.equal(candidates.length * allocated + gap, container, 'equal declared shrink weights contain both frames and gutter');
+      }
+      assert.equal(candidates[0].media.findAllByType(Artwork)[0] === artwork, true, 'failed-media controller is retained');
+      assert.equal(candidates[0].media.findAllByType('RNExpoImage').some(node => typeof node.props.source?.uri === 'string'), false, 'font-only transitions cannot clear failed-media state');
+      assert.equal(artwork.findAllByType('RNExpoImage')[0] === fallbackImage, true); assert.equal(leaf(artwork, 'Minh hoạ') === label, true); converted(h, label, { fontSize: 13, lineHeight: 18 });
+      assert.equal(one(candidates[1].media.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'retained second licensed image') === candidates[1].image, true);
+      const rootStyle = flatten(artworkRoot.props.style), rasterStyle = flatten(fallbackImage.props.style);
+      assert.equal(rootStyle.position, 'absolute'); assert.equal(rootStyle.width, undefined); assert.equal(rootStyle.height, undefined);
+      assert.equal(rasterStyle.position, 'absolute'); assert.equal(rasterStyle.width, '100%'); assert.equal(rasterStyle.height, '100%');
+      noFontIO(h, before); assert.equal(h.observation().subscriptions, 1); assert.equal(h.state.window.fontScale, 1);
+    };
+    check(false);
+    for (const scale of [2, 1, 2, 1]) { await h.nativeFont(snapshot(scale)); check(scale === 2); }
+    consumed(h);
+  });
+});

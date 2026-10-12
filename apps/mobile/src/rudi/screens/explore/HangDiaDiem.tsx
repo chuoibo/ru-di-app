@@ -388,7 +388,7 @@ export function PlaceCompare({
         );
 
         return (
-          <View key={dd.id} style={styles.ungVien}>
+          <View key={dd.id} style={[styles.ungVien, xepDoc && styles.ungVienDoc]}>
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
@@ -466,7 +466,9 @@ const styles = StyleSheet.create({
   soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   soSanhDoc: { flexDirection: "column", gap: 20 },
   rowBadgeDuoi: { alignSelf: "flex-start", marginTop: 4 },
-  ungVien: { flex: 1, minWidth: 0 },
+  // Definite widths with auto basis avoid carrying a column height into the next row.
+  ungVien: { width: "50%", flexGrow: 0, flexShrink: 1, flexBasis: "auto", minWidth: 0 },
+  ungVienDoc: { width: "100%", flexShrink: 0 },
   ungVienPress: { gap: 6 },
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.

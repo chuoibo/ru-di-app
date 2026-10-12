@@ -267,6 +267,9 @@ test('TB05 mounted phone rail phone resets all five strip allocations and the Cr
       order(true); retained();
       assert.equal(flatten(bar(h).props.style).width, 104, 'rail keeps its existing width');
       assert.equal(flatten(list().props.style).flexDirection, 'column');
+      const listStyle = flatten(list().props.style);
+      assert.equal(listStyle.width, '100%', 'TB05 list has definite width on both axes');
+      assert.equal(listStyle.flexBasis, 'auto'); assert.equal(listStyle.flexGrow, 0); assert.equal(listStyle.flexShrink, 0); assert.equal(listStyle.flex, undefined);
       destinations.forEach(value => assert.equal(flatten(tab(h, value).props.style).height, rowHeight, 'rail destination keeps measured row reserve'));
       assert.equal(flatten(blank().props.style).height, 96, 'hidden rail stamp allocation keeps its existing height');
       assert.equal(flatten(stamp(h).props.style).height, 96, 'Create keeps its existing rail height');
@@ -287,18 +290,25 @@ test('TB05 mounted phone rail phone resets all five strip allocations and the Cr
       assert.equal(flatten(bar(h).props.style).width, '100%', 'TB05 phone bar explicitly resets prior rail width to full parent width');
       assert.equal(flatten(bar(h).props.style).height, barHeight, 'phone keeps its native-font reserve and safe area');
       assert.equal(flatten(list().props.style).flexDirection, 'row');
+      const listStyle = flatten(list().props.style);
+      assert.equal(listStyle.width, '100%', 'TB05 returned strip list declares full parent width');
+      assert.equal(listStyle.flexBasis, 'auto'); assert.equal(listStyle.flexGrow, 0); assert.equal(listStyle.flexShrink, 0); assert.equal(listStyle.flex, undefined);
       for (const node of slots()) {
         const style = flatten(node.props.style), name = node === blank() ? 'hidden stamp slot' : node.props.accessibilityLabel;
-        assert.equal(style.flexBasis, 0, 'TB05 zero phone basis for ' + name);
-        assert.equal(style.flexGrow, 1, 'equal phone growth for ' + name);
-        assert.equal(style.flexShrink, 1, 'phone allocation may shrink for ' + name);
+        assert.equal(style.flexBasis, 'auto', 'TB05 phone slot avoids resolved basis cached on the previous axis for ' + name);
+        assert.equal(style.flexGrow, 0, 'phone uses the declared equal width for ' + name);
+        assert.equal(style.flexShrink, 0, 'phone keeps the exact declared width for ' + name);
         assert.equal(style.minWidth, 0, 'no prior rail minimum width for ' + name);
         assert.equal(style.height, '100%', 'explicit phone cross-axis height for ' + name);
         assert.equal(style.flex, undefined, 'no shorthand hides phone basis for ' + name);
-        assert.equal(style.width, undefined, 'no fixed phone slot width for ' + name);
+        assert.equal(style.width, '20%', 'TB05 all five phone slots declare exactly one fifth for ' + name);
         assert.equal(style.maxWidth, undefined, 'no fixed phone slot maximum for ' + name);
         assert.equal(style.minHeight, 48, 'existing target minimum for ' + name);
       }
+      // Declared constraints at the supplied 320dp window fixture, not measured Yoga geometry.
+      const declaredWidths = slots().map(node => h.state.window.width * Number.parseFloat(flatten(node.props.style).width) / 100);
+      assert.deepEqual(declaredWidths, [64, 64, 64, 64, 64]);
+      assert.equal(declaredWidths.reduce((sum, value) => sum + value, 0), h.state.window.width, 'five declared allocations contain the strip exactly');
       const create = flatten(stamp(h).props.style);
       assert.equal(create.height, '100%', 'TB05 Create resets prior rail height to the phone allocation');
       assert.equal(create.flexBasis, 0, 'Create explicitly resets prior main-axis allocation');

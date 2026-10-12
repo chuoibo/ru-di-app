@@ -10,7 +10,49 @@ Rule lâu dài ở [AGENTS.md](../../../AGENTS.md#cổng-chất-lượng-thị-g
 là checkpoint lịch sử `811c893f`, không mô tả trạng thái quyền hoặc Android hiện tại.
 Không đổi nhãn ảnh/capture lịch sử thành source mới.
 
-## Điểm hiện tại 12/10 — bốn phần sửa, chờ kiểm bản gộp trên Android
+## Android7a — clean9 xanh nhưng Axis và hồ sơ còn đỏ (12/10)
+
+**Chưa nghiệm thu độ đẹp hoặc toàn frontend.** Checkpoint `7a255c3557093a0689d195ae314e94a8511975ef` đã có [clean9 thực](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7a255c35/clean-checks.json), SHA `375255c2f3d01541c7e7718879f46720cf73efa4fe58feb67e2df89bb7df4865`: cả chín bước exit0, cây sạch trước/sau; Node243 tệp/1.868 pass,0fail/cancel/skip/todo, Go guide98pass. Tổng206,057s, scope peak mẫu1.162,137MiB/hostmin23,512GiB. Node loại năm browser testfiles theo danh sách trong receipt; không gọi clean9 là full strict gate. Fixup/go-guide không có memory.events sample, không nhận no-OOM measurement cho hai bước nhanh đó.
+
+[Root review native7a](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-7a255c35-root-review-20261012-r1/root-review.json) SHA `372802be584385259de819d79f471d0764a435c3da60915cfeddeca0cd929346` pin toàn bộ artifacts/source correlation: **46 PNG,43 được root mở,41 đủ điều kiện**. Ảnh marker JS7a đã mở; dùng lại APK compile0b15, không gán native-build7a. PNG/XML không nguyên tử.41ảnh đủ điều kiện gồm marker/settings và các frame lặp, không là41feature/action đạt hoặc whole-screen approval.
+
+| Vùng Android đã mở | Kết quả quan sát tại7a | Việc còn phải kiểm/sửa |
+|---|---|---|
+| Home phone100/200; tablet100 | Heart phone200 bên phải; lead/facts đọc được. Tablet100 hai frame300/300, ảnh đầy frame/nhãn nằm trong khung. | [Tablet hot200→100](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7a255c35/root-native-screens/home-after-tablet-return100.png) **RED**: từ stack616 trở lại còn cột đầu574, cột sau hẹp/ngoài màn. Chưa chứng minh root cause Yoga/cache. |
+| Tab rail→phone100 | Overlay Tạo64 đúng. | [Phone return100](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7a255c35/root-native-screens/home-after-phone-return100.png) **RED**: slot72/72/hidden96/72, Cá nhân chỉ8px còn thấy; không nhận target8px là usable. |
+| Inbox sáng/tối100/200, search/IME | Các label đã mở đọc được; query tổng hợp giữ hot200→100/IME, clear phục hồi. | Chưa kiểm đủ nhóm tên dài ở hàng dưới, story có dữ liệu/invites. Global Tabs RED độc lập, không suy Inbox được duyệt toàn màn. |
+| Cá nhân100 BEFORE | [Ảnh trước](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7a255c35/root-native-screens/profile-before100.png) cho thấy facts3+2 rời rạc, nút sửa outlined nổi và khoảng trống. | **RED thẩm mỹ**, cần gom danh tính/thống kê/thao tác theo nhịp giấy; chưa có native AFTER của proposal mới hoặc hồ sơ200 tại phase này. |
+| Cộng đồng100 BEFORE/body | Actionbar bốn mục có cùng hàng, nhưng header dư hàng thao tác48dp. | Cần gom thao tác phụ, giữ căn author/body/actions; chưa nhận after của proposal compact mới hoặc200. |
+| Q Nếp100/200/IME | Consent tổng hợp72 ký tự→draft64 sau working; quiet consent48/Save52 tại100; clear disabled có lý do; refill thường18 ký tự/hai newline giữ hot100→200/IME, đóng/phục hồi100. | Nhãn tạo lại200 wrap giữa hàng cần refinement; đoạn action từng nằm ngoài viewport cần microreview. **Chưa Save tại7a**, chưa providerID/independent GET/DB/refusal/ACK; không kết luận crash4ef hết. |
+
+Ngoại lệ không được nhận UI-complete/continuity credit:
+
+- `source-loaded`: root đã mở startup Bundling60%, chưa phải finished UI.
+- `q-generated-after100`: root đã mở request còn working, chưa có completed draft. Draft settled có ảnh riêng.
+- `q-review-refill-hot-ime100`, `q-review-refill-ime200`, `q-review-refill100`: chưa được mở; capture/font/back chồng input session chưa xong, input kết thúc CalledProcessError. Không gán tên file thành proof. Các frame `q-refill-verified-*` là lượt serial kiểm riêng sau đó.
+
+[Planned stop7a](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7a255c35/planned-native-stop.json) SHA `b623e05707f91763cdacfa9cbada605a54cd6f02ca8f867f3d8abc8e8e3b6c88`,03:26:37UTC12/10: monitor/Metro/emulator sở hữu đã dừng trước host/control/code checks, không phải memory alarm. Core/legacy được xác nhận còn chạy, protected audit giữ nguyên. Watch có1.125 host/225 ready-guest/221PSS samples; hostmin20,424GiB,guestmin639,480MiB,PSSmax749,741MiB, PID3337 không đổi; sampled safety/OOM/kill0. Không bảo đảm continuous/soak hoặc phủ nhận crash4ef.
+
+Controls tập trung Axis/Profile thực được ghi ở mục kế tiếp; native7a vẫn là BEFORE của các sửa này. Còn clean bản gộp đúng SHA và root mở AFTER100/200/hot100/IME/wide/rail return. Mỗi feature phải đối chiếu mockup và hoàn thiện chi tiết; toàn A–S/main, strict gate, native crypto/iOS/TalkBack/motion vẫn mở.
+
+## Axis / Cá nhân — controls tập trung đã chạy, chờ bản ghép và native AFTER (12/10)
+
+Root đã chạy serial hai bộ độc lập trên đúng base sạch7a, mỗi bộ freeze đủ **1093 nguồn/37 harness** và dùng cùng harness cho mọi variant. Lượt này chỉ chạy14case Axis (HC09–17/TB01–05) hoặc5case Profile (PH01–05), không chạy lại toàn186case ở mỗi variant. Receipt clean9 của7a là bằng chứng nền full Node thực đã có; không tạo focused base-green giả.
+
+| Bộ controls | Candidate / identity | Canary | Hai mutant | Receipt actual |
+|---|---|---|---|---|
+| Axis,14case |14/0;14/0|12/2,HC17/TB05|13/1,HC17;13/1,TB05|[Axis actual summary](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-axis-width-focused-frozen-20261012-r1/actual-controls-summary-20261012-r1.json)|
+| Cá nhân,5case |5/0;5/0|3/2,PH04/PH05|4/1,PH04;4/1,PH05|[Profile actual summary](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-profile-hierarchy-focused-frozen-20261012-r1/actual-controls-summary-20261012-r1.json)|
+
+Summary Axis SHA `f6c20478e34f7a5d6d6d4c05d043cd06c5ffb7fc25f8b6e3334f53fa7d44cd2e`,31,099s/peak mẫu168,438MiB/hostmin24,300GiB. Summary Profile SHA `74694d7021fc03bd11b71011ebde53e5d7a7c32876884d3913291f4fd43ecf62`,19,092s/peak mẫu172,383MiB/hostmin24,300GiB. Cả10runs khớp counts/actualIDsets dự đoán,0skip/cancel/todo/guard-error/stop/sampled scopeOOM/kill; log stdout/stderr và result hashes khớp. Wrapperd498… giữ nguyên scope2048MiB/heap768MiB/concurrency1/timeout180s; native/Metro OFF, lock chung giữ từngvariant nối tiếp.
+
+Raw first failures đã đọc: canary Axis TB05 thiếu list width100% và HC17 thiếu auto basis; mutant shrink0 đỏHC17 tại0≠1, mutant destination25% đỏTB05 tại25%≠20%. Canary Profile PH04 gặp5thay10value/label và PH05 thiếu quiet edit trong identity; mutant group3+2 đỏPH04 tại[3,2]≠[2,3], mutant edit fill đỏPH05 tại#ffffff≠transparent. Không phải lookup/import failure hoặc blanket catch.
+
+Axis thay flex basis cũ bằng auto và chiều rộng rõ cho Compare/phone slots, giữ media/controller/keys/handlers và ConDauTao. Profile r2 gom facts thành band2connections+3footprints, value/label tách cấp, quiet edit trong identity; band row width50%/một phần ba chiều rộng, stack100%, auto basis và grow0. PH01–03 giữ prefix, PH04 vàTB05 đổi constraint có chủ đích; chỉPH05/HC17 thêm registration. [Manifest Axis](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-axis-width-focused-frozen-20261012-r1/manifest.json) giữ harness SHA `971d2787a38abf0a0bcb91f8bdd62c85dc725ed70e1b1f68d56b6c03a1a8fe26`; [Manifest Profile](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/root-profile-hierarchy-focused-frozen-20261012-r1/manifest.json) giữ harness SHA `54644056f9ecae9cc3552df3a72e7488bf9a449554a06e5f375ab18665be822c`.
+
+Đây actual-host control cho declaration/ownership/retained input-media state; phép tính containment là policy, không chạy Yoga hoặc chứng minh decoded image/onLoad, glyph/IME/TalkBack/motion hay độ đẹp. Cơ chế stale flex basis trên RN vẫn là inference, native7a RED vẫn giữ làm BEFORE. Đã ghép đúng byte **4production+3harness** cùng hai tài liệu này; graph dự kiến188hostcase/24file và243Nodefile/1.870case, **chưa phải kết quả full của bản ghép**. Clean9 đúng checkpoint mới và root mở Android AFTER100/200/hot100/IME/tablet→phone còn PENDING. Q/Cộng đồng nằm checkpoint kế tiếp, chưa tự ghép chung. Toàn A–S/độ đẹp/main vẫn chưa nghiệm thu.
+
+## Checkpoint lịch sử a2ac→7a — bốn phần sửa trước Android7a
 
 **Chưa nghiệm thu toàn frontend hoặc độ đẹp.** Base `a2ac74f1d316026b3699cce1f02fe1d140881964` đã qua clean9/9:242 tệp Node,1.856/1.856 ca; Go guide98,199,549s. [Clean đúng base](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a2ac74f1/clean-checks.json). Bốn phần dưới đã tích hợp đúng byte vào feature branch; clean đúng checkpoint mới và native AFTER còn **PENDING tại lúc ghi checkpoint này**.
 
