@@ -49,4 +49,18 @@ Người dùng đã bác Composer hiện tại từ `/tmp/codex-clipboard-Ziur7u
 
 Mốc base `75b7e52a486dc022d1977d075dd5ea37837ea262` có trước invocation; r2 áp dụng cho lần sửa tiếp theo. Dùng `quality-bar.md` đi kèm để review native AFTER đúng SHA, không dùng ship lịch sử hoặc host green thay phán đoán đẹp. FINISH còn mở.
 
-**Quality bar lưu trong repo:** `docs/design/nep-ui-implementation/QUALITY-BAR-NATIVE-20261013.md`. Verdict và ảnh native AFTER đúng checkpoint còn chờ; không có approved comp mới.
+**Quality bar lưu trong repo:** `docs/design/nep-ui-implementation/QUALITY-BAR-NATIVE-20261013.md`. Ảnh native AFTER và verdict e338 được đối chiếu bên dưới; không có approved comp mới.
+
+## Đối chiếu built artifact e338 · 13/10/2026
+
+Correction đã nằm trong `e338740b73e98eada580bffae3edb239acb9ab5c`: content/stage/writing/body grow ở mọi chiều rộng, shrink0/basis auto; bỏ bottomInset16, giữ footer/safe-area shell. `expanded` chỉ còn chính sách maxHeight input theo width. MediaPicker/MentionPicker/Field, `topicsTools` và mọi handler giữ trong cây cuộn; không có một toolbar thứ hai hoặc field dài ghim chân màn. Ảnh [phone tối100](../review/e338740b/composer-mobile.png) và [cửa sổ tablet tối100](../review/e338740b/composer-tablet.png) cho thấy rail sát vùng đăng, khoảng dư nằm trong canvas. Documenter đã mở cả hai, thêm ảnh chủ đề200/IME trong bó private; không đo pixel/hitbox hoặc suy mượt từ ảnh.
+
+Bó native ngoài repo: `native-audit-e338740b` dưới `~/.local/share/rudi-nep-ui/runtime-private-merged-20261006/`. `source-screen-receipt.json` gắn fingerprint sourcee338/PID2884; `root-visual-review.json` ghi root mở26 PNG, pin52 PNG/XML cho cả Composer và Search. Đây không phải26 trạng thái Composer. `ready-e338` là loading trắng; `search-after-dark-100-sample-settled` thực tế là Profile, loại khỏi verdict Search. `sample-ime` là mẫu câu đã hiện nhưng bàn phím đóng, chỉ dùng cho sample-state.
+
+AFTER Composer hiện phủ form rỗng, focus và chủ đề: light/dark100, phone dark200 với cuộn và IME body/topic, cùng cửa sổ768×1024 font100 sáng/tối trên một emulator. Chưa có native e338 cho bài đã nhập dài, media/pending/retry, validation/conflict, audience/edit/nhóm hoặc đăng/ACK; không dùng host tests thay các scene đó. Phone thường/landscape, tablet200/IME, TalkBack, contrast/target đo thật, reduced motion và phần cứng/iOS cũng chưa phủ đầy quality bar.
+
+Root chạy clean exacte3389/9: Node subset246 file,1880/1880, fail/skip/cancel/todo0; Go chỉ gói hướng dẫn98/98. Năm file browser bị loại theo receipt. Không phải full gate/main/deploy hoặc nghiệm thu đẹp. Native555 mẫu, PID2884 không đổi, OOM0 ở các scope được theo dõi chỉ mô tả lượt kiểm; không chứng nhận hiệu năng hay mọi hành vi.
+
+Verdict độc lập `impeccable-finish-review-e338-private-20261013-r1/scoped-verdict-five-sections.md` là **FIX**, sau khi reviewer mở23 ảnh (12 Composer,10 Search,1 source). F1 đã giải quyết trong dock thu gọn đã chụp; F2 đã giải quyết trong canvas rỗng đã chụp. F3 chỉ đạt một phần: cụm author/audience và ô chủ đề rỗng khi focus/IME được kiểm, còn typed body/topic, caret/selection với nội dung, Mention và helper/error/phục hồi chưa có native proof mới. Không suy những state đó hỏng, cũng không gọi F3 resolved.
+
+FINISH và quality bar rộng còn mở. Đây là tài liệu lịch sử e338; sửa tab Khám phá sau e338 là slice khác, chưa được chứng minh bởi các ảnh này. Nếu Composer thay đổi tiếp, cần đối chiếu source và capture mới trước khi cập nhật kết luận; không tái dùng ship lịch sử.

@@ -896,6 +896,29 @@ nối vùng viết, counter và toolbar thành một vùng liên tục, không c
 khoảng trống sau toolbar. Đây là sửa F1/F4 được nhìn thấy ở native7cf,
 không thay `RONG_COT` hoặc mặc định mọi form.
 
+**Composer và hàng tìm địa điểm — cục bộ tại `e338740b` (13/10/2026).**
+Composer bài viết cho content/stage/writing/body nhận phần cao dư ở mọi
+chiều rộng (`flexGrow: 1`, `flexShrink: 0`, basis tự nhiên), thay nhánh chỉ
+grow ở wide. Khoảng trống thuộc canvas; counter theo cuối vùng viết, rail
+công cụ theo sau. Bỏ đệm cuối body, dùng khe đầu footer của shell; không
+ghim MediaPicker/MentionPicker/Field vào footer. Khi phần thêm mở hoặc chữ
+lớn, nó cuộn trong thân; không ép toàn nhóm vào màn đầu. Giải thích duyệt
+bài vẫn cạnh audience, lý do/lỗi đăng vẫn cạnh quyết định đăng. Đây là bố
+cục của caller Composer, không là mặc định mọi `RudiScreen`.
+
+Khám phá › Địa điểm giữ ô tìm là chính và nút hỏi AI bên cạnh: hàng stretch
+với gap8, nút AI rộng48, chiều cao auto/min48 theo hàng. `IconButton` nhận
+style opt-in tại caller; các caller không truyền style vẫn giữ ô48×48.
+Không thêm token, font, world hay raster mới. Đối chiếu built artifact và
+phạm vi ảnh e338 ở [brief Composer](.impeccable/surfaces/apps-mobile-src-rudi-community-composer-tsx.md)
+và [brief hàng tìm](.impeccable/surfaces/src-rudi-screens-explore-explorelive-tsx-5ec3650c.md).
+Verdict độc lập e338 là **FIX**: F1 đạt ở dock thu gọn, F2 đạt ở canvas
+rỗng, S1 đạt ở hàng tìm trong các scale/theme/window đã chụp; F3 còn một
+phần vì chưa có nội dung đã nhập, Mention và phục hồi qua IME. FINISH còn
+mở; đây là đối chiếu lịch sử e338, không phê duyệt đẹp/ship toàn app hoặc
+chứng cứ cho sửa tab Khám phá sau đó. Không nâng kích thước cục bộ hay sai
+lệch có sẵn thành luật hệ thiết kế.
+
 Composer Khoảnh khắc J dùng cùng cột đọc (640dp) cho ảnh/caption, privacy
 và footer audience/action/helper; không giữ body640/footer560. Khi IME đóng,
 footer lấy inset đáy thiết bị cộng khoảng thở (12dp); khi mở giữ nhánh IME

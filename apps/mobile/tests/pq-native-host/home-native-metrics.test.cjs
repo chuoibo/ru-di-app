@@ -173,8 +173,11 @@ test('HC12 shared Hang Dau and Field defaults keep their RN path under an actual
     await h.mount(); raw(h.one('RNTextInput', props => props.accessibilityLabel === 'HC default search'), 17, 24);
     raw(leaf(header(h), 'Cộng đồng'), 21, 27); raw(leaf(lead(h), dd.name), 21, 27);
     assert.equal(compare(h).findAllByType(h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceRow).length, 2, 'default wide large-window branch remains the original rows');
-    const scroll = one(header(h).findAllByType('RNScrollView'), 'actual header scroll');
-    await act(async () => scroll.props.onLayout()); assert.equal(h.nativeHostCalls.at(-1).kind, 'scrollToEnd');
+    const sections = header(h).findAllByType('RNPressable').filter(node => node.props.accessibilityRole === 'tab');
+    assert.deepEqual(sections.map(node => node.props.accessibilityLabel), ['Địa điểm', 'Cộng đồng']);
+    for (const section of sections) assert.equal(leaf(section, section.props.accessibilityLabel).props.numberOfLines, undefined, 'default section labels retain full copy');
+    assert.equal(header(h).findAllByType('RNScrollView').length, 0, 'the two sections no longer require a scroll container');
+    assert.equal(h.nativeHostCalls.some(call => call.kind === 'scrollToEnd'), false);
     assert.equal(h.observation().subscriptions, 1); assert.equal(h.observation().live, 1); assert.equal(h.calls.length, 0);
     assert.equal(h.exploreStorage.length, 0, 'pure shared card rendering cannot access destination storage');
   } finally { await h.dispose(); }

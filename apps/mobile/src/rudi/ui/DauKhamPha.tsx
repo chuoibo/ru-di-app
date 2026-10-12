@@ -1,5 +1,5 @@
-import { useRef, type ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text as RNText, View, useWindowDimensions } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, StyleSheet, Text as RNText, View, useWindowDimensions } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
 import { typography, useRudiTheme } from "../theme";
@@ -20,38 +20,19 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
  * faint; one font for both, so nothing shifts when the section changes. It
  * only draws: the route file owns the navigation, because the guide's
  * extractor (`tools/rut-huong-dan.mjs`) reads a route's exits there. The
- * words scroll sideways rather than clip when a large text size outgrows a
- * narrow phone; `phai` (the bell and the feed settings) stays put, outside
- * the tablist, which may own tabs only. Below 360dp it rises above the words,
- * as the community's own header does (B7): beside two 48dp buttons the words
- * had 180 of 288dp and «Địa điểm» was cut to its last letters.
+ * two labels wrap inside the available row, so both sections stay visible
+ * at large native text sizes. `phai` stays outside the tablist, which may
+ * own tabs only. Below 360dp non-inline actions rise above the words.
  */
 export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false, inlineActions = false }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode; nativeMetrics?: boolean; inlineActions?: boolean }) {
   const { colors } = useRudiTheme();
   const CopyText = nativeMetrics ? NativeMetricText : RNText;
-  const cuon = useRef<ScrollView>(null);
   // The words stay first in reading order; only the controls' place on screen changes.
   // A single overflow target leaves the section words on the same row.
   const hep = useWindowDimensions().width < 360 && phai !== undefined && !inlineActions;
-  // When large text makes the words outgrow the row, the open section is the
-  // one in view: Cộng đồng, the second word, scrolls itself in. Asked again
-  // once the row knows its own width (on the web the content size arrives
-  // first, and a scroll measured then moved two pixels and hid «đồng» under
-  // the settings button: 246-dp proxy for 320 × 1.3, finish review 02/10).
-  const hienMucMo = () => {
-    if (muc === "community") cuon.current?.scrollToEnd({ animated: false });
-  };
   return (
     <View style={[styles.hang, hep && styles.hangHep]} testID="dau-kham-pha">
-      <ScrollView
-        contentContainerStyle={styles.cuonTrong}
-        horizontal
-        onContentSizeChange={hienMucMo}
-        onLayout={hienMucMo}
-        ref={cuon}
-        showsHorizontalScrollIndicator={false}
-        style={[styles.cuon, inlineActions && styles.cuonInline]}
-      >
+      <View style={[styles.mucTrongHang, inlineActions && styles.mucInline]}>
         <View {...TABLIST} style={styles.danhSach}>
           {MUC.map((m) => {
             const chon = m.muc === muc;
@@ -65,7 +46,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false, inlineA
                 }}
                 style={styles.muc}
               >
-                <CopyText numberOfLines={1} style={[typography.h2, { color: chon ? colors.ink : colors.inkFaint }]}>
+                <CopyText style={[typography.h2, styles.nhan, { color: chon ? colors.ink : colors.inkFaint }]}>
                   {m.nhan}
                 </CopyText>
                 <View style={[styles.bang, { backgroundColor: chon ? colors.accent : "transparent" }]} />
@@ -73,7 +54,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false, inlineA
             );
           })}
         </View>
-      </ScrollView>
+      </View>
       {phai ? <View style={[styles.phai, hep && styles.phaiHep]}>{phai}</View> : null}
     </View>
   );
@@ -81,11 +62,11 @@ export function DauKhamPha({ muc, onDoiMuc, phai, nativeMetrics = false, inlineA
 
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center", gap: 8 },
-  cuon: { flexGrow: 1, flexShrink: 1 },
-  cuonInline: { flexBasis: 0, minWidth: 0 },
-  cuonTrong: { flexGrow: 1 },
+  mucTrongHang: { flexGrow: 1, flexShrink: 1, minWidth: 0 },
+  mucInline: { flexBasis: 0 },
   danhSach: { flexDirection: "row", gap: 24 },
-  muc: { minHeight: 48, alignItems: "center", justifyContent: "center", paddingTop: 6, gap: 4 },
+  muc: { minHeight: 48, flexShrink: 1, minWidth: 0, alignItems: "center", justifyContent: "center", paddingTop: 6, gap: 4 },
+  nhan: { maxWidth: "100%", textAlign: "center" },
   bang: { width: 28, height: 4, borderRadius: 2 },
   phai: { flexShrink: 0 },
   hangHep: { paddingTop: 48 },

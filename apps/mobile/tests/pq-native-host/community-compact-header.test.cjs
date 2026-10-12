@@ -56,7 +56,7 @@ async function community(view, run) {
   finally { await h.dispose(); h.community.assertClean(); assert.equal(Object.values(h.community.listeners).every(entries => entries.size === 0), true, 'actual listeners clean up'); assert.equal(h.sockets.every(socket => socket.closed), true); observation(h, 1); }
 }
 
-test('CH01 actual tab keeps one inline overflow and selected section callbacks on retained search through hot metrics', async () => {
+test('CH01 actual tab keeps two full section labels and one inline overflow on retained search through hot metrics', async () => {
   await community('tab', async h => {
     assert.equal(h.sockets.length, 1, 'actual stream creates one synthetic native socket');
     assert.equal(h.sockets[0].url, 'wss://synthetic.invalid/v2/community/stream');
@@ -71,12 +71,17 @@ test('CH01 actual tab keeps one inline overflow and selected section callbacks o
     assert.equal(style(overflow).width, 48); assert.equal(style(overflow).height, 48);
     assert.equal(style(right).position, undefined); assert.equal(style(right).flexShrink, 0);
     assert.equal(root.findAllByType('RNPressable').length, 3, 'two real section tabs and exactly one overflow target');
-    const scroll = one(root.findAllByType('RNScrollView'), 'actual section scroll'), scrollRef = h.native.node(scroll);
-    assert.equal(style(scroll).flexBasis, 0); assert.equal(style(scroll).minWidth, 0);
+    const sectionList = one(root.findAllByType('RNView').filter(node => node.props.role === 'tablist'), 'actual two-section tablist');
+    assert.deepEqual(sectionList.findAllByType('RNPressable').map(node => node.props.accessibilityLabel), ['Địa điểm', 'Cộng đồng']);
     const active = action(root, 'Cộng đồng'), inactive = action(root, 'Địa điểm');
     assert.equal(active.props.accessibilityRole, 'tab'); assert.equal(inactive.props.accessibilityRole, 'tab');
     assert.equal(active.props['aria-selected'], true); assert.equal(inactive.props['aria-selected'], false);
     const activeText = copy(active, 'Cộng đồng'), inactiveText = copy(inactive, 'Địa điểm');
+    for (const label of [activeText, inactiveText]) {
+      assert.equal(label.props.numberOfLines, undefined, 'CH01 full section copy may wrap with native text size');
+      assert.equal(label.props.ellipsizeMode, undefined);
+    }
+    assert.equal(root.findAllByType('RNScrollView').length, 0, 'two complete section labels need no horizontal section scroll');
     const tabs = component(h, 'apps/mobile/src/rudi/ui/HangChuTab', 'HangChuTab');
     assert.equal(tabs.props.nativeMetrics, true);
     const feedText = copy(tabs, 'Dành cho bạn'), search = input(h), searchRef = h.native.node(search);
@@ -84,6 +89,7 @@ test('CH01 actual tab keeps one inline overflow and selected section callbacks o
     const hint = copy(h.root.root, 'Đi đâu, ăn gì, trải nghiệm gì?'); metrics(h, hint, { fontSize: 17, lineHeight: 24 });
     await h.native.focus(search); await act(async () => search.props.onChangeText('QC community query'));
     const before = counters(h);
+    const nativeBefore = h.nativeHostCalls.length;
     for (const value of [snapshot(), snapshot(2), unavailable(), snapshot()]) {
       await h.nativeFont(value); observation(h);
       assert.equal(h.state.window.width, 320); assert.equal(h.state.window.fontScale, 1, 'native metrics change while window remains stale');
@@ -95,11 +101,13 @@ test('CH01 actual tab keeps one inline overflow and selected section callbacks o
       assert.equal(copy(active, 'Cộng đồng') === activeText, true); assert.equal(copy(inactive, 'Địa điểm') === inactiveText, true); assert.equal(copy(tabs, 'Dành cho bạn') === feedText, true);
       metrics(h, activeText, { fontSize: 21, lineHeight: 27, letterSpacing: -0.3 }); metrics(h, inactiveText, { fontSize: 21, lineHeight: 27, letterSpacing: -0.3 }); metrics(h, feedText, { fontSize: 14, lineHeight: 19 });
       assert.equal(h.native.node(options(h)) === overflowRef, true); assert.deepEqual(counters(h), before, 'font-only change cannot dispatch I/O, attempts or navigation');
-      const offset = h.nativeHostCalls.length;
-      await act(async () => { scroll.props.onLayout({ nativeEvent: { layout: { width: 232, height: 64 } } }); scroll.props.onContentSizeChange(400, 64); });
-      const calls = h.nativeHostCalls.slice(offset);
-      assert.equal(calls.length, 2, 'both actual selected-section callbacks issue their own request');
-      for (const call of calls) { assert.equal(call.kind, 'scrollToEnd'); assert.equal(call.target, scrollRef.id); assert.equal(call.options.animated, false); assert.deepEqual(Object.keys(call.options), ['animated']); }
+      assert.equal(one(root.findAllByType('RNView').filter(node => node.props.role === 'tablist'), 'retained section tablist') === sectionList, true);
+      assert.equal(root.findAllByType('RNScrollView').length, 0, 'hot native metrics cannot reintroduce section scrolling');
+      for (const label of [activeText, inactiveText]) {
+        assert.equal(label.props.numberOfLines, undefined, 'CH01 full section copy stays uncapped through metrics fallback');
+        assert.equal(label.props.ellipsizeMode, undefined);
+      }
+      assert.equal(h.nativeHostCalls.length, nativeBefore, 'font-only change cannot issue imperative native actions');
     }
     await press(active); assert.equal(h.routes.length, 0, 'active section does not navigate');
     await press(inactive); assert.equal(h.community.navigationCalls.at(-1).method, 'navigate'); assert.equal(h.routes.at(-1), '/explore');

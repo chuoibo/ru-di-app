@@ -61,3 +61,7 @@ Root đã chọn narrow growth tại caller sau reviewer độc lập: giữ ngu
 Source75 đã có tests xanh vẫn bị người dùng bác; không nâng source assertion thành nghiệm thu thẩm mỹ. Hoàn tất review/verdict/documenter có phạm vi, không viết lại toàn DESIGN cho extension, không tạo raster trong task này. FINISH chưa đóng.
 
 Craft floor: `/home/lakiet/.claude/plugins/cache/impeccable/impeccable/4.5.2/skills/impeccable/reference/craft-floor.md`.
+
+## Hai section Khám phá · yêu cầu bổ sung sau ảnh e338
+
+Hai mục Địa điểm/Cộng đồng phải đọc đầy đủ cùng lúc ở100/200/return100, không clip mục bên cạnh hoặc thu font để giữ thanh thấp. Khi thiếu bề rộng, nhãn được wrap và hàng tăng chiều cao; cả hai target tối thiểu48dp. Giữ thứ tự, typeh2 native, băng coral và selected state. Nút overflow Community ở ngoài tablist, vẫn tới được. Kiểm cả Explore và Community, light/dark, phone320/window768; bounds chưa thay việc nhìn glyph/dấu và optical alignment. Giữ owner/input/ref/focus/query qua native metrics, không phát I/O khi chỉ đổi font. Năm feed khác vẫn có scroll riêng; chưa được suy đã đạt. Đây là tiêu chuẩn candidate mới, chưa native AFTER hoặc verdict.
