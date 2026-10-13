@@ -72,9 +72,9 @@ import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { loaiSoCua } from "../../so/ban-tinh";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
-import { bangMauChat, mucNguoi, typography, useRudiTheme } from "../../theme";
+import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
-import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner } from "../../ui/NativeFontMetrics";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 import { useMotion } from "../../ui/useMotion";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -129,7 +129,7 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
               <Sticker id={tin.than} size={120} />
             </View>
           ) : (
-            <View style={[styles.bong, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
+            <View style={[styles.bong, tin.kind === "text" && !pendingRandom && styles.bongChu, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
               <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{pendingRandom ? `Lượt ${pendingRandom.mode === "wheel" ? "vòng quay" : "đua vịt"} · ${pendingRandom.options.length} lựa chọn` : tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
             </View>
           )}
@@ -186,6 +186,9 @@ function ObserveChatMetrics({ contextId }: { contextId: string }) {
 function GroupChatContent({ contextId }: { contextId: string }) {
   const router = useRouter();
   const { colors, dark, radius, space } = useRudiTheme();
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // The reading slot follows native line height plus two 5dp insets and borders.
+  const avatarLineHeight = bodyMetrics?.lineHeight === undefined ? 48 : Math.max(48, bodyMetrics.lineHeight + 12);
   const insets = useSafeAreaInsets();
   const { reduced } = useMotion();
   const { phien, datPhien } = useRudiSession();
@@ -992,6 +995,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     const laSticker = tin.kind === "sticker";
     const laAnh = tin.kind === "image";
     const daXoa = tin.kind === "deleted";
+    const laTinChu = tin.kind === "text" && !pollV2 && !randomV2;
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
     // The theme colours the sender's bubble; a taken-back row is paper again.
     const nenBong = daXoa || laAnh ? colors.card : cuaToi ? mauChat.bubble : colors.card;
@@ -1003,21 +1007,24 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     const loiCuaTin = loiTin !== null && loiTin.id === tin.id ? loiTin : null;
     return (
       // The name, the quote and the reactions sit around the line, not in it:
-      // the line holds only the avatar and the bubble, so the avatar's foot is
-      // the last bubble's foot (QA UI-064 measured it 22px low, beside the
-      // time). Runs sit 2dp apart, separate voices 12dp.
+      // the line holds only the avatar and the bubble. The text avatar pairs
+      // with the last reading line; cards and media keep their existing frame.
+      // Runs sit 2dp apart, separate voices 12dp.
       <View style={[styles.tinKhoi, { paddingTop: dauChuoi ? 12 : 2 }]}>
-        {benKia && dauChuoi ? (
-          // The sender in their own ink (ADR-0037 D6): the same colour as their avatar ring.
-          <Text style={[typography.caption, styles.thut, { color: tin.author_id ? mucNguoi(tin.author_id, dark) : colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
+        {benKia && dauChuoi && !nhanRieng ? (
+          <Text style={[typography.note, styles.tenTacGia, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
         ) : null}
         <View testID={`chat-message-${tin.id}`} style={[styles.hang, benToi && styles.hangToi, laAi && !laPoll && styles.hangGiua]}>
           {benKia ? (
-            cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
+            cuoiChuoi ? laTinChu ? (
+              <View style={[styles.chuDauTinChu, { height: avatarLineHeight }]}>
+                <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} />
+              </View>
+            ) : <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
           ) : null}
           <View style={[styles.khoi, benToi && styles.khoiToi, laPoll || randomV2 ? styles.khoiPoll : laAi && styles.khoiAi]}>
             {/* The quote sits ABOVE the bubble, in the bubble's column: the
-                avatar beside the column still meets the bubble's foot, and the
+                avatar beside the column still pairs with the body, and the
                 quote stays part of the message it introduces. Never in a
                 flex-wrapped row under it: a lone Text at the end of a wrapping
                 row keeps one word's width (bài học RN 2026-09-04). A deleted
@@ -1086,7 +1093,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
                 onAccessibilityAction={() => { if (!daXoa) setMenuTin(tin); }}
                 onLongPress={() => setMenuTin(tin)}
                 onPress={() => { if (!daXoa) setMenuTin(tin); }}
-                style={[styles.bong, laAnh && styles.bongAnh, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
+                style={[styles.bong, laTinChu && styles.bongChu, laAnh && styles.bongAnh, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
               >
                 {daXoa ? (
                   <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
@@ -1225,6 +1232,14 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           ) : null}
         </View>
       ) : null}
+      {/* One mounted history boundary also hides inverted native descendants. */}
+      <View
+        accessibilityElementsHidden={lichSuAn}
+        importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+        pointerEvents={lichSuAn ? "none" : "auto"}
+        collapsable={false}
+        style={[styles.lichSu, lichSuAn && styles.lichSuAn]}
+      >
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. It is
           the flexible part of the column now, and scrolls inside itself: as a
@@ -1430,6 +1445,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
             <Text style={[typography.label, { color: colors.ink }]}>Tin mới nhất</Text>
           </Pressable>
         ) : null}
+      </View>
       </View>
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
@@ -1684,7 +1700,9 @@ const styles = StyleSheet.create({
   khoiAi: { maxWidth: 640, flex: 1 },
   khoiPoll: { maxWidth: 560, flex: 1 },
   choChuDau: { width: 30, height: 30 },
+  chuDauTinChu: { width: 30, minHeight: 48, alignItems: "center", justifyContent: "center" },
   bong: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minWidth: 0 },
+  bongChu: { minWidth: 48, minHeight: 48, paddingVertical: 5, justifyContent: "center" },
   bongAnh: { paddingHorizontal: 6, paddingVertical: 6 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
@@ -1695,11 +1713,13 @@ const styles = StyleSheet.create({
   ds: { flex: 1 },
   dsRong: { flexGrow: 0, flexShrink: 1 },
   dsRongTrong: { flexGrow: 0 },
-  lichSuAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: 0, height: 0, minHeight: 0, overflow: "hidden" },
+  lichSu: { flex: 1, minHeight: 0, overflow: "hidden" },
+  lichSuAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: 0, height: 0, minHeight: 0, maxHeight: 0, overflow: "hidden", opacity: 0 },
   dsAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: "auto" },
   tinKhoi: { gap: 3 },
   // The name, quote and reactions start where the bubble does, past the avatar.
   thut: { marginLeft: 38 },
+  tenTacGia: { marginLeft: 52, marginRight: 14 },
   duoiToi: { justifyContent: "flex-end" },
   loiTin: { marginTop: 2 },
   // Under your own message the sentence hangs from the right, like the bubble.

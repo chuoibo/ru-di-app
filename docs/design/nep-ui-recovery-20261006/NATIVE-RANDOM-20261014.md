@@ -55,3 +55,17 @@ Kiểm root cho các sửa tiếp: typecheck pass; test compile pass; Node focus
 Các sửa sau `1ad95c9a` cần checkpoint mới và clean9 mới; không dùng pass của parent thay thế. Emulator/Metro/watch vẫn OFF trong lượt build/test này. Native độ đẹp, chuyển động, gửi/replay, font/IME và Impeccable finish review/documenter của Random chưa hoàn tất; A–S/strict32/main và các cổng native độc lập vẫn OPEN.
 
 Checkpoint `317bb116`: năm bước đầu clean9 pass; Node **1918/1919**, một failure của guard hiển thị ID nhận nhầm ternary đọc khóa catalogue; fail 1, skip/cancel/todo 0, ba bước sau chưa chạy. Tách hàm đọc khóa opaque khỏi hàm xử lý chữ hiển thị, giữ nguyên guard và regression bảo toàn ID; không thêm ngoại lệ scanner. Graph 317 riêng đo đủ 1120 source/43 harness, 2240 raw comparisons, 0 mismatch; không dùng làm graph/pass của checkpoint sau. Native vẫn OFF.
+
+## Native b646 và đợt sửa bố cục chat
+
+Checkpoint `b6462736` qua **9/9** trên CHECK sạch: Node **1919/1919**, 250 file; Go guide **98 pass**, một package; fail/skip/cancel/todo 0. Root so lại 2240 file/OID và 18 raw stream. ELF có VCS đúng b646 được dựng riêng từ clone local sạch như đã mô tả; không thay receipt ELF gốc của clean9.
+
+QC local đã áp dụng migration chat/metrics v8 và chạy core mới. Lượt launcher đầu không ghi được owner receipt dù core mới sống; giữ nguyên failure, không suy ra nguyên nhân hoặc equality environment cũ. Root và reviewer đọc helper adoption, kiểm PID/start ticks/ELF/cổng/health/config chọn lọc, metadata v8/OID, legacy và dependencies, rồi chỉ cập nhật receipt đúng core đang chạy. Không chạy lại migration hoặc restart Docker. Full worker AGY-only vẫn thiếu embedding; tìm quán AI thực tế **OPEN**.
+
+Root đã mở Android emulator ở 320×640, dark, chữ 100/200%, xác nhận marker b646 và actor fixture. Nhập hai lựa chọn tổng hợp Pho/Bun bằng driver giới hạn dữ liệu; đua vịt gửi thành công qua MLS, hiện kết quả Bun trong editor và thẻ chat. Vịt là cutout ImageGen thật và thấy rõ khi thu nhỏ. Chưa có ảnh in-flight, chưa kiểm vòng quay, replay/reload/hai thành viên, tám lựa chọn, reduced motion hoặc light; không dùng lượt này nghiệm thu toàn tính năng.
+
+Ảnh cho thấy ba lỗi: phần tìm quán và chú thích chiếm chỗ; lịch sử inverted còn lộ trên editor ở cỡ chữ lớn; tên/avatar tin nhắn lệch thị giác đúng phản ánh tiếp của chủ sản phẩm. Đợt sửa kế tiếp gộp tìm quán thành mục mở khi cần, bỏ chú thích tự nhập và đường kẻ lặp, đặt CTA trong chân màn, kéo đầu nội dung khi lượt được xác nhận. Chat riêng bỏ tên trùng header; nhóm dùng tên dịu và căn theo chữ trong bong bóng. Plain text/pending giữ target tối thiểu 48dp và avatar đi theo chiều cao dòng hiện tại. Boundary mounted ẩn cả lịch sử khi editor mở; không unmount crypto/list hooks. Asset/round/queue/Rust ABI không đổi trong đợt bố cục này.
+
+Trước sửa, planned stop native có **803 mẫu**, PID app ổn định, không đổi PID, không safety stop hoặc sampled scope OOM/OOM-kill. Host available thấp nhất **15,68GiB**, guest đã boot thấp nhất **680,26MiB**, PSS app lớn nhất **750,29MiB**. Đây là đợt khoảng 13 phút, không chứng minh không còn OOM ở mọi flow. Root đợi từng action/input/capture kết thúc trước bước tiếp.
+
+Typecheck/compile và focused regression **51/51**, fail/skip/cancel/todo 0, của đợt bố cục đã pass tại cây làm việc; clean9 và ảnh sau sửa phải đo lại tại checkpoint mới. Native finish review/documenter, A–S, strict32, main và các cổng native độc lập vẫn **OPEN**.
