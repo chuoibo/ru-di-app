@@ -97,11 +97,12 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
           onPress={() => onChange({ ...draft, options: draft.options.filter((_, i) => i !== index) })} /> : null}
       </View>)}
       {!round && options.length < 8 ? <RudiButton compact full={false} icon="add" variant="ghost" label="Thêm lựa chọn" disabled={locked || searching}
+        lyDo={searching ? "Đang tìm quán; thêm lựa chọn sau khi tìm xong." : "Lượt đã khóa; mở lượt mới để sửa."}
         onPress={() => onChange({ ...draft, options: [...draft.options, { label: "" }] })} /> : null}
       {error ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
       <View style={styles.actions}>
         {!round ? <RudiButton label={mode === "wheel" ? "Quay cùng Nếp" : "Cho vịt xuất phát"} icon={mode === "wheel" ? "refresh" : "flag-outline"}
-          disabled={publishing || searching} loading={publishing} onPress={onPlay} />
+          disabled={publishing || searching} lyDo={searching ? "Đang tìm quán; bạn có thể chơi khi tìm xong." : "Đang gửi lượt này vào nhóm."} loading={publishing} onPress={onPlay} />
           : !published ? <RudiButton label={publishing ? "Đang gửi lượt…" : "Thử gửi lại lượt này"} disabled={publishing} lyDo="Đang gửi lượt này vào nhóm." loading={publishing} onPress={onRetry} />
           : complete ? <View style={[styles.resultActions, reflow && styles.column]}>
             <RudiButton full={false} label="Tạo kèo" onPress={onCreateOuting} />

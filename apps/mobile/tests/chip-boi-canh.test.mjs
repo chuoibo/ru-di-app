@@ -97,8 +97,8 @@ test("màn đưa cho chip đúng gói sẽ gửi, và «Xem» liệt kê đúng 
   const live = readFileSync(join(SRC, "screens", "chat", "GroupChatLive.tsx"), "utf8");
   assert.match(live, /const goiChip = [^;]*boiCanhAi/, "gói trên chip phải là gói gomBoiCanhChat dựng");
   assert.match(live, /<ChipBoiCanh goi=\{goiChip\}/);
-  // The bundle frozen at the press is the one the chip showed.
-  assert.match(live, /goi: goiSeGui\(goiChip, kemTin\)/);
+  // The composer freezes the shown bundle; the random tool promises request-only.
+  assert.match(live, /goi: randomRequestOnly \? undefined : goiSeGui\(goiChip, kemTin\)/);
 });
 
 // Bug 2026-09-28 (lab screenshot 08): the «Xem» sheet was a child of the chip,

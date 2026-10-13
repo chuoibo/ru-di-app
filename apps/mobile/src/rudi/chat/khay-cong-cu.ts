@@ -72,9 +72,9 @@ export interface LenhGoiY {
  * The commands the composer suggests. Choosing one fills the composer and
  * sends nothing (chat-ui-contract.md): an AI request is an ordinary message
  * the person finishes writing, with the preview chip above the send button
- * (ADR-0046). Only `/vote` opens a form, because a poll is not a message.
+ * (ADR-0046). `/vote` and bare `/random` open their editors.
  *
- * The same four commands in every room; a room of two only words them for two.
+ * The same commands in every room; a room of two only words them for two.
  */
 export function lenhGoiY(haiNguoi: boolean): readonly LenhGoiY[] {
   return [

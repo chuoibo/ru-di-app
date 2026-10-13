@@ -112,10 +112,10 @@ test("cặp đám bạn: lời gọi lên máy chủ là plan, kèm tin tag và 
   } finally { globalThis.fetch = original; datTokenPhien(null); }
 });
 
-test("ô soạn của cặp gợi ý đủ bốn lệnh như nhóm, chữ viết cho hai người", () => {
+test("ô soạn của cặp gợi ý đủ năm lệnh như nhóm, chữ viết cho hai người", () => {
   const cap = lenhGoiY(true);
   const nhom = lenhGoiY(false);
-  assert.deepEqual(cap.map((l) => l.nhan), ["/plan", "/vote", "/chia-bill", "@Rủ Đi"]);
+  assert.deepEqual(cap.map((l) => l.nhan), ["/plan", "/vote", "/random", "/chia-bill", "@Rủ Đi"]);
   assert.deepEqual(cap.map((l) => l.nhan), nhom.map((l) => l.nhan));
   assert.deepEqual(cap.map((l) => l.goiY), nhom.map((l) => l.goiY));
   for (const l of cap) {
@@ -171,7 +171,7 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   // B8 (QA UI-071): a group of one shows it quieter, under «Mời bạn vào nhóm».
   assert.match(live, /\n\s*<RudiButton label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\} variant=\{chiMinhToi \? "ghost" : "outline"\}/, "nút mở tờ hẹn ở màn trống có ở mọi phòng");
   assert.match(live, /const nhacDangGo = timNhacAi\(nhap\)/);
-  assert.match(live, /const nhac = command === undefined \? timNhacAi\(body\) : null/);
+  assert.match(live, /const nhac = command === undefined \|\| randomRequestOnly \? timNhacAi\(body\) : null/);
   assert.match(live, /MO_DAU_HOI_AI \+ nhapRef\.current\.text/);
   // The couple's extras read the server's `cap_doi`, and only in a pair.
   assert.match(live, /const capDoi = nhanRieng && laCapDoi\(ai\.capabilities\);/);
