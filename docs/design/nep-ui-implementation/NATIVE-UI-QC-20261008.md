@@ -1282,3 +1282,10 @@ Clean9/9 ởee42, Node1880/1880/246file, Go-guide98/98. Root mở45ảnhnative, 
 ReviewerFIX xác nhận gapcounter→tool131dp ở320×960 so với13dp ở320×640, cùngtoolgap4dp. Correction saustop đổiceilingcompact sangmax(420,height), toolgap8; giữ cây/owner/ref/lease/handler. LP08migration giữnative-line minimum vượtwindow; focused28+owner/media/topic30 đều xanh. Chờ exactSHA clean/nativeAFTER/verdict/documenter mới; không lấy ảnhee42 làm AFTER cho correction này.
 
 Theo dõi26293mẫu, PID2962 khôngđổi, hostmin17,641GiB, guestreadymin684,266MiB, PSSmax744MiB, khôngsafety/OOM trongscope; plannedstop02:01:57UTC13/10 giữcore/legacy. Runtime tồn tại trongturn bịngắt; khôngcoi làsoakđãthiếtkế. APIreverse đãkhôi phục, nháp trảrỗng, media tổng hợp bỏkhỏinháp, khôngđăngbài. Bannerfeedupdate chồngsearch là finding độc lập chưađóng.
+
+
+### 13/10 · 0cdc: source sạch, native có giới hạn
+
+Exact `0cdc77f2542cf9c3f40359a9fd28af9d388b46c6`: clean 9/9, Node 246 file/1.880 pass, Go guide 98 pass. Fixup/go-guide thiếu scope-events, không gán 0 cho dữ liệu thiếu. [Provenance](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-0cdc77f2/clean-provenance.json) và [controls](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-0cdc77f2/focused-controls-summary.json): candidate/identity 28/0; canary 27/1 LP08; mutant metric-key 22/6; mutant no-line-max 27/1 LP08, đúng dự đoán. Đây không phải native acceptance.
+
+Root mở 16 PNG/30 pin, marker thật/PID2901. Planned stop 02:32:58 UTC: 903 mẫu, host min 19,405773 GiB, guest min 568,746094 MiB, PSS max 745,431641 MiB, PID2901 không đổi; 0 safety/OOM/kill trong bốn scope được theo dõi. Watch/Metro/emulator OFF, core/legacy giữ nguyên. Crash buffer có **4 Bluetooth SIGABRT**, PID900/4650/4737/4777, không có com.lakiet.rudi; exit-info giữ lịch sử ee42. Canonical cũ ghi nhầm 3 được bảo toàn cùng [correction](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-0cdc77f2/root-visual-review-crash-count-correction.json). Không full gate/deploy/toàn-app approval.

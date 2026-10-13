@@ -80,6 +80,79 @@ function assertNepErrorDocument(source) {
   assert.equal(footerReferences.length, 0, "tài liệu lỗi không chuyển vào CTA cố định");
 }
 
+/** Bind the update affordance to the returned feed, not an unused JSX declaration. */
+function assertUpdateRowInFlow(source) {
+  const sf = ts.createSourceFile("CommunityScreen.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  function nodes(root, predicate, ownBody = false) {
+    const found = [];
+    function visit(node) {
+      if (ownBody && ts.isFunctionLike(node)) return;
+      if (predicate(node)) found.push(node);
+      ts.forEachChild(node, visit);
+    }
+    visit(root);
+    return found;
+  }
+  const tag = (node) => (ts.isJsxElement(node) ? node.openingElement : node).tagName.getText(sf);
+  const children = (node) => node.children.filter((child) => !(ts.isJsxText(child) && !child.text.trim()) && !(ts.isJsxExpression(child) && !child.expression));
+  function attr(element, name) {
+    assert.ok(element.attributes.properties.every(ts.isJsxAttribute), "update document binding has no overriding JSX spread");
+    return element.attributes.properties.find((item) => item.name.getText(sf) === name)?.initializer;
+  }
+  function expression(element, name) {
+    const value = attr(element, name);
+    assert.ok(value && ts.isJsxExpression(value) && value.expression, `actual update document has ${name}`);
+    return value.expression;
+  }
+  const identifier = (node, name) => ts.isIdentifier(node) && node.text === name;
+  const reference = (node, name) => ts.isPropertyAccessExpression(node) && identifier(node.expression, "styles") && node.name.text === name;
+  const owners = nodes(sf, (node) => ts.isFunctionDeclaration(node) && node.name?.text === "CommunityScreenContent");
+  assert.equal(owners.length, 1, "one feed content owner");
+  const returns = nodes(owners[0].body, (node) => ts.isReturnStatement(node) && node.expression && ts.isJsxElement(node.expression) && tag(node.expression) === "RudiScreen" && attr(node.expression.openingElement, "testID")?.text === "community-screen", true);
+  assert.equal(returns.length, 1, "one actual returned feed screen");
+  const columns = children(returns[0].expression).filter((node) => ts.isJsxElement(node) && tag(node) === "View" && reference(expression(node.openingElement, "style"), "readingColumn"));
+  assert.equal(columns.length, 1, "one rendered reading column");
+  const document = children(columns[0]);
+  const lists = document.filter((node) => ts.isJsxSelfClosingElement(node) && tag(node) === "FlatList" && identifier(expression(node, "ref"), "list") && identifier(expression(node, "data"), "posts"));
+  assert.equal(lists.length, 1, "same reader-owned FlatList");
+  const updates = document.filter((node) => ts.isJsxExpression(node) && node.expression && ts.isConditionalExpression(node.expression) && identifier(node.expression.condition, "fresh"));
+  assert.equal(updates.length, 1, "one fresh affordance in the actual column");
+  assert.equal(document[document.indexOf(lists[0]) + 1], updates[0], "fresh affordance follows the same FlatList in reading order");
+  const update = updates[0].expression;
+  assert.equal(update.whenFalse.kind, ts.SyntaxKind.NullKeyword, "no reserved update row while fresh is false");
+  assert.ok(ts.isJsxElement(update.whenTrue) && tag(update.whenTrue) === "Animated.View", "fresh renders the update row directly");
+  const row = update.whenTrue;
+  const buttons = children(row);
+  assert.equal(buttons.length, 1, "one direct refresh action");
+  const button = buttons[0];
+  assert.ok(ts.isJsxSelfClosingElement(button) && tag(button) === "RudiButton", "rendered row contains the existing button primitive");
+  const label = attr(button, "accessibilityLabel");
+  assert.ok(label && ts.isStringLiteral(label) && label.text === "Bảng tin có cập nhật", "refresh keeps its accessible name");
+  const press = expression(button, "onPress");
+  assert.ok(ts.isArrowFunction(press) && press.parameters.length === 0 && ts.isVoidExpression(press.body) && ts.isCallExpression(press.body.expression) && identifier(press.body.expression.expression, "refresh") && press.body.expression.arguments.length === 0, "actual button calls the existing guarded refresh");
+  const style = expression(row.openingElement, "style");
+  assert.ok(ts.isArrayLiteralExpression(style), "rendered update row exposes its style bindings");
+  const sheets = nodes(sf, (node) => ts.isVariableDeclaration(node) && identifier(node.name, "styles"));
+  assert.equal(sheets.length, 1, "one source stylesheet binding");
+  const sheet = sheets[0].initializer;
+  assert.ok(sheet && ts.isCallExpression(sheet) && ts.isPropertyAccessExpression(sheet.expression) && identifier(sheet.expression.expression, "StyleSheet") && sheet.expression.name.text === "create" && sheet.arguments.length === 1 && ts.isObjectLiteralExpression(sheet.arguments[0]), "actual source stylesheet is inspectable");
+  assert.ok(sheet.arguments[0].properties.every(ts.isPropertyAssignment), "stylesheet has no spread override for the update binding");
+  const bindings = style.elements.filter((node) => reference(node, "newPosts"));
+  assert.equal(bindings.length, 1, "rendered row uses the inspected update style");
+  const assignments = sheet.arguments[0].properties.filter((node) => (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) && node.name.text === "newPosts");
+  assert.equal(assignments.length, 1, "one update style definition");
+  const objects = [assignments[0].initializer, ...style.elements.filter((node) => !reference(node, "newPosts"))];
+  for (const object of objects) {
+    assert.ok(ts.isObjectLiteralExpression(object), "no opaque update style can bypass the flow contract");
+    for (const property of object.properties) {
+      assert.ok(ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)), "update styles have no dynamic or spread overrides");
+      const name = property.name.text;
+      assert.ok(!["top", "bottom", "left", "right", "start", "end", "transform", "inset", "insetBlock", "insetInline"].includes(name), "update row has no visual offset over the document");
+      if (name === "position") assert.ok(ts.isStringLiteral(property.initializer) && property.initializer.text === "relative", "update row participates in normal layout");
+    }
+  }
+}
+
 test("chủ đề: kiểm như máy chủ (posts.go normalizeTopics), nói điều cần sửa", () => {
   assert.equal(TOI_DA_CHU_DE, 5);
   assert.deepEqual(tachChuDe(" cà phê, ,Đà Lạt ,"), ["cà phê", "Đà Lạt"]);
@@ -143,9 +216,9 @@ test("bảng tin: quay lại giữ danh sách, ẩn có hoàn tác, xoá lịch 
   // at 390dp); below 360dp the actions rise above the large title.
   assert.match(man, /<\/View>\s*<\/View>\s*\{\/\* Under the row/);
   assert.match(man, /const hep = useWindowDimensions\(\)\.width < 360/);
-  // UI-143: the update band follows the header's measured height; under
-  // Khám phá's header (the tab) the screen draws no header of its own.
-  assert.match(man, /top: dau \? 8 : caoDau \+ 8/);
+  // UI-143: updates have a normal-flow place after the actual reader-owned
+  // list, keeping the search clear without moving the list's starting edge.
+  assertUpdateRowInFlow(man);
   // The stream's first sync opens the connection: no «Bảng tin có cập nhật» for it.
   assert.match(man, /else if \(!lanDau\) setFresh\(true\)/);
   // UI-135 on the web: the place in the list is put back when the reader returns.

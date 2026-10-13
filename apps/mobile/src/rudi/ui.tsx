@@ -143,7 +143,9 @@ export function RudiScreen({
             if (!active() || TextInput.State.currentlyFocusedInput() !== input || cuon.current?.getNativeScrollRef() !== viewport || !Number.isFinite(inputTop) || !Number.isFinite(inputHeight) || inputHeight <= 0) return;
             const bottomDelta = inputTop + inputHeight + focusBottom.current - (top + height);
             const topDelta = inputTop - top - 16;
-            const delta = bottomDelta > 0 ? bottomDelta : topDelta < 0 ? topDelta : 0;
+            const fitsWithClearance = inputHeight + 16 + focusBottom.current <= height;
+            // An oversized input cannot satisfy both edges; keep the revealed bottom stable.
+            const delta = bottomDelta > 0 ? bottomDelta : fitsWithClearance && topDelta < 0 ? topDelta : 0;
             if (delta !== 0) cuon.current?.scrollTo({ y: Math.max(0, cuonY.value + delta), animated: false });
           });
         });

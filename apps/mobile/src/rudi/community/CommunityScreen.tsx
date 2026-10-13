@@ -100,9 +100,6 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
   const [theoDoiChuDe, setTheoDoiChuDe] = useState<boolean | null>(null);
   // The bell: a dot when a notification is newer than this phone last looked (QA UI-147).
   const [coMoi, setCoMoi] = useState(false);
-  // The «Bảng tin có cập nhật» band sits under the header as laid out, not at a
-  // fixed 136: at 320 the subtitle wrapped and the band covered a tab (QA UI-143).
-  const [caoDau, setCaoDau] = useState(136);
   const list = useRef<FlatList<Post>>(null);
   const generation = useRef(0);
   const fetching = useRef(false);
@@ -363,7 +360,7 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
     <Sheet open={comments !== null} onClose={() => setComments(null)} accessibilityLabel="Bình luận">{comments ? <Comments person={person} post={comments}/> : null}</Sheet>
   </>}>
     <View style={styles.readingColumn}>
-    {dau ? null : <View onLayout={(e) => setCaoDau(Math.round(e.nativeEvent.layout.height))} style={[styles.header, topic ? styles.headerChuDe : null, { borderBottomColor: colors.line }]}>
+    {dau ? null : <View style={[styles.header, topic ? styles.headerChuDe : null, { borderBottomColor: colors.line }]}>
       {topic ? (
         // A topic is a page pushed onto the feed: it has the way back every
         // other community page has, and follows its topic where it stands
@@ -396,7 +393,6 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
         </>
       )}
     </View>}
-    {fresh ? <Animated.View entering={FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} exiting={FadeOut.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} style={[styles.newPosts, { top: dau ? 8 : caoDau + 8 }]}><RudiButton compact label="Bảng tin có cập nhật" icon="arrow-up" onPress={() => void refresh()}/></Animated.View> : null}
     <FlatList
       ref={list}
       data={posts}
@@ -467,6 +463,9 @@ function CommunityScreenContent({ dau }: { dau?: DungDau }) {
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
     />
+    {/* Keep the reader's offset and the search field clear: updates take
+        their own place at the bottom of the reading column. */}
+    {fresh ? <Animated.View entering={FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} exiting={FadeOut.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} style={[styles.newPosts, { borderTopColor: colors.line }]}><RudiButton compact variant="ghost" label="Xem cập nhật" accessibilityLabel="Bảng tin có cập nhật" labelAlign="left" icon="arrow-up" onPress={() => void refresh()}/></Animated.View> : null}
     </View>
   </RudiScreen>;
 }
@@ -515,5 +514,5 @@ const styles = StyleSheet.create({
   // rule already sets it apart, so no space over it.
   empty: { marginHorizontal: 16, paddingTop: 0 },
   daAn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  newPosts: { position: "absolute", alignSelf: "center", zIndex: 3 },
+  newPosts: { flexShrink: 0, paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
 });

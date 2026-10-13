@@ -99,3 +99,12 @@ Plannedstop02:01:57UTC13/10:26293mẫu (bao gồm thời gian runtime còn mở 
 Correction một batch sau stop: compact ceiling `Math.max(420,height)` nhận phần dư trong EditText, giữ complete-native-line minimum; longtext đổi từcap420 sang tối thiểu mộtwindow hữu hạn. Railgap4→8 giữtarget48 vàstack. BODYr3 đượcpersist trướcUIedit, floor đọc lại. LP08 cũ RED15/1 đúng844vs420; migration chỉ đổiceiling và giữedge nativepitch vượtwindow bằng1000,25→min/max1008,5. Focused28/28 vàowner/media/topic30/30, khôngskip/fail/cancel/todo. Commandfocused đầu có một tên file không tồn tại đượcNode bỏ qua; con số28 là đúng3file đã chạy, không gọi4file. Bộ4file owner đúng được chạy riêng30/30. NativeAFTER/canary2mutant/finish/documenter của correction mới cònchờ.
 
 Finding riêng cần tiếp tục: banner «Bảng tin có cập nhật» đang chồng vùng search củaCommunity ởphone/tablet200. Chưa sửa trong batch canvas; không dùng reviewDau để đóng finding này. Toàn bộ qualitybar/A–S/main/iOS/phần cứng vẫn mở.
+
+
+### 13/10 · 0cdc: canvas rỗng sát công cụ; bài dài chưa đạt tự reveal
+
+[Root review](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-0cdc77f2/root-visual-review.json): counter→tools 13dp ở phone/ordinary/tall100, body 218/440/538dp; ba target phone 87/88/87×48dp, khe 8dp. Form rỗng tiến bộ trong đúng ảnh; không suy ra 200%/tablet/bài dài. Loại ready bundling62% và navigation khỏi verdict. Hai raw idle-diagnostic PNG không có paired XML; không dùng làm bằng chứng layout đã ổn định.
+
+Lượt 1.776 ký tự chỉ hoàn tất sau parent drag cứu thủ công: 12 chunk×148, body/focus giữ ở IME100→200→100, caret rõ trong ảnh 200%; không gọi autofocus/reveal bình thường PASS. Các lượt trước dump idle thất bại hoặc mới có prefix746. Body đã xóa, không submit/topic/media/Mention mới. Reviewer độc lập giữ FIX, chưa nghiệm thu autofocus.
+
+Sau stop, candidate sửa shared reveal: ô cao hơn viewport cộng clearance không kéo ngược lên sau khi đã reveal đáy; ô vừa vẫn giữ nhánh cũ. Banner Community rời absolute overlay để đứng sau cùng FlatList, trước nav. Chưa có native AFTER. TR07 giữ RED6/1 rồi bộ owner/reveal GREEN30/0; b7 migration GREEN7/0. Evidence: memory-bounded-checks/oversized-reveal-0cdc-red-r1, oversized-reveal-0cdc-green-r1, community-update-b7-green-0cdc-r1 dưới runtime private. B7 peak0/eventsnull là UNAVAILABLE, không phải 0 memory. Checkpoint/clean9/controls/native AFTER/verdict của candidate còn chờ.

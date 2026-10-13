@@ -70,3 +70,10 @@ Hai mục Địa điểm/Cộng đồng phải đọc đầy đủ cùng lúc �
 ## Composer r3 · sau native phone cao ee42
 
 Phần dư phải nằm trong chính EditText có thể nhập, không chuyểncounter xuống để che đuôi không thể nhập. Compact ceiling tối thiểu420dp và tối thiểu một chiều cao cửa sổ, vẫn hữu hạn với bài dài; native complete-line minimum thắngceiling. Expanded giữ policy hiện tại. Kiểm phone320×640,390×844,320×960 rỗng và bài tổng hợp1776ký tự với IME100/200/return100, caret/reveal/cuộn; không suy geometry dài giữ nguyên từ testowner. Ba target tool tách8dp cả hàng100 vàstack200, min48dp, đủ nhãn/count/baseline. Caption/recovery/topic có thể cuộn nhưng field/action phải thực sự tớiđược; gestureQC phải bắt đầu trong boundsScrollView hiện tại, không ởfooter. Đây là tiêu chuẩn correction mới, chưa AFTER/verdict.
+
+
+### Sau diagnostic 0cdc · bài dài và banner còn mở
+
+Bài 1.776 ký tự phải nhập/focus bình thường không manual escape, giữ đủ nội dung và cho phép sửa đầu/giữa/cuối qua IME100→200→100, dismiss/reopen/refocus. Parent drag, topic helper/error và công cụ phải tiếp cận được mà không vòng cuộn hai mép. Kiểm phone hẹp/ordinary/tall, expanded, light/dark và target công cụ; không lấy raw non-idle hoặc manual rescue làm acceptance.
+
+Banner cập nhật phải cùng reading flow, không che search, giữ refresh/offset/accessibility và native font reflow. Host/AST xanh chỉ chứng minh guards đã chạy. Giữ lịch sử và source fingerprint; crash buffer 0cdc có 4 Bluetooth events theo correction, memory chỉ có hiệu lực trong cửa sổ đã đo. Chờ candidate AFTER/reviewer; DESIGN cuối, FINISH/main/toàn A–S/iOS/phần cứng vẫn mở.

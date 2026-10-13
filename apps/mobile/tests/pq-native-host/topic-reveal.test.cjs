@@ -249,3 +249,52 @@ test('TR06 invalid native geometry fails to baseline and explicit refocus starts
     assert.equal(h.calls.some(call => call.options.method === 'POST'), false);
   });
 });
+
+test('TR07 oversized focused body converges after scroll feedback while fitting inputs retain upward reveal', async () => {
+  await withComposer(async (h, vault, lease) => {
+    const keep = retained(h), saved = vault.docNhapBai('synthetic-A', 'new:community');
+    const body = h.input(), input = h.native.node(body), container = scroll(h), target = h.native.node(container);
+    // Native rectangles are explicit fixtures. The second measurement translates
+    // the same input by the exact scroll delta; no Yoga or caret layout is simulated.
+    async function measureBody(inputTop, inputHeight) {
+      await h.native.resolve(await viewport(h), [0, 77, 320, 194]);
+      await h.native.resolve(latest(h, 'measureInWindow', input), [16, inputTop, 288, inputHeight]);
+    }
+    async function scrolled(y) {
+      await act(async () => container.props.onScroll({ nativeEvent: { contentOffset: { y } } }));
+    }
+    await h.native.focus(body); await h.native.emitKeyboard('keyboardDidShow');
+    assert.equal(clearance(h), 16, 'body uses the existing baseline clearance');
+    await measureBody(93, 420);
+    assert.equal(commands(h).length, 1);
+    assert.equal(commands(h)[0].target, target.id, 'actual body scroll ancestor');
+    assert.deepEqual({ ...commands(h)[0].options }, { y: 258, animated: false });
+    await scrolled(258); await measureBody(-165, 420);
+    assert.equal(commands(h).length, 1, 'bottom-aligned oversized input cannot trigger the opposite top correction');
+    await scrolled(258); await measureBody(-165, 420);
+    assert.equal(commands(h).length, 1, 'repeated native scroll feedback stays at the same settled offset');
+
+    await h.native.emitKeyboard('keyboardDidHide');
+    await scrolled(100); await h.native.emitKeyboard('keyboardDidShow');
+    await measureBody(40, 72);
+    assert.equal(commands(h).length, 2, 'a fitting input still receives the original upward correction');
+    assert.equal(commands(h)[1].target, target.id);
+    assert.deepEqual({ ...commands(h)[1].options }, { y: 47, animated: false });
+    await scrolled(47); await measureBody(93, 72);
+    assert.equal(commands(h).length, 2, 'fitting input settles at the original top clearance');
+
+    // H163 fits inside raw V194 but cannot fit H + top16 + bottom16.
+    await act(async () => container.props.onLayout());
+    await measureBody(93, 163);
+    assert.equal(commands(h).length, 3);
+    assert.deepEqual({ ...commands(h)[2].options }, { y: 48, animated: false });
+    await scrolled(48); await measureBody(92, 163);
+    assert.equal(commands(h).length, 3, 'the clearance boundary also converges without a one-point reverse scroll');
+    keep(); assert.equal(h.native.node(h.input()) === input, true, 'same focused native body handle');
+    assert.equal(input.isFocused(), true, 'screen reveal does not replace native focus');
+    assert.equal(vault.phienNhapBai('synthetic-A'), lease);
+    assert.deepEqual(vault.docNhapBai('synthetic-A', 'new:community'), saved, 'reveal never edits the RAM draft');
+    assert.equal(h.calls.some(call => call.options.method === 'POST'), false);
+    assert.equal(h.picks.length, 0); assert.equal(h.uploads.length, 0);
+  });
+});
