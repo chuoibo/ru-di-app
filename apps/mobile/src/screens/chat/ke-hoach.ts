@@ -61,6 +61,8 @@ export type DiaDiem = {
   cachKm?: number;
   gioMo?: string;
   loai?: string;
+  /** Catalogue provenance, supplied on random search cards by the server. */
+  nguon?: string;
 };
 
 export type Chang = {
@@ -151,6 +153,8 @@ export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null
   if (gioMo) diaDiem.gioMo = gioMo;
   const loai = chuoi(o.category);
   if (loai) diaDiem.loai = loai;
+  const nguon = chuoi(o.source);
+  if (nguon) diaDiem.nguon = nguon;
   return diaDiem;
 }
 

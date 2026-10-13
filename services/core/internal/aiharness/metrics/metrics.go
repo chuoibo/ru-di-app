@@ -67,13 +67,19 @@ var schemaV7SQL string
 // SchemaV7SQL is version 7 (the couple's taste tool may be named).
 func SchemaV7SQL() string { return schemaV7SQL }
 
+//go:embed schema_v8.sql
+var schemaV8SQL string
+
+// SchemaV8SQL is version 8 (the explicit random source-search command).
+func SchemaV8SQL() string { return schemaV8SQL }
+
 // PhienBan is the schema version this binary writes rows for.
-const PhienBan = 7
+const PhienBan = 8
 
 // cacPhienBan are the versions in order. An applied version is never
 // edited: its checksum is recorded and a changed file is refused.
 func cacPhienBan() []string {
-	return []string{schemaSQL, schemaV2SQL, schemaV3SQL, schemaV4SQL, schemaV5SQL, schemaV6SQL, schemaV7SQL}
+	return []string{schemaSQL, schemaV2SQL, schemaV3SQL, schemaV4SQL, schemaV5SQL, schemaV6SQL, schemaV7SQL, schemaV8SQL}
 }
 
 // Execer is a pool or a transaction.

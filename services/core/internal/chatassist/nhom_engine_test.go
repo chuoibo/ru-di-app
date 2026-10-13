@@ -4,8 +4,27 @@ import (
 	"encoding/json"
 	"testing"
 
+	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/repo"
 )
+
+func TestRandomCommandMapsWithoutChangingLegacySyntax(t *testing.T) {
+	if lenh, ok := obsLenh("random"); !ok || lenh != obs.LenhRandom {
+		t.Fatalf("random command missing from engine: %q %v", lenh, ok)
+	}
+	for in, want := range map[string]string{
+		" /RaNdOm quán Đà Lạt ": "quán Đà Lạt",
+		"/random":               "",
+		"/randomize quán":       "/randomize quán",
+		"hỏi /random quán":      "hỏi /random quán",
+		"/plan quán":            "quán",
+		"/chia-bill taxi":       "taxi",
+	} {
+		if got := loiNhoNhom(in); got != want {
+			t.Fatalf("request %q became %q, want %q", in, got, want)
+		}
+	}
+}
 
 // Only the room's ACTIVE members reach the engine (the reviewer's mutant G3):
 // a member who left, or who was only invited, is neither in the router's

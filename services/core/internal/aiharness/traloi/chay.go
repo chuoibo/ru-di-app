@@ -2,7 +2,9 @@ package traloi
 
 import (
 	"context"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,6 +28,14 @@ import (
 //
 //go:embed traloi.txt
 var traLoiHe string
+
+const loiDanRandom = "Find suitable catalogue choices for a random game, up to five places. Cite each selected place with its [[p:alias]] evidence token; the system supplies its exact catalogue name. The catalogue contains places, not a verified dish or menu list: do not invent dishes, menus, options, names or source claims. State clearly when the evidence cannot satisfy the request. This search does not make an itinerary, create a poll or outing, draft expenses, or choose the game's winner."
+
+// VersionRandom pins the system instruction used by the command's search.
+func VersionRandom() string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(traLoiHe) + "\n\n" + loiDanRandom))
+	return hex.EncodeToString(sum[:])[:12]
+}
 
 // Data block names of the answer step's user turns. Ours, never data.
 const (
@@ -51,6 +61,8 @@ const MaxChoTrongPhan = 5
 type Vao struct {
 	Cau    string
 	YeuCau truyhoi.YeuCau
+	// Random asks for catalogue choices for a game, never an itinerary.
+	Random bool
 }
 
 // BoPhan are the answer step's parts. Verifier nil means VerifierLLM.
@@ -300,7 +312,11 @@ func bangChungCua(ids []string, sc *tools.SoCai) []truyhoi.BangChung {
 // YeuCauTraLoi is the answer step's first request, byte-stable for the same
 // input.
 func YeuCauTraLoi(v Vao, r crag.KetQua, bi []string, sc *tools.SoCai) *model.LLMRequest {
-	return cautruc.YeuCau(llm.BuocTraLoi, strings.TrimSpace(traLoiHe), NoiDungTraLoi(v, r, sc), LuocDo(bi), MaxTokensTraLoi)
+	instruction := strings.TrimSpace(traLoiHe)
+	if v.Random {
+		instruction += "\n\n" + loiDanRandom
+	}
+	return cautruc.YeuCau(llm.BuocTraLoi, instruction, NoiDungTraLoi(v, r, sc), LuocDo(bi), MaxTokensTraLoi)
 }
 
 // NoiDungTraLoi is the answer step's user turn.

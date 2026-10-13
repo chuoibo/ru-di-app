@@ -30,6 +30,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { xemBinhChonV2 } from "../../chat/e2ee/binh-chon-v2";
+import { newNativeRandomRound, RandomSourceUnavailable } from "../../chat/e2ee/random-native";
+import { decodeRandomRound, type RandomRound } from "../../chat/e2ee/random-v2";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -88,6 +90,8 @@ import { TraLoiAi } from "./TraLoiAi";
 import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
 import { ChipBoiCanh, TamXemBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, DaiKeoSapToi, ToHen, type KhayChat } from "./SoHen";
+import { RandomPicker, EMPTY_RANDOM_DRAFT, type RandomDraft } from "./RandomPicker";
+import { ChatRandomCard } from "./ChatRandomCard";
 import { docKeoCuaNhom } from "../../keo/keo";
 import { chiaKeo, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
@@ -113,6 +117,8 @@ import { duongDangNhap } from "../../duong-vao";
 export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
   const { colors, space } = useRudiTheme();
   const hong = tin.trangThai === "that-bai";
+  const pendingRound = tin.kind === "text" ? decodeRandomRound(tin.than) : null;
+  const pendingRandom = pendingRound?.id === tin.attempt.key ? pendingRound : null;
   return (
     <View style={styles.choGui}>
       <View style={[styles.hang, styles.hangToi]}>
@@ -124,7 +130,7 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
             </View>
           ) : (
             <View style={[styles.bong, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
-              <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
+              <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{pendingRandom ? `Lượt ${pendingRandom.mode === "wheel" ? "vòng quay" : "đua vịt"} · ${pendingRandom.options.length} lựa chọn` : tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
             </View>
           )}
           {hong ? (
@@ -243,6 +249,65 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   // The chip's «Xem» sheet, mounted at this screen's root like the others.
   const [xemBoiCanh, setXemBoiCanh] = useState(false);
   const [khay, setKhay] = useState<KhayChat>(null);
+  const [randomDraft, setRandomDraft] = useState<RandomDraft>(() => ({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] }));
+  const [randomRound, setRandomRound] = useState<RandomRound | null>(null);
+  const [randomPublished, setRandomPublished] = useState(false);
+  const [randomPublishing, setRandomPublishing] = useState(false);
+  const [randomSearching, setRandomSearching] = useState(false);
+  const [randomError, setRandomError] = useState<string | null>(null);
+  const [randomSearchMessage, setRandomSearchMessage] = useState<string | null>(null);
+  const [randomSearchTrigger, setRandomSearchTrigger] = useState<string | null>(null);
+  const randomSearchConsumed = useRef<string | null>(null);
+  const randomSearchOwner = useRef(0);
+  const [randomSources, setRandomSources] = useState<Record<string, string>>({});
+  const randomPublishingRef = useRef(false);
+  const randomPublishOwner = useRef(0);
+  const randomContext = useRef(contextId);
+  useEffect(() => {
+    if (randomContext.current === contextId) return;
+    randomContext.current = contextId;
+    randomPublishOwner.current += 1; randomPublishingRef.current = false; setRandomPublishing(false);
+    randomSearchOwner.current += 1;
+    setRandomDraft({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] });
+    setRandomRound(null); setRandomPublished(false); setRandomSearching(false);
+    setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomError(null); setRandomSources({}); setRandomSearchMessage(null);
+    setKhay(null);
+  }, [contextId]);
+  useEffect(() => {
+    if (randomRound && chat.tin.some((tin) => tin.id === randomRound.id && tin.random_v2?.id === randomRound.id && Number(tin.cursor) > 0) &&
+      !chat.hangCho.some((tin) => tin.attempt.key === randomRound.id)) {
+      setRandomPublished(true); setRandomError(null);
+    }
+  }, [randomRound, chat.tin, chat.hangCho]);
+  useEffect(() => {
+    if (!randomSearchTrigger || randomSearchConsumed.current === randomSearchTrigger || randomRound !== null || lan.lan !== "v2") return;
+    const answer = chat.tin.find((tin) => {
+      const card = docTheAi(tin.card);
+      return tin.kind === "ai_card" && tin.reply_to?.id === randomSearchTrigger && card.loai === "tra_loi" && card.lenh === "random";
+    });
+    if (answer) {
+      const card = docTheAi(answer.card);
+      if (card.loai !== "tra_loi") return;
+      randomSearchConsumed.current = randomSearchTrigger;
+      const places = card.phan.flatMap((part) => part.loai === "places" ? part.the.diaDiem : []).filter((place) => place.ten.length <= 80);
+      const unique = places.filter((place, index) => places.findIndex((other) => other.ten.normalize("NFC").toLowerCase() === place.ten.normalize("NFC").toLowerCase()) === index).slice(0, 5);
+      if (unique.length) {
+        setRandomDraft((draft) => ({ ...draft, options: unique.map((place) => ({ label: place.ten, placeId: place.id })) }));
+        setRandomSources(Object.fromEntries(unique.map((place) => [place.id, place.nguon ? `Nguồn: ${place.nguon}` : "Từ danh mục địa điểm"])));
+      }
+      setRandomSearchMessage(card.phan.filter((part) => part.loai === "text").map((part) => part.text).join("\n") ||
+        (unique.length ? "Gợi ý từ danh mục địa điểm. Bạn có thể sửa hoặc thêm món của mình." : "Chưa có lựa chọn có nguồn. Bạn có thể đổi lời nhờ hoặc tự thêm."));
+      setRandomSearching(false);
+      setRandomError(null);
+      return;
+    }
+    const failed = ai.requests.find((request) => request.trigger_message_id === randomSearchTrigger && (request.status === "failed" || request.status === "cancelled"));
+    const held = ai.cho.find((request) => request.trigger === randomSearchTrigger && request.loi !== null);
+    if (randomSearching && (failed || held)) {
+      setRandomSearching(false);
+      setRandomError(held?.loi ?? (failed ? chuHangLoiGoi(failed).cau : "Chưa tìm được quán. Hãy thử lại hoặc tự thêm."));
+    }
+  }, [randomSearchTrigger, randomSearching, randomRound, chat.tin, ai.requests, ai.cho, lan.lan]);
   const toHenChung = useToHenChung(contextId, personId);
   const [xacNhanBoToHen, setXacNhanBoToHen] = useState(false);
   // Which decided polls already feed an open sheet, so the card can say "mở"
@@ -487,7 +552,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   const rongTrang = !chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0;
   const thapCuaSo = caoCuaSo < 600;
   // The poll owns the editing column even before the keyboard opens.
-  const lichSuAn = khay === "poll" && !khongNhanTin && ghiChatDuoc && !toHenChung.sheet;
+  const lichSuAn = (khay === "poll" || khay === "random") && !khongNhanTin && ghiChatDuoc && !toHenChung.sheet;
   const lichSuAnRef = useRef(lichSuAn);
   lichSuAnRef.current = lichSuAn;
   const lichSuSanSang = useRef(true);
@@ -643,20 +708,30 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     void ai.goiCap({ khoa, trigger, ...cap });
   };
 
-  const gui = async (command?: string): Promise<boolean> => {
+  const gui = async (command?: string, randomRequestOnly = false): Promise<boolean> => {
     if (!ghiChatDuoc) return false;
     const body = (command ?? nhap).trim();
     if (!body || guiRef.current) return false;
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
+    if (/^\/random$/i.test(body)) { setKhay("random"); Keyboard.dismiss(); doiNhap(""); return false; }
     // An `@Rủ Đi`, `/plan` or `/chia-bill` message is an ordinary message
     // (ADR-0046): it is sent exactly like any other, and only once the server
     // has stored it is the AI asked, naming it. The key is the send's own, so
     // retrying either half can never double the other; the bundle is frozen
     // here, at the press, before the question joins the list it reads.
-    const nhac = command === undefined ? timNhacAi(body) : null;
+    const nhac = command === undefined || randomRequestOnly ? timNhacAi(body) : null;
+    const asksRandom = nhac?.lenh === "random";
+    const searchOwner = asksRandom ? ++randomSearchOwner.current : randomSearchOwner.current;
+    const searchRoom = contextId;
+    if (asksRandom) {
+      setRandomDraft((draft) => ({ ...draft, request: nhac.loiNho }));
+      setRandomRound(null); setRandomPublished(false); setRandomError(null); setRandomSearchMessage(null);
+      setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(lenhSanSang(ai.capabilities, "random"));
+      setKhay("random"); Keyboard.dismiss();
+    }
     const attempt = newAttempt();
     if (nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh)) {
-      capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
+      capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: randomRequestOnly ? undefined : goiSeGui(goiChip, kemTin) });
     }
     guiRef.current = true;
     setLoiCuoi(null);
@@ -669,14 +744,17 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     veCuoi();
     try {
       const daGui = await chat.gui(body, traLoiCu, attempt);
+      if (asksRandom && (randomContext.current !== searchRoom || randomSearchOwner.current !== searchOwner)) return false;
       // Landed for a conversation that has left the screen: nothing to show here.
-      if (daGui === null) return false;
+      if (daGui === null) { if (asksRandom) { setRandomSearching(false); setRandomError("Lời nhờ chưa gửi được. Thử lại tin đang chờ trong chat."); } return false; }
+      if (asksRandom) setRandomSearchTrigger(daGui.id);
       hoiAiVeTin(attempt.key, daGui.id);
       veCuoi();
       const cau = cauYDinh(daGui);
       if (cau !== null) setLoiCuoi({ cau });
       return !daGui.intent_error;
     } catch {
+      if (asksRandom && randomContext.current === searchRoom && randomSearchOwner.current === searchOwner) { setRandomSearching(false); setRandomError("Lời nhờ chưa gửi được. Bạn có thể tự thêm lựa chọn hoặc thử lại trong chat."); }
       // The failed row owns the exact text, quote and retry key. Leave any
       // newer words in the composer untouched.
       return false;
@@ -685,6 +763,51 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       setDangGui(false);
       setDangGuiThan(null);
     }
+  };
+
+  const publishRandom = async (round: RandomRound, retry = false) => {
+    if (!ghiChatDuoc || randomPublishingRef.current) return;
+    const room = contextId;
+    const owner = ++randomPublishOwner.current;
+    randomPublishingRef.current = true; setRandomPublishing(true); setRandomError(null);
+    Keyboard.dismiss();
+    try {
+      const pending = chat.hangCho.some((tin) => tin.attempt.key === round.id);
+      const sent = retry && pending ? await v2.thuLai(round.id) : await v2.guiRandom(round);
+      if (randomContext.current !== room || owner !== randomPublishOwner.current) return;
+      if (sent) setRandomPublished(true);
+      else setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
+    } catch {
+      if (randomContext.current === room && owner === randomPublishOwner.current) setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
+    } finally {
+      if (owner === randomPublishOwner.current && randomContext.current === room) {
+        randomPublishingRef.current = false; setRandomPublishing(false);
+      }
+    }
+  };
+  const playRandom = () => {
+    if (!ghiChatDuoc || randomPublishingRef.current || randomRound) return;
+    try {
+      const options = randomDraft.options.map((option) => ({ ...option, label: option.label.trim() }));
+      const round = newNativeRandomRound(randomDraft.request, randomDraft.mode, options);
+      setRandomRound(round); setRandomPublished(false); void publishRandom(round);
+    } catch (cause) {
+      setRandomError(cause instanceof RandomSourceUnavailable ? cause.message : "Cần 2–8 lựa chọn khác nhau, mỗi tên tối đa 80 ký tự. Hãy sửa các lựa chọn rồi thử lại.");
+    }
+  };
+  const openRandom = (round?: RandomRound, fresh = false) => {
+    Keyboard.dismiss(); setRandomError(null); setKhay("random");
+    if (round) {
+      randomSearchOwner.current += 1;
+      setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(false); setRandomSearchMessage(null);
+      setRandomDraft({ request: round.request, mode: round.mode, options: round.options.map((option) => ({ ...option })) });
+      setRandomRound(fresh ? null : round); setRandomPublished(!fresh); setRandomSources({});
+    }
+  };
+  const createOutingFromRandom = (round: RandomRound) => {
+    setKhay(null);
+    const winner = round.options[round.winner];
+    router.push({ pathname: "/outings/new", params: { contextId, initialTitle: winner.label, ...(winner.placeId ? { place: winner.placeId } : {}) } } as never);
   };
 
   const moToHen = (tin?: Tin) => {
@@ -856,6 +979,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
     const pollV2 = lan.lan === "v2" ? tin.poll_v2 : undefined;
+    const randomV2 = lan.lan === "v2" ? tin.random_v2 : undefined;
     const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, poll: pollV2, deleted: false }, personId) : null;
     const laAi = tin.kind === "ai_card" || pollV2 !== undefined;
     const theCuaTin = pollV2 ? { loai: "poll" as const, vote_id: tin.id, question: pollV2.question, options: pollV2.options } : docTheAi(tin.card);
@@ -891,7 +1015,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           {benKia ? (
             cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
           ) : null}
-          <View style={[styles.khoi, benToi && styles.khoiToi, laPoll ? styles.khoiPoll : laAi && styles.khoiAi]}>
+          <View style={[styles.khoi, benToi && styles.khoiToi, laPoll || randomV2 ? styles.khoiPoll : laAi && styles.khoiAi]}>
             {/* The quote sits ABOVE the bubble, in the bubble's column: the
                 avatar beside the column still meets the bubble's foot, and the
                 quote stays part of the message it introduces. Never in a
@@ -909,7 +1033,8 @@ function GroupChatContent({ contextId }: { contextId: string }) {
                 </Text>
               </View>
             ) : null}
-            {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+            {randomV2 ? <ChatRandomCard round={randomV2} readOnly={!ghiChatDuoc} onMenu={() => setMenuTin(tin)}
+              onNew={() => openRandom(randomV2, true)} onView={() => openRandom(randomV2)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(`/places/${id}` as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
               <TraLoiAi
                 readOnly={!ghiChatDuoc}
                 contextId={contextId}
@@ -1309,7 +1434,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           {lenhPhuHop.map((l) => (
-            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { if (l.nhan === "/vote") { setKhay("poll"); doiNhap(""); } else doiNhap(l.goiY); }} style={styles.lenhHang}>
+            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { if (l.nhan === "/vote") { setKhay("poll"); doiNhap(""); } else if (l.nhan === "/random") { openRandom(); doiNhap(""); } else doiNhap(l.goiY); }} style={styles.lenhHang}>
               <Text style={[typography.label, { color: colors.accent }]}>{l.nhan}</Text>
               <Text style={[typography.caption, { color: colors.inkSoft }]}>{l.moTa}</Text>
             </Pressable>
@@ -1366,16 +1491,26 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} keyboardOpen={banPhimMo} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: khay === "random" || lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" || khay === "random" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}>{khay === "random" ? <RandomPicker
+        draft={randomDraft} onChange={(draft) => { setRandomDraft(draft); setRandomError(null); }} onClose={() => setKhay(null)}
+        onOpenPlace={(id) => router.push(`/places/${id}` as never)}
+        onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(`/random ${randomDraft.request}`, true); }}
+        onPlay={playRandom} round={randomRound} published={randomPublished} publishing={randomPublishing} searching={randomSearching}
+        error={randomError} searchMessage={randomSearchMessage} searchReady={lenhSanSang(ai.capabilities, "random")} keyboardOpen={banPhimMo} sources={randomSources}
+        onRetry={() => { if (randomRound) void publishRandom(randomRound, true); }}
+        onNew={() => { setRandomRound(null); setRandomPublished(false); setRandomError(null); }}
+        onCreateOuting={() => { if (randomRound && randomPublished) createOutingFromRandom(randomRound); }}
+      /> : <CongCuChat personId={personId} contextId={contextId} panel={khay} keyboardOpen={banPhimMo} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
+        onRandom={() => openRandom()}
         // The tray no longer asks the AI itself: it starts the message.
         onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((MO_DAU_HOI_AI + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
-        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /></View> : null}
+        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} />}</View> : null}
       {!khongNhanTin && ghiChatDuoc && !khay && !toHenChung.sheet && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
           <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
@@ -1402,7 +1537,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
             {lan.lan === "legacy" ? "Tin mới cần phòng mã hoá đầu cuối trên bản ứng dụng hỗ trợ. Tin cũ vẫn đọc được ở trên." : "Chỉ gửi được khi máy này thiết lập mã hoá đầu cuối cho phòng."}
           </Text>
         </View>
-      ) : khay === "poll" || khay === "tools" || toHenChung.sheet ? null : (
+      ) : khay === "poll" || khay === "tools" || khay === "random" || toHenChung.sheet ? null : (
         <View
           style={[
             styles.soan,

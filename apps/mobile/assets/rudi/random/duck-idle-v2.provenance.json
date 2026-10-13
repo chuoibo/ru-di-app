@@ -1,0 +1,24 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-13",
+  "use_case": "background-extraction",
+  "purpose": "shipping duck racer state sprite",
+  "prompt_file": "duck-idle-v2.prompt.txt",
+  "prompt_sha256": "ad4483810dd18b9893423b683eef84077cc5f662e1225c3bf0b089040e8d4c5d",
+  "references": [
+    "duck-character-v2"
+  ],
+  "original_sha256": "e9cd0f7d6353a8c7b6938df3606120f8e39f54a9338956782d37af7e93fc56c5",
+  "png_sha256": "94821fa858b22b45bb1845398c3edc879b9227f5ab67d659660135a2b7df89e1",
+  "decoded_rgba_sha256": "623b267bad7f9f22b9071d342cc7354015f1738e86acaf01c7bf7b30a60abbe0",
+  "width": 1254,
+  "height": 1254,
+  "mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "pixel_identity_after_metadata_embed": true,
+  "synthetic": true,
+  "native_qc": "OPEN"
+}

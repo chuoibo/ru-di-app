@@ -44,12 +44,12 @@ const (
 )
 
 // The commands a reply can answer.
-var replyCommands = map[string]bool{"plan": true, "chia_bill": true, "hoi": true}
+var replyCommands = map[string]bool{"plan": true, "chia_bill": true, "hoi": true, "random": true}
 
 // ReplyMeta is what the server, not the model, writes on a reply.
 type ReplyMeta struct {
 	InvocationID string
-	// Command is the invocation's command: plan, chia_bill or hoi.
+	// Command is the invocation's command: plan, chia_bill, hoi or random.
 	Command string
 	// Read is how many shared turns the server confirmed belong to the room
 	// (the invocation's so_tin_doc), never the caller's own count.
@@ -90,6 +90,11 @@ func GroundReply(meta ReplyMeta, parts []tree.Value, places []*tree.OrderedMap) 
 			break
 		}
 		part, kind, err := groundReplyPart(raw, catalogue)
+		// Random searches only supply catalogue choices. An itinerary or a
+		// bill pointer cannot turn a search answer into another workflow.
+		if meta.Command == "random" && kind != "text" && kind != "places" {
+			continue
+		}
 		if err != nil || seen[kind] {
 			continue
 		}

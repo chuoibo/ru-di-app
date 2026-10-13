@@ -62,14 +62,14 @@ function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: bo
   return { ten: nhom.display_name, soNguoi: String(nhom.member_count), haiNguoi: laPair(nhom) };
 }
 
-export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { phien: Phien; sourceMessageId?: string; placeId?: string }) {
+export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId, initialTitle }: { phien: Phien; sourceMessageId?: string; placeId?: string; initialTitle?: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, radius } = useRudiTheme();
   const palette = usePaperPalette();
   const { fontScale } = useWindowDimensions();
   const nhom = nhomHienTai(phien);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(() => initialTitle ?? "");
   // The boxes hold the spelling a person types and reads; ISO lives on the wire.
   const [startsOn, setStartsOn] = useState(ngayKieuViet(homNayIso()));
   const [endsOn, setEndsOn] = useState(ngayKieuViet(homNayIso()));

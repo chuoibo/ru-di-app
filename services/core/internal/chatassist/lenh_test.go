@@ -15,7 +15,7 @@ func TestLenhNhomChiNhanHaiLenh(t *testing.T) {
 			t.Errorf("%q phải là lệnh nhóm hợp lệ", ok)
 		}
 	}
-	for _, sai := range []string{"", "Plan", "chia-bill", "chiabill", "chia_bill "} {
+	for _, sai := range []string{"", "Plan", "chia-bill", "chiabill", "chia_bill ", "Random", "random ", "/random"} {
 		if h.lenhNhom(sai, true) {
 			t.Errorf("%q không được là lệnh nhóm", sai)
 		}
@@ -23,6 +23,9 @@ func TestLenhNhomChiNhanHaiLenh(t *testing.T) {
 	// `hoi` is an answer in the thread: it needs exactly one tag message.
 	if !h.lenhNhom("hoi", true) || h.lenhNhom("hoi", false) {
 		t.Error("hoi của nhóm cần đúng một tin tag")
+	}
+	if !h.lenhNhom("random", true) || h.lenhNhom("random", false) {
+		t.Error("random của nhóm cần đúng một tin nhờ")
 	}
 }
 
@@ -51,6 +54,32 @@ func TestTaoLoiGoiKiemLenhTruocKhiChamDB(t *testing.T) {
 	for _, dung := range []string{"plan", "chia_bill"} {
 		if w := gui(dung, false); w.Code != 401 {
 			t.Errorf("lệnh %q phải qua kiểm lệnh rồi dừng ở xác thực, nhận %d %s", dung, w.Code, w.Body.String())
+		}
+	}
+}
+
+func TestRandomNeedsRequestAndTriggerBeforeDB(t *testing.T) {
+	h := New(nil)
+	for _, c := range []struct {
+		prompt, trigger string
+		code            int
+	}{
+		{"quán ăn Đà Lạt", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", 401},
+		{"/random", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", 400},
+		{strings.Repeat("đ", 301), "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", 400},
+		{"quán ăn Đà Lạt", "", 400},
+	} {
+		in := map[string]string{"logical_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "command": "random", "prompt": c.prompt}
+		if c.trigger != "" {
+			in["trigger_message_id"] = c.trigger
+		}
+		raw, _ := json.Marshal(in)
+		r := httptest.NewRequest("POST", "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/ai-invocations", bytes.NewReader(raw))
+		r.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != c.code {
+			t.Fatalf("prompt %q trigger %q: %d %s", c.prompt, c.trigger, w.Code, w.Body.String())
 		}
 	}
 }

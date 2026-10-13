@@ -586,6 +586,10 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
+	randomCo, randomVi := enabled && h.nhomEngine.RandomSanSang(), reason
+	if enabled && !randomCo {
+		randomVi = "random_source_unavailable"
+	}
 	// chia_bill is off in an end-to-end room (lan_v2.go chiaBillV2).
 	chiaCo, chiaVi := enabled, reason
 	if g.lane == laneV2 {
@@ -605,7 +609,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// field reads `khong`.
 	// `protocol` names the room's lane (ADR-0057 §6): in a v2 room the caller's
 	// device delivers the answer, and the client reads that from here.
-	reply(w, 200, map[string]any{"protocol": g.lane, "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": chiaCo, "reason": chiaVi}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
+	reply(w, 200, map[string]any{"protocol": g.lane, "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": chiaCo, "reason": chiaVi}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "random": map[string]any{"available": randomCo, "reason": randomVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
 }
 
 // The values of chat-capabilities' ai.stream (contract §3).
@@ -646,7 +650,7 @@ func newID() string {
 }
 
 // lenhNhom is the closed list of commands a group invocation may carry. It
-// mirrors `chat_ai_command_scope` (schema_hoi.sql), so a command the table
+// mirrors `chat_ai_command_scope` (schema_random.sql), so a command the table
 // would refuse is refused here as a 400 rather than surfacing as a 500 from the
 // INSERT. Every command shares one queue, one digest, one rate limit and one
 // authority check; only the worker's inference step differs. `hoi` (the
@@ -656,7 +660,7 @@ func (h *Handler) lenhNhom(command string, coTrigger bool) bool {
 	switch command {
 	case lenhPlan, lenhChiaBill:
 		return true
-	case lenhHoi:
+	case lenhHoi, lenhRandom:
 		return coTrigger
 	}
 	return false
@@ -665,6 +669,7 @@ func (h *Handler) lenhNhom(command string, coTrigger bool) bool {
 const (
 	lenhPlan     = "plan"
 	lenhChiaBill = "chia_bill"
+	lenhRandom   = "random"
 )
 
 // The two values of `chat_ai_invocations.lane`.
@@ -689,6 +694,10 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !chatv2.ValidID(in.LogicalID) || !h.lenhNhom(in.Command, in.TriggerMessageID != nil) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 || (in.TriggerMessageID != nil && !chatv2.ValidID(*in.TriggerMessageID)) {
+		failure(w, invalid("invalid_invocation"))
+		return
+	}
+	if in.Command == lenhRandom && (strings.TrimSpace(loiNhoNhom(in.Prompt)) == "" || utf8.RuneCountInString(loiNhoNhom(in.Prompt)) > 300) {
 		failure(w, invalid("invalid_invocation"))
 		return
 	}
@@ -803,6 +812,10 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	if !available {
 		refuse(w, 503, "provider_unavailable")
+		return
+	}
+	if in.Command == lenhRandom && !h.nhomEngine.RandomSanSang() {
+		refuse(w, 503, "random_source_unavailable")
 		return
 	}
 	var recent int
@@ -937,6 +950,10 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 		}
 		if !retryable {
 			refuse(w, 409, "invocation_not_retryable")
+			return
+		}
+		if v.Command == lenhRandom && !h.nhomEngine.RandomSanSang() {
+			refuse(w, 503, "random_source_unavailable")
 			return
 		}
 		// A retry puts the job back in flight, so it counts against the room

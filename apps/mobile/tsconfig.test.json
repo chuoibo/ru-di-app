@@ -345,6 +345,8 @@
     "src/rudi/chat/e2ee/kieu.ts",
     "src/rudi/chat/e2ee/api-v2.ts",
     "src/rudi/chat/e2ee/so-tin.ts",
+    "src/rudi/chat/e2ee/random-v2.ts",
+    "src/rudi/chat/e2ee/random-native.ts",
     "src/rudi/chat/e2ee/may-ma-hoa.ts",
     "src/rudi/chat/e2ee/so-phong.ts",
     "src/rudi/chat/e2ee/thiet-bi.ts",

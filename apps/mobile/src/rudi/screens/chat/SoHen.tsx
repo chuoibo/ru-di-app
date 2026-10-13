@@ -15,7 +15,7 @@ import { useDongKhay } from "../../ui/useDongKhay";
 import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { usePollFocusReveal } from "./usePollFocusReveal";
 
-export type KhayChat = "tools" | "poll" | "plan" | null;
+export type KhayChat = "tools" | "poll" | "plan" | "random" | null;
 
 /** The folded margin names the next action; the full text lives in the thread. */
 export function ToHen({ tin, onOpen, onVote, haiNguoi = false }: {
@@ -107,7 +107,7 @@ export function DaiKeoSapToi({ ten, nhip, onOpen, gon = false }: {
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onManual, capabilities, busy, error, haiNguoi = false, onToGiay, keyboardOpen = false }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onRandom, onManual, capabilities, busy, error, haiNguoi = false, onToGiay, keyboardOpen = false }: {
   personId: string; contextId: string;
   /** A two-person conversation: the same tools, worded for two. */
   haiNguoi?: boolean;
@@ -125,6 +125,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
    * (`MO_DAU_HOI_AI`), in every room.
    */
   onHoiAi: () => void;
+  onRandom?: () => void;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null;
   /** The chat's existing keyboard owner supplies this state. */
   keyboardOpen?: boolean;
@@ -203,10 +204,11 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     } else setPollError("Bình chọn chưa được gửi. Bản nháp vẫn ở đây; bạn có thể thử lại.");
   };
   // Each tool is the paper thing it puts into the conversation (ADR-0037 D1).
-  const tools: { vat: VatBan; label: string; action: () => void }[] = [
+  const tools: { vat?: VatBan; label: string; action: () => void }[] = [
     { vat: "anh-in", label: "Ảnh", action: onImage },
     { vat: "sticker", label: "Sticker", action: onSticker },
     { vat: "phieu-bau", label: "Bình chọn", action: () => onPanel("poll") },
+    ...(onRandom ? [{ label: "Ngẫu nhiên", action: onRandom }] : []),
     { vat: "lich", label: "Tờ hẹn", action: () => onPanel("plan") },
     // A couple keeps every friends' tool and adds its paper (owner decision 2026-09-28).
     ...(onToGiay ? [{ vat: "thu-gap" as VatBan, label: CONG_CU_TO_GIAY, action: () => { onPanel(null); onToGiay(); } }] : []),
@@ -251,10 +253,10 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
           <View onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); const h = Math.ceil(e.nativeEvent.layout.height); if (w > 0 && w !== rongHang) setRongHang(w); if (h !== caoHang) setCaoHang(h); }} style={styles.toolRow} testID="khay-hang-cong-cu">{tools.map((tool) => (
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
               style={({ pressed }) => [styles.tool, { width: boCuc.oRong }, pressed && styles.pressed]}>
-              <View style={[styles.toolIcon, { width: boCuc.icon, height: boCuc.icon, backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={boCuc.icon - 12} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={boCuc.icon - 12} /></View>
+              <View style={[styles.toolIcon, { width: boCuc.icon, height: boCuc.icon, backgroundColor: colors.ground, borderColor: colors.line }]}>{tool.vat ? <VeLop height={boCuc.icon - 12} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={boCuc.icon - 12} /> : <Ionicons name="disc-outline" size={32} color={colors.accent} />}</View>
               {/* Stretched to the column: measured at its own width, Android wrapped
                   «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
-              <Text numberOfLines={fontScale === undefined ? undefined : 2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
+              <Text style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
         ) : null}

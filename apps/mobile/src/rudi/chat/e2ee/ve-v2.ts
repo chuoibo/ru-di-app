@@ -69,6 +69,7 @@ function sangTinThuong(t: TinV2, contextId: string, personId: string, anhDaMo: R
     kind: t.deleted ? "deleted" : t.sticker !== null ? "sticker" : t.media?.type === "image" ? "image" : "text",
     body,
     ...(t.poll && !t.deleted ? { poll_v2: t.poll } : {}),
+    ...(t.random && !t.deleted ? { random_v2: t.random } : {}),
     image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
     ...(t.media?.type === "image" && !t.deleted ? { image_width: t.media.width, image_height: t.media.height } : {}),
     card: null,

@@ -2108,6 +2108,54 @@
         "controlled-artifact"
       ],
       "reason": "Mockup built-in ImageGen tổng hợp phản biện editor bình chọn/IME ngày13/10. Root và fresh reviewer poll_ime_direction_review đã mở reference cùng native BEFORE, đọc prompt/provenance. Không dữ liệu thật hoặc credential. Chọn một editor, helper/error trong body và một action; bác boxed fields/gradient/tỷ lệ màn cao/khoảng trống lớn/fit chữ lớn giả. Wrapper nhúng đúng prompt2912byte; decoded pixels khớp original. Chỉ critique reference, không approved comp/native AFTER/asset product. Pin đúng path/hash; thay byte phải review lại."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/random/random-reference-v1.png",
+      "sha256": "ad69f16ccc181a4bcde5a94273b622de78b05fe2f2adec74a0b44d608a0d1f4d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/random/duck-racer-study-v1.png",
+      "sha256": "6b05b8b62f0fd92f28b88990d7192c4d13b5d58e6ada186c67a1f639f003d84a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/random/duck-character-v2.png",
+      "sha256": "9f2c9f5cc2740f1c530bf84cd22c35ebb1609ceb928f5879cd5358f6d837675a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-idle-v2.png",
+      "sha256": "94821fa858b22b45bb1845398c3edc879b9227f5ab67d659660135a2b7df89e1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-racing-v2.png",
+      "sha256": "b61f00a5a4ae26bd6b9bed841ad8a1f2034bceaac58386f6d5b60cba25abb125",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-winner-v2.png",
+      "sha256": "05e8ccd3c145d39717eb45ca152e10c97bdf95e5cdb85529f220705f0dbe1d0f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
     }
   ]
 }

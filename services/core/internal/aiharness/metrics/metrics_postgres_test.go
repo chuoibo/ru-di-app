@@ -43,7 +43,9 @@ func setup(t *testing.T) *pgxpool.Pool {
 	}
 	t.Cleanup(func() { _, _ = base.Exec(context.Background(), "DROP SCHEMA "+ident+" CASCADE") })
 	cfg := base.Config().Copy()
-	cfg.ConnConfig.RuntimeParams["search_path"] = schema + ",public"
+	// Never resolve an unmigrated private table to the live fixture's public
+	// counterpart, including a prepared Installed query before migration.
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -377,7 +379,7 @@ func TestChecksumLech(t *testing.T) {
 func TestV7CongCuGuHaiBan(t *testing.T) {
 	pool := setup(t)
 	ctx := context.Background()
-	if metrics.PhienBan != 7 {
+	if metrics.PhienBan < 7 {
 		t.Fatalf("PhienBan %d", metrics.PhienBan)
 	}
 	doi := record(invocation(t, pool))
@@ -395,7 +397,7 @@ func TestV7CongCuGuHaiBan(t *testing.T) {
 	if _, err := pool.Exec(ctx, `ALTER TABLE ai_turn_metrics DROP CONSTRAINT ai_turn_metrics_cong_cu_check, ADD CONSTRAINT ai_turn_metrics_cong_cu_check CHECK (cong_cu <@ ARRAY['search_places','get_place','list_destinations','nearest_area','group_snapshot','list_group_outings','search_app_manual','explain_screen','propose_places','propose_itinerary','draft_poll','suggest_screen','my_upcoming_outings','recall_memory','remember_fact','forget_fact','what_you_remember','set_reminder']::text[])`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `DELETE FROM aiharness_schema_migrations WHERE version=7`); err != nil {
+	if _, err := pool.Exec(ctx, `DELETE FROM aiharness_schema_migrations WHERE version>=7`); err != nil {
 		t.Fatal(err)
 	}
 	if ok, err := metrics.Installed(ctx, pool); err != nil || ok {
@@ -422,5 +424,47 @@ func TestV7CongCuGuHaiBan(t *testing.T) {
 	}
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM pg_constraint WHERE conrelid=to_regclass('ai_turn_metrics') AND pg_get_constraintdef(oid) LIKE '%cong_cu <@%'`).Scan(&n); err != nil || n != 1 {
 		t.Fatalf("%d cong_cu constraints: %v", n, err)
+	}
+}
+
+func TestV8LenhRandomUpgradeOnPostgres(t *testing.T) {
+	pool := setup(t)
+	ctx := context.Background()
+	kept := record(invocation(t, pool))
+	if err := metrics.Ghi(ctx, pool, kept); err != nil {
+		t.Fatal(err)
+	}
+	// Reproduce the version-7 command CHECK, retaining all older rows.
+	if _, err := pool.Exec(ctx, `ALTER TABLE ai_turn_metrics DROP CONSTRAINT ai_turn_metrics_lenh_check, ADD CONSTRAINT ai_turn_metrics_lenh_check CHECK (lenh IN ('hoi','plan','chia_bill'))`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM aiharness_schema_migrations WHERE version=8`); err != nil {
+		t.Fatal(err)
+	}
+	random := record(invocation(t, pool))
+	random.Bot, random.Lenh = obs.BotNhom, obs.LenhRandom
+	if err := metrics.Ghi(ctx, pool, random); err == nil {
+		t.Fatal("version 7 accepted random")
+	}
+	for i := 0; i < 2; i++ {
+		if err := metrics.Migrate(ctx, pool); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := metrics.Ghi(ctx, pool, random); err != nil {
+		t.Fatalf("version 8 refused random: %v", err)
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM ai_turn_metrics WHERE invocation_id IN ($1,$2)`, string(kept.InvocationID), string(random.InvocationID)).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("migration lost rows: %d %v", n, err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET lenh='randomize' WHERE invocation_id=$1`, string(random.InvocationID)); err == nil {
+		t.Fatal("version 8 accepted an unknown command")
+	}
+	if _, err := pool.Exec(ctx, `UPDATE aiharness_schema_migrations SET digest='changed' WHERE version=8`); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Migrate(ctx, pool); err == nil || !strings.Contains(err.Error(), "checksum") {
+		t.Fatalf("version 8 checksum changed silently: %v", err)
 	}
 }

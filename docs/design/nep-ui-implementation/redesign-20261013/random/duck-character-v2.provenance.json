@@ -1,0 +1,24 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-13",
+  "use_case": "stylized-concept",
+  "purpose": "critique reference, not native evidence",
+  "prompt_file": "duck-character-v2.prompt.txt",
+  "prompt_sha256": "87b500b57f1915142fb74948d1f3a226938708976af2543a2f8deecccbecb48d",
+  "references": [
+    "duck-racer-study-v1"
+  ],
+  "original_sha256": "5a95d5a729c3528793f2cc7dee685d4efdb34003d6f7d7d9d4cee010a7eda4f2",
+  "png_sha256": "9f2c9f5cc2740f1c530bf84cd22c35ebb1609ceb928f5879cd5358f6d837675a",
+  "decoded_rgba_sha256": "37c5dc2264ad2dff006d2923c5a5c86db551ea85051be7e19782fcb2b4bc8ba7",
+  "width": 1774,
+  "height": 887,
+  "mode": "RGB",
+  "alpha_extrema": [
+    255,
+    255
+  ],
+  "pixel_identity_after_metadata_embed": true,
+  "synthetic": true,
+  "native_qc": "OPEN"
+}

@@ -51,6 +51,7 @@ export type TrichDan = {
 export type Tin = {
   /** Native-only projection of authenticated MLS operations; never a legacy server card. */
   poll_v2?: import("./e2ee/binh-chon-v2").BinhChonV2;
+  random_v2?: import("./e2ee/random-v2").RandomRound;
   revision?: number;
   id: string;
   context_id: string;

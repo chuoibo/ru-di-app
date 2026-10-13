@@ -13,13 +13,13 @@ function measuredRect(top: number, width: number, height: number): Rect | null {
 }
 
 /** Reveal only the current poll input inside its measured native scroll body. */
-export function usePollFocusReveal(active: boolean) {
+export function usePollFocusReveal(active: boolean, fieldCount = 7) {
   const caption = useNativeStandaloneTextMetrics(typography.caption);
   const body = useNativeTextInputMetrics(typography.body, {});
   const fields = useRef<FieldRefs[] | null>(null);
   if (fields.current === null) {
-    // Question plus six choices: refs never depend on the current choice count.
-    fields.current = Array.from({ length: 7 }, () => ({ input: createRef<TextInput>(), group: createRef<View>() }));
+    // Fixed slots per editor; changing the current choice count never replaces refs.
+    fields.current = Array.from({ length: Math.max(1, Math.min(9, fieldCount)) }, () => ({ input: createRef<TextInput>(), group: createRef<View>() }));
   }
   const slots = fields.current;
   const scrollRef = useRef<ScrollView>(null);

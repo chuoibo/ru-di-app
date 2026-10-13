@@ -10,6 +10,8 @@ export { THEME_CHAT, bangMauChat, laThemeChat, nhanTheme, type BangMauChat, type
 
 export type RudiTone = "accent" | "ai" | "split";
 export type RudiPalette = typeof tokens.color.light;
+/** Categorical game paper; indices/full names, never hue alone, identify choices. */
+export const mauLuotChon = tokens.choiceGame;
 
 /**
  * The person's own light/dark choice, when they made one (L5, ADR-0023 §2.5).

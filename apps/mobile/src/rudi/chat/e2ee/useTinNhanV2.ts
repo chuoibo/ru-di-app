@@ -33,6 +33,7 @@ import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
 import { CHU_MA_HOA } from "./tom-tat";
 import { danhSach, moiTruoc } from "./so-tin";
 import { chuDongBinhChon } from "./binh-chon-v2";
+import { encodeRandomRound, type RandomRound } from "./random-v2";
 import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
 
 const NHIP_MS = 3000;
@@ -234,9 +235,9 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
   );
 
   const guiOp = useCallback(
-    async (op: Operation): Promise<TinDaGui | null> => {
+    async (op: Operation, logicalId?: string): Promise<TinDaGui | null> => {
       const may = await mayCua(personId);
-      const ev = await may.gui(contextId, op);
+      const ev = await may.gui(contextId, op, logicalId);
       const id = ev?.envelope?.logical_send_id;
       return id === undefined ? null : daGui(id);
     },
@@ -384,6 +385,7 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     taiLai: nap,
     boPhieu: (pollId: string, optionId: string) => guiPhieu(pollId, optionId),
     dongBinhChon: (pollId: string) => guiPhieu(pollId, null),
+    guiRandom: (round: RandomRound) => guiOp({ type: "text", body: encodeRandomRound(round) }, round.id),
     gui: (body: string, traLoi: { id: string } | null = null) =>
       guiOp(traLoi === null ? { type: "text", body } : { type: "reply", reply_to: traLoi.id, body }),
     sua: (messageId: string, body: string) => guiOp({ type: "edit", message_id: messageId, body }),

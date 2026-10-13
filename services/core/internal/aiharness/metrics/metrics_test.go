@@ -63,7 +63,7 @@ func TestBangKhongChuaChuTuDo(t *testing.T) {
 			t.Errorf("cột %s có thể chứa chữ tự do: %s", name, def)
 		}
 	}
-	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaSQL+schemaV2SQL+schemaV3SQL+schemaV4SQL+schemaV5SQL+schemaV6SQL, "")
+	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(strings.Join(cacPhienBan(), "\n"), "")
 	if regexp.MustCompile(`(?i)\b(jsonb?|bytea|varchar|character varying)\b`).MatchString(sql) {
 		t.Error("schema có kiểu chứa được chữ tự do")
 	}
@@ -126,7 +126,7 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 	if obs.NhanGuard("nhay_cam").Valid() {
 		t.Fatal("a record may hold nhay_cam")
 	}
-	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV7SQL {
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV8SQL {
 		t.Fatal("PhienBan is not the last version")
 	}
 	// Version 5's path list is exactly obs.Duongs.
@@ -206,13 +206,30 @@ func TestV7CongCuGuHaiBan(t *testing.T) {
 	if n := strings.Count(body, ";"); n != 1 || strings.Count(body, "ADD CONSTRAINT") != 1 {
 		t.Fatalf("version 7 does more than the cong_cu CHECK: %d statements", n)
 	}
-	if SchemaV7SQL() != schemaV7SQL || PhienBan != 7 {
-		t.Fatal("PhienBan / SchemaV7SQL")
+	if SchemaV7SQL() != schemaV7SQL {
+		t.Fatal("SchemaV7SQL")
 	}
 }
 
 // execDem counts the statements it is given and runs none.
 type execDem struct{ n int }
+
+func TestV8LenhRandomIsClosed(t *testing.T) {
+	m := regexp.MustCompile(`ADD CONSTRAINT ai_turn_metrics_lenh_check\s*CHECK \(lenh IN \(([^)]*)\)\)`).FindStringSubmatch(schemaV8SQL)
+	if m == nil || m[1] != "'hoi','plan','chia_bill','random'" || !strings.Contains(schemaV8SQL, "DROP CONSTRAINT ai_turn_metrics_lenh_check") || SchemaV8SQL() != schemaV8SQL || PhienBan != 8 {
+		t.Fatalf("random metrics migration does not pin the command list: %s", schemaV8SQL)
+	}
+	for _, good := range []obs.Lenh{obs.LenhHoi, obs.LenhPlan, obs.LenhChiaBill, obs.LenhRandom} {
+		if !good.Valid() {
+			t.Fatalf("command %q missing from record", good)
+		}
+	}
+	for _, bad := range []obs.Lenh{"Random", "/random", "random ", "food"} {
+		if bad.Valid() {
+			t.Fatalf("record admitted unknown command %q", bad)
+		}
+	}
+}
 
 func (e *execDem) Exec(context.Context, string, ...any) (pgconn.CommandTag, error) {
 	e.n++

@@ -80,6 +80,7 @@ export function lenhGoiY(haiNguoi: boolean): readonly LenhGoiY[] {
   return [
     { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
     { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
+    { nhan: "/random", goiY: "/random", moTa: "Vòng quay hoặc đua vịt chọn giúp" },
     {
       nhan: "/chia-bill",
       goiY: "/chia-bill ",
