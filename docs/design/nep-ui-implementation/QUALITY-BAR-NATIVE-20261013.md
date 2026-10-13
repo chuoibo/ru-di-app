@@ -65,3 +65,8 @@ Craft floor: `/home/lakiet/.claude/plugins/cache/impeccable/impeccable/4.5.2/ski
 ## Hai section Khám phá · yêu cầu bổ sung sau ảnh e338
 
 Hai mục Địa điểm/Cộng đồng phải đọc đầy đủ cùng lúc ở100/200/return100, không clip mục bên cạnh hoặc thu font để giữ thanh thấp. Khi thiếu bề rộng, nhãn được wrap và hàng tăng chiều cao; cả hai target tối thiểu48dp. Giữ thứ tự, typeh2 native, băng coral và selected state. Nút overflow Community ở ngoài tablist, vẫn tới được. Kiểm cả Explore và Community, light/dark, phone320/window768; bounds chưa thay việc nhìn glyph/dấu và optical alignment. Giữ owner/input/ref/focus/query qua native metrics, không phát I/O khi chỉ đổi font. Năm feed khác vẫn có scroll riêng; chưa được suy đã đạt. Đây là tiêu chuẩn candidate mới, chưa native AFTER hoặc verdict.
+
+
+## Composer r3 · sau native phone cao ee42
+
+Phần dư phải nằm trong chính EditText có thể nhập, không chuyểncounter xuống để che đuôi không thể nhập. Compact ceiling tối thiểu420dp và tối thiểu một chiều cao cửa sổ, vẫn hữu hạn với bài dài; native complete-line minimum thắngceiling. Expanded giữ policy hiện tại. Kiểm phone320×640,390×844,320×960 rỗng và bài tổng hợp1776ký tự với IME100/200/return100, caret/reveal/cuộn; không suy geometry dài giữ nguyên từ testowner. Ba target tool tách8dp cả hàng100 vàstack200, min48dp, đủ nhãn/count/baseline. Caption/recovery/topic có thể cuộn nhưng field/action phải thực sự tớiđược; gestureQC phải bắt đầu trong boundsScrollView hiện tại, không ởfooter. Đây là tiêu chuẩn correction mới, chưa AFTER/verdict.

@@ -1273,3 +1273,12 @@ Nguồn exact `e338740b73e98eada580bffae3edb239acb9ab5c`, clean9/9,246file/1.880
 Verdict scoped **fix**: F1/F2/S1 resolved trong các trạng thái đã chụp; F3 partial còn typing/Mention/recovery. Cụm rail→gửi phone16px/tablet30px đã liền; khoảng dư trong canvas. Search/AI outer borders cùng mép100/200/return100, targetAI48×52→48×74→48×52. [Ảnh/pins/exclusions](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-e338740b/root-visual-review.json), [verdict5section](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/impeccable-finish-review-e338-private-20261013-r1/scoped-verdict-five-sections.md). Loading và wrong-scene bị loại; sample-ime thật sự keyboard closed. Query/sample tổng hợp đã xoá, không publish/inference/media write.
 
 [Planned stop](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-e338740b/planned-native-stop.json):555mẫu,hostmin18,331GiB,readyguestmin610,715MiB,PSSmax704,988MiB,PID2884không đổi,0safety/sampled OOM/kill. Crash/exit history không đổi; nativeOFF/corelegacygiữ. Native HTML/CSS detector skipped. Tab Cộng đồng bị cắt ở200 là finding riêng đang sửa; fullqualitymatrix/A–S/iOS/main chưa hoàn tất.
+
+
+### 13/10 · ee42: hai section đủ chữ, canvas cao còn phải sửa
+
+Clean9/9 ởee42, Node1880/1880/246file, Go-guide98/98. Root mở45ảnhnative, reviewer mới mở35ảnh cópins: Dau đọc trọn hai mục ở100/200/return100, sáng/tối vàwindow768; typedbody/topicvalidation/Mention/recoveryDrop/Retry/Remove được thao tác thật với fixture tổng hợp, không publish. Capture sai scene/gesture bị loại rõ trong `native-audit-ee42d3cb/root-visual-review.json`.
+
+ReviewerFIX xác nhận gapcounter→tool131dp ở320×960 so với13dp ở320×640, cùngtoolgap4dp. Correction saustop đổiceilingcompact sangmax(420,height), toolgap8; giữ cây/owner/ref/lease/handler. LP08migration giữnative-line minimum vượtwindow; focused28+owner/media/topic30 đều xanh. Chờ exactSHA clean/nativeAFTER/verdict/documenter mới; không lấy ảnhee42 làm AFTER cho correction này.
+
+Theo dõi26293mẫu, PID2962 khôngđổi, hostmin17,641GiB, guestreadymin684,266MiB, PSSmax744MiB, khôngsafety/OOM trongscope; plannedstop02:01:57UTC13/10 giữcore/legacy. Runtime tồn tại trongturn bịngắt; khôngcoi làsoakđãthiếtkế. APIreverse đãkhôi phục, nháp trảrỗng, media tổng hợp bỏkhỏinháp, khôngđăngbài. Bannerfeedupdate chồngsearch là finding độc lập chưađóng.

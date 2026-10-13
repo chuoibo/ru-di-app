@@ -188,11 +188,15 @@ test('LP08 same-scale metrics are observed and Composer always reserves a comple
     await h.nativeFont(snapshot(2, 201.25));
     sameHost(h, input, 'Synthetic tall line');
     assert.equal(inputStyle(h).lineHeight, 201.25); assert.equal(inputStyle(h).minHeight, 209.5, '201.5dp pixel pitch + 8dp vertical padding');
-    assert.equal(inputStyle(h).maxHeight, 420, 'responsive physical ceiling remains above the minimum');
+    assert.equal(inputStyle(h).maxHeight, 844, 'compact ceiling permits the full host window above the minimum');
     await h.nativeFont(snapshot(2, 500.25));
     sameHost(h, input, 'Synthetic tall line');
     assert.equal(inputStyle(h).lineHeight, 500.25); assert.equal(inputStyle(h).minHeight, 508.5);
-    assert.equal(inputStyle(h).maxHeight, 508.5, 'physical ceiling may not contradict one complete line');
+    assert.equal(inputStyle(h).maxHeight, 844, 'a complete native line below the window does not lower its ceiling');
+    await h.nativeFont(snapshot(2, 1000.25));
+    sameHost(h, input, 'Synthetic tall line');
+    assert.equal(inputStyle(h).lineHeight, 1000.25); assert.equal(inputStyle(h).minHeight, 1008.5);
+    assert.equal(inputStyle(h).maxHeight, 1008.5, 'window ceiling may not contradict one complete native line');
   });
 });
 

@@ -9,7 +9,7 @@ related_targets: []
 
 **Primary target:** `apps/mobile/src/rudi/community/Composer.tsx`.
 **Related targets:** `community/MediaPicker.tsx`, `community/MentionPicker.tsx`, shell `RudiScreen` và bộ đo chữ native dùng sẵn; chưa đề xuất sửa shared source.
-**Mode / flow:** Operate, Read cho giải thích phạm vi; code-led, `layout` → `polish`. Kế thừa giấy/mực/coral hiện hữu, không chọn brand/seed mới. Đây là BODY r2 prospective, thay định hướng Composer r1 sau phản hồi của người dùng; r1 giữ nguyên.
+**Mode / flow:** Operate, Read cho giải thích phạm vi; code-led, `layout` → `polish`. Kế thừa giấy/mực/coral hiện hữu, không chọn brand/seed mới. Đây là BODY r3 prospective sau ảnh ee42 trên cửa sổ cao; giữ lịch sử r1/r2 và e338 bên dưới.
 
 ## Direction contract
 
@@ -21,7 +21,7 @@ STORY: Biết ai đọc → viết → bổ sung nếu cần → đăng. Phạm 
 
 FIRST VIEWPORT: Top bar; avatar/tên/phạm vi và giải thích; canvas co giãn ở giữa. Khi thu gọn, rail ba công cụ sát quyết định đăng ở đáy, cùng cột; lý do/lỗi thuộc dock. Phần mở thêm cuộn trong thân.
 
-FORM: Form một cột với dock hành động; bố cục native thích ứng trước, polish sau. Kế thừa world, code-led refinement; không concept-seed mới.
+FORM: Form một cột, canvas nhập nhận phần dư và dock liền. Compact giữ ceiling hữu hạn bằng max(420dp, chiều cao cửa sổ); expanded giữ policy hiện tại. Một dòng native trọn vẹn vẫn thắng ceiling. Rail tách target8dp, giữ48dp tối thiểu và các owner/ref/handler. Kế thừa world, code-led refinement; không concept-seed mới.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
@@ -64,3 +64,10 @@ Root chạy clean exacte3389/9: Node subset246 file,1880/1880, fail/skip/cancel/
 Verdict độc lập `impeccable-finish-review-e338-private-20261013-r1/scoped-verdict-five-sections.md` là **FIX**, sau khi reviewer mở23 ảnh (12 Composer,10 Search,1 source). F1 đã giải quyết trong dock thu gọn đã chụp; F2 đã giải quyết trong canvas rỗng đã chụp. F3 chỉ đạt một phần: cụm author/audience và ô chủ đề rỗng khi focus/IME được kiểm, còn typed body/topic, caret/selection với nội dung, Mention và helper/error/phục hồi chưa có native proof mới. Không suy những state đó hỏng, cũng không gọi F3 resolved.
 
 FINISH và quality bar rộng còn mở. Đây là tài liệu lịch sử e338; sửa tab Khám phá sau e338 là slice khác, chưa được chứng minh bởi các ảnh này. Nếu Composer thay đổi tiếp, cần đối chiếu source và capture mới trước khi cập nhật kết luận; không tái dùng ship lịch sử.
+
+
+## Amendment r3 · canvas thật trên cửa sổ cao
+
+Native ee42 cho thấy counter→target công cụ13dp ở320×640,33dp ở390×844 và131dp ở320×960. Cap420 làm phần dư nằm sau counter, ngoài EditText. Sửa đúng caller thành ceiling compact `Math.max(420, height)`, dùng chiều cao cửa sổ đã quan sát sẵn, không thêm phép trừ/spacer/observer; native complete-line minimum vẫn thắng ceiling. Đây là đổi chính sách long-text từ420dp sang tối thiểu một cửa sổ, không được gọi long-text geometry giữ nguyên. Bài dài vẫn có cap hữu hạn; tablet vẫn không cap như hiện tại.
+
+Đúng ba target công cụ cách nhau8dp cả hàng ngang và stack200; giữ min48dp, chữ đầy đủ, count chọn và baseline. Không thêm artwork, remount, di chuyển field/recovery vào footer hoặc đổi payload/lease/attempt/locks. Recapture phone320, ordinary390×844, tall320×960 rỗng/đã nhập,100/200/return100 và bài tổng hợp1776ký tự với IME/caret để kiểm reveal và cuộn. Giữ kiểm minimum nguyên dòng khi native line pitch vượt ceiling. F1/F2/F3 của reviewer ee42 vẫn mở tới AFTER/verdict/documenter đúng source mới.

@@ -274,7 +274,7 @@ function ComposerForm() {
     {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change({ group: g.id })}/>)}</> : null}
     <View style={styles.stage}>
     <View style={[styles.writing, { borderColor: colors.line }]}>
-      <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : 420, minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
+      <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : Math.max(420, height), minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={styles.tools}>
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   body: { flexGrow: 1, flexShrink: 0, flexBasis: "auto", textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: typography.body.lineHeight },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
   tools: { gap: 8 },
-  toolRow: { flexDirection: "row", gap: 4, padding: 4, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
+  toolRow: { flexDirection: "row", gap: 8, padding: 4, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
   toolStack: { flexDirection: "column" },
   tool: { flex: 1, flexDirection: "row", minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8 },
   toolLabel: { flexShrink: 1, minWidth: 0 },
