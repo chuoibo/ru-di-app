@@ -116,3 +116,24 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## Cổng riêng
 
 Counter6c đã đủ glyph trong captures root nêu; chưa nhận toàn Composer. Agent mở composer-long-edit-start-light100.png: startZ/caret không thấy dù success receipt xác minh exact1777 tại offset0. Proposal chỉ bảo đảm input box có declared cap theo actual viewport; Android internal caret scroll phải được kiểm lại FIRST/MIDDLE/END với closeddriver, font100/200/return100 và IME open/close. Giữ R5 draft/lease/ACK/retry/media/topic clearance, toàn nhãn/scaling và reveal guard oversized. Unavailable font giữ nguyên RN scaling và minimum an toàn hiện hữu; nếu complete line lớn hơn viewport thì không ép nhỏ chữ và không nhận caret-fit PASS. Host rectangles không chứng minh pixels/caret.
+
+
+## 13/10 · actual context compatibility
+
+# Composer · compatibility sau full gate f3 RED
+
+Basef3c001a87f45330c5eff6b682064187c74f4a422. Giữ direction IME viewport đã chọn, chỉ làm actual context và style forwarding minh bạch. Contract viết trước private representation change; root chọn trước W.
+
+THESIS: Editor dùng đúng viewport từ owner thật và giữ toàn style của caller; host không bỏ qua context để đổi lấy test xanh.
+
+OWN-WORLD: Giấy/mực/coral hiện hữu. Không đổi typography, khoảng cách, rail, footer hoặc artwork; đây là compatibility của cùng layout.
+
+STORY: Actual screen đo viewport → context thật tới input → bounds an toàn → draft/attachment/retry giữ nguyên. Owner absence có defaultnull thật; owner có height phải được đọc.
+
+FIRST VIEWPORT: Canvas khôngIME và editor IME giữ contract hiện tại. Không thay caret finding bằng một stub hook luônnull; native recapture vẫn phải làm.
+
+FORM: Tách pure viewport context/hook thành leaf module thật; ui dùng/reexport cùng context. Legacy host delegate actualhook và có explicit actualprovider seam. Wrapper nhận props identifier, local rest bỏ bottomClearance, explicit props.style tới native input ở cả hai nhánh.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+Không sửa scanner để bỏ assertion. Regression bổ sung phải cho thấy height được provide thay đổi maxHeight qua actual hook, cùng native input/body/draft; null/default thuộc actual context absence. TR01–09/LP08 thật vẫn kiểm owner/reveal/line floor riêng. Native first/middle/end caret và beauty chưa được nhận PASS.

@@ -303,7 +303,8 @@ function ComposerForm() {
   </RudiScreen></NativeFontMetricsProvider>;
 }
 
-function ComposerBodyInput({ bottomClearance, ...props }: TextInputProps & { bottomClearance: number }) {
+function ComposerBodyInput(props: TextInputProps & { bottomClearance: number }) {
+  const { bottomClearance, ...nativeProps } = props;
   const viewportHeight = useRudiInputViewportHeight();
   const metrics = useNativeTextInputMetrics(props.style, props);
   const original = StyleSheet.flatten(props.style) ?? {};
@@ -320,7 +321,7 @@ function ComposerBodyInput({ bottomClearance, ...props }: TextInputProps & { bot
     // Bound the native editor, so its own scrolling can reveal a first or middle caret.
     maxHeight: available === null ? typeof original.maxHeight === "number" ? Math.max(original.maxHeight, minimum) : original.maxHeight : Math.max(minimum, Math.min(typeof original.maxHeight === "number" ? original.maxHeight : Infinity, available)),
   };
-  return <NativeMetricTextInput {...props} style={geometry ? [props.style, geometry] : props.style} />;
+  return <NativeMetricTextInput {...nativeProps} style={geometry ? [props.style, geometry] : props.style} />;
 }
 
 function ComposerTool({ icon, label, accessibilityLabel, onPress, selected, expanded, disabled, stacked }: { icon: IconName; label: string; accessibilityLabel: string; onPress: () => void; selected?: boolean; expanded?: boolean; disabled?: boolean; stacked: boolean }) {

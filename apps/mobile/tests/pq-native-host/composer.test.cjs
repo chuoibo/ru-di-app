@@ -163,3 +163,31 @@ test('vault snapshots clone mutable inputs/outputs and reject stale same-actor l
     assert.equal(v.docNhapBai('synthetic-A', 'new:community').body, 'Synthetic valid new lease');
   } finally { await h.dispose(); }
 });
+
+test('PV01 legacy writer host delegates the actual viewport hook and preserves caller styles with a provided owner', async () => {
+  const { flatten } = require('./native-metrics-boundary.cjs');
+  const h = host({ inputViewportHeight: 240 }); await h.mount();
+  try {
+    await h.changeBody('Synthetic provided viewport draft');
+    const input = h.body(), saved = h.load(vaultPath).docNhapBai('synthetic-A', 'new:community'), beforeCalls = h.calls.length;
+    const module = h.load('apps/mobile/src/rudi/ui/InputViewport');
+    assert.equal(h.load('apps/mobile/src/rudi/ui').useRudiInputViewportHeight === module.useRudiInputViewportHeight, true, 'adapter exposes the actual source hook');
+    assert.match(h.consumed.get('apps/mobile/src/rudi/ui/InputViewport'), /\/apps\/mobile\/src\/rudi\/ui\/InputViewport\.tsx$/, 'actual leaf source consumed');
+    for (const [height, maximum] of [[240, 208], [320, 288], [null, 844], [240, 208]]) {
+      await h.setInputViewportHeight(height);
+      const style = flatten(h.body().props.style);
+      assert.equal(style.maxHeight, maximum, 'the actual hook reads its provided owner, including explicit null');
+      assert.equal(style.fontSize, 17); assert.equal(style.lineHeight, 24);
+      assert.equal(style.paddingVertical, 4); assert.equal(style.textAlignVertical, 'top');
+      assert.equal(style.color, '#123456', 'geometry forwarding retains incoming caller ink');
+      assert.equal(h.body() === input, true, 'provider updates retain the native input');
+      assert.equal(h.body().props.value, 'Synthetic provided viewport draft');
+      assert.equal(Object.hasOwn(h.body().props, 'bottomClearance'), false, 'custom clearance never reaches the native host');
+      assert.deepEqual(h.load(vaultPath).docNhapBai('synthetic-A', 'new:community'), saved, 'viewport updates keep the RAM draft and logical attempt');
+    }
+    assert.equal(h.calls.length, beforeCalls); assert.deepEqual(h.routes, [], 'context reads have no transport or navigation side effects');
+  } finally { await h.dispose(); }
+  const absent = host(); await absent.mount();
+  try { assert.equal(flatten(absent.body().props.style).maxHeight, 844, 'absent owner uses the actual context default'); }
+  finally { await absent.dispose(); }
+});

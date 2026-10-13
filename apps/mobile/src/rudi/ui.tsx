@@ -4,9 +4,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Children, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { Text } from "./ui/NativeFontMetrics";
+import { InputViewportContext } from "./ui/InputViewport";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -28,6 +29,7 @@ import { useMotion } from "./ui/useMotion";
 import { TABLIST, giuState, tabState, toggleState } from "../ui/a11y";
 
 export type { IconName } from "./ui/RudiIcon";
+export { useRudiInputViewportHeight } from "./ui/InputViewport";
 
 type ScreenProps = {
   children: ReactNode;
@@ -83,10 +85,6 @@ type ScreenProps = {
 
 /** The tablet column widths of `RudiScreen`'s `cot`. */
 const RONG_COT = { doc: COT_DOC, form: 560, rong: 960 } as const;
-
-const InputViewportContext = createContext<number | null>(null);
-/** Actual scroll viewport while this screen's IME is open; no native reads. */
-export function useRudiInputViewportHeight() { return useContext(InputViewportContext); }
 
 export function RudiScreen({
   children,

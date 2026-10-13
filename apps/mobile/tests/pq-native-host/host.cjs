@@ -17,8 +17,9 @@ console.error = (...args) => { if (!String(args[0]).includes('react-test-rendere
 function person(id = 'synthetic-A') { return { person_id: id, token: `synthetic-token-${id}`, profile: { display_name: id }, contexts: [], context_id: null }; }
 function post(id = 'synthetic-post', revision = 3) { return { id, author_id: 'synthetic-A', body: 'Synthetic server body', audience: 'public', context_id: null, revision, topics: ['Server'], mentions: [], media: [] }; }
 function deferred() { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
-function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot, mode = 'candidate', realMedia = false } = {}) {
-  const state = { actor, params, token: null, revoke: null, show: true, tick: 0, nativeFont: { status: "available", fontScale: 1 } };
+function viewportValue(value) { assert.ok(value === undefined || value === null || (typeof value === 'number' && Number.isFinite(value) && value > 0), 'Explicit viewport height is finite positive or absent'); return value; }
+function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot, mode = 'candidate', realMedia = false, inputViewportHeight } = {}) {
+  const state = { actor, params, token: null, revoke: null, show: true, tick: 0, nativeFont: { status: "available", fontScale: 1 }, inputViewportHeight: viewportValue(inputViewportHeight) };
   const fontListeners = new Set();
   const cache = new Map(), consumed = new Map(), queue = new Map(), calls = [], routes = [];
   let root, session;
@@ -34,7 +35,7 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     'apps/mobile/src/danh-tinh': { ngheThuHoiPhien: fn => { state.revoke = fn; return () => { state.revoke = null; }; } },
     'apps/mobile/src/rudi/kho': { xoaPhienAsync: async () => {} },
     'apps/mobile/src/rudi/theme': { typography: new Proxy({ body: { fontSize: 17, lineHeight: 24 } }, { get: (target, key) => target[key] ?? {} }), useRudiTheme: () => ({ colors }) },
-    'apps/mobile/src/rudi/ui': { Field: visual('Field'), RudiButton: Button, RudiScreen: Screen, TopBar: visual('TopBar') },
+    'apps/mobile/src/rudi/ui': { Field: visual('Field'), RudiButton: Button, RudiScreen: Screen, TopBar: visual('TopBar'), get useRudiInputViewportHeight() { return load('apps/mobile/src/rudi/ui/InputViewport').useRudiInputViewportHeight; } },
     'apps/mobile/src/rudi/ui/CauTaiCho': { CauTaiCho: props => React.createElement('CauTaiCho', props, props.cau, props.cau && props.hanhDong ? React.createElement(Button, { label: props.hanhDong.label, onPress: props.hanhDong.onPress }) : null) },
     'apps/mobile/src/rudi/ui/Skeleton': { SkeletonLines: visual('SkeletonLines') },
     'apps/mobile/src/rudi/ui/AvatarNguoi': { AvatarNguoi: visual('AvatarNguoi') },
@@ -75,7 +76,14 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
   const Session = load('apps/mobile/src/rudi/session');
   const Composer = load('apps/mobile/src/rudi/community/Composer').Composer;
   function Probe() { session = Session.useRudiSession(); return null; }
-  function App() { React.useLayoutEffect(() => { const callback = state.afterCommit; state.afterCommit = null; callback?.(); }); return React.createElement(Session.RudiSessionProvider, null, React.createElement(Probe), state.show ? React.createElement(Composer) : null); }
+  function App() {
+    React.useLayoutEffect(() => { const callback = state.afterCommit; state.afterCommit = null; callback?.(); });
+    const editor = state.show ? React.createElement(Composer) : null;
+    // The legacy screen remains a writer-test boundary; an explicit owner uses
+    // the actual application's context, not a replacement hook or guessed null.
+    const content = state.inputViewportHeight === undefined ? editor : React.createElement(load('apps/mobile/src/rudi/ui/InputViewport').InputViewportContext.Provider, { value: state.inputViewportHeight }, editor);
+    return React.createElement(Session.RudiSessionProvider, null, React.createElement(Probe), content);
+  }
   const update = async fn => { await act(async () => { fn(); root.update(React.createElement(App, { tick: ++state.tick })); }); };
   const hosts = (type, match = () => true) => root.root.findAll(node => node.type === type && match(node.props));
   const one = (type, match) => { const nodes = hosts(type, match); assert.equal(nodes.length, 1, `${type} count`); return nodes[0]; };
@@ -89,6 +97,7 @@ function createHost({ actor = person(), params = {}, candidateRoot = sourceRoot,
     async dispose() { await act(async () => { root.unmount(); }); },
     async setActor(value) { state.actor = value; await act(async () => { value ? session.datPhien(value) : session.quenTaiCho(); }); },
     async setParams(value) { await update(() => { state.params = value; }); },
+    async setInputViewportHeight(value) { assert.notEqual(state.inputViewportHeight, undefined, 'Only an explicit viewport owner may update'); assert.notEqual(value, undefined, 'Keep the explicit owner mounted'); await update(() => { state.inputViewportHeight = viewportValue(value); }); },
     audienceOpen() { return hosts('RNPressable', p => p.accessibilityRole === 'radio').length > 0; },
     body() { return one('RNTextInput', p => p.testID === 'community-body'); },
     field(label) { return one('Field', p => p.label === label || p.accessibilityLabel === label); },
