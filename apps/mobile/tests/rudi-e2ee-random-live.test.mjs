@@ -83,6 +83,51 @@ test("text/reply replay chỉ nhận cùng logical ID, giữ timestamp ACK, khô
   assert.equal(deleted.deleted, true);
 });
 
+test("timestamp ACK RFC3339 giữ nguyên qua sổ/reopen và offset cùng instant có cùng lịch", () => {
+  const live = round();
+  const body = encodeRandomLiveRound(live);
+  const fraction = ".458684";
+  const spellings = [`2026-10-14T10:00:00${fraction}Z`, `2026-10-14T17:00:00${fraction}+07:00`,
+    `2026-10-14T05:30:00${fraction}-04:30`, `2026-10-13T23:00:00${fraction}-11:00`,
+    `2026-10-14T10:00:00${fraction}+00:00`];
+  const anchor = clock(BASE + 458, 100, 20);
+  const moments = [100, 5100, 12_100, 18_100, 18_120];
+  const expected = moments.map((mono) => randomLiveView(live, spellings[0], anchor, mono));
+  assert.deepEqual(expected.map((view) => view.phase), ["countdown", "countdown", "racing", "racing", "finished"]);
+  assert.equal(expected[2].progress, 0.5);
+  assert.equal(expected[3].reveal, false);
+  assert.equal(expected[4].reveal, true);
+  for (const at of spellings) {
+    const records = [{ t: "cho", r: received({ type: "text", body }), luc: 1 }];
+    assert.equal(replay(records).so.byId[ID], undefined);
+    records.push({ t: "da-gui", id: ID, seq: 7, at });
+    const accepted = replay(records).so.byId[ID];
+    const projected = sangTin(accepted, ROOM, AUTHOR, {});
+    assert.equal(accepted.at, at);
+    assert.equal(accepted.body, body);
+    assert.equal(projected.created_at, at, "projection does not rewrite the sealed timestamp");
+    assert.deepEqual(projected.random_live_v2, live);
+    assert.deepEqual(moments.map((mono) => randomLiveView(projected.random_live_v2, projected.created_at, anchor, mono)), expected);
+    records.push({ t: "da-gui", id: ID, seq: 8, at: "2026-10-14T11:00:00Z" });
+    const reopened = replay(records).so.byId[ID];
+    assert.deepEqual(reopened, accepted, "reopen and duplicate ACK retain the first immutable event/time");
+    const reopenedProjection = sangTin(reopened, ROOM, AUTHOR, {});
+    assert.deepEqual(moments.map((mono) => randomLiveView(reopenedProjection.random_live_v2, reopenedProjection.created_at, anchor, mono)), expected);
+    if (!at.endsWith("Z")) assert.equal(randomClockSample(at, 100, 120), null, "the clock endpoint contract remains UTC Z only");
+  }
+  for (const at of ["2026-02-30T17:00:00+07:00", "2026-02-29T05:30:00-04:30", "2026-10-14T24:00:00Z",
+    "2026-10-14T17:00:60+07:00", "2026-10-14T17:00:00+24:00", "2026-10-14T17:00:00+07:60",
+    "2026-10-14T17:00:00+7:00", "2026-10-14T17:00:00+0700", "2026-10-14T10:00:00-00:00",
+    "2026-10-14T10:00:00", "2026-10-14T10:00:00." + "1".repeat(10) + "Z", "2026-10-15T17:00:00+07:00"]) {
+    const view = randomLiveView(live, at, anchor, 100);
+    assert.equal(view.phase, "unavailable", at);
+    assert.equal(view.reveal, false, at);
+  }
+  for (const at of spellings) {
+    assert.equal(randomLiveView(live, at, anchor, 30_101).phase, "unavailable", "an offset cannot bypass clock expiry");
+  }
+});
+
 test("inbox/quote không dùng raw wire hoặc lộ nhãn thắng khi không có clock", () => {
   const live = round();
   const tin = replay([record(received({ type: "text", body: encodeRandomLiveRound(live) }))]).so.byId[ID];

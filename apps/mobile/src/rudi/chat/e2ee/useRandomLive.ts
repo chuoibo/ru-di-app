@@ -2,7 +2,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { AppState } from "react-native";
 
-import { randomClockSample, randomLiveView, randomServerNow, type RandomClockAnchor, type RandomLiveRound, type RandomLiveView } from "./random-live";
+import { RANDOM_CLOCK_MAX_AGE_MS, randomClockSample, randomLiveView, randomServerNow, type RandomClockAnchor, type RandomLiveRound, type RandomLiveView } from "./random-live";
 
 export type RandomRoomClock = { anchor: RandomClockAnchor | null; status: "syncing" | "ready" | "unavailable" };
 const UNAVAILABLE: RandomRoomClock = { anchor: null, status: "unavailable" };
@@ -19,18 +19,39 @@ export function useRandomRoomClock(sample: () => Promise<{ server_now: string }>
     let disposed = false;
     let generation = 0;
     let refresh: ReturnType<typeof setTimeout> | null = null;
-    const setClock = (clock: RandomRoomClock) => setStored({ reader: sample, clock });
+    let expiry: ReturnType<typeof setTimeout> | null = null;
+    let current: RandomRoomClock = UNAVAILABLE;
+    const setClock = (clock: RandomRoomClock) => { current = clock; setStored({ reader: sample, clock }); };
+    const expireAtOriginalDeadline = (anchor: RandomClockAnchor) => {
+      if (expiry !== null) clearTimeout(expiry);
+      const check = () => {
+        expiry = null;
+        if (disposed || current.anchor !== anchor) return;
+        const now = monotonicNow();
+        if (now === null || randomServerNow(anchor, now) === null) {
+          setClock(UNAVAILABLE);
+          return;
+        }
+        expiry = setTimeout(check, Math.max(1, Math.ceil(RANDOM_CLOCK_MAX_AGE_MS - (now - anchor.monotonicMs)) + 1));
+      };
+      check();
+    };
     const stop = () => {
       generation += 1;
       if (refresh !== null) clearTimeout(refresh);
+      if (expiry !== null) clearTimeout(expiry);
       refresh = null;
+      expiry = null;
       if (!disposed) setClock({ anchor: null, status: "unavailable" });
     };
     const synchronize = async () => {
-      stop();
-      if (!enabled || AppState.currentState !== "active" || monotonicNow() === null) return;
-      const version = generation;
-      setClock({ anchor: null, status: "syncing" });
+      const initialNow = monotonicNow();
+      if (!enabled || AppState.currentState !== "active" || initialNow === null) { stop(); return; }
+      const version = ++generation;
+      if (refresh !== null) clearTimeout(refresh);
+      refresh = null;
+      // Renewal cannot blank an anchor that still covers the current race.
+      if (randomServerNow(current.anchor, initialNow) === null) setClock({ anchor: null, status: "syncing" });
       let best: RandomClockAnchor | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         if (disposed || version !== generation) return;
@@ -48,12 +69,13 @@ export function useRandomRoomClock(sample: () => Promise<{ server_now: string }>
       if (disposed || version !== generation) return;
       const now = monotonicNow();
       if (best === null || now === null || randomServerNow(best, now) === null) {
-        setClock({ anchor: null, status: "unavailable" });
+        if (now === null || randomServerNow(current.anchor, now) === null) setClock(UNAVAILABLE);
       } else {
         setClock({ anchor: best, status: "ready" });
+        expireAtOriginalDeadline(best);
       }
       // A failed sampler also gets one bounded refresh while this room is focused.
-      refresh = setTimeout(() => void synchronize(), 30_000);
+      refresh = setTimeout(() => void synchronize(), 20_000);
     };
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") void synchronize();

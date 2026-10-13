@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { RandomPlayableRound } from "../../chat/e2ee/random-live";
@@ -17,11 +17,15 @@ export function ChatRandomCard({ round, acceptedAt, clock, onNew, onView, onCrea
   const { colors } = useRudiTheme();
   const [expanded, setExpanded] = useState(false);
   const [cardWidth, setCardWidth] = useState(0);
+  const [watchedRound, setWatchedRound] = useState<string | null>(null);
   const live = useRandomLiveTimeline(round.v === 2 ? round : null, acceptedAt, clock);
+  const active = live?.phase === "countdown" || live?.phase === "racing";
+  useEffect(() => { if (active) setWatchedRound(round.id); }, [active, round.id]);
   const revealed = round.v === 1 || live?.reveal === true;
   const status = live?.phase === "countdown" ? `Bắt đầu sau ${Math.ceil(live.remainingMs / 1000)} giây`
     : live?.phase === "racing" ? "Lượt đang diễn theo lịch chung" : live?.reason ?? "Lượt đã khóa";
-  const showGame = live?.phase === "countdown" || live?.phase === "racing" || expanded && live?.phase === "finished";
+  // Keep the finishing pose for a viewer who watched; old history stays compact.
+  const showGame = active || live?.phase === "finished" && (expanded || watchedRound === round.id);
   return <View onLayout={(event) => {
     const width = event.nativeEvent.layout.width;
     if (Number.isFinite(width) && width > 0) setCardWidth(width);

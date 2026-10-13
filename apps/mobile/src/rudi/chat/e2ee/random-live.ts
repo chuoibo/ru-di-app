@@ -90,9 +90,20 @@ export function randomClockSample(serverNow: string, before: number, after: numb
 }
 
 function parseTimestamp(value: string | null): number | null {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(value)) return null;
+  if (typeof value !== "string" || !value.endsWith("Z")) return null;
+  return parseEventTimestamp(value);
+}
+
+/** Event JSON may retain pgx's local offset; keep its stored spelling unchanged. */
+function parseEventTimestamp(value: string | null): number | null {
+  if (typeof value !== "string") return null;
+  const parts = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{1,9})?(Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+  if (parts === null) return null;
+  const hours = Number(parts[4] ?? 0), minutes = Number(parts[5] ?? 0);
+  if (hours > 23 || minutes > 59 || parts[2] === "-00:00") return null;
+  const offset = (parts[3] === "-" ? -1 : 1) * (hours * 60 + minutes) * 60_000;
   const ms = Date.parse(value);
-  return Number.isFinite(ms) && ms > 0 && new Date(ms).toISOString().slice(0, 19) === value.slice(0, 19) ? ms : null;
+  return Number.isFinite(ms) && ms > 0 && new Date(ms + offset).toISOString().slice(0, 19) === parts[1] ? ms : null;
 }
 
 export function randomServerNow(clock: RandomClockAnchor | null, monotonic: number): number | null {
@@ -105,7 +116,7 @@ export function randomServerNow(clock: RandomClockAnchor | null, monotonic: numb
 
 /** No wall-clock or mount time enters the shared progress/reveal decision. */
 export function randomLiveView(round: RandomLiveRound, acceptedAt: string | null, clock: RandomClockAnchor | null, monotonic: number): RandomLiveView {
-  const at = parseTimestamp(acceptedAt);
+  const at = parseEventTimestamp(acceptedAt);
   const now = randomServerNow(clock, monotonic);
   if (at === null || now === null || at > now + clock!.uncertaintyMs + 1000) return { phase: "unavailable", progress: 0, remainingMs: 0, reveal: false,
     reason: "Chưa đồng bộ được giờ. Mở lại lượt khi có mạng." };

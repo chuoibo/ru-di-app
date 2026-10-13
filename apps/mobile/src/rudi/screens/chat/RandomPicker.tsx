@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import type { RandomLiveView, RandomPlayableRound } from "../../chat/e2ee/random-live";
@@ -9,6 +9,7 @@ import { IconButton, RudiButton } from "../../ui";
 import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { useDongKhay } from "../../ui/useDongKhay";
+import { useMotion } from "../../ui/useMotion";
 import { RandomGame } from "./RandomGame";
 import { usePollFocusReveal } from "./usePollFocusReveal";
 
@@ -25,6 +26,7 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
   onOpenPlace: (id: string) => void;
 }) {
   const { colors } = useRudiTheme();
+  const { reduced } = useMotion();
   const { width, height } = useWindowDimensions();
   const metrics = useNativeStandaloneTextMetrics(typography.label);
   const reflow = width < 360 || metrics === null || (metrics.fontSize ?? 14) > 20;
@@ -33,6 +35,8 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
   const [complete, setComplete] = useState(false);
   const [showSearch, setShowSearch] = useState(() => !!draft.request.trim());
   const [showPreview, setShowPreview] = useState(false);
+  const previewRequest = useRef<{ target: { top: number; height: number } | null; contentReady: boolean } | null>(null);
+  const scrollFrame = useRef({ y: 0, height: 0, contentHeight: 0 });
   const [showSearchMessage, setShowSearchMessage] = useState(false);
   const locked = round !== null || publishing;
   const finished = round?.v === 2 && live !== null ? live.reveal : complete;
@@ -40,6 +44,18 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
   useEffect(() => {
     if (round && published) reveal.scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [round?.id, published, reveal.scrollRef]);
+  useEffect(() => { if (round || keyboardOpen) previewRequest.current = null; }, [round, keyboardOpen]);
+  const revealPreview = () => {
+    const request = previewRequest.current, frame = scrollFrame.current;
+    if (!request?.target || !request.contentReady || !showPreview || keyboardOpen || round) return;
+    const { top, height: previewHeight } = request.target;
+    if (frame.height <= 0 || frame.contentHeight < top + previewHeight) return;
+    const desired = previewHeight + 16 > frame.height || top < frame.y + 8
+      ? top - 8 : Math.max(frame.y, top + previewHeight + 8 - frame.height);
+    const y = Math.max(0, Math.min(desired, frame.contentHeight - frame.height));
+    previewRequest.current = null;
+    if (Math.abs(y - frame.y) > 1) reveal.scrollRef.current?.scrollTo({ y, animated: !reduced });
+  };
   const setOption = (index: number, label: string) => onChange({ ...draft, options: draft.options.map((option, i) => i === index ? { label } : option) });
   const mode = round?.mode ?? draft.mode, options = round?.options ?? draft.options;
   return <View style={[styles.root, { backgroundColor: colors.ground }]} testID="random-picker">
@@ -48,8 +64,15 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
       <IconButton accessibilityLabel="Đóng Nếp chọn giúp" icon="close" quiet onPress={onClose} />
     </View>
     <ScrollView ref={reveal.scrollRef} keyboardShouldPersistTaps="handled" style={styles.body} contentContainerStyle={styles.content}
-      onLayout={reveal.onBodyLayout} onScroll={reveal.onScroll} scrollEventThrottle={16}
-      onScrollBeginDrag={reveal.onScrollBeginDrag} onContentSizeChange={reveal.onContentSizeChange}>
+      onLayout={(event) => { reveal.onBodyLayout(); scrollFrame.current.height = event.nativeEvent.layout.height; revealPreview(); }}
+      onScroll={(event) => { reveal.onScroll(event); scrollFrame.current.y = event.nativeEvent.contentOffset.y; }} scrollEventThrottle={16}
+      onScrollBeginDrag={() => { previewRequest.current = null; reveal.onScrollBeginDrag(); }}
+      onContentSizeChange={(_width, contentHeight) => {
+        reveal.onContentSizeChange(); scrollFrame.current.contentHeight = contentHeight;
+        // Wait for both the arena layout and its new scroll range, in either event order.
+        if (previewRequest.current && showPreview) previewRequest.current.contentReady = true;
+        revealPreview();
+      }}>
       {!round ? <>
         <View accessibilityRole="tablist" style={[styles.modes, { borderColor: colors.lineStrong, backgroundColor: colors.card }]}>
           {([ ["wheel", "Vòng quay", "disc-outline"], ["ducks", "Đua vịt", "flag-outline"] ] as const).map(([value, label, icon]) =>
@@ -123,13 +146,22 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
         </View> : null}
       </> : null}
       {!round && !keyboardOpen && constrained ? <Pressable accessibilityRole="button" accessibilityState={{ expanded: showPreview }}
-        onPress={() => setShowPreview(!showPreview)} style={styles.searchDoor}>
+        onPress={() => {
+          previewRequest.current = showPreview ? null : { target: null, contentReady: false };
+          setShowPreview(!showPreview);
+        }} style={styles.searchDoor}>
         <Ionicons name={mode === "wheel" ? "disc-outline" : "flag-outline"} size={20} color={colors.inkSoft} />
         <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>{`${showPreview ? "Thu" : "Xem trước"} ${mode === "wheel" ? "vòng quay" : "đường đua"}`}</Text>
         <Ionicons name={showPreview ? "chevron-up" : "chevron-down"} size={18} color={colors.inkSoft} />
       </Pressable> : null}
-      {!round && !keyboardOpen && (!constrained || showPreview) ? <RandomGame mode={mode} options={options}
-        compact width={Math.min(width - 32, mode === "ducks" ? 560 : 220)} /> : null}
+      {!round && !keyboardOpen && (!constrained || showPreview) ? <View onLayout={(event) => {
+        if (previewRequest.current) {
+          const { y, height: previewHeight } = event.nativeEvent.layout;
+          previewRequest.current.target = { top: y, height: previewHeight };
+          revealPreview();
+        }
+      }}><RandomGame mode={mode} options={options}
+        compact width={Math.min(width - 32, mode === "ducks" ? 560 : 220)} /></View> : null}
       {error && (keyboardOpen || round && published) ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
       {round && published && finished ? <View style={styles.actions}>
           <View style={[styles.resultActions, reflow && styles.column]}>

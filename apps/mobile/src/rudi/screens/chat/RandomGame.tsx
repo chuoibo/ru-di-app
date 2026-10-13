@@ -74,7 +74,14 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
   const finalAngle = round ? 1800 - (round.winner + 0.5) * 360 / count : 0;
   // Clamp the visible pose, not its clock: native velocity stays continuous
   // between samples, and the last crossing waits for the conservative reveal.
-  const pose = scheduled && !live.reveal ? progress.interpolate({ inputRange: [0, 0.99, 1], outputRange: [0, 0.99, 0.99] }) : progress;
+  const pose = useMemo(() => scheduled && !live?.reveal
+    ? progress.interpolate({ inputRange: [0, 0.99, 1], outputRange: [0, 0.99, 0.99] }) : progress, [scheduled, live?.reveal, progress]);
+  const wheelRotation = useMemo(() => pose.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${finalAngle}deg`] }), [pose, finalAngle]);
+  const runners = useMemo(() => tracks.map((track) => ({
+    x: pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.x }),
+    bob: pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.bob }),
+    tilt: pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.tilt }),
+  })), [tracks, pose]);
   const liveStatus = scheduled ? live.phase === "countdown" ? `Xuất phát sau ${Math.ceil(live.remainingMs / 1000)} giây`
     : live.phase === "racing" ? `Đang ${mode === "wheel" ? "quay" : "đua"} · ${Math.ceil(live.remainingMs / 1000)} giây`
     : live.phase === "syncing" ? "Đang đồng bộ giờ…" : live.phase === "unavailable" ? live.reason : null : null;
@@ -85,7 +92,7 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
     {liveStatus ? <Text style={[typography.label, styles.status, { color: colors.inkSoft }]}>{liveStatus}</Text> : null}
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.object}>
       {mode === "wheel" ? <View style={{ width: size, height: size }}>
-        <Animated.View style={{ transform: [{ rotate: pose.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${finalAngle}deg`] }) }] }}>
+        <Animated.View style={{ transform: [{ rotate: wheelRotation }] }}>
           <Svg width={size} height={size} viewBox="0 0 300 300">
             <Circle cx={150} cy={150} r={140} fill={colors.card} stroke={colors.lineStrong} strokeWidth={2} />
             <G>{Array.from({ length: count }, (_, index) => {
@@ -107,15 +114,14 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
               fill={(row + col) % 2 ? mauLuotChon.ink : mauLuotChon.river.finishPaper} />))}
           <Path d={`M ${arena.finish - 18} 18 Q ${arena.finish - 8} 12 ${arena.finish + 6} 18 L ${arena.finish + 6} 30 Q ${arena.finish - 8} 24 ${arena.finish - 18} 30 Z`} fill={brand.coral} />
         </Svg>
-        {tracks.map((track, index) => {
+        {runners.map((runner, index) => {
           const top = 26 + (arena.height - 52 - arena.duck) * index / (count - 1);
           return <Animated.View key={index} style={[styles.runner, { left: 12, top, width: arena.duck, height: arena.duck,
-            transform: [{ translateX: pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.x }) },
-              { translateY: running ? pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.bob }) : 0 }] }]}>
+            transform: [{ translateX: runner.x }, { translateY: running ? runner.bob : 0 }] }]}>
             <Svg width={arena.duck + 22} height={22} style={[styles.wake, { bottom: 0, left: -20, opacity: running ? 0.85 : 0.45 }]}>
               <Path d={`M 2 13 Q 12 6 22 13 T ${arena.duck + 16} 13 M 6 18 Q 14 12 24 18 T ${arena.duck + 12} 18`} fill="none" stroke={mauLuotChon.river.foam} strokeWidth={1.5} />
             </Svg>
-            <Animated.View style={{ transform: [{ rotate: running ? pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.tilt }) : "0deg" }] }}>
+            <Animated.View style={{ transform: [{ rotate: running ? runner.tilt : "0deg" }] }}>
               <Image source={DUCKS[index % DUCKS.length]} style={{ width: arena.duck, height: arena.duck }} contentFit="contain" />
             </Animated.View>
             <View style={[styles.badge, { backgroundColor: PAPER_INKS[index], borderColor: reveal && round?.winner === index ? brand.coral : mauLuotChon.river.finishPaper }]}>

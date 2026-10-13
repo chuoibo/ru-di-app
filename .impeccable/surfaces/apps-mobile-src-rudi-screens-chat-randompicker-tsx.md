@@ -18,3 +18,9 @@ FIRST VIEWPORT: Gutter 16dp, heading/close gọn, mode rồi danh sách sửa; t
 FORM: Seed reference: inherited code-led extension, user-pinned continuous river race, no seed roll. Bỏ hàng tiến trình; đường chạy ẩn, số đi cùng vịt, vạch đích caro. Nhịp tăng/giảm và vượt nhau tái hiện từ seed, không chọn lại kết quả. V1 xem lại cục bộ; v2 chỉ diễn đúng pha đồng hồ đã đồng bộ, reduced motion giữ cùng hạn lộ kết quả. Không badge người đang xem, đồng thuận hay chứng nhận công bằng.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Ghi chú triển khai
+
+Bấm mở preview phải đưa sân vừa mở vào vùng đọc theo layout và chiều cao scroll thực; sân cao hơn viewport giữ đầu sân để người dùng cuộn tiếp. Chỉ cuộn một lần từ thao tác mở rõ ràng, tôn trọng reduced motion; hủy khi kéo tay, mở IME hoặc tạo lượt. Tick live không kéo vị trí đọc. Native d91 đã thấy sân chỉ lộ một khe sau thao tác mở ở 320×640/font1; sửa source chưa phải bằng chứng native AFTER.
+
+Thẻ đang mount ở pha đếm ngược hoặc đua giữ sân thu gọn qua lúc về đích của cùng lượt; lịch sử mở muộn vẫn là tóm tắt, có thể mở chi tiết. Interpolation node được giữ qua các tick cùng lượt. Cần native AFTER để kiểm tư thế thắng, vị trí đọc và độ mượt.
