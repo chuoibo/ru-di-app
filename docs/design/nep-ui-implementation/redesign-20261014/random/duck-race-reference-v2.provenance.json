@@ -1,0 +1,18 @@
+{
+  "tool": "built-in image_gen",
+  "source": "/home/lakiet/.codex/generated_images/01a1192e-6adb-7ec1-8aba-b662fbdce6ac/exec-dfde549f-d41e-46e7-8cff-190483405d07.png",
+  "references": [],
+  "prompt_sha256": "47058e51579259f3ea1d9ebd7861e0cd9903b85acd37bd8e717b5f391849e9ac",
+  "generated_sha256": "6e519e9edbec62f802a3ca32323702445fff01123f60587b3b98f2bc8a76af57",
+  "rgba_sha256_before_metadata": "8b8c05b543d8a03bed242b08d85695c6899443641fa170e8c34d34e367405aed",
+  "size": [
+    1475,
+    1067
+  ],
+  "mode": "RGB",
+  "alpha_extrema": null,
+  "purpose": "critique reference",
+  "embedded_sha256": "3c2bb1528b93dfa1c57eebb7bc2dd9ca8c84863d5955745b32bfbd14771e647f",
+  "rgba_sha256_after_metadata": "8b8c05b543d8a03bed242b08d85695c6899443641fa170e8c34d34e367405aed",
+  "metadata_verification": "PNG tEXt raw Latin-1 bytes equal UTF-8 prompt bytes; decoded RGBA unchanged"
+}

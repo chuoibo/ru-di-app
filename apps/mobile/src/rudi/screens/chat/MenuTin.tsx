@@ -3,6 +3,7 @@ import { Clipboard, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ngayDiaPhuong, nhanNgayDiaPhuong } from "../../chat/nhip-tin";
 import { PHAN_UNG, gioPhut, type LoaiPhanUng, type Tin } from "../../chat/tin-song";
+import { randomLivePreview } from "../../chat/e2ee/random-live";
 import { typography, useRudiTheme } from "../../theme";
 import { ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
@@ -88,7 +89,7 @@ export function MenuTin({
               chevron={false}
               icon="copy-outline"
               onPress={() => {
-                Clipboard.setString(tin.body ?? "");
+                Clipboard.setString(tin.random_live_v2 ? randomLivePreview(tin.random_live_v2) : tin.body ?? "");
                 onClose();
               }}
               title="Sao chép"

@@ -9,6 +9,7 @@
  */
 import type { NhomTomTat } from "../../../phien";
 import type { TinV2 } from "./so-tin";
+import { randomLivePreview } from "./random-live";
 
 export type TomTatV2 = {
   conversation_id: string;
@@ -28,6 +29,8 @@ export function xemTruocTinV2(tin: TinV2): string {
   if (tin.ai !== null) return "Rủ Đi AI đã trả lời";
   if (tin.sticker !== null) return "Đã gửi một sticker";
   if (tin.media?.type === "image") return "Đã gửi một ảnh";
+  // Inbox has no fresh room clock, so a live round stays generic even after its deadline.
+  if (tin.randomLive !== undefined) return randomLivePreview(tin.randomLive);
   if (tin.random !== undefined) {
     const round = tin.random;
     return `${round.mode === "wheel" ? "Vòng quay" : "Đua vịt"} chọn: ${round.options[round.winner].label}`;

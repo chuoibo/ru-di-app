@@ -27,6 +27,7 @@ export type ApiV2 = {
   events(actorId: string, room: string, device: string, after: number): Promise<Page>;
   mark(actorId: string, room: string, device: string, sequence: number): Promise<void>;
   summaries(actorId: string): Promise<TomTatV2[]>;
+  clock(actorId: string, room: string, device: string): Promise<{ server_now: string }>;
 };
 
 export const apiV2: ApiV2 = {
@@ -61,4 +62,7 @@ export const apiV2: ApiV2 = {
     await translatedAsActor(LOI, `/v2/chat/${room}/marks`, { method: "PUT", body: { device_id: device, kind: "read", sequence }, actorId, contexts: room });
   },
   summaries: async (actorId) => (await translatedAsActor<{ rooms: TomTatV2[] }>(LOI, "/v2/chat/summaries", { method: "GET", actorId })).rooms,
+  clock: (actorId, room, device) => translatedAsActor(LOI, `/v2/chat/${room}/clock?device_id=${device}`, {
+    method: "GET", actorId, contexts: room, timeoutMs: 2000,
+  }),
 };

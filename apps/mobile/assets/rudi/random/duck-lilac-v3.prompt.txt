@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: transparent shipping duck-racer sprite, lilac-scarf variant.
+Input image: original coral-bandana duck sprite is the edit target.
+Primary request: preserve the exact adorable golden yellow toy duck body, expression, proportions, raised tail, full body square crop, painterly texture, right-facing three-quarter side view and soft lighting. Replace ONLY the coral-red bandana with a soft LILAC PURPLE scarf with a short playful trailing end behind the neck. The scarf has a tidy small knot, simple refined fabric. Keep the head bare. It must clearly be a different accessory from the coral bandana but the same charming game character family.
+Constraints: ONE duck only, full character fits approximately88 percent width, genuine transparent alpha preserved. No labels, numbers, badges, water, splashes, ground, shadows outside silhouette, other props, UI, logos, trophy or crown. No background. Do not change facing direction.

@@ -44,6 +44,7 @@ func RouteIDs() []string {
 	return append([]string{
 		"POST /v2/chat/{conversation}/events",
 		"GET /v2/chat/{conversation}/events",
+		"GET /v2/chat/{conversation}/clock",
 		"PUT /v2/chat/{conversation}/marks",
 		"GET /v2/chat/{conversation}/stream",
 	}, lifecycleRouteIDs()...)

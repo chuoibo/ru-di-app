@@ -31,7 +31,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { xemBinhChonV2 } from "../../chat/e2ee/binh-chon-v2";
 import { newNativeRandomRound, RandomSourceUnavailable } from "../../chat/e2ee/random-native";
-import { decodeRandomRound, isRandomPlaceId, randomPlacePath, type RandomRound } from "../../chat/e2ee/random-v2";
+import { decodeRandomRound, isRandomPlaceId, randomPlacePath } from "../../chat/e2ee/random-v2";
+import { createRandomLiveRound, decodeRandomLiveRound, randomServerNow, type RandomPlayableRound } from "../../chat/e2ee/random-live";
+import { useRandomLiveTimeline } from "../../chat/e2ee/useRandomLive";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -117,7 +119,7 @@ import { duongDangNhap } from "../../duong-vao";
 export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
   const { colors, space } = useRudiTheme();
   const hong = tin.trangThai === "that-bai";
-  const pendingRound = tin.kind === "text" ? decodeRandomRound(tin.than) : null;
+  const pendingRound = tin.kind === "text" ? decodeRandomRound(tin.than) ?? decodeRandomLiveRound(tin.than) : null;
   const pendingRandom = pendingRound?.id === tin.attempt.key ? pendingRound : null;
   return (
     <View style={styles.choGui}>
@@ -253,7 +255,9 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   const [xemBoiCanh, setXemBoiCanh] = useState(false);
   const [khay, setKhay] = useState<KhayChat>(null);
   const [randomDraft, setRandomDraft] = useState<RandomDraft>(() => ({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] }));
-  const [randomRound, setRandomRound] = useState<RandomRound | null>(null);
+  const [randomRound, setRandomRound] = useState<RandomPlayableRound | null>(null);
+  const [randomReplay, setRandomReplay] = useState(false);
+  const [randomReceiptAt, setRandomReceiptAt] = useState<string | null>(null);
   const [randomPublished, setRandomPublished] = useState(false);
   const [randomPublishing, setRandomPublishing] = useState(false);
   const [randomSearching, setRandomSearching] = useState(false);
@@ -272,16 +276,19 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     randomPublishOwner.current += 1; randomPublishingRef.current = false; setRandomPublishing(false);
     randomSearchOwner.current += 1;
     setRandomDraft({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] });
-    setRandomRound(null); setRandomPublished(false); setRandomSearching(false);
+    setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomSearching(false);
     setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomError(null); setRandomSources({}); setRandomSearchMessage(null);
     setKhay(null);
   }, [contextId]);
   useEffect(() => {
-    if (randomRound && chat.tin.some((tin) => tin.id === randomRound.id && tin.random_v2?.id === randomRound.id && Number(tin.cursor) > 0) &&
+    const accepted = randomRound ? chat.tin.find((tin) => tin.id === randomRound.id &&
+      (tin.random_v2?.id === randomRound.id || tin.random_live_v2?.id === randomRound.id) && Number(tin.cursor) > 0) : undefined;
+    if (accepted && randomRound &&
       !chat.hangCho.some((tin) => tin.attempt.key === randomRound.id)) {
-      setRandomPublished(true); setRandomError(null);
+      setRandomPublished(true); setRandomReceiptAt(accepted.created_at); setRandomError(null);
     }
   }, [randomRound, chat.tin, chat.hangCho]);
+  const randomLive = useRandomLiveTimeline(randomRound?.v === 2 && randomPublished ? randomRound : null, randomReceiptAt, v2.randomClock);
   useEffect(() => {
     if (!randomSearchTrigger || randomSearchConsumed.current === randomSearchTrigger || randomRound !== null || lan.lan !== "v2") return;
     const answer = chat.tin.find((tin) => {
@@ -728,7 +735,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     const searchRoom = contextId;
     if (asksRandom) {
       setRandomDraft((draft) => ({ ...draft, request: nhac.loiNho }));
-      setRandomRound(null); setRandomPublished(false); setRandomError(null); setRandomSearchMessage(null);
+      setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomError(null); setRandomSearchMessage(null);
       setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(lenhSanSang(ai.capabilities, "random"));
       setKhay("random"); Keyboard.dismiss();
     }
@@ -768,7 +775,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     }
   };
 
-  const publishRandom = async (round: RandomRound, retry = false) => {
+  const publishRandom = async (round: RandomPlayableRound, retry = false) => {
     if (!ghiChatDuoc || randomPublishingRef.current) return;
     const room = contextId;
     const owner = ++randomPublishOwner.current;
@@ -776,9 +783,9 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     Keyboard.dismiss();
     try {
       const pending = chat.hangCho.some((tin) => tin.attempt.key === round.id);
-      const sent = retry && pending ? await v2.thuLai(round.id) : await v2.guiRandom(round);
+      const sent = retry && pending ? await v2.thuLai(round.id) : round.v === 2 ? await v2.guiRandomLive(round) : await v2.guiRandom(round);
       if (randomContext.current !== room || owner !== randomPublishOwner.current) return;
-      if (sent) setRandomPublished(true);
+      if (sent) { setRandomPublished(true); setRandomReceiptAt(sent.created_at); }
       else setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
     } catch {
       if (randomContext.current === room && owner === randomPublishOwner.current) setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
@@ -790,24 +797,29 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   };
   const playRandom = () => {
     if (!ghiChatDuoc || randomPublishingRef.current || randomRound) return;
+    const monotonic = globalThis.performance?.now?.();
+    if (v2.randomClock.status !== "ready" || monotonic === undefined || randomServerNow(v2.randomClock.anchor, monotonic) === null) {
+      setRandomError("Chưa đồng bộ được giờ của nhóm. Đợi có mạng rồi thử lại."); return;
+    }
     try {
       const options = randomDraft.options.map((option) => ({ ...option, label: option.label.trim() }));
-      const round = newNativeRandomRound(randomDraft.request, randomDraft.mode, options);
-      setRandomRound(round); setRandomPublished(false); void publishRandom(round);
+      const round = createRandomLiveRound(newNativeRandomRound(randomDraft.request, randomDraft.mode, options));
+      setRandomRound(round); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); void publishRandom(round);
     } catch (cause) {
       setRandomError(cause instanceof RandomSourceUnavailable ? cause.message : "Cần 2–8 lựa chọn khác nhau, mỗi tên tối đa 80 ký tự. Hãy sửa các lựa chọn rồi thử lại.");
     }
   };
-  const openRandom = (round?: RandomRound, fresh = false) => {
+  const openRandom = (round?: RandomPlayableRound, fresh = false, replay = false) => {
     Keyboard.dismiss(); setRandomError(null); setKhay("random");
     if (round) {
       randomSearchOwner.current += 1;
       setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(false); setRandomSearchMessage(null);
       setRandomDraft({ request: round.request, mode: round.mode, options: round.options.map((option) => ({ ...option })) });
-      setRandomRound(fresh ? null : round); setRandomPublished(!fresh); setRandomSources({});
+      const accepted = chat.tin.find((tin) => tin.id === round.id && Number(tin.cursor) > 0);
+      setRandomRound(fresh ? null : round); setRandomReplay(!fresh && replay); setRandomReceiptAt(fresh ? null : accepted?.created_at ?? null); setRandomPublished(!fresh); setRandomSources({});
     }
   };
-  const createOutingFromRandom = (round: RandomRound) => {
+  const createOutingFromRandom = (round: RandomPlayableRound) => {
     setKhay(null);
     const winner = round.options[round.winner];
     router.push({ pathname: "/outings/new", params: { contextId, initialTitle: winner.label, ...(winner.placeId ? { place: winner.placeId } : {}) } } as never);
@@ -982,7 +994,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
     const pollV2 = lan.lan === "v2" ? tin.poll_v2 : undefined;
-    const randomV2 = lan.lan === "v2" ? tin.random_v2 : undefined;
+    const randomV2 = lan.lan === "v2" ? tin.random_live_v2 ?? tin.random_v2 : undefined;
     const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, poll: pollV2, deleted: false }, personId) : null;
     const laAi = tin.kind === "ai_card" || pollV2 !== undefined;
     const theCuaTin = pollV2 ? { loai: "poll" as const, vote_id: tin.id, question: pollV2.question, options: pollV2.options } : docTheAi(tin.card);
@@ -1040,8 +1052,8 @@ function GroupChatContent({ contextId }: { contextId: string }) {
                 </Text>
               </View>
             ) : null}
-            {randomV2 ? <ChatRandomCard round={randomV2} readOnly={!ghiChatDuoc} onMenu={() => setMenuTin(tin)}
-              onNew={() => openRandom(randomV2, true)} onView={() => openRandom(randomV2)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(randomPlacePath(id) as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+            {randomV2 ? <ChatRandomCard round={randomV2} acceptedAt={tin.created_at} clock={v2.randomClock} readOnly={!ghiChatDuoc} onMenu={() => setMenuTin(tin)}
+              onNew={() => openRandom(randomV2, true)} onView={(replay) => openRandom(randomV2, false, replay)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(randomPlacePath(id) as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
               <TraLoiAi
                 readOnly={!ghiChatDuoc}
                 contextId={contextId}
@@ -1512,10 +1524,11 @@ function GroupChatContent({ contextId }: { contextId: string }) {
         onOpenPlace={(id) => router.push(randomPlacePath(id) as never)}
         onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(`/random ${randomDraft.request}`, true); }}
         onPlay={playRandom} round={randomRound} published={randomPublished} publishing={randomPublishing} searching={randomSearching}
+        live={randomReplay ? null : randomLive}
         error={randomError} searchMessage={randomSearchMessage} searchReady={lenhSanSang(ai.capabilities, "random")} keyboardOpen={banPhimMo} sources={randomSources}
         onRetry={() => { if (randomRound) void publishRandom(randomRound, true); }}
-        onNew={() => { setRandomRound(null); setRandomPublished(false); setRandomError(null); }}
-        onCreateOuting={() => { if (randomRound && randomPublished) createOutingFromRandom(randomRound); }}
+        onNew={() => { setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomError(null); }}
+        onCreateOuting={() => { if (randomRound && randomPublished && (randomRound.v === 1 || randomReplay || randomLive?.reveal)) createOutingFromRandom(randomRound); }}
       /> : <CongCuChat personId={personId} contextId={contextId} panel={khay} keyboardOpen={banPhimMo} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}

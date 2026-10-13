@@ -3467,6 +3467,14 @@
       "evidence": "services/core/internal/chatv2http/postgres_test.go"
     },
     {
+      "id": "GET /v2/chat/{conversation}/clock",
+      "method": "GET",
+      "path": "/v2/chat/{conversation}/clock",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/clock_postgres_test.go"
+    },
+    {
       "id": "PUT /v2/chat/{conversation}/marks",
       "method": "PUT",
       "path": "/v2/chat/{conversation}/marks",

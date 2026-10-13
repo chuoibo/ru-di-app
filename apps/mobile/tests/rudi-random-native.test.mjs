@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { newNativeRandomRound, RandomSourceUnavailable } from "../dist-test/rudi/chat/e2ee/random-native.js";
+import { duongDua, khungDuongDua, MOC_DUONG_DUA } from "../dist-test/rudi/chat/e2ee/duong-dua.js";
 
 const options = [{ label: "Món A" }, { label: "Món B" }, { label: "Món C" }];
 const id = (word) => `${word}-cafe-4abc-8abc-abcdefabcdef`;
@@ -41,4 +42,38 @@ test("invalid choices are refused before reading any draw entropy", (t) => {
   native(t, () => { calls++; return id("abcdefab"); });
   assert.throws(() => newNativeRandomRound("", "wheel", [{ label: "A" }, { label: "A" }]));
   assert.equal(calls, 1, "only the logical id was minted; no draw was sampled");
+});
+
+test("race paths replay exactly, move only forward and finish with the frozen winner", () => {
+  const seed = "abcdefab00000002abcdefcdfeabcdef";
+  for (let count = 2; count <= 8; count++) for (let winner = 0; winner < count; winner++) {
+    const paths = Array.from({ length: count }, (_, runner) => duongDua(seed, runner, winner));
+    paths.forEach((path, runner) => {
+      assert.deepEqual(path, duongDua(seed, runner, winner));
+      assert.equal(path.length, MOC_DUONG_DUA.length);
+      assert.equal(path[0], 0);
+      path.forEach((x, i) => { assert.ok(Number.isFinite(x) && x >= 0 && x <= 1); if (i) assert.ok(x > path[i - 1]); });
+      assert.equal(path.at(-1) === 1, runner === winner);
+    });
+    assert.ok(paths.every((path, runner) => runner === winner || path.at(-1) < paths[winner].at(-1)));
+  }
+});
+
+test("race pace permits overtakes before the final surge; it is not a fixed rank progress bar", () => {
+  const paths = Array.from({ length: 4 }, (_, i) => duongDua("abcdefab00000002abcdefcdfeabcdef", i, 2));
+  let overtakes = 0;
+  for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) {
+    for (let step = 2; step < 19; step++) if ((paths[a][step] - paths[b][step]) * (paths[a][step - 1] - paths[b][step - 1]) < 0) overtakes++;
+  }
+  assert.ok(overtakes >= 2, `expected repeated overtakes, saw ${overtakes}`);
+});
+
+test("eight runners keep a compact continuous arena and the winner beak reaches the finish", () => {
+  for (const width of [200, 288, 358, 560]) for (const count of [2, 4, 8]) {
+    const arena = khungDuongDua(width, count, false);
+    assert.equal(arena.width, width);
+    assert.ok(arena.height <= 306);
+    assert.ok(12 + arena.travel + arena.duck <= width);
+    assert.ok(Math.abs(12 + arena.travel + arena.duck * 0.95 - arena.finish) < 0.001);
+  }
 });

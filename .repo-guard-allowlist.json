@@ -2156,6 +2156,62 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh tổng hợp ImageGen cho Random trong chat, không dữ liệu thật; prompt chính xác và provenance bên cạnh. Pin riêng từng file; không phải bằng chứng native."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261014/random/duck-race-reference-v2.png",
+      "sha256": "3c2bb1528b93dfa1c57eebb7bc2dd9ca8c84863d5955745b32bfbd14771e647f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Chỉ critique reference, không approved comp hoặc bằng chứng native."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/river-arena-v2.png",
+      "sha256": "ee522eaaecfa3e2eb36492ed6b5c80ba3e20dea7fb44768aeea127f0f7ab2d75",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Asset game thực, vịt/nền sông nguyên bản, không lấy asset website tham khảo."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-coral-v3.png",
+      "sha256": "59a8d629601ba9e5c67680107c0d1ed8f9965a61697752c839f930965d04af80",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Asset game thực, vịt/nền sông nguyên bản, không lấy asset website tham khảo."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-mint-v3.png",
+      "sha256": "e36baf2af5ef48e837b0baf1c7c15e878245ccfe5bbbbb859d4b78e8c0932b9b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Asset game thực, vịt/nền sông nguyên bản, không lấy asset website tham khảo."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-navy-v3.png",
+      "sha256": "dcfc258eaa9f3c8acfe77224c011564426f7c0de9e9c1449db43187f5e124227",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Asset game thực, vịt/nền sông nguyên bản, không lấy asset website tham khảo."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-lilac-v3.png",
+      "sha256": "ec4439d090ffad7d92f5dfdc01bb84d9041c51ad8b1cc6fb7489ade9bd3b9045",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Artwork tổng hợp built-in ImageGen cho đua vịt Nếp ngày14/10; root đã mở ảnh thực, kiểm alpha/pixels và prompt nguyên văn nhúng bằng imp. Không người thật, dữ liệu thật hoặc credential. Prompt/provenance đi kèm; pin riêng từng path/hash, không miễn thư mục. Asset game thực, vịt/nền sông nguyên bản, không lấy asset website tham khảo."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/random/duck-mint-v3.provenance.json",
+      "sha256": "683035db5298bebcb9f688f8700ff38beb462ed66ab93cea5b72dc03d2b971bf",
+      "rules": [
+        "vn-phone"
+      ],
+      "reason": "Root đã đọc toàn bộ provenance và đối chiếu output built-in ImageGen thực: dãy mười chữ số chỉ thuộc UUID tên file do tool sinh, không số điện thoại hoặc dữ liệu người tham gia. Giữ source path nguyên bản để truy vết; chỉ miễn vn-phone đúng file/hash, không đổi scanner hoặc các rule khác."
     }
   ]
 }
