@@ -31,6 +31,8 @@ Raw logs riêng dưới `~/.local/share/rudi-nep-ui/runtime-private-merged-20261
 
 ## Còn mở
 
+Checkpoint `229497dd` đã chạy clean9: typecheck pass, bước guide fail do map/fingerprint sinh từ source chưa cập nhật; bảy bước sau chưa chạy. Sinh lại đúng bằng `tools/rut-huong-dan.mjs`: 62 routes, fingerprint `5c1123cf5893`, chỉ thêm nhãn nav cho đường quán nguồn. Giữ raw fail và graph 229 riêng (1120 source/43 harness/2240 raw comparisons, 0 mismatch), không gọi đó là clean9 pass. Checkpoint kế tiếp chạy lại trên SHA mới.
+
 Chạy lại 9 bước ở cây sạch đúng SHA; cập nhật graph/source receipt; kiểm native light/dark, 100/200%, IME, hai game/motion/reduced motion, offline/retry/reload/hai thành viên và tìm quán với backend QC mới. Backend QC đang giữ runtime cũ; source mới chưa được coi đã deploy. Sau ảnh cuối cần fresh finish reviewer rồi documenter của Impeccable. Chưa merge main/deploy production; strict32, iOS/hardware/TalkBack/crypto và audit FE A–S toàn app còn mở.
 
 Đợt native b8 trước đã planned OFF. Lần clear poll cuối thất bại do root chạy UIAutomator capture khi driver còn chạy; crash buffer là UIAutomator, không tự gọi app OOM. Giữ evidence đó; các thao tác native sau phải chờ mỗi action/capture hoàn tất trước thao tác tiếp.

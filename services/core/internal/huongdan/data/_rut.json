@@ -558,6 +558,7 @@
         "outings/[id]",
         "outings/new",
         "people/[id]",
+        "places/[id]",
         "settings/da-chan"
       ],
       "man": "groups/[id]/chat",
