@@ -55,10 +55,10 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
   useEffect(() => {
     if (!scheduled) return;
     progress.stopAnimation();
-    progress.setValue(reduced && !live.reveal ? 0 : live.reveal ? 1 : Math.min(live.progress, 0.97));
-    if (reduced || live.phase !== "racing" || live.progress >= 0.97) return;
+    progress.setValue(reduced && !live.reveal ? 0 : live.progress);
+    if (reduced || live.phase !== "racing" || live.progress >= 1) return;
     // Native frames run between clock updates; a late join seeks before moving.
-    const motion = Animated.timing(progress, { toValue: 0.97, duration: live.remainingMs, easing: Easing.linear, useNativeDriver: true });
+    const motion = Animated.timing(progress, { toValue: 1, duration: live.remainingMs, easing: Easing.linear, useNativeDriver: true });
     motion.start();
     return () => motion.stop();
   }, [scheduled, live?.phase, live?.progress, live?.remainingMs, live?.reveal, reduced, progress]);
@@ -72,6 +72,9 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
   })), [round?.id, round?.seed, round?.winner, count, arena.travel]);
   const named = options.filter((option) => option.label.trim()).length;
   const finalAngle = round ? 1800 - (round.winner + 0.5) * 360 / count : 0;
+  // Clamp the visible pose, not its clock: native velocity stays continuous
+  // between samples, and the last crossing waits for the conservative reveal.
+  const pose = scheduled && !live.reveal ? progress.interpolate({ inputRange: [0, 0.99, 1], outputRange: [0, 0.99, 0.99] }) : progress;
   const liveStatus = scheduled ? live.phase === "countdown" ? `Xuất phát sau ${Math.ceil(live.remainingMs / 1000)} giây`
     : live.phase === "racing" ? `Đang ${mode === "wheel" ? "quay" : "đua"} · ${Math.ceil(live.remainingMs / 1000)} giây`
     : live.phase === "syncing" ? "Đang đồng bộ giờ…" : live.phase === "unavailable" ? live.reason : null : null;
@@ -82,7 +85,7 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
     {liveStatus ? <Text style={[typography.label, styles.status, { color: colors.inkSoft }]}>{liveStatus}</Text> : null}
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.object}>
       {mode === "wheel" ? <View style={{ width: size, height: size }}>
-        <Animated.View style={{ transform: [{ rotate: progress.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${finalAngle}deg`] }) }] }}>
+        <Animated.View style={{ transform: [{ rotate: pose.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${finalAngle}deg`] }) }] }}>
           <Svg width={size} height={size} viewBox="0 0 300 300">
             <Circle cx={150} cy={150} r={140} fill={colors.card} stroke={colors.lineStrong} strokeWidth={2} />
             <G>{Array.from({ length: count }, (_, index) => {
@@ -95,27 +98,27 @@ export function RandomGame({ mode, options, round = null, live = null, animate =
         </Animated.View>
         <View style={[styles.nep, { left: size / 2 - 29, top: size / 2 - 29 }]}><Nep pose="gop-y" size={58} /></View>
         <View style={[styles.pointer, { left: size / 2 - 9, borderTopColor: brand.coral }]} />
-      </View> : <View testID="random-river-arena" style={[styles.pond, { width: arena.width, height: arena.height }]}>
+      </View> : <View testID="random-river-arena" style={[styles.pond, { width: arena.width, height: arena.height, backgroundColor: mauLuotChon.river.water }]}>
         <Image source={RIVER} style={StyleSheet.absoluteFill} contentFit="fill" cachePolicy="memory-disk" />
         <Svg width={arena.width} height={arena.height} style={StyleSheet.absoluteFill}>
           <Rect x={arena.finish - 1} y={18} width={2} height={arena.height - 36} fill={mauLuotChon.ink} />
           {Array.from({ length: Math.ceil((arena.height - 48) / 10) }, (_, row) => [0, 1].map((col) =>
             <Rect key={`${row}:${col}`} x={arena.finish - 6 + col * 6} y={24 + row * 10} width={6} height={10}
-              fill={(row + col) % 2 ? mauLuotChon.ink : "#FFF7E9"} />))}
+              fill={(row + col) % 2 ? mauLuotChon.ink : mauLuotChon.river.finishPaper} />))}
           <Path d={`M ${arena.finish - 18} 18 Q ${arena.finish - 8} 12 ${arena.finish + 6} 18 L ${arena.finish + 6} 30 Q ${arena.finish - 8} 24 ${arena.finish - 18} 30 Z`} fill={brand.coral} />
         </Svg>
         {tracks.map((track, index) => {
           const top = 26 + (arena.height - 52 - arena.duck) * index / (count - 1);
           return <Animated.View key={index} style={[styles.runner, { left: 12, top, width: arena.duck, height: arena.duck,
-            transform: [{ translateX: progress.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.x }) },
-              { translateY: running ? progress.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.bob }) : 0 }] }]}>
+            transform: [{ translateX: pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.x }) },
+              { translateY: running ? pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.bob }) : 0 }] }]}>
             <Svg width={arena.duck + 22} height={22} style={[styles.wake, { bottom: 0, left: -20, opacity: running ? 0.85 : 0.45 }]}>
-              <Path d={`M 2 13 Q 12 6 22 13 T ${arena.duck + 16} 13 M 6 18 Q 14 12 24 18 T ${arena.duck + 12} 18`} fill="none" stroke="#E8F5E9" strokeWidth={1.5} />
+              <Path d={`M 2 13 Q 12 6 22 13 T ${arena.duck + 16} 13 M 6 18 Q 14 12 24 18 T ${arena.duck + 12} 18`} fill="none" stroke={mauLuotChon.river.foam} strokeWidth={1.5} />
             </Svg>
-            <Animated.View style={{ transform: [{ rotate: running ? progress.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.tilt }) : "0deg" }] }}>
+            <Animated.View style={{ transform: [{ rotate: running ? pose.interpolate({ inputRange: MOC_DUONG_DUA, outputRange: track.tilt }) : "0deg" }] }}>
               <Image source={DUCKS[index % DUCKS.length]} style={{ width: arena.duck, height: arena.duck }} contentFit="contain" />
             </Animated.View>
-            <View style={[styles.badge, { backgroundColor: PAPER_INKS[index], borderColor: reveal && round?.winner === index ? brand.coral : "#FFF7E9" }]}>
+            <View style={[styles.badge, { backgroundColor: PAPER_INKS[index], borderColor: reveal && round?.winner === index ? brand.coral : mauLuotChon.river.finishPaper }]}>
               <Text allowFontScaling={false} style={[styles.badgeText, { color: mauLuotChon.ink }]}>{index + 1}</Text>
             </View>
           </Animated.View>;
@@ -131,7 +134,7 @@ const styles = StyleSheet.create({
   game: { alignItems: "center", gap: 8, paddingVertical: 8, maxWidth: "100%" }, object: { alignItems: "center", maxWidth: "100%" },
   nep: { position: "absolute", width: 58, height: 58 },
   pointer: { position: "absolute", top: 2, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 23, borderLeftColor: "transparent", borderRightColor: "transparent" },
-  pond: { borderRadius: 18, overflow: "hidden", backgroundColor: "#176A73" },
+  pond: { borderRadius: 18, overflow: "hidden" },
   runner: { position: "absolute" }, wake: { position: "absolute" },
   badge: { position: "absolute", left: -6, bottom: 0, width: 21, height: 21, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   badgeText: { fontSize: 12, lineHeight: 15, fontWeight: "700" },
