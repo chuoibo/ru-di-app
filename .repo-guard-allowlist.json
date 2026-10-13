@@ -2068,6 +2068,14 @@
         "controlled-artifact"
       ],
       "reason": "Mockup built-in ImageGen tổng hợp để phản biện bố cục Cá nhân ngày 13/10. Root và fresh reviewer profile_mockup_fresh_review đã mở r3 trực tiếp và đọc prompt/provenance; không dữ liệu thật hay credential. Corrected direction bỏ bảng stats/eyebrow trong mockup; đây chỉ critique reference, không approved comp/native evidence/product asset. PNG được wrapper embed-prompt nguyên văn, không đổi pixels. Pin đúng artifact; thay byte phải review lại."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/profile-rhythm-reference-r5.png",
+      "sha256": "308c954a819f0d8679a889b20e4bd36ba780eb64135ae38e63b5108477722c71",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mockup built-in ImageGen tổng hợp để phản biện nhịp đọc phần dưới Cá nhân. Root và fresh reviewer adfc_profile_composer_fresh_review đã mở r5, đọc prompt/provenance; chỉ dữ liệu fixture tổng hợp, không dữ liệu thật hoặc credential. Không approved comp, native AFTER hay asset product. Wrapper nhúng prompt nguyên văn; decoded pixels giữ nguyên. Pin đúng path/hash; thay byte phải review lại."
     }
   ]
 }

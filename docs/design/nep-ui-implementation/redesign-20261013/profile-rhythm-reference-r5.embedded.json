@@ -1,0 +1,9 @@
+{
+  "original_png_sha256": "f70e97fa1ee8581ea11753d56ed51a6cb99da4e76d12f794f5e6901a766c399d",
+  "embedded_png_sha256": "308c954a819f0d8679a889b20e4bd36ba780eb64135ae38e63b5108477722c71",
+  "decoded_rgba_sha256": "dd54d36f59192eddb2c9bcedb2d318833c16c00dc22584948f1a8d6c68774e58",
+  "method": "impeccable wrapper embed-prompt PNG tEXt; pixels identical to private original",
+  "prompt_file": "profile-rhythm-reference-r5.prompt.txt",
+  "imagegen_tool": "built-in",
+  "scope": "Synthetic critique reference only; not an approved comp, native AFTER or product asset. No raster companion needed."
+}

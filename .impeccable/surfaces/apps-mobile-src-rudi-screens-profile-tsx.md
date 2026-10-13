@@ -87,3 +87,24 @@ Title diary đứng đầu entry, không static “Những ngày muốn giữ”
 - Root native AFTER matrix: light/dark;320/390/768;100→200→100/unavailable; content/no-cover/image failure/loading/error/empty/long bio/title; lower doors/kept/account/saved/editIME. P1/P2 hiện partial, P3 unresolved; chưa có SHIP.
 
 Questions skipped: người dùng đã cho phép tự redesign/audit; root là executor duy nhất, đã chọn corrected diary-first direction và sẽ review contract/patch trước W.
+
+
+## 13/10 · correction F1–F4 từ fresh native review adfc
+
+# Profile — nhịp liên tục và trục action theo fresh review adfc
+
+Code-led Operate/Read, scoped layout→polish trong incumbent world. Đã đọc full fresh review `adfc-profile-composer-fresh-review-20261013-r1/five-section-review.md` và mở actual diary200, corrected r5. R5 chỉ là critique reference chưa approve; không lấy raster/shading/font weight/chevron làm spec. R1 giữ nguyên. Root persist contract qua wrapper trước live edits; native AFTER/verdict còn OPEN.
+
+## Direction contract
+
+THESIS: Một trang đọc liên tục: saved diary dẫn, facts/gu hỗ trợ, tools theo sau; các action chữ nằm đúng trục nội dung khi footer xuống dòng.
+
+OWN-WORLD: Giữ paper/ink/coral/navy và type hiện hữu. Không metric panel, count icon, artwork hoặc identity mới; r5 chỉ giúp đánh giá nhịp.
+
+STORY: Identity → tabs → saved diary → five global facts → gu → tools. Một content wrapper giữ các owner24/28/20/28; count+noun tự wrap không separator.
+
+FIRST VIEWPORT: Không nhét diary lên font200 bằng thu chữ. Khi action wrap, glyph bắt cùng lề body; vùng chạm48 vẫn yên, không negative margin.
+
+FORM: Chỉ Profile/DiaryLead callers: ghost text actions full=false, labelAlign=left, local padding/border0 và min target48. Giữ shared button, readers/hooks/cache, routes, retry, editor/draft/source identity; không I/O hoặc mirrored geometry tests.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

@@ -26,7 +26,7 @@ export function ProfileDiaryFailure({ message, retry }: { message: string; retry
   return <View testID="profile-diary-error" style={styles.empty}>
     <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>Chưa mở được trang đã giữ</Text>
     <Text accessibilityRole="alert" style={[typography.body, { color: colors.inkSoft }]}>{message}</Text>
-    <RudiButton full={false} label="Thử lại" variant="ghost" onPress={retry} />
+    <RudiButton full={false} label="Thử lại" labelAlign="left" variant="ghost" style={styles.textAction} onPress={retry} />
   </View>;
 }
 
@@ -36,7 +36,7 @@ export function ProfileDiaryEmpty() {
   return <View testID="profile-diary-empty" style={styles.empty}>
     <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>Chưa có trang đã giữ</Text>
     <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn có thể giữ lại cuộc đi từ trang của kèo.</Text>
-    <RudiButton full={false} label="Xem kèo của nhóm" variant="ghost" onPress={() => router.push("/(tabs)/plan" as never)} />
+    <RudiButton full={false} label="Xem kèo của nhóm" labelAlign="left" variant="ghost" style={styles.textAction} onPress={() => router.push("/(tabs)/plan" as never)} />
   </View>;
 }
 
@@ -81,7 +81,7 @@ function SavedDiary({ person, diary }: { person: string; diary: Diary }) {
     {imageFailed ? <Text style={[typography.note, { color: colors.inkSoft }]}>Ảnh chưa mở được. Nội dung vẫn còn đây.</Text> : null}
     <View style={styles.footer}>
       <Text style={[typography.note, styles.metadata, { color: colors.inkSoft }]}>{`${diary.kind === "trip" ? "Sổ chuyến đi" : "Khoảnh khắc"} · ${diary.audience === "private" ? "Chỉ mình tôi" : "Công khai"}`}</Text>
-      <RudiButton full={false} label="Mở trang" variant="ghost" onPress={() => router.push(`/diaries/${diary.id}` as never)} />
+      <RudiButton full={false} label="Mở trang" labelAlign="left" variant="ghost" style={styles.textAction} onPress={() => router.push(`/diaries/${diary.id}` as never)} />
     </View>
   </View>;
 }
@@ -98,4 +98,5 @@ const styles = StyleSheet.create({
   footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 },
   metadata: { flexShrink: 1 },
   empty: { gap: 10, alignItems: "flex-start" },
+  textAction: { paddingHorizontal: 0, borderWidth: 0, justifyContent: "flex-start", minWidth: 48, minHeight: 48 },
 });

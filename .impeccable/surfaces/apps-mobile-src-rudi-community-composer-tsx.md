@@ -137,3 +137,22 @@ FORM: Tách pure viewport context/hook thành leaf module thật; ui dùng/reexp
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 Không sửa scanner để bỏ assertion. Regression bổ sung phải cho thấy height được provide thay đổi maxHeight qua actual hook, cùng native input/body/draft; null/default thuộc actual context absence. TR01–09/LP08 thật vẫn kiểm owner/reveal/line floor riêng. Native first/middle/end caret và beauty chưa được nhận PASS.
+
+
+## 13/10 · correction F1–F4 từ fresh native review adfc
+
+# Composer · chuyển vùng viết sang công cụ khi mở IME
+
+Base adfc0584e3574de862dacd79b86d91fa1684c0e1. Direction private trước candidate; native AFTER/root chọn còn pending.
+
+THESIS: Khi đang viết, vùng nhìn kết thúc sạch sau bộ đếm; khay công cụ không lộ một mảnh viền không thể đọc.
+
+OWN-WORLD: Giữ giấy/mực/coral và khay hiện hữu. Không thêm artwork, token, chữ, nút, clamp hoặc font cap.
+
+STORY: Soạn thảo và bộ đếm thành một cụm; công cụ kế tiếp cuộn tới được; gửi vẫn ở footer cố định. Các đường nhập/media/topic/Mention và recovery giữ nguyên.
+
+FIRST VIEWPORT: Hai actual IME dark100/200 cho thấy counter đầy nhưng rail ló 8px. Dùng khoảng chuyển 16dp bằng tail đang dành sẵn; noIME phần trống tiếp tục thuộc canvas đàn hồi.
+
+FORM: Giữ stage gap8, thêm tools marginTop8. Không đổi input bounds, counter clearance, reveal/epoch, refs/keys/owners hoặc observer. Nội dung dài và font200 vẫn cuộn; complete-line minimum vẫn ưu tiên. Kiểm lại cả lúc đóng IME và scroll tới công cụ.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

@@ -160,7 +160,7 @@ function ProfileContent({ phien }: { phien: Phien }) {
       <View style={editingProfile ? undefined : styles.profileHero}>
         {!editingProfile ? <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Cá nhân</Text> : null}
         {/* Settings keeps its single door in the management group below. */}
-        <HoSoSong phien={phien} onEditorChange={setEditor} renderContent={(profile) => <>
+        <HoSoSong phien={phien} onEditorChange={setEditor} renderContent={(profile) => <View style={styles.profileBody}>
       <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
         {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={styles.profileTab}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
       </View>
@@ -169,7 +169,7 @@ function ProfileContent({ phien }: { phien: Phien }) {
       {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
       <View style={styles.preferences}>
         <Text style={[typography.note, { color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
-        <RudiButton full={false} label="Sở thích" variant="ghost" onPress={() => router.push("/personalization")} />
+        <RudiButton full={false} label="Sở thích" labelAlign="left" variant="ghost" style={styles.profileTextAction} onPress={() => router.push("/personalization")} />
       </View>
       <View style={styles.menuGroups}>
         <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
@@ -229,7 +229,7 @@ function ProfileContent({ phien }: { phien: Phien }) {
         </View>
       </View>
       </>}
-      </>} />
+      </View>} />
       </View>
     </RudiScreen>
   );
@@ -252,10 +252,7 @@ function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pendi
       <Text testID="profile-fact-contexts" style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${profile.counts.contexts} nhóm`}</Text>
     </View>
     <View style={styles.footprints}>
-      {footprints.map(([id, value, noun], index) => <View key={id} style={styles.footprint}>
-        {index > 0 ? <Text accessible={false} style={[typography.body, { color: colors.inkSoft }]}>·</Text> : null}
-        <Text testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
-      </View>)}
+      {footprints.map(([id, value, noun]) => <Text key={id} testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>)}
     </View>
   </View>;
 }
@@ -418,6 +415,7 @@ const styles = StyleSheet.create({
   khung: { gap: 14 },
   profileContent: { gap: 0 },
   profileHero: { gap: 8 },
+  profileBody: { gap: 0 },
   profileTabs: { flexDirection: "row", gap: 16, marginTop: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
   profileTabIndicator: { position: "absolute", bottom: 0, width: 32, height: 2, borderRadius: 1 },
@@ -426,9 +424,9 @@ const styles = StyleSheet.create({
   relations: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 20, rowGap: 4 },
   friendsAction: { minWidth: 48, minHeight: 48, maxWidth: "100%", justifyContent: "center", gap: 3 },
   contextWords: { minWidth: 0, flexShrink: 1 },
-  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 8, rowGap: 4 },
-  footprint: { maxWidth: "100%", flexDirection: "row", alignItems: "baseline", gap: 8 },
+  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 8 },
   preferences: { alignItems: "flex-start", gap: 4, marginTop: 20 },
+  profileTextAction: { paddingHorizontal: 0, borderWidth: 0, justifyContent: "flex-start", minWidth: 48, minHeight: 48 },
   menuGroups: { paddingTop: 28, gap: 20 },
   menuGroup: { gap: 0, borderBottomWidth: StyleSheet.hairlineWidth },
   menuHeading: { marginBottom: 4 },

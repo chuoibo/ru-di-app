@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   writing: { gap: 4, flexGrow: 1, flexShrink: 0, flexBasis: "auto", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
   body: { flexGrow: 1, flexShrink: 0, flexBasis: "auto", textAlignVertical: "top", paddingHorizontal: 0, paddingVertical: 4, lineHeight: typography.body.lineHeight },
   counter: { textAlign: "right", fontVariant: ["tabular-nums"] },
-  tools: { gap: 8 },
+  tools: { gap: 8, marginTop: 8 },
   toolRow: { flexDirection: "row", gap: 8, padding: 4, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
   toolStack: { flexDirection: "column" },
   tool: { flex: 1, flexDirection: "row", minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8 },
