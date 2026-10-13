@@ -60,11 +60,11 @@ test("số thành viên đọc lại khi người vừa vào nhắn, kể cả k
 });
 
 test("phòng rỗng co giãn, vật thể nhường chỗ và ô soạn ở đáy", () => {
-  assert.match(LIVE, /<ScrollView contentContainerStyle=\{\[styles\.rongNoi/);
+  assert.match(LIVE, /<ScrollView\s+accessibilityElementsHidden=\{lichSuAn\}[\s\S]*?contentContainerStyle=\{\[styles\.rongNoi/);
   assert.match(LIVE, /rong: \{ flex: 1 \}/);
-  assert.match(LIVE, /style=\{rongTrang \? styles\.dsRong : styles\.ds\}/);
+  assert.match(LIVE, /style=\{\[rongTrang \? styles\.dsRong : styles\.ds, lichSuAn && styles\.lichSuAn\]\}/);
   assert.match(LIVE, /thapCuaSo \|\| khay !== null \? null : <PaperObject/, "hình vẽ nhường chỗ trước");
-  assert.match(LIVE, /const gonDau = khay !== null && thapCuaSo;/);
+  assert.match(LIVE, /const gonDau = lichSuAn \|\| \(khay !== null && thapCuaSo\);/);
   assert.match(LIVE, /\(toHen \|\| keoTrenBang\) && !gonDau/, "dải ghim nhường chỗ cho khay ở cửa sổ thấp");
   assert.match(LIVE, /!khongNhanTin && !gonDau \? <HangToGiaySong/, "hàng tờ giấy cũng vậy");
   assert.match(LIVE, /veCuoi: \{ position: "absolute"/, "nút «Tin mới nhất» nổi trên danh sách, không lấy chỗ của nó");
