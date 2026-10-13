@@ -71,3 +71,25 @@ FINISH và quality bar rộng còn mở. Đây là tài liệu lịch sử e338;
 Native ee42 cho thấy counter→target công cụ13dp ở320×640,33dp ở390×844 và131dp ở320×960. Cap420 làm phần dư nằm sau counter, ngoài EditText. Sửa đúng caller thành ceiling compact `Math.max(420, height)`, dùng chiều cao cửa sổ đã quan sát sẵn, không thêm phép trừ/spacer/observer; native complete-line minimum vẫn thắng ceiling. Đây là đổi chính sách long-text từ420dp sang tối thiểu một cửa sổ, không được gọi long-text geometry giữ nguyên. Bài dài vẫn có cap hữu hạn; tablet vẫn không cap như hiện tại.
 
 Đúng ba target công cụ cách nhau8dp cả hàng ngang và stack200; giữ min48dp, chữ đầy đủ, count chọn và baseline. Không thêm artwork, remount, di chuyển field/recovery vào footer hoặc đổi payload/lease/attempt/locks. Recapture phone320, ordinary390×844, tall320×960 rỗng/đã nhập,100/200/return100 và bài tổng hợp1776ký tự với IME/caret để kiểm reveal và cuộn. Giữ kiểm minimum nguyên dòng khi native line pitch vượt ceiling. F1/F2/F3 của reviewer ee42 vẫn mở tới AFTER/verdict/documenter đúng source mới.
+
+
+## Amendment r4 · counter khi mở bàn phím
+
+
+Base `d8b06b1f82eb766def1a2ec42b90330746ef9f01`; amendment code-led `layout → polish`, giữ world và contract hiện hữu. Viết trước candidate. Không tạo raster/token.
+
+THESIS: Counter đọc trọn ở cuối canvas; bàn phím không biến dòng phụ thành mảnh chữ bị cắt.
+
+OWN-WORLD: Giấy yên, mực rõ, coral dành cho quyết định đăng. Chất riêng nằm ở nhịp và quan hệ, không thêm hộp/tranh.
+
+STORY: Viết và giữ caret → biết giới hạn ký tự → bổ sung nếu cần → đăng. Counter thuộc vùng viết; tools theo sau trong cùng cột.
+
+FIRST VIEWPORT: Giữ tác giả/phạm vi và canvas. Khi IME mở, thân cuộn chừa đủ counter cộng khoảng thở hiện hữu; tools dài vẫn tiếp cận bằng cuộn, không ép cả rail200 vào màn đầu.
+
+FORM: Một cột. Nhận chiều cao thật từ counter onLayout, chỉ đổi clearance của body; topic tiếp tục đo helper/error và dùng baseline16 khi chờ. Không thêm native measurement loop, ref, owner, key hoặc đổi draft/ACK/media/audience.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Tiêu chuẩn riêng
+
+Counter giữ đủ nhãn `n/5000`, scaling native, trục với canvas/rail; không đưa vào footer. Layout event finite/positive mới được nhận; cùng height không khởi động reveal lần nữa. Epoch cũ và lease/unmount cũ không được đổi clearance. Giữ last known height qua thay font/width đến khi có actual layout mới; không reset về baseline nếu geometry không đổi. Native AFTER phải kiểm1776 nhập bình thường, IME100→200→100, unavailable nếu có, caret/selection, topic helper/error và cả empty phone/ordinary/tall. Host rectangles không là Yoga hoặc pixel proof; FINISH/beauty approval còn mở.

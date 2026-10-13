@@ -298,3 +298,121 @@ test('TR07 oversized focused body converges after scroll feedback while fitting 
     assert.equal(h.picks.length, 0); assert.equal(h.uploads.length, 0);
   });
 });
+
+test('TR08 actual counter layout reserves the body tail without restarting settled reveal or accepting retired geometry', async () => {
+  await withComposer(async (h, vault, lease) => {
+    const keep = retained(h), saved = vault.docNhapBai('synthetic-A', 'new:community');
+    const body = h.input(), input = h.native.node(body), container = scroll(h), target = h.native.node(container);
+    const beforeIO = { calls: h.calls.length, picks: h.picks.length, uploads: h.uploads.length, routes: h.routes.length, attempts: h.attemptCount() };
+    const counter = () => {
+      const values = h.text(props => h.React.Children.toArray(props.children).join('') === `${bodyValue.length}/5000`);
+      assert.equal(values.length, 1, 'one complete actual counter');
+      return values[0];
+    };
+    async function counterLayout(height, callback = counter().props.onLayout, width = 288) {
+      assert.equal(typeof callback, 'function', 'actual counter forwards its passive native layout callback');
+      await act(async () => callback({ nativeEvent: { layout: { x: 16, y: 305, width, height } } }));
+    }
+    async function measureBody(top, height, viewportHeight) {
+      await h.native.resolve(await viewport(h), [0, 77, 320, viewportHeight]);
+      await h.native.resolve(latest(h, 'measureInWindow', input), [16, top, 288, height]);
+    }
+    async function scrolled(y) { await act(async () => container.props.onScroll({ nativeEvent: { contentOffset: { y } } })); }
+    await h.nativeFont(font(1));
+    assert.equal(h.state.window.fontScale, 2, 'native100 is observed while the window font remains stale at200');
+    const counterHost = counter(), at100 = counterHost.props.onLayout;
+    await h.native.focus(body); await h.native.emitKeyboard('keyboardDidShow');
+    // These are explicit rectangles from the clipped native scene, not a Yoga model.
+    await measureBody(77, 224, 240);
+    assert.equal(commands(h).length, 0, 'the original body rectangle alone already fits baseline clearance');
+    await counterLayout(18, at100);
+    assert.ok(h.native.pendingFrames() > 0, 'counter layout reruns the actual screen reveal through its inset effect');
+    await measureBody(77, 224, 240);
+    assert.equal(commands(h).length, 1);
+    assert.equal(commands(h)[0].target, target.id, 'counter tail uses the actual body scroll ancestor');
+    assert.deepEqual({ ...commands(h)[0].options }, { y: 22, animated: false }, 'the complete counter and existing breathing room move above the viewport edge');
+    await scrolled(22); await measureBody(55, 224, 240);
+    assert.equal(commands(h).length, 1, 'the oversized input stays settled after counter-aware feedback');
+    const settled = h.nativeHostCalls.length;
+    await counterLayout(18);
+    for (const value of [0, -1, NaN, Infinity]) await counterLayout(value);
+    await counterLayout(18, counter().props.onLayout, 0);
+    await counterLayout(18, counter().props.onLayout, NaN);
+    assert.equal(h.native.pendingFrames(), 0, 'duplicate or invalid counter boxes cannot start a measurement loop');
+    assert.equal(h.nativeHostCalls.length, settled);
+
+    await h.nativeFont(font(2));
+    assert.equal(h.state.window.fontScale, 2, 'native font events do not rewrite the window fixture');
+    await counterLayout(18, at100);
+    assert.equal(h.native.pendingFrames(), 0, 'retired100 counter callback cannot restart screen reveal');
+    assert.equal(h.nativeHostCalls.length, settled);
+    const at200 = counter().props.onLayout;
+    await counterLayout(36, at200);
+    await measureBody(55, 218, 234);
+    assert.equal(commands(h).length, 2);
+    assert.deepEqual({ ...commands(h)[1].options }, { y: 40, animated: false }, 'the larger actual counter is reserved without a scalar font guess');
+    await scrolled(40); await measureBody(37, 218, 234);
+    assert.equal(commands(h).length, 2);
+    const settled200 = h.nativeHostCalls.length;
+    await counterLayout(18, at100);
+    assert.equal(h.native.pendingFrames(), 0, 'stale100 counter cannot replace the committed200 tail');
+    assert.equal(h.nativeHostCalls.length, settled200);
+
+    await h.nativeFont(font(1));
+    await counterLayout(36, at200);
+    assert.equal(h.native.pendingFrames(), 0, 'retired200 geometry cannot cross the100→200→100 epoch');
+    const returned = counter().props.onLayout;
+    await counterLayout(18, returned); await measureBody(37, 218, 234);
+    assert.equal(commands(h).length, 2, 'a shorter tail does not reverse an already revealed oversized input');
+    await counterLayout(36, at200);
+    assert.equal(h.native.pendingFrames(), 0, 'retired200 geometry cannot replace the returned100 tail');
+    await counterLayout(18, at100);
+    assert.equal(h.native.pendingFrames(), 0, 'the first100 callback cannot restart the settled100 screen');
+
+    await h.nativeFont({ status: 'unavailable', reason: 'module-inactive' });
+    assert.notEqual(counter().props.allowFontScaling, false, 'unavailable metrics retain the original native scaling path');
+    await counterLayout(18, returned);
+    assert.equal(h.native.pendingFrames(), 0);
+    // A fractional fallback box proves that actual layout, not18×fontScale, owns the tail.
+    await counterLayout(42.5); await measureBody(37, 218, 234);
+    assert.equal(commands(h).length, 3);
+    assert.deepEqual({ ...commands(h)[2].options }, { y: 46.5, animated: false });
+    await scrolled(46.5); await measureBody(30.5, 218, 234);
+    assert.equal(commands(h).length, 3);
+    await counterLayout(18, returned);
+    assert.equal(h.native.pendingFrames(), 0, 'available-font geometry cannot replace the measured fallback tail');
+    assert.equal(counter() === counterHost, true, 'the same native counter stays mounted through all metric paths');
+    assert.equal(h.native.node(h.input()) === input, true);
+    assert.equal(input.isFocused(), true);
+
+    await h.native.focus(topic(h));
+    assert.equal(clearance(h), 16, 'a pending topic still uses its own baseline, not the remembered body tail');
+    await counterLayout(44);
+    assert.equal(clearance(h), 16);
+    await tail(h); assert.equal(clearance(h), 85, 'the actual helper/error tail still owns topic clearance');
+    await finishReveal(h, await viewport(h));
+    const topicSettled = h.nativeHostCalls.length;
+    await counterLayout(45);
+    assert.equal(clearance(h), 85, 'counter growth cannot replace a committed topic helper tail');
+    assert.equal(h.native.pendingFrames(), 0); assert.equal(h.nativeHostCalls.length, topicSettled);
+    keep();
+    assert.deepEqual(vault.docNhapBai('synthetic-A', 'new:community'), saved);
+    assert.equal(vault.phienNhapBai('synthetic-A'), lease);
+    assert.deepEqual({ calls: h.calls.length, picks: h.picks.length, uploads: h.uploads.length, routes: h.routes.length, attempts: h.attemptCount() }, beforeIO, 'layout and fonts do not perform product I/O or replace the attempt');
+
+    await h.native.blur(topic(h)); await h.native.emitKeyboard('keyboardDidHide'); await frames(h);
+    await h.native.focus(body);
+    const retired = counter().props.onLayout, beforeRetirement = h.nativeHostCalls.length, bodyTail = clearance(h);
+    assert.ok(bodyTail > 16, 'the remembered actual counter owns body clearance again');
+    vault.datChuSoHuuNhapBai('synthetic-retired'); vault.datChuSoHuuNhapBai('synthetic-A');
+    await counterLayout(100, retired);
+    assert.equal(clearance(h), bodyTail, 'retired lease geometry cannot change the body tail'); assert.equal(h.native.pendingFrames(), 0);
+    assert.equal(h.nativeHostCalls.length, beforeRetirement, 'a retired draft lease cannot admit counter geometry');
+    await h.update(state => { state.show = false; });
+    await counterLayout(101, retired);
+    assert.equal(h.nativeHostCalls.length, beforeRetirement, 'the retained callback cannot revive an unmounted screen');
+    assert.equal(h.native.pendingFrames(), 0); assert.equal(h.observation().live, 0);
+    assert.equal(h.observation().removals, h.observation().subscriptions);
+    assert.equal(vault.docNhapBai('synthetic-A', 'new:community'), null, 'a retired counter callback cannot recreate the old draft');
+  });
+});

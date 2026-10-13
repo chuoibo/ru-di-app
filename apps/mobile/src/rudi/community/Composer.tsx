@@ -3,7 +3,7 @@ import { COMMUNITY_ERRORS } from "./api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions, type TextInput, type TextInputProps } from "react-native";
+import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type TextInput, type TextInputProps } from "react-native";
 import { docNhomCuaToi, type NhomTomTat } from "../../phien";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -197,6 +197,18 @@ function ComposerForm() {
     // The topic box checks itself as the server will (QA UI-133): the sentence
     // sits under the box while typing, and «Gửi» waits with the reason.
     const loiChuDeGo = loiChuDe(topics);
+    const counterPresent = Boolean(phien) && !loading && editReady;
+    const counterGeneration = useMemo(() => ({}), [counterPresent, nativeFont, fontScale, width]);
+    const [counterLayout, setCounterLayout] = useState<{ generation: object; height: number | null }>(() => ({ generation: counterGeneration, height: null }));
+    useLayoutEffect(() => {
+        // A same-size native text need not emit another layout after metrics change.
+        setCounterLayout((previous) => previous.generation === counterGeneration ? previous : { generation: counterGeneration, height: counterPresent ? previous.height : null });
+    }, [counterGeneration, counterPresent]);
+    const recordCounterLayout = (event: LayoutChangeEvent) => {
+        const { width: counterWidth, height: counterHeight } = event.nativeEvent.layout;
+        if (!counterPresent || !current() || !Number.isFinite(counterWidth) || counterWidth <= 0 || !Number.isFinite(counterHeight) || counterHeight <= 0) return;
+        setCounterLayout((previous) => !current() || previous.generation !== counterGeneration || previous.height === counterHeight ? previous : { generation: counterGeneration, height: counterHeight });
+    };
     const topicsPresent = Boolean(phien) && !loading && editReady && Boolean(topicsOpen || topics || loiChuDeGo);
     const topicsGeneration = useMemo(() => ({}), [topicsPresent, topicsFocused, topics, loiChuDeGo, nativeFont, fontScale, width]);
     const measureTopics = () => {
@@ -239,7 +251,8 @@ function ComposerForm() {
             if (topicsFrame.current !== null) { cancelAnimationFrame(topicsFrame.current); topicsFrame.current = null; }
         };
     }, [topicsGeneration]);
-    const focusBottomInset = topicsFocused && topicsClearance?.generation === topicsGeneration ? topicsClearance.value : 16;
+    const bodyClearance = counterLayout.height === null ? 16 : counterLayout.height + styles.writing.gap + 16;
+    const focusBottomInset = topicsFocused ? topicsClearance?.generation === topicsGeneration ? topicsClearance.value : 16 : bodyClearance;
     if (!phien)
         return <RudiScreen><TopBar title="Kể một khoảnh khắc"/><Text style={[typography.body, { color: colors.ink }]}>Đăng nhập để viết câu chuyện của bạn.</Text></RudiScreen>;
     const chooseAudience = (value: Audience) => { if (change({ audience: value })) setAudienceOpen(false); };
@@ -275,7 +288,7 @@ function ComposerForm() {
     <View style={styles.stage}>
     <View style={[styles.writing, { borderColor: colors.line }]}>
       <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : Math.max(420, height), minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
-      <Text style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
+      <Text onLayout={recordCounterLayout} style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={styles.tools}>
       <MediaPicker compact disabled={busy} canEdit={() => current() && !sending.current} initialFile={pendingFile} onFileChange={rememberFile} person={phien.person_id} media={media} onChange={(v) => change({ media: v })} onBusy={(v) => { if (current()) { uploadingNow.current = v; setUploading(v); } }} renderToolbar={(pick, picking) => <View style={[styles.toolRow, fontScale >= 1.5 && styles.toolStack, { backgroundColor: colors.card, borderColor: colors.line }]}>

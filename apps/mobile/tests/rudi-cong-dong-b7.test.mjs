@@ -117,7 +117,7 @@ function assertUpdateRowInFlow(source) {
   assert.equal(lists.length, 1, "same reader-owned FlatList");
   const updates = document.filter((node) => ts.isJsxExpression(node) && node.expression && ts.isConditionalExpression(node.expression) && identifier(node.expression.condition, "fresh"));
   assert.equal(updates.length, 1, "one fresh affordance in the actual column");
-  assert.equal(document[document.indexOf(lists[0]) + 1], updates[0], "fresh affordance follows the same FlatList in reading order");
+  assert.ok(document[document.indexOf(lists[0]) + 1] === updates[0], "fresh affordance follows the same FlatList in reading order");
   const update = updates[0].expression;
   assert.equal(update.whenFalse.kind, ts.SyntaxKind.NullKeyword, "no reserved update row while fresh is false");
   assert.ok(ts.isJsxElement(update.whenTrue) && tag(update.whenTrue) === "Animated.View", "fresh renders the update row directly");
