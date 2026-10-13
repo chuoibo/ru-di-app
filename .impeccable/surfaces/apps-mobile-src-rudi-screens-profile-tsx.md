@@ -108,3 +108,20 @@ FIRST VIEWPORT: Không nhét diary lên font200 bằng thu chữ. Khi action wra
 FORM: Chỉ Profile/DiaryLead callers: ghost text actions full=false, labelAlign=left, local padding/border0 và min target48. Giữ shared button, readers/hooks/cache, routes, retry, editor/draft/source identity; không I/O hoặc mirrored geometry tests.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+
+## 13/10 · F5 ngân sách phải được vẽ đầy đủ
+
+THESIS: Dòng gu là một đoạn đọc đầy đủ, không đánh mất mức chi đã lưu trong pixels dù XML còn chữ.
+
+OWN-WORLD: Giữ note/inkSoft, giấy/mực/coral và r5 critique reference; không art hoặc typography mới.
+
+STORY: Sau năm facts, đọc nguyên sở thích và ngân sách rồi chọn Sở thích.
+
+FIRST VIEWPORT: Đoạn nhận chiều rộng thật của cột, cao tự nhiên;100/200 sáng/tối và hot round-trip phải nhìn thấy suffix. XML không thay ảnh.
+
+FORM: Chỉ alignSelf stretch ở summary Text, không key/remount, observer, fixed height, ellipsis hoặc chia suffix. Giữ native metrics owner, dữ liệu, draft và routes. Nguyên nhân omission chưa được chứng minh; candidate chưa là fix.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+Native2c cho thấy budget bị thiếu ở100light/dark/return, đầy đủ ở200. Root mở ảnh và independent agent xác nhận; evidence và candidate contract nằm trong private profile-gu-f5-direction-2c96ce60-20261013-r1. Native AFTER và fresh finish vẫn OPEN.

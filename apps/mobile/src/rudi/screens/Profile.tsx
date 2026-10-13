@@ -168,7 +168,7 @@ function ProfileContent({ phien }: { phien: Phien }) {
       <DiaryLead person={personId} collection={diaries} />
       {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
       <View style={styles.preferences}>
-        <Text style={[typography.note, { color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
+        <Text style={[typography.note, { alignSelf: "stretch", color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
         <RudiButton full={false} label="Sở thích" labelAlign="left" variant="ghost" style={styles.profileTextAction} onPress={() => router.push("/personalization")} />
       </View>
       <View style={styles.menuGroups}>

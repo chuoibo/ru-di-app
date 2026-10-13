@@ -20,7 +20,6 @@ import {
   StyleSheet,
   ScrollView,
   type ViewToken,
-  Text,
   TextInput,
   type TextStyle,
   View,
@@ -72,6 +71,8 @@ import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
 import { bangMauChat, mucNguoi, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 import { useMotion } from "../../ui/useMotion";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { Sticker } from "../../ui/stickers/Sticker";
@@ -165,6 +166,17 @@ function HangLoiNho({ title, cau, dangCho = false, testID, children }: { title: 
 }
 
 export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <GroupChatContent contextId={contextId} /> : <ObserveChatMetrics contextId={contextId} />;
+}
+
+function ObserveChatMetrics({ contextId }: { contextId: string }) {
+  const snapshot = useNativeFontScale();
+  // One stable owner covers the thread, composer, trays and sheets.
+  return <NativeFontMetricsProvider snapshot={snapshot}><GroupChatContent contextId={contextId} /></NativeFontMetricsProvider>;
+}
+
+function GroupChatContent({ contextId }: { contextId: string }) {
   const router = useRouter();
   const { colors, dark, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();

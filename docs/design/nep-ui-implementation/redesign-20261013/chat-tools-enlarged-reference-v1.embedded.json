@@ -1,0 +1,9 @@
+{
+  "original_png_sha256": "ef00f27ca86c186e11c9f69a4b146a5044b34fd21141ef230a1dbeb0766a4b31",
+  "embedded_png_sha256": "75b441ac72db0b0ec72e81f1b424291f115a1f9bec65413ac6a0d2ae017b98d7",
+  "decoded_rgba_sha256": "ac654f654be1270cc25ad829e8125271ee262d35428a6bb17dfb4853fae62633",
+  "method": "impeccable wrapper embed-prompt PNG tEXt; pixels identical to private original",
+  "prompt_file": "chat-tools-enlarged-reference-v1.prompt.txt",
+  "imagegen_tool": "built-in",
+  "scope": "Synthetic code-led critique reference; not approved comp/native AFTER/product asset. Existing icon-above-caption grammar selected; reject horizontal cards/drag handle/shading/exact200 geometry."
+}

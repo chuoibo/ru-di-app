@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { lenhSanSang, type ChatCapabilities } from "../../chat/ai-invocations";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
-import { CONG_CU_TO_GIAY, KHOANG_CONG_CU, boCucKhay, chuKhay, tranKhay } from "../../chat/khay-cong-cu";
+import { CONG_CU_TO_GIAY, ICON_CONG_CU, KHOANG_CONG_CU, boCucKhay, chuKhay, tranKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, lichTrinhTrongThe, type Tin } from "../../chat/tin-song";
 import { KHUNG_VAT, hinhVat, type VatBan } from "../../art/vat-ban";
 import { typography, useRudiTheme } from "../../theme";
@@ -12,6 +12,7 @@ import { VeLop } from "../../ui/art/VeLop";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Field, IconButton, RudiButton } from "../../ui";
 import { useDongKhay } from "../../ui/useDongKhay";
+import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 
 export type KhayChat = "tools" | "poll" | "plan" | null;
 
@@ -131,10 +132,19 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   const sanSang = lenhSanSang(capabilities, "plan");
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
   useNhuongChoNep(panel !== null);
-  const { height, width, fontScale } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+  const captionMetrics = useNativeStandaloneTextMetrics(typography.caption);
+  // A caption geometry budget, not an inferred OS scale. Native conversion
+  // can be nonlinear, so reserve the larger size/line-height ratio.
+  const fontScale = captionMetrics === null ? undefined : Math.max(
+    (captionMetrics.fontSize ?? typography.caption.fontSize) / typography.caption.fontSize,
+    (captionMetrics.lineHeight ?? typography.caption.lineHeight) / typography.caption.lineHeight,
+  );
   // The tool row's real width once laid out; before that, the window's less
   // the tray's side padding (the chat column is at most 820 wide).
   const [rongHang, setRongHang] = useState<number | null>(null);
+  // Unknown metrics use one full-width column and its measured natural height.
+  const [caoHang, setCaoHang] = useState(0);
   // The photo note's own height, so the tray's cap counts it with the grid.
   const [caoGhiChu, setCaoGhiChu] = useState(0);
   const [draft, setDraft] = useState(() => docBanNhapCongCu(personId, contextId));
@@ -198,7 +208,10 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     ...(onToGiay ? [{ vat: "thu-gap" as VatBan, label: CONG_CU_TO_GIAY, action: () => { onPanel(null); onToGiay(); } }] : []),
   ];
   const hasDraft = panel === "poll" && (!!draft.question || draft.choices.some(Boolean));
-  const boCuc = boCucKhay(rongHang ?? Math.min(width, 820) - 32, tools.length, fontScale);
+  const rongCongCu = Math.max(0, rongHang ?? Math.min(width, 820) - 32);
+  const boCuc = fontScale === undefined
+    ? { cot: 1, hang: tools.length, oRong: rongCongCu, icon: Math.min(ICON_CONG_CU, rongCongCu), caoNoiDung: caoHang }
+    : boCucKhay(rongHang ?? Math.min(width, 820) - 32, tools.length, fontScale);
   return (
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
@@ -208,11 +221,11 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, {
-        // The cap holds the grid and the photo note under it; when a short
-        // window squeezes the tray it may shrink, but never below one whole
-        // row of tools, so a tile is never cut in half.
+        // Known metrics reserve one complete row. Unknown metrics keep a
+        // natural full-width column without inventing a text-height minimum;
+        // its measured content and the photo note share this scrolling cap.
         maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung + caoGhiChu : null),
-        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : panel === "poll" ? Math.min(100 * fontScale, tranKhay(height, null)) : 0,
+        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, fontScale === undefined ? 0 : (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : panel === "poll" ? Math.min(100 * (fontScale ?? 1), tranKhay(height, null)) : 0,
       }]}>
         {/* Draft actions scroll with the fields instead of taking their space above the keyboard. */}
         {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
@@ -225,13 +238,13 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         {panel === "tools" ? (
           // One row while every tool still holds its widest word, else balanced
           // rows of equal tools (`boCucKhay`): five never wrap 4 + 1 (lab 28/09).
-          <View onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); if (w > 0 && w !== rongHang) setRongHang(w); }} style={styles.toolRow} testID="khay-hang-cong-cu">{tools.map((tool) => (
+          <View onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); const h = Math.ceil(e.nativeEvent.layout.height); if (w > 0 && w !== rongHang) setRongHang(w); if (h !== caoHang) setCaoHang(h); }} style={styles.toolRow} testID="khay-hang-cong-cu">{tools.map((tool) => (
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
               style={({ pressed }) => [styles.tool, { width: boCuc.oRong }, pressed && styles.pressed]}>
               <View style={[styles.toolIcon, { width: boCuc.icon, height: boCuc.icon, backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={boCuc.icon - 12} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={boCuc.icon - 12} /></View>
               {/* Stretched to the column: measured at its own width, Android wrapped
                   «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
-              <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
+              <Text numberOfLines={fontScale === undefined ? undefined : 2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
         ) : null}
