@@ -206,7 +206,7 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.doesNotMatch(soHen, /minWidth: 62/, "ô tối thiểu 62 cố định làm năm ô xuống hàng 4 + 1 ở 360");
   // The cap counts the photo note under the grid too (B6, QA UI-124), and the
   // box never shrinks below one whole row of tools.
-  assert.match(soHen, /maxHeight: tranKhay\(height, panel === "tools" \? boCuc\.caoNoiDung \+ caoGhiChu : null\)/, "trần khay không được cắt lưới công cụ");
+  assert.match(soHen, /maxHeight: panel === "poll" \? tranBinhChon : tranKhay\(height, panel === "tools" \? boCuc\.caoNoiDung \+ caoGhiChu : null\)/, "poll có vùng nhập riêng; trần công cụ vẫn tính đủ lưới và ghi chú ảnh");
   assert.match(soHen, /minHeight: panel === "tools" \? Math\.min\(boCuc\.caoNoiDung, /);
   assert.match(soHen, /\{chu\.ghiChuAnh\}/, "dòng chú thích ảnh đọc theo hai người / nhóm");
   assert.match(soHen, /nhapDangMo \? chuKhay\(haiNguoi\)\.suaChung/, "«Sửa cùng hội» có bản cho hai người");

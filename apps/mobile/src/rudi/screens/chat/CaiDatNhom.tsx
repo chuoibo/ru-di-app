@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { coGiDeDoi, doiNhom, roiNhom } from "../../chat/nhom-cai-dat";
@@ -11,6 +11,7 @@ import { Field, Heading, ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
 import { congTac } from "../../ui/cong-tac";
 import { toggleState } from "../../../ui/a11y";
+import { Text } from "../../ui/NativeFontMetrics";
 
 export type NhomCaiDat = {
   id: string;
@@ -162,6 +163,7 @@ export function CaiDatNhomSheet({
           <Text style={[typography.note, { color: mauChon.bubbleInk }]}>Phố cổ nhé!</Text>
         </View>
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeRail}>
       <View accessibilityRole="radiogroup" style={styles.themes}>
         {THEME_CHAT.map((slug) => {
           const mau = bangMauChat(slug, dark);
@@ -177,20 +179,19 @@ export function CaiDatNhomSheet({
                 {
                   borderRadius: radius.control,
                   backgroundColor: mau.bubble,
-                  // The theme's own accent is often the bubble's colour, so a
-                  // border in it vanished (blind read, S9): the chosen swatch
-                  // is ringed in ink and carries a tick.
-                  borderColor: chon ? colors.ink : colors.lineStrong,
-                  borderWidth: chon ? 3 : 1,
+                  borderColor: colors.lineStrong,
                 },
               ]}
             >
-              {chon ? <Ionicons color={mau.bubbleInk} name="checkmark" size={16} /> : null}
+              {/* Selection never changes a target's measured box or text baseline. */}
+              {chon ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderWidth: 3, borderColor: colors.ink, borderRadius: radius.control }]} /> : null}
+              <View style={styles.themeMark}>{chon ? <Ionicons color={mau.bubbleInk} name="checkmark" size={16} /> : null}</View>
               <Text style={[typography.label, { color: mau.bubbleInk }]}>Aa</Text>
             </Pressable>
           );
         })}
       </View>
+      </ScrollView>
       <Text style={[typography.caption, { color: colors.inkFaint }]}>
         {nhanTheme(nhom.theme ?? "mac-dinh")}. {laPair ? "Hai bạn thấy cùng một màu." : "Cả nhóm thấy cùng một màu."}
       </Text>
@@ -246,8 +247,10 @@ export function CaiDatNhomSheet({
 const styles = StyleSheet.create({
   khoi: { gap: 8, paddingBottom: 8 },
   quyetDinh: { gap: 8, paddingTop: 16 },
-  themes: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingVertical: 8 },
-  oTheme: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
+  themeRail: { flexGrow: 1 },
+  themes: { flex: 1, minWidth: 272, flexDirection: "row", alignItems: "stretch", gap: 8, paddingVertical: 8 },
+  oTheme: { flex: 1, minWidth: 48, minHeight: 52, paddingVertical: 4, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  themeMark: { height: 16, alignItems: "center", justifyContent: "center" },
   hangCongTac: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   hangChu: { flex: 1, gap: 2 },
   xemTruoc: { borderWidth: StyleSheet.hairlineWidth, padding: 12, gap: 6 },

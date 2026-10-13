@@ -212,6 +212,9 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   const boCuc = fontScale === undefined
     ? { cot: 1, hang: tools.length, oRong: rongCongCu, icon: Math.min(ICON_CONG_CU, rongCongCu), caoNoiDung: caoHang }
     : boCucKhay(rongHang ?? Math.min(width, 820) - 32, tools.length, fontScale);
+  // An editor gets more room than a tool note; the parent's keyboard-avoiding
+  // column can still shrink this scroll body without moving its fixed footer.
+  const tranBinhChon = Math.round(height * 0.6);
   return (
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
@@ -224,8 +227,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         // Known metrics reserve one complete row. Unknown metrics keep a
         // natural full-width column without inventing a text-height minimum;
         // its measured content and the photo note share this scrolling cap.
-        maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung + caoGhiChu : null),
-        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, fontScale === undefined ? 0 : (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : panel === "poll" ? Math.min(100 * (fontScale ?? 1), tranKhay(height, null)) : 0,
+        maxHeight: panel === "poll" ? tranBinhChon : tranKhay(height, panel === "tools" ? boCuc.caoNoiDung + caoGhiChu : null),
+        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, fontScale === undefined ? 0 : (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : 0,
       }]}>
         {/* Draft actions scroll with the fields instead of taking their space above the keyboard. */}
         {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
@@ -252,8 +255,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             lines above them: when a short window squeezes the tray, the note
             is what gets cut, never a tool (QA UI-124). */}
         {panel === "tools" ? <Text onLayout={(e) => { const h = Math.ceil(e.nativeEvent.layout.height); if (h !== caoGhiChu) setCaoGhiChu(h); }} style={[typography.caption, styles.ghiChu, { color: colors.inkSoft }]}>{chu.ghiChuAnh}</Text> : panel === "poll" ? (
-          // Written on a sticky note, one pen line per choice (plan S5).
-          <View style={[styles.form, styles.giayNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
+          // One ruled editor on the tray, without a second paper frame.
+          <View style={styles.form}>
             <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
             {/* The message sits under the box it belongs to. One sentence under
                 the whole form said something was wrong but not where, so fixing
@@ -263,7 +266,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
               <ONhapMuc label={`Lựa chọn ${index + 1}`} accessibilityLabel={`Ô lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
               {fieldErrors?.choices[index] ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.choices[index]}</Text> : null}
             </View>)}
-            {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
+            {draft.choices.length < 6 ? <RudiButton icon="add" label="Thêm lựa chọn" variant="ghost" compact full={false} style={styles.themLuaChon} disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
           </View>
         ) : (
           /* The words that replaced the tray's own prompt box (ADR-0046): an
@@ -277,6 +280,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
         <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />
+        {!hasDraft && !pollError ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Thêm câu hỏi và ít nhất 2 lựa chọn.</Text> : null}
       </View> : panel === "plan" ? <View style={styles.footer}>
         {error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{error}</Text> : null}
         {sanSang ? <RudiButton label="Hỏi Rủ Đi AI" disabled={busy} onPress={onHoiAi} />
@@ -305,8 +309,8 @@ const styles = StyleSheet.create({
   tool: { alignItems: "center", justifyContent: "flex-start", gap: 7, paddingVertical: 10 },
   toolNhan: { alignSelf: "stretch", textAlign: "center" },
   toolIcon: { borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  giayNho: { borderWidth: 1, borderRadius: 4, padding: 12, marginTop: 4 },
-  form: { gap: 12, paddingBottom: 4 },
+  form: { gap: 16, paddingTop: 8, paddingBottom: 4 },
+  themLuaChon: { alignSelf: "flex-start", paddingHorizontal: 0, borderWidth: 0, justifyContent: "flex-start" },
   scroll: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
   footer: { flexShrink: 0, gap: 8, paddingTop: 10 },
   scope: { flexDirection: "row", alignItems: "flex-start", gap: 8 },

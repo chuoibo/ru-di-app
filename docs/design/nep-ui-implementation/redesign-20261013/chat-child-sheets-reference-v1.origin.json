@@ -1,0 +1,56 @@
+{
+  "schema": "imagegen-reference-provenance-v1",
+  "utc": "2026-10-13T09:13:04.655988+00:00",
+  "tool": "built-in image_gen.imagegen",
+  "use_case": "ui-mockup",
+  "source_sha": "c6717455c914b687e1e04e72f4f32d563defe2c9",
+  "original_path": "/home/lakiet/.codex/generated_images/01a1192e-6adb-7ec1-8aba-b662fbdce6ac/exec-a3bc3e47-249e-4ac6-808c-e1aa319cc864.png",
+  "original_sha256": "7b30c704ca8fbb368d7637ddcc9b7cf9c38b86385f8454c17dbe0423668fcd41",
+  "saved_path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/chat-child-sheets-imagegen-c6717455-20261013-r1/chat-child-sheets-reference-v1.png",
+  "saved_sha256": "7b30c704ca8fbb368d7637ddcc9b7cf9c38b86385f8454c17dbe0423668fcd41",
+  "prompt_path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/chat-child-sheets-imagegen-c6717455-20261013-r1/prompt.txt",
+  "prompt_sha256": "683293ace8e9ecc5c30c50c3b54893b9d0a25b84ee1681f7d0e931e9b00211ff",
+  "reference_images": [
+    {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c6717455/root-native-screens/chat-sticker-dark100-entry.png",
+      "sha256": "ac2b69cb9798845d175d69f941a2b9f81a3db984d0ccf61d4bc629816ecbd3c7",
+      "role": "synthetic native critique reference"
+    },
+    {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c6717455/root-native-screens/chat-sticker-dark200-hot.png",
+      "sha256": "0531723e0684d4c65fbc53d263cf3177230a6861fc72629e251e20cada9b8e01",
+      "role": "synthetic native critique reference"
+    },
+    {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c6717455/root-native-screens/chat-poll-empty-dark100.png",
+      "sha256": "873a67371e2e6a4b0dc89fc511df74e0791bce54309f3a2acc9776e7ac3b463d",
+      "role": "synthetic native critique reference"
+    },
+    {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c6717455/root-native-screens/chat-poll-empty-dark200-hot.png",
+      "sha256": "f9a3148ebedf29b24166362c675b8c7d130f311d6cb9ce028c92306d3e523bd5",
+      "role": "synthetic native critique reference"
+    },
+    {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c6717455/root-native-screens/chat-settings-pair-dark100-reopen.png",
+      "sha256": "f37f06c247a10331f690ff0de68e81dd3f52549482ca806debcaecc8df6b605b",
+      "role": "synthetic native critique reference"
+    }
+  ],
+  "transparent_background": false,
+  "rendered_to_user": true,
+  "authority": "Critique reference only, no approved comp or native fit/IME proof",
+  "selected_direction": "Balanced sticker columns with natural labels; single poll editing surface; equal five-swatch row and intrinsic text. Actual grammar/code-native components govern implementation.",
+  "rejected_details": [
+    "Phone shells",
+    "Gradient shading",
+    "Added sheet handle for inline poll",
+    "Nested outlined form input cards as default",
+    "Exact claimed200%fit",
+    "Forced fullheight pair settings blankcanvas"
+  ],
+  "companion_raster_assets_needed": false,
+  "companion_reason": "Existing editable sticker SVG and theme colors remain appropriate; no filler artwork.",
+  "prompt_bytes_exact_tool_string": true,
+  "metadata_note": "Removed file-writer final newline to preserve exact builtin tool prompt; prior file/metadata retained privately."
+}

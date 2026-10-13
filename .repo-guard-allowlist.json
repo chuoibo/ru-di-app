@@ -2092,6 +2092,14 @@
         "long-number"
       ],
       "reason": "Bốn expected_fingerprint trong metadata origin lặp timestamp19chữ số của bản dựng QC synthetic, không số điện thoại/tài khoản hoặc dữ liệu người tham gia. Root và fresh reviewer chat_mockup_direction_fresh_review đã đọc nguyên metadata và đối chiếu14hash provenance. Chỉ miễn long-number đúng path/hash; giữ mọi rule dữ liệu/credential khác và không sửa scanner."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/chat-child-sheets-reference-v1.png",
+      "sha256": "6beaa102c1d9cb4756cafda051ff9fc7113c4fb5ebe639962768660cfe8395a4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mockup built-in ImageGen tổng hợp phản biện ba khay chat ngày13/10. Root và fresh reviewer chat_child_sheets_direction_review đã mở board/originals, đọc prompt/provenance. Chỉ fixture tổng hợp; không dữ liệu thật hoặc credential. Chọn grid cân/editor rộng/năm swatch; bác phone shell/gradient/boxed fields/poll handle/fullheight settings/disabled-empty/thiếu Aa và hình học200 xấp xỉ. Wrapper nhúng đúng prompt5570byte; root kiểm decoded pixels giống original. Chỉ critique reference, không approved comp/native AFTER/asset product. Pin đúng path/hash; thay byte phải review lại."
     }
   ]
 }

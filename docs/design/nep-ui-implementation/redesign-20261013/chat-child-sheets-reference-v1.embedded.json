@@ -1,0 +1,10 @@
+{
+  "original_png_sha256": "7b30c704ca8fbb368d7637ddcc9b7cf9c38b86385f8454c17dbe0423668fcd41",
+  "embedded_png_sha256": "6beaa102c1d9cb4756cafda051ff9fc7113c4fb5ebe639962768660cfe8395a4",
+  "decoded_rgba_sha256": "2be6992dfa8083fa4fa2aa1ce5ce40004bec84de73b7f88490e6a0c6d5de82f9",
+  "method": "impeccable wrapper PNG tEXt exact prompt; decoded pixels identical",
+  "prompt_file": "chat-child-sheets-reference-v1.prompt.txt",
+  "prompt_sha256": "683293ace8e9ecc5c30c50c3b54893b9d0a25b84ee1681f7d0e931e9b00211ff",
+  "imagegen_tool": "built-in",
+  "scope": "Synthetic code-led critique reference; not approved comp/nativeAFTER/product asset. Current vectors remain production artwork. Reject phone shells/shading/boxed fields/pollhandle/fullheightsettings/disabledemptyCTA/omittedAa/exact200fit."
+}
