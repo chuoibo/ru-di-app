@@ -349,8 +349,11 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			assistant.WithNepEngine(engine).WithNhomEngine(engine)
 			logger.Info("AI engine runs in this process")
 		case may != nil:
-			assistant.WithCoMay()
-			logger.Info("AI jobs run in `core work`; this process has a model")
+			// Queue admission needs a configured read-only catalogue port,
+			// not the worker's embedding client or execution engine. The
+			// separate worker validates and builds its own execution ports.
+			assistant.WithCoMay().WithRandomNguon(aidoc.Lexical{C: aidoc.Moi(pool, 0)})
+			logger.Info("AI command admission configured; jobs run in `core work`")
 		}
 		// The answer streams (slice 11): this process serves the SSE routes
 		// and, with its in-process workers, writes the streams too. Empty

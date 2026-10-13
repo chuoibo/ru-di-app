@@ -70,8 +70,9 @@ func TestRandomMigrationV8KeepsOlderRows(t *testing.T) {
 	}
 }
 
-// Exercise the actual queue, PostgreSQL catalogue, command metrics and
-// immutable v2 result receipt. No plaintext message is published by Go.
+// Exercise distinct producer and worker handlers, the actual queue,
+// PostgreSQL catalogue, command metrics and immutable v2 result receipt.
+// The producer makes no inference; Go publishes no plaintext message.
 func TestRandomSearchV2CatalogueAndReceipt(t *testing.T) {
 	ctx := context.Background()
 	dd, first, second := "dd-"+newID(), "q-"+newID(), "q-"+newID()
@@ -84,6 +85,9 @@ func TestRandomSearchV2CatalogueAndReceipt(t *testing.T) {
 		llm.Buoc{Text: `{"ket_luan":"du","rang_buoc_thieu":[]}`},
 		llm.Buoc{Text: `{"hanh_dong":"tra_loi","rang_buoc_khong_dat":[],"cau":[{"chu":"Bạn xem [[p:p1]] và [[p:p2]] nhé.","bang_chung":["p1","p2"],"trich":[]}]}`},
 		kiemNhom("ho_tro", "e1", "e2"))
+	worker := n.f.handler
+	producerRetr := &testkit.TheoLuot{}
+	n.f.handler = New(n.f.pool).WithCoMay().WithRandomNguon(producerRetr)
 	if _, err := n.f.pool.Exec(ctx, `INSERT INTO destinations(id,name,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES($1,'Đà Lạt',11.94,108.44,11.8,108.3,12.1,108.6,0)`, dd); err != nil {
 		t.Fatal(err)
 	}
@@ -109,8 +113,14 @@ func TestRandomSearchV2CatalogueAndReceipt(t *testing.T) {
 	requireCode(t, n.f.request("POST", n.f.route(), n.f.token, body), 200)
 	body["command"] = "plan"
 	requireCode(t, n.f.request("POST", n.f.route(), n.f.token, body), 409)
-	if ok, err := n.f.handler.ProcessOne(ctx); !ok || err != nil {
+	if n.stub.SoGoi() != 0 || len(producerRetr.Da) != 0 || len(retr.Da) != 0 {
+		t.Fatal("queueing performed model inference or catalogue retrieval")
+	}
+	if ok, err := worker.ProcessOne(ctx); !ok || err != nil {
 		t.Fatalf("random worker: %v %v", ok, err)
+	}
+	if len(producerRetr.Da) != 0 || n.stub.SoGoi() != 4 {
+		t.Fatalf("search ran on the wrong process: producer retrievals=%d worker model calls=%d", len(producerRetr.Da), n.stub.SoGoi())
 	}
 	w = n.f.request("GET", n.f.route()+"/"+job.ID, n.f.token, nil)
 	requireCode(t, w, 200)

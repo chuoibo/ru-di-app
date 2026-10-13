@@ -22,6 +22,10 @@ const MARKER = "\n/rudi-random-v1 ";
 const WORD_RANGE = 0x100000000;
 const MAX_BODY = 6000;
 const MAX_BYTES = 12 * 1024;
+const MAX_PLACE_SCALARS = 200;
+const MAX_PLACE_BYTES = 800;
+// Installed Expo Router decodes source params twice; escaped identities are unsupported.
+const PERCENT_ESCAPE = /%[0-9a-f]{2}/i;
 // Keep the readable fallback a single unambiguous line, including bidi controls.
 const CONTROLS = /[\p{Cc}\p{Cf}\p{Cs}\u2028\u2029]/u;
 
@@ -42,6 +46,29 @@ function text(value: unknown, max: number, canonical: boolean, nonempty = false)
     ? null : normalized;
 }
 
+function withinUtf8(value: string, maxBytes: number): boolean {
+  let bytes = 0;
+  for (const character of value) {
+    const point = character.codePointAt(0)!;
+    bytes += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
+    if (bytes > maxBytes) return false;
+  }
+  return true;
+}
+
+/** Catalogue keys are opaque Text identities; never trim or normalize them. */
+export function isRandomPlaceId(value: unknown): value is string {
+  if (typeof value !== "string" || value.trim().length === 0 || CONTROLS.test(value) || PERCENT_ESCAPE.test(value) || value === "." || value === "..") return false;
+  if (value.length > MAX_PLACE_SCALARS * 2 || [...value].length > MAX_PLACE_SCALARS) return false;
+  return withinUtf8(value, MAX_PLACE_BYTES);
+}
+
+/** A source key is one encoded segment of a fixed local route, never a URL. */
+export function randomPlacePath(placeId: string): string {
+  if (!isRandomPlaceId(placeId)) throw new Error("Invalid random place ID");
+  return `/places/${encodeURIComponent(placeId)}`;
+}
+
 /** Expand Unicode caseless forms without a locale-dependent comparison. */
 function labelKey(label: string): string {
   return [...label.toLowerCase()].map((letter) => letter === "\u0131" ? letter : letter.toUpperCase().toLowerCase()).join("").normalize("NFC");
@@ -55,7 +82,7 @@ function options(value: unknown, canonical: boolean): RandomOption[] | null {
     if (!record(item) || !exactKeys(item, ["label"], ["placeId"])) return null;
     const label = text(item.label, 80, canonical, true);
     if (label === null || labels.has(labelKey(label))) return null;
-    if (Object.hasOwn(item, "placeId") && (typeof item.placeId !== "string" || !UUID.test(item.placeId))) return null;
+    if (Object.hasOwn(item, "placeId") && !isRandomPlaceId(item.placeId)) return null;
     labels.add(labelKey(label));
     result.push({ label, ...(typeof item.placeId === "string" ? { placeId: item.placeId } : {}) });
   }
@@ -104,14 +131,7 @@ function fallback(round: RandomRound): string {
 }
 
 function inBounds(body: string): boolean {
-  if (body.length > MAX_BODY) return false;
-  let bytes = 0;
-  for (const character of body) {
-    const point = character.codePointAt(0)!;
-    bytes += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
-    if (bytes > MAX_BYTES) return false;
-  }
-  return true;
+  return body.length <= MAX_BODY && withinUtf8(body, MAX_BYTES);
 }
 
 /** Stable readable text for old clients, followed by the exact canonical snapshot. */

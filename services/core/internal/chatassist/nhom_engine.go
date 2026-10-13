@@ -12,6 +12,7 @@ import (
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/chatintent"
 	"mobile/services/core/internal/domain/companion"
 	"mobile/services/core/internal/domain/tree"
@@ -38,12 +39,25 @@ import (
 // of the conversation is read, and a v2 room has no text for the server to
 // read: its shared messages then bill nobody.
 
-// WithNhomEngine runs the group's jobs on the Go engine in this process; it
-// also says this process has a model (WithCoMay).
+// WithNhomEngine supplies group command readiness and the engine workers
+// use. It marks the model configured but does not start a worker.
 func (h *Handler) WithNhomEngine(e *aiharness.Engine) *Handler {
 	h.nhomEngine = e
 	h.coMay = h.coMay || e != nil
 	return h
+}
+
+// WithRandomNguon supplies a split producer's read-only catalogue port.
+// It neither marks a provider configured nor starts inference or a worker.
+func (h *Handler) WithRandomNguon(nguon truyhoi.Retriever) *Handler {
+	h.randomNguon = nguon
+	return h
+}
+
+// randomSanSang reports source readiness for queue admission, not worker
+// liveness. A worker executes only through its independently built engine.
+func (h *Handler) randomSanSang() bool {
+	return h.randomNguon != nil || h.nhomEngine.RandomSanSang()
 }
 
 // obsLenh is the job's command as the engine's closed set names it.

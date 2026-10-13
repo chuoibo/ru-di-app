@@ -1,12 +1,34 @@
 package chatassist
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/testkit"
 	"mobile/services/core/internal/repo"
 )
+
+func TestRandomProducerReadinessNeedsSourceAndProvider(t *testing.T) {
+	h := New(nil).WithCoMay().WithRandomNguon(nil)
+	if !h.nhomSanSang(context.Background()) || h.randomSanSang() {
+		t.Fatal("a provider alone supplied catalogue readiness")
+	}
+	nguon := &testkit.TheoLuot{}
+	h.WithRandomNguon(nguon)
+	if !h.randomSanSang() || h.nhomEngine != nil || len(nguon.Da) != 0 {
+		t.Fatal("source readiness built an engine or retrieved candidates")
+	}
+	h.WithRandomNguon(nil)
+	if h.randomSanSang() {
+		t.Fatal("removing the source left random available")
+	}
+	keyless := New(nil).WithRandomNguon(nguon)
+	if keyless.nhomSanSang(context.Background()) || !keyless.randomSanSang() {
+		t.Fatal("attaching a source changed provider readiness")
+	}
+}
 
 func TestRandomCommandMapsWithoutChangingLegacySyntax(t *testing.T) {
 	if lenh, ok := obsLenh("random"); !ok || lenh != obs.LenhRandom {

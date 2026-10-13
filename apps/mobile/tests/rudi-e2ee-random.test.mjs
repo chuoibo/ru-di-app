@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createRandomRound, decodeRandomRound, encodeRandomRound, randomWinner } from "../dist-test/rudi/chat/e2ee/random-v2.js";
+import { createRandomRound, decodeRandomRound, encodeRandomRound, isRandomPlaceId, randomPlacePath, randomWinner } from "../dist-test/rudi/chat/e2ee/random-v2.js";
 import { SO_TRONG, apDung } from "../dist-test/rudi/chat/e2ee/so-tin.js";
 import { dungPhong } from "../dist-test/rudi/chat/e2ee/so-phong.js";
 import { sangTin } from "../dist-test/rudi/chat/e2ee/ve-v2.js";
@@ -11,6 +11,8 @@ const BINH = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const ROUND = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const ROOM = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const PLACE = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+const QUEUED_PLACE = `q-${PLACE}`;
+const SEEDED_PLACE = "p-tiem-nuong-xom-lao";
 const MESSAGE = ROUND;
 const ALIAS = "ffffffff-ffff-4fff-8fff-ffffffffffff";
 const AT = "2026-10-13T07:00:00Z";
@@ -59,6 +61,66 @@ test("chuẩn hoá trim/NFC trước phát; snapshot sao chép lựa chọn và 
   assert.equal(round({ request: "" }).request, "");
 });
 
+test("khóa catalogue opaque giữ q-UUID, slug seed và nguyên khoảng trắng/NFD qua wire MLS", () => {
+  for (const placeId of [QUEUED_PLACE, SEEDED_PLACE, "osm-node-42", PLACE.toUpperCase(), "  Cafe\u0301 / Đà Lạt  "]) {
+    const snapshot = round({ options: [{ label: "Quán nguồn", placeId }, { label: "Tự nhập" }] });
+    const body = encodeRandomRound(snapshot);
+    assert.equal(snapshot.options[0].placeId, placeId);
+    assert.equal(decodeRandomRound(body).options[0].placeId, placeId);
+    assert.equal(encodeRandomRound(decodeRandomRound(body)), body);
+    const received = nhan(AN, { type: "text", body });
+    const replayed = dungPhong(JSON.parse(JSON.stringify([{ t: "tin", seq: 1, r: received, at: AT }]))).so;
+    assert.deepEqual(replayed, apDung(SO_TRONG, received, 1, AT));
+    assert.equal(sangTin(replayed.byId[MESSAGE], ROOM, BINH, {}).random_v2.options[0].placeId, placeId);
+    assert.equal(replayed.byId[MESSAGE].ai, null);
+  }
+});
+
+test("khóa nguồn không trắng, tối đa 200 scalar/800 byte; sai kiểu, điều khiển, dot và percent escape bị từ chối", () => {
+  const invalid = ["", "   ", ".", "..", "a".repeat(201), "𐐀".repeat(201),
+    "a%2Fb", "%2e%2e", "%252e", "a%3Fb", "a%23b", "a%20b", "a%ABb",
+    "a\u0000b", "a\nb", "a\tb", "a\u007fb", "a\u202eb", "a\u2066b", "a\u200bb", "a\u2028b", "a\u2029b",
+    "a\ud800b", "a\udc00b", null, undefined, 3, {}, []];
+  for (const placeId of invalid) {
+    assert.equal(isRandomPlaceId(placeId), false, JSON.stringify(placeId));
+    assert.throws(() => round({ options: [{ label: "Quán", placeId }, { label: "Cơm" }] }));
+    const dispatched = [];
+    assert.throws(() => dispatched.push(randomPlacePath(placeId)));
+    assert.deepEqual(dispatched, []);
+    const malformed = { ...round(), options: [{ label: "Quán", placeId }, { label: "Cơm" }] };
+    if (placeId !== undefined) {
+      const body = bodyFor(malformed);
+      assert.equal(decodeRandomRound(body), null);
+      assert.equal(apDung(SO_TRONG, nhan(AN, { type: "text", body }), 1).byId[MESSAGE].random, undefined);
+    }
+  }
+  for (const placeId of ["a".repeat(200), "𐐀".repeat(200)]) {
+    assert.equal([...placeId].length, 200);
+    assert.ok(Buffer.byteLength(placeId, "utf8") <= 800);
+    const snapshot = round({ options: [{ label: "Quán", placeId }, { label: "Cơm" }] });
+    assert.equal(decodeRandomRound(encodeRandomRound(snapshot)).options[0].placeId, placeId);
+  }
+});
+
+test("đường nguồn encode toàn bộ khóa thành segment nội bộ, không nhận URL hoặc query điều hướng", () => {
+  for (const placeId of [QUEUED_PLACE, SEEDED_PLACE, "  Cafe\u0301 / Đà Lạt  ", "a/b?next=//other.example#x", "../outings", "a%quán", "a%2x",
+    "https://other.example/path?next=/outings#x", "//other.example/path"]) {
+    const path = randomPlacePath(placeId);
+    assert.equal(path, `/places/${encodeURIComponent(placeId)}`);
+    const resolved = new URL(path, "https://rudi.example");
+    assert.equal(resolved.origin, "https://rudi.example");
+    assert.equal(resolved.pathname, path);
+    assert.equal(resolved.search, "");
+    assert.equal(resolved.hash, "");
+    assert.equal(decodeURIComponent(resolved.pathname.slice("/places/".length)), placeId);
+    // The installed route parser decodes once; the hook catches an invalid second decode.
+    const parsed = decodeURIComponent(resolved.pathname.slice("/places/".length));
+    let hooked;
+    try { hooked = decodeURIComponent(parsed); } catch { hooked = parsed; }
+    assert.equal(hooked, placeId);
+  }
+});
+
 test("rejection sampling tại biên 3/5/8 chọn word đầu hợp lệ theo big-endian", () => {
   for (const count of [3, 5]) {
     assert.equal(randomWinner(words(0xfffffffe, 0, 0, 0), count), count - 1);
@@ -88,8 +150,6 @@ test("lựa chọn phải có 2–8 nhãn khác nhau sau caseless/NFC, tối đa
     [{ label: "A\tB" }, { label: "C" }], [{ label: "A\u0000B" }, { label: "C" }],
     [{ label: "A\u202eB" }, { label: "C" }], [{ label: "A\u2028B" }, { label: "C" }],
     [{ label: 4 }, { label: "B" }], ["A", "B"],
-    [{ label: "A", placeId: "not-an-id" }, { label: "B" }],
-    [{ label: "A", placeId: PLACE.toUpperCase() }, { label: "B" }],
     [{ label: "A", placeId: null }, { label: "B" }],
     [{ label: "A", placeId: undefined }, { label: "B" }],
     [{ label: "A", source: "server" }, { label: "B" }],
@@ -155,7 +215,7 @@ test("body quá 6000 ký tự hoặc 12 KiB UTF-8 bị từ chối trước gi�
 });
 
 test("hai thành viên và replay sealed log khôi phục cùng snapshot; logical id không bị ghi đè", () => {
-  const body = wire({ mode: "ducks" });
+  const body = wire({ mode: "ducks", options: [{ label: "Quán hàng đợi", placeId: QUEUED_PLACE }, { label: "Quán seed", placeId: SEEDED_PLACE }] });
   const first = nhan(AN, { type: "text", body });
   const peerOne = apDung(SO_TRONG, first, 1, AT);
   const peerTwo = apDung(SO_TRONG, structuredClone(first), 1, AT);

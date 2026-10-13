@@ -18,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/chatv2"
@@ -36,14 +37,16 @@ type Handler struct {
 	pool   *pgxpool.Pool
 	mux    *featureroute.Mux
 	worker WorkerConfig
-	// nepEngine and nhomEngine run Nếp's and the group's jobs in this
-	// process (internal/aiharness, the only engine since ADR-0052). coMay
-	// says this host has a model, set with an engine or, in a process that
-	// serves the routes while `core work` runs the jobs, by WithCoMay.
+	// nepEngine and nhomEngine supply command readiness and run jobs only
+	// when this process starts a worker (internal/aiharness, ADR-0052).
+	// coMay says this host has a model, set with an engine or WithCoMay.
 	// Without it every invocation is refused provider_unavailable.
 	nepEngine  *aiharness.Engine
 	nhomEngine *aiharness.Engine
 	coMay      bool
+	// randomNguon is a split producer's read-only catalogue port. It only
+	// supplies queue admission readiness; workers use nhomEngine instead.
+	randomNguon truyhoi.Retriever
 	// scopes limits the jobs this process claims (WithQueues); nil is all.
 	scopes []string
 	// nhip, when set, carries the heartbeat and the model-call counter
@@ -586,7 +589,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
-	randomCo, randomVi := enabled && h.nhomEngine.RandomSanSang(), reason
+	randomCo, randomVi := enabled && h.randomSanSang(), reason
 	if enabled && !randomCo {
 		randomVi = "random_source_unavailable"
 	}
@@ -814,7 +817,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 503, "provider_unavailable")
 		return
 	}
-	if in.Command == lenhRandom && !h.nhomEngine.RandomSanSang() {
+	if in.Command == lenhRandom && !h.randomSanSang() {
 		refuse(w, 503, "random_source_unavailable")
 		return
 	}
@@ -952,7 +955,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			refuse(w, 409, "invocation_not_retryable")
 			return
 		}
-		if v.Command == lenhRandom && !h.nhomEngine.RandomSanSang() {
+		if v.Command == lenhRandom && !h.randomSanSang() {
 			refuse(w, 503, "random_source_unavailable")
 			return
 		}

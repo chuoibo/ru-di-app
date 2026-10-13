@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { xemBinhChonV2 } from "../../chat/e2ee/binh-chon-v2";
 import { newNativeRandomRound, RandomSourceUnavailable } from "../../chat/e2ee/random-native";
-import { decodeRandomRound, type RandomRound } from "../../chat/e2ee/random-v2";
+import { decodeRandomRound, isRandomPlaceId, randomPlacePath, type RandomRound } from "../../chat/e2ee/random-v2";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -289,7 +289,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       const card = docTheAi(answer.card);
       if (card.loai !== "tra_loi") return;
       randomSearchConsumed.current = randomSearchTrigger;
-      const places = card.phan.flatMap((part) => part.loai === "places" ? part.the.diaDiem : []).filter((place) => place.ten.length <= 80);
+      const places = card.phan.flatMap((part) => part.loai === "places" ? part.the.diaDiem : []).filter((place) => place.ten.length <= 80 && isRandomPlaceId(place.id));
       const unique = places.filter((place, index) => places.findIndex((other) => other.ten.normalize("NFC").toLowerCase() === place.ten.normalize("NFC").toLowerCase()) === index).slice(0, 5);
       if (unique.length) {
         setRandomDraft((draft) => ({ ...draft, options: unique.map((place) => ({ label: place.ten, placeId: place.id })) }));
@@ -1034,7 +1034,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
               </View>
             ) : null}
             {randomV2 ? <ChatRandomCard round={randomV2} readOnly={!ghiChatDuoc} onMenu={() => setMenuTin(tin)}
-              onNew={() => openRandom(randomV2, true)} onView={() => openRandom(randomV2)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(`/places/${id}` as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+              onNew={() => openRandom(randomV2, true)} onView={() => openRandom(randomV2)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(randomPlacePath(id) as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
               <TraLoiAi
                 readOnly={!ghiChatDuoc}
                 contextId={contextId}
@@ -1493,7 +1493,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       ) : null}
       {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: khay === "random" || lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" || khay === "random" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}>{khay === "random" ? <RandomPicker
         draft={randomDraft} onChange={(draft) => { setRandomDraft(draft); setRandomError(null); }} onClose={() => setKhay(null)}
-        onOpenPlace={(id) => router.push(`/places/${id}` as never)}
+        onOpenPlace={(id) => router.push(randomPlacePath(id) as never)}
         onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(`/random ${randomDraft.request}`, true); }}
         onPlay={playRandom} round={randomRound} published={randomPublished} publishing={randomPublishing} searching={randomSearching}
         error={randomError} searchMessage={randomSearchMessage} searchReady={lenhSanSang(ai.capabilities, "random")} keyboardOpen={banPhimMo} sources={randomSources}

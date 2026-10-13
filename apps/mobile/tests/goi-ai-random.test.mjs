@@ -12,6 +12,17 @@ test("lựa chọn giữ tên, id và nguồn của hàng danh mục", () => {
   assert.equal(docDiaDiem({ name: "Món bịa", source: "ai" }), null);
 });
 
+test("parser giữ nguyên khóa text NFD/khoảng trắng nhưng vẫn trim tên và bỏ khóa trắng", () => {
+  for (const id of ["q-eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "p-tiem-nuong-xom-lao", "  Cafe\u0301 / Đà Lạt  ", "a%2Fb", "%2e%2e", "%252e"]) {
+    const place = docDiaDiem({ id, name: "  Quán Thử  ", source: "curated" });
+    assert.deepEqual(place, { id, ten: "Quán Thử", nguon: "curated" });
+  }
+  for (const id of [null, undefined, "", "   ", 7]) {
+    assert.equal(docDiaDiem({ id, name: "Quán Thử" }), null);
+    assert.deepEqual(docDiaDiem({ id, name: "  Tự nhập  " }, true), { id: "", ten: "Tự nhập" });
+  }
+});
+
 test("/random chỉ nhận token đầu và giữ đúng lời nhờ", () => {
   assert.deepEqual(timNhacAi(" /RaNdOm quán ăn ở Đà Lạt"), { lenh: "random", loiNho: "quán ăn ở Đà Lạt" });
   assert.deepEqual(timNhacAi("/random @Rủ Đi tìm quán".normalize("NFD")), { lenh: "random", loiNho: "tìm quán" });

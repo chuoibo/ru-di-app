@@ -129,7 +129,8 @@ function soThuc(value: unknown): number | null {
 export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null {
   const o = asRecord(raw);
   if (!o) return null;
-  const id = chuoi(o.id);
+  // Catalogue Text primary keys are identities, unlike display copy.
+  const id = typeof o.id === "string" && o.id.trim() !== "" ? o.id : null;
   const ten = chuoi(o.name);
   // A suggestion always names a catalogue place: without an id there is
   // nothing to link to, so the row is dropped. A stop somebody typed on the
