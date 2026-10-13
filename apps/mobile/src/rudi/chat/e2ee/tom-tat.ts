@@ -8,6 +8,7 @@
  * message is encrypted.
  */
 import type { NhomTomTat } from "../../../phien";
+import type { TinV2 } from "./so-tin";
 
 export type TomTatV2 = {
   conversation_id: string;
@@ -20,6 +21,19 @@ export type TomTatV2 = {
 
 /** What a v2 row says when this device has no words for its last message. */
 export const CHU_MA_HOA = "Tin nhắn mã hoá đầu cuối";
+
+/** Preview a replayed local message; never interpret its body as new card metadata. */
+export function xemTruocTinV2(tin: TinV2): string {
+  if (tin.deleted) return "Tin nhắn đã bị xoá";
+  if (tin.ai !== null) return "Rủ Đi AI đã trả lời";
+  if (tin.sticker !== null) return "Đã gửi một sticker";
+  if (tin.media?.type === "image") return "Đã gửi một ảnh";
+  if (tin.random !== undefined) {
+    const round = tin.random;
+    return `${round.mode === "wheel" ? "Vòng quay" : "Đua vịt"} chọn: ${round.options[round.winner].label}`;
+  }
+  return tin.body ?? CHU_MA_HOA;
+}
 
 /**
  * The list with every v2 room's row taken from the lane: its unread count

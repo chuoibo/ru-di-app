@@ -30,7 +30,7 @@ import { apiV2 } from "./api-v2";
 import type { Card, MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
-import { CHU_MA_HOA } from "./tom-tat";
+import { xemTruocTinV2 } from "./tom-tat";
 import { danhSach, moiTruoc } from "./so-tin";
 import { chuDongBinhChon } from "./binh-chon-v2";
 import { encodeRandomRound, type RandomRound } from "./random-v2";
@@ -99,7 +99,7 @@ export async function xemTruocV2(personId: string, rooms: string[]): Promise<Rec
   for (const room of rooms) {
     const cuoi = danhSach(dungPhong((await may.soPhong(room)).ban).so).at(-1);
     if (cuoi === undefined) continue;
-    out[room] = cuoi.deleted ? "Tin nhắn đã bị xoá" : cuoi.ai !== null ? "Rủ Đi AI đã trả lời" : cuoi.sticker !== null ? "Đã gửi một sticker" : cuoi.media?.type === "image" ? "Đã gửi một ảnh" : cuoi.body ?? CHU_MA_HOA;
+    out[room] = xemTruocTinV2(cuoi);
   }
   return out;
 }

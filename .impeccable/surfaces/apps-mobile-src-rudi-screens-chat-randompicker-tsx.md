@@ -13,7 +13,7 @@ OWN-WORLD: Extension Operate/code-led của giấy, mực, Bricolage và coral/n
 
 STORY: Tool hoặc /random mở cùng editor. Tìm quán có nguồn hoặc tự nhập món; sửa danh sách, chọn mode, khóa lượt, gửi MLS rồi mô phỏng. Retry/replay giữ seed; lượt mới là thao tác riêng. Thiếu nguồn không sinh ứng viên mẫu.
 
-FIRST VIEWPORT: Cùng gutter 16dp với chat, heading/close gọn, lời nhờ và hai mode, một vật chơi trung tâm, danh sách và CTA trong cùng vùng cuộn. Không composer hoặc lịch sử hé avatar phía sau. 320dp/200% giữ tên đầy đủ ở danh sách ngoài hình, target≥48dp, focus/IME có vùng nhập thực.
+FIRST VIEWPORT: Cùng gutter 16dp với chat, heading/close gọn, tìm quán mở khi cần và hai mode. Nhãn sửa lựa chọn đi trước preview; cửa sổ thấp/chữ lớn mở preview bằng hành động riêng. Khi hoàn tất, tên thắng đi trước hình chơi. CTA ở chân màn, ẩn khi IME mở; không composer/lịch sử phía sau. 320dp/200% giữ tên ngoài hình, target≥48dp và vùng nhập thực.
 
 FORM: Seed reference: inherited code-led extension, no seed roll. Wheel đánh số nối danh sách, kim coral, wedge giấy có giới hạn; đua giữ làn bằng nhau và nhãn tĩnh. Một khoảnh khắc chuyển động hữu hạn, reduced motion tới kết quả ngay. Thẻ chat có tên thắng, mode, nguồn và hành động có đường đi thật; không giả đồng thuận nhóm hay AI receipt.
 

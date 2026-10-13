@@ -24,12 +24,14 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
   onOpenPlace: (id: string) => void;
 }) {
   const { colors } = useRudiTheme();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const metrics = useNativeStandaloneTextMetrics(typography.label);
   const reflow = width < 360 || metrics === null || (metrics.fontSize ?? 14) > 20;
+  const constrained = height < 800 || metrics === null || (metrics.fontSize ?? 14) > 20;
   const reveal = usePollFocusReveal(keyboardOpen, 9);
   const [complete, setComplete] = useState(false);
   const [showSearch, setShowSearch] = useState(() => !!draft.request.trim());
+  const [showPreview, setShowPreview] = useState(false);
   const [showSearchMessage, setShowSearchMessage] = useState(false);
   const locked = round !== null || publishing;
   useDongKhay(true, onClose);
@@ -83,12 +85,12 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
             </Pressable>)}
         </View>
       </> : <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>{published ? "Lượt này đã được gửi vào nhóm." : publishing ? "Đang gửi lượt đã khóa vào nhóm…" : "Lượt chưa gửi được. Kết quả được giữ nguyên khi thử lại."}</Text>}
-      {(!keyboardOpen || !!round) && (!round || published) ? <RandomGame mode={mode} options={options}
-        round={round} animate={!!round && published} width={Math.min(width - 64, round ? 280 : options.filter((option) => option.label.trim()).length < 2 ? 160 : 220)} onComplete={() => setComplete(true)} /> : null}
       {round && published && complete ? <View accessibilityLiveRegion="polite" style={styles.result}>
         <Text style={[typography.note, { color: colors.inkSoft }]}>{mode === "wheel" ? "Vòng quay chọn" : "Về đích đầu tiên"}</Text>
         <Text style={[typography.h2, { color: colors.ink }]}>{round.options[round.winner].label}</Text>
       </View> : null}
+      {round && published ? <RandomGame mode={mode} options={options} round={round} animate
+        width={Math.min(width - 64, 280)} onComplete={() => setComplete(true)} /> : null}
       <View style={styles.listHeading}>
         <Text style={[typography.title, styles.flex, { color: colors.ink }]}>{round ? "Các lựa chọn của lượt này" : "Trên bàn chọn"}</Text>
         <Text style={[typography.note, { color: colors.inkSoft }]}>{options.length}/8</Text>
@@ -111,11 +113,19 @@ export function RandomPicker({ draft, onChange, onClose, onSearch, onPlay, onNew
       {!round && options.length < 8 ? <RudiButton compact full={false} icon="add" variant="ghost" label="Thêm lựa chọn" disabled={locked || searching}
         lyDo={searching ? "Đang tìm quán; thêm lựa chọn sau khi tìm xong." : "Lượt đã khóa; mở lượt mới để sửa."}
         onPress={() => onChange({ ...draft, options: [...draft.options, { label: "" }] })} /> : null}
+      {!round && !keyboardOpen && constrained ? <Pressable accessibilityRole="button" accessibilityState={{ expanded: showPreview }}
+        onPress={() => setShowPreview(!showPreview)} style={styles.searchDoor}>
+        <Ionicons name={mode === "wheel" ? "disc-outline" : "flag-outline"} size={20} color={colors.inkSoft} />
+        <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>{`${showPreview ? "Thu" : "Xem trước"} ${mode === "wheel" ? "vòng quay" : "đường đua"}`}</Text>
+        <Ionicons name={showPreview ? "chevron-up" : "chevron-down"} size={18} color={colors.inkSoft} />
+      </Pressable> : null}
+      {!round && !keyboardOpen && (!constrained || showPreview) ? <RandomGame mode={mode} options={options}
+        width={Math.min(width - 64, options.filter((option) => option.label.trim()).length < 2 ? 160 : 220)} /> : null}
       {error && (keyboardOpen || round && published) ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
       {round && published && complete ? <View style={styles.actions}>
           <View style={[styles.resultActions, reflow && styles.column]}>
             <RudiButton full={false} label="Tạo kèo" onPress={onCreateOuting} />
-            <RudiButton full={false} variant="outline" label="Lượt mới" onPress={() => { setComplete(false); onNew(); }} />
+            <RudiButton full={false} variant="outline" label="Lượt mới" onPress={() => { setComplete(false); setShowPreview(false); onNew(); }} />
           </View>
         <Text style={[typography.note, { color: colors.inkSoft }]}>Người tổ chức tạo lượt chọn này.</Text>
       </View> : null}
