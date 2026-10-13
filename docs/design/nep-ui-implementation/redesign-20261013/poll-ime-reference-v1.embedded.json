@@ -1,0 +1,14 @@
+{
+  "original_png_sha256": "b98d8f05be163f1c3a76bba51a810f82ef290a0ace876608dbd700a161ed9d27",
+  "embedded_png_sha256": "134926414bf525ed28ea4d449ab4f2384de6c350262f43b614763f7039cde7ff",
+  "decoded_rgba_sha256": "8a1afe9a0ccb68fef1aa7e83a733edfa8b3f54de1299a1e27eb41067e16af649",
+  "dimensions": [
+    887,
+    1774
+  ],
+  "method": "impeccable wrapper PNG tEXt exact prompt; decoded pixels identical",
+  "prompt_file": "poll-ime-reference-v1.prompt.txt",
+  "prompt_sha256": "3ec38250731c97b15c132dc88560b1108055a188c80a1617511808ab8de98487",
+  "imagegen_tool": "built-in",
+  "scope": "Synthetic critique reference only, not approved comp/native geometry/AFTER/product asset. Reject boxed fields, gradients, tall viewport and fake large-font fit. No companion raster needed; native primitives and existing vector controls."
+}

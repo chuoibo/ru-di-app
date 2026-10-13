@@ -2100,6 +2100,14 @@
         "controlled-artifact"
       ],
       "reason": "Mockup built-in ImageGen tổng hợp phản biện ba khay chat ngày13/10. Root và fresh reviewer chat_child_sheets_direction_review đã mở board/originals, đọc prompt/provenance. Chỉ fixture tổng hợp; không dữ liệu thật hoặc credential. Chọn grid cân/editor rộng/năm swatch; bác phone shell/gradient/boxed fields/poll handle/fullheight settings/disabled-empty/thiếu Aa và hình học200 xấp xỉ. Wrapper nhúng đúng prompt5570byte; root kiểm decoded pixels giống original. Chỉ critique reference, không approved comp/native AFTER/asset product. Pin đúng path/hash; thay byte phải review lại."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/poll-ime-reference-v1.png",
+      "sha256": "134926414bf525ed28ea4d449ab4f2384de6c350262f43b614763f7039cde7ff",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mockup built-in ImageGen tổng hợp phản biện editor bình chọn/IME ngày13/10. Root và fresh reviewer poll_ime_direction_review đã mở reference cùng native BEFORE, đọc prompt/provenance. Không dữ liệu thật hoặc credential. Chọn một editor, helper/error trong body và một action; bác boxed fields/gradient/tỷ lệ màn cao/khoảng trống lớn/fit chữ lớn giả. Wrapper nhúng đúng prompt2912byte; decoded pixels khớp original. Chỉ critique reference, không approved comp/native AFTER/asset product. Pin đúng path/hash; thay byte phải review lại."
     }
   ]
 }

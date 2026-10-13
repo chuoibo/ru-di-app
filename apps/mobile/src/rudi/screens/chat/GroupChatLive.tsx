@@ -13,6 +13,7 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -485,8 +486,20 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   const coChu = nhap.trim().length > 0;
   const rongTrang = !chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0;
   const thapCuaSo = caoCuaSo < 600;
-  // While the tray is open in a short window the pinned rows fold away.
-  const gonDau = khay !== null && thapCuaSo;
+  // The poll owns the editing column even before the keyboard opens.
+  const lichSuAn = khay === "poll" && !khongNhanTin && ghiChatDuoc && !toHenChung.sheet;
+  const lichSuAnRef = useRef(lichSuAn);
+  lichSuAnRef.current = lichSuAn;
+  const lichSuSanSang = useRef(true);
+  const caoKhungLichSu = useRef(0);
+  if (lichSuAn) {
+    lichSuSanSang.current = false;
+    caoKhungLichSu.current = 0;
+  }
+  const caoLichSu = useRef(0);
+  const [lanHienLichSu, setLanHienLichSu] = useState(0);
+  const veCuoiCho = useRef(false);
+  const gonDau = lichSuAn || (khay !== null && thapCuaSo);
   // The composer grows with what is typed up to 120dp -- four lines, the
   // ceiling QA's acceptance pins (UI-062) and the most a phone can give the
   // box before the thread above it stops being the conversation -- and never
@@ -531,7 +544,14 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   const danhDauHienThi = useRef(chat.danhDauHienThi);
   danhDauHienThi.current = chat.danhDauHienThi;
   const baoTinHienThi = useCallback(({ viewableItems }: { viewableItems: ViewToken<HangHienThi>[] }) => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
     danhDauHienThi.current(viewableItems.flatMap(({ item, isViewable }) => isViewable && item.loai === "tin" ? [item.tin.id] : []));
+  }, []);
+  const napCuHonHienTai = useRef(chat.napCuHon);
+  napCuHonHienTai.current = chat.napCuHon;
+  const napLichSuCu = useCallback(() => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
+    void napCuHonHienTai.current();
   }, []);
 
   // The list only auto-scrolls to new rows when the reader is already at the
@@ -547,6 +567,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   // reader's place only while they are up in the history.
   const [oCuoi, setOCuoi] = useState(true);
   const ghiViTri = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
     const gan = e.nativeEvent.contentOffset.y <= 120;
     ganCuoi.current = gan;
     setOCuoi(gan);
@@ -554,13 +575,42 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   // Back to the end before a row of ours lands, and say so: with the anchor
   // off, the new row and the notice under it sit at offset 0 by construction.
   const veCuoi = useCallback(() => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) {
+      // Preserve an explicit send-to-newest without moving a hidden reader.
+      veCuoiCho.current = true;
+      return;
+    }
     ganCuoi.current = true;
     setOCuoi(true);
     danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
+  const hienLaiLichSu = useCallback(() => {
+    if (lichSuAnRef.current || lichSuSanSang.current || caoKhungLichSu.current <= 0 || caoLichSu.current <= 0 || Math.abs(caoLichSu.current - caoKhungLichSu.current) > 1) return;
+    lichSuSanSang.current = true;
+    // Hidden viewability updates may already be cached inside FlatList.
+    setLanHienLichSu((lan) => lan + 1);
+    if (veCuoiCho.current) {
+      veCuoiCho.current = false;
+      veCuoi();
+    }
+  }, [veCuoi]);
+  const baoCaoLichSu = useCallback((e: LayoutChangeEvent) => {
+    const cao = e.nativeEvent.layout.height;
+    // A hidden child keeps its last real viewport; never learn height 0.
+    if (lichSuAnRef.current || !Number.isFinite(cao) || cao <= 0) return;
+    caoLichSu.current = cao;
+    hienLaiLichSu();
+  }, [hienLaiLichSu]);
+  const baoKhungLichSu = useCallback((e: LayoutChangeEvent) => {
+    const cao = e.nativeEvent.layout.height;
+    if (lichSuAnRef.current || !Number.isFinite(cao) || cao <= 0) return;
+    caoKhungLichSu.current = cao;
+    // On resize, wait for the child's real viewport to match this wrapper.
+    hienLaiLichSu();
+  }, [hienLaiLichSu]);
   const soHang = useRef(chat.tin.length);
   useEffect(() => {
-    if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
+    if (!lichSuAnRef.current && lichSuSanSang.current && chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
     soHang.current = chat.tin.length;
   }, [chat.tin.length, reduced]);
   // The composer's notice is a list header, not a row: `maintainVisibleContentPosition`
@@ -569,6 +619,10 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   // person just made down there (QA UI-069 measured it 1,500px off screen).
   useEffect(() => {
     if (loiCuoi !== null) {
+      if (lichSuAnRef.current || !lichSuSanSang.current) {
+        veCuoiCho.current = true;
+        return;
+      }
       ganCuoi.current = true;
       setOCuoi(true);
       danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
@@ -576,7 +630,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
   }, [loiCuoi, reduced]);
   useEffect(() => {
     const sub = Keyboard.addListener("keyboardDidShow", () => {
-      if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+      if (!lichSuAnRef.current && lichSuSanSang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
     });
     return () => sub.remove();
   }, []);
@@ -1039,6 +1093,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           ) : null}
           {toHen ? (
             <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
+              if (lichSuAnRef.current || !lichSuSanSang.current) return;
               const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
               if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
             }} />
@@ -1051,7 +1106,16 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           fixed block it pushed the composer under the bottom edge of a short
           window (QA UI-124, 390×460 and 375×667 with the tray open). */}
       {rongTrang ? (
-        <ScrollView contentContainerStyle={[styles.rongNoi, { paddingHorizontal: space.md }]} keyboardShouldPersistTaps="handled" style={styles.rong} testID="chat-rong">
+        <ScrollView
+          accessibilityElementsHidden={lichSuAn}
+          importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+          pointerEvents={lichSuAn ? "none" : "auto"}
+          scrollEnabled={!lichSuAn}
+          contentContainerStyle={[styles.rongNoi, { paddingHorizontal: space.md }]}
+          keyboardShouldPersistTaps="handled"
+          style={[styles.rong, lichSuAn && styles.lichSuAn]}
+          testID="chat-rong"
+        >
           {chat.loi ? (
             // The first page did not load and nothing came by the feed either.
             <CauTaiCho
@@ -1082,12 +1146,23 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       {/* The list and the jump pill share one box: the pill floats over the
           newest end instead of taking 60dp from the list, which made the
           thread jump every time it came and went. */}
-      <View style={rongTrang ? styles.dsRong : styles.ds}>
+      <View
+        accessibilityElementsHidden={lichSuAn}
+        importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+        pointerEvents={lichSuAn ? "none" : "auto"}
+        collapsable={false}
+        onLayout={baoKhungLichSu}
+        style={[rongTrang ? styles.dsRong : styles.ds, lichSuAn && styles.lichSuAn]}
+      >
         <FlatList
           ref={danhSachRef}
+          onLayout={baoCaoLichSu}
+          extraData={lanHienLichSu}
+          scrollEnabled={!lichSuAn}
           // Empty, the list keeps only its header's height and the empty page
           // above takes the room.
-          style={rongTrang ? styles.dsRongTrong : styles.ds}
+          // Clip the parent, not the native reader viewport or its anchor.
+          style={[rongTrang ? styles.dsRongTrong : styles.ds, lichSuAn && styles.dsAn, lichSuAn && { height: caoLichSu.current }]}
           contentContainerStyle={[styles.danhSach, { paddingHorizontal: space.md }]}
           data={hang}
           inverted
@@ -1183,7 +1258,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
               <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
             ) : chat.loiCu ? (
               // Where the older messages would have appeared: the top of the thread.
-              <CauTaiCho cau={chat.loiCu} hanhDong={{ label: "Thử lại", onPress: () => void chat.napCuHon() }} style={styles.loiCuoi} testID="chat-loi-cu" />
+              <CauTaiCho cau={chat.loiCu} hanhDong={{ label: "Thử lại", onPress: napLichSuCu }} style={styles.loiCuoi} testID="chat-loi-cu" />
             ) : null
           }
           // Hold the reader's place while they are up in the history and rows
@@ -1200,11 +1275,13 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           // Content grows at the newest end (a row, the pending bubble, the
           // notice header): within a bubble of the end, stay at the end.
           onContentSizeChange={() => {
-            if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+            if (!lichSuAnRef.current && lichSuSanSang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
           }}
-          onEndReached={() => void chat.napCuHon()}
+          // A hidden callback must not consume RN's content-length edge latch.
+          onEndReached={lichSuAn || !lichSuSanSang.current ? undefined : napLichSuCu}
           onEndReachedThreshold={0.6}
           onScrollToIndexFailed={({ index, averageItemLength }) => {
+            if (lichSuAnRef.current || !lichSuSanSang.current) return;
             danhSachRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
           }}
           onMomentumScrollEnd={ghiViTri}
@@ -1289,7 +1366,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}><CongCuChat personId={personId} contextId={contextId} panel={khay} keyboardOpen={banPhimMo} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
@@ -1483,6 +1560,8 @@ const styles = StyleSheet.create({
   ds: { flex: 1 },
   dsRong: { flexGrow: 0, flexShrink: 1 },
   dsRongTrong: { flexGrow: 0 },
+  lichSuAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: 0, height: 0, minHeight: 0, overflow: "hidden" },
+  dsAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: "auto" },
   tinKhoi: { gap: 3 },
   // The name, quote and reactions start where the bubble does, past the avatar.
   thut: { marginLeft: 38 },

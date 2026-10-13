@@ -13,6 +13,7 @@ import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Field, IconButton, RudiButton } from "../../ui";
 import { useDongKhay } from "../../ui/useDongKhay";
 import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { usePollFocusReveal } from "./usePollFocusReveal";
 
 export type KhayChat = "tools" | "poll" | "plan" | null;
 
@@ -106,7 +107,7 @@ export function DaiKeoSapToi({ ten, nhip, onOpen, gon = false }: {
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onManual, capabilities, busy, error, haiNguoi = false, onToGiay }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onManual, capabilities, busy, error, haiNguoi = false, onToGiay, keyboardOpen = false }: {
   personId: string; contextId: string;
   /** A two-person conversation: the same tools, worded for two. */
   haiNguoi?: boolean;
@@ -125,6 +126,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
    */
   onHoiAi: () => void;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null;
+  /** The chat's existing keyboard owner supplies this state. */
+  keyboardOpen?: boolean;
 }) {
   const { colors } = useRudiTheme();
   const chu = chuKhay(haiNguoi);
@@ -166,6 +169,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     }
   };
   useDongKhay(panel !== null, () => onPanelRef.current(null));
+  const pollReveal = usePollFocusReveal(panel === "poll" && keyboardOpen);
   if (!panel) return null;
   // Discarding is deliberate, so it does not need a confirmation box in front
   // of it -- but a 2000-character request can die on one mistap, and until now
@@ -212,18 +216,21 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   const boCuc = fontScale === undefined
     ? { cot: 1, hang: tools.length, oRong: rongCongCu, icon: Math.min(ICON_CONG_CU, rongCongCu), caoNoiDung: caoHang }
     : boCucKhay(rongHang ?? Math.min(width, 820) - 32, tools.length, fontScale);
-  // An editor gets more room than a tool note; the parent's keyboard-avoiding
-  // column can still shrink this scroll body without moving its fixed footer.
-  const tranBinhChon = Math.round(height * 0.6);
+  // With the IME open, the measured keyboard-avoiding column owns the budget.
+  // Outside editing, the natural fields share a bounded scrolling body.
+  const tranBinhChon = keyboardOpen ? undefined : Math.round(height * 0.6);
   return (
-    <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
+    <View style={[styles.tools, panel === "poll" && keyboardOpen && styles.pollEditor, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
         <Text accessibilityRole="header" style={[typography.title, styles.flex, { color: colors.ink }]}>
           {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? chu.tieuDePoll : "Phác một tờ hẹn"}
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
-      <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, {
+      <ScrollView ref={pollReveal.scrollRef} keyboardShouldPersistTaps="handled"
+        onLayout={pollReveal.onBodyLayout} onScroll={pollReveal.onScroll} scrollEventThrottle={16}
+        onScrollBeginDrag={pollReveal.onScrollBeginDrag} onContentSizeChange={pollReveal.onContentSizeChange}
+        style={[styles.scroll, panel === "poll" && keyboardOpen && styles.pollBody, {
         // Known metrics reserve one complete row. Unknown metrics keep a
         // natural full-width column without inventing a text-height minimum;
         // its measured content and the photo note share this scrolling cap.
@@ -257,16 +264,24 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         {panel === "tools" ? <Text onLayout={(e) => { const h = Math.ceil(e.nativeEvent.layout.height); if (h !== caoGhiChu) setCaoGhiChu(h); }} style={[typography.caption, styles.ghiChu, { color: colors.inkSoft }]}>{chu.ghiChuAnh}</Text> : panel === "poll" ? (
           // One ruled editor on the tray, without a second paper frame.
           <View style={styles.form}>
-            <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
+            <View collapsable={false} ref={pollReveal.fields[0].group} onLayout={pollReveal.onFieldLayout}>
+              <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll}
+                oRef={pollReveal.fields[0].input} onFocus={() => pollReveal.onFocus(0)} onBlur={() => pollReveal.onBlur(0)} />
+            </View>
             {/* The message sits under the box it belongs to. One sentence under
                 the whole form said something was wrong but not where, so fixing
                 it meant re-reading every box (reviewer C4, heuristic 9). */}
-            {fieldErrors?.question ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.question}</Text> : null}
-            {draft.choices.map((choice, index) => <View key={index} style={styles.o}>
-              <ONhapMuc label={`Lựa chọn ${index + 1}`} accessibilityLabel={`Ô lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
+            {fieldErrors?.question ? <Text accessibilityLiveRegion="polite" onLayout={pollReveal.onFieldLayout} style={[typography.caption, { color: colors.warn }]}>{fieldErrors.question}</Text> : null}
+            {draft.choices.map((choice, index) => <View key={index} style={styles.o} onLayout={pollReveal.onFieldLayout}>
+              <View collapsable={false} ref={pollReveal.fields[index + 1].group} onLayout={pollReveal.onFieldLayout}>
+                <ONhapMuc label={`Lựa chọn ${index + 1}`} accessibilityLabel={`Ô lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100}
+                  oRef={pollReveal.fields[index + 1].input} onFocus={() => pollReveal.onFocus(index + 1)} onBlur={() => pollReveal.onBlur(index + 1)} />
+              </View>
               {fieldErrors?.choices[index] ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.choices[index]}</Text> : null}
             </View>)}
             {draft.choices.length < 6 ? <RudiButton icon="add" label="Thêm lựa chọn" variant="ghost" compact full={false} style={styles.themLuaChon} disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
+            {pollError ? <Text accessibilityLiveRegion="polite" onLayout={pollReveal.onFieldLayout} style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
+            {!hasDraft && !pollError ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Thêm câu hỏi và ít nhất 2 lựa chọn.</Text> : null}
           </View>
         ) : (
           /* The words that replaced the tray's own prompt box (ADR-0046): an
@@ -278,9 +293,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         )}
       </ScrollView>
       {panel === "poll" ? <View style={styles.footer}>
-        {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
-        <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />
-        {!hasDraft && !pollError ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Thêm câu hỏi và ít nhất 2 lựa chọn.</Text> : null}
+        <RudiButton label="Gửi bình chọn" compact={keyboardOpen} loading={busy} disabled={busy} onPress={() => void sendPoll()} />
       </View> : panel === "plan" ? <View style={styles.footer}>
         {error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{error}</Text> : null}
         {sanSang ? <RudiButton label="Hỏi Rủ Đi AI" disabled={busy} onPress={onHoiAi} />
@@ -299,6 +312,8 @@ const styles = StyleSheet.create({
   // the composer under it never leaves the screen (QA UI-124: a couple's room
   // at 390×460 with the tray open pushed the send button 60dp under the edge).
   tools: { borderTopWidth: 1, paddingHorizontal: 16, paddingBottom: 12, flexShrink: 1, minHeight: 0 },
+  pollEditor: { flex: 1 },
+  pollBody: { flexGrow: 1 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   ghiChu: { paddingTop: 2, paddingBottom: 4 },
   draftRow: { flexDirection: "row", alignItems: "center", gap: 8 },

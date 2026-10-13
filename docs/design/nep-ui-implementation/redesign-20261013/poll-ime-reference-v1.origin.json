@@ -1,0 +1,9 @@
+{
+  "mode": "built-in image_gen",
+  "use_case": "ui-mockup",
+  "original_path": "/home/lakiet/.codex/generated_images/01a1192e-6adb-7ec1-8aba-b662fbdce6ac/exec-73cc2e7f-d40a-4d17-9e1f-ca75ac272850.png",
+  "original_sha256": "b98d8f05be163f1c3a76bba51a810f82ef290a0ace876608dbd700a161ed9d27",
+  "prompt_sha256": "3ec38250731c97b15c132dc88560b1108055a188c80a1617511808ab8de98487",
+  "prompt_bytes": 2912,
+  "scope": "Critique reference only; no approved comp or native geometry proof. Reject boxed fields, gradients, tall viewport ratio and claims of true large-font fit. Retain one editor, one action, helper in scrolling body; actual metrics and focused native input decide."
+}
