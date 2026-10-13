@@ -95,6 +95,12 @@ function chuoi(value: unknown): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/** Catalogue identity is not display copy; preserve its exact codepoints. */
+function khoaCatalogue(value: unknown): string | null {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  return value;
+}
+
 /** Integer đồng, or nothing. A float here is a server defect, not a rounding. */
 function nguyenDong(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isInteger(value) || !Number.isFinite(value)) {
@@ -129,8 +135,7 @@ function soThuc(value: unknown): number | null {
 export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null {
   const o = asRecord(raw);
   if (!o) return null;
-  // Catalogue Text primary keys are identities, unlike display copy.
-  const id = typeof o.id === "string" && o.id.trim() !== "" ? o.id : null;
+  const id = khoaCatalogue(o.id);
   const ten = chuoi(o.name);
   // A suggestion always names a catalogue place: without an id there is
   // nothing to link to, so the row is dropped. A stop somebody typed on the
