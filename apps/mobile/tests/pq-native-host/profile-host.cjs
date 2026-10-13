@@ -40,15 +40,19 @@ function profileFixture(overrides = {}) {
 function journeyFixture() {
   return { routes: [], active_run: null, earned_badges: [], candidates: [], chapters: [], mp4_credits: { granted: 0, used: 0, available: 0 }, suggestion_preview: { checkins: 0, distinct_destinations: 0, photo_days: 0, story_days: 0, shared_outings: 0 } };
 }
-function createHost({ surface = 'profile', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], profile = {}, savedPlaces = [], invitations = [], deferProfile = false, deferSaved = false, placeNames = {}, initialTheme = 'he-thong', systemScheme = 'light' } = {}) {
+function createHost({ surface = 'profile', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], profile = {}, savedPlaces = [], invitations = [], deferProfile = false, deferSaved = false, diaries = [], diaryNext = null, deferDiary = false, placeNames = {}, initialTheme = 'he-thong', systemScheme = 'light' } = {}) {
   assert.ok(['comments', 'detail', 'feed', 'boundary', 'profile', 'settings'].includes(surface));
   const state = { profile: profileFixture(profile), savedPlaces: [...savedPlaces], invitations: [...invitations], placeNames: { ...placeNames }, journey: journeyFixture(), actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { width: 390, height: 844, fontScale: 1, scale: 2 } };
+  state.diaryPage = { diaries: [...diaries], next_cursor: diaryNext };
   const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
   const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
-  const commentsReadQueue = [], friendsReadQueue = [], profileReadQueue = [], savedReadQueue = [];
+  const profileFocusEffects = new Set();
+  let profileFocused = true;
+  const commentsReadQueue = [], friendsReadQueue = [], profileReadQueue = [], savedReadQueue = [], diaryReadQueue = [];
   if (deferProfile) profileReadQueue.push({ ...deferred(), started: false });
   if (deferSaved) savedReadQueue.push({ ...deferred(), started: false });
-  const profileReads = [], profileWrites = [], sessionWrites = [], savedReads = [];
+  if (deferDiary) diaryReadQueue.push({ ...deferred(), started: false });
+  const profileReads = [], profileWrites = [], sessionWrites = [], savedReads = [], diaryReads = [];
   // Profile reads are a named phien I/O boundary. Taste also reads /people/me,
   // so parking by route alone would consume the wrong request.
   function profileRead(actorId) {
@@ -166,7 +170,13 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
         return { saved: state.savedPlaces.map(place_id => ({ place_id })) };
       }
       if (/^\/people\/[^/]+\/friend-requests\?direction=incoming$/.test(route) && method === 'GET') { call.kind = 'readInvitations'; return { requests: state.invitations }; }
-      if (/^\/people\/[^/]+\/diaries\?before=$/.test(route) && method === 'GET') { call.kind = 'readDiaries'; return { diaries: [], next_cursor: null }; }
+      if (/^\/people\/[^/]+\/diaries\?before=[^?]*$/.test(route) && method === 'GET') {
+        call.kind = 'readDiaries'; diaryReads.push(call);
+        const queued = diaryReadQueue.shift();
+        if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
+        assert.equal(route.endsWith('?before='), true, 'pagination requires an explicit synthetic page boundary');
+        return state.diaryPage;
+      }
       if (route === '/me/achievement-routes' && method === 'GET') { call.kind = 'readJourney'; return state.journey; }
       if (route.startsWith('/people/avatars?')) return { avatars: {} };
       if (route.startsWith('/friends')) return [];
@@ -233,7 +243,13 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     'expo-modules-core': { requireOptionalNativeModule: name => { assert.equal(name, 'RudiFontScale'); return nativeFontModule; } },
     'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
     'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
-    'expo-router': { Redirect: visual('RNRouterRedirect'), useLocalSearchParams: () => state.params, usePathname: () => surface === 'profile' ? '/profile' : surface === 'detail' ? `/community/posts/${state.params.id}` : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
+    'expo-router': { Redirect: visual('RNRouterRedirect'), useLocalSearchParams: () => state.params, usePathname: () => surface === 'profile' ? '/profile' : surface === 'detail' ? `/community/posts/${state.params.id}` : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(() => {
+      if (surface !== 'profile') return callback();
+      const effect = { callback, cleanup: undefined };
+      profileFocusEffects.add(effect);
+      if (profileFocused) effect.cleanup = callback();
+      return () => { effect.cleanup?.(); profileFocusEffects.delete(effect); };
+    }, [callback]) },
     'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
     'react-native-safe-area-context': { SafeAreaView: visual('RNSafeAreaView'), useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
     '@expo/vector-icons': { Ionicons: visual('RNIonicons') }, 'react-native-svg': svg,
@@ -337,7 +353,7 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
   function hosts(kind, match = () => true) { assert.ok(root, 'mounted host'); return root.root.findAll(node => node.type === kind && match(node.props)); }
   function one(kind, match) { const values = hosts(kind, match); assert.equal(values.length, 1, `One ${kind} host`); return values[0]; }
   const h = {
-    state, consumed, consumedHashes, profileReads, profileWrites, sessionWrites, savedReads, storageCalls, boundaryViolations, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet, settingsIo,
+    state, consumed, consumedHashes, profileReads, profileWrites, sessionWrites, savedReads, diaryReads, storageCalls, boundaryViolations, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet, settingsIo,
     get root() { return root; },
     get session() { return session; },
     apiError(message, status = 422) { return new api.ApiError(status, message); },
@@ -358,6 +374,18 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     callsFor(kind) { return calls.filter(call => call.kind === kind); },
     async mount() { await act(async () => { root = Renderer.create(React.createElement(App), { createNodeMock: element => ({ id: ++nodeId, kind: element.type, focus() { focused = this; }, blur() { if (focused === this) focused = null; }, scrollTo(options) { nativeHostCalls.push({ kind: 'scrollTo', options }); }, scrollToOffset(options) { nativeHostCalls.push({ kind: 'scrollToOffset', options }); }, getNativeScrollRef() { return this; }, measureInWindow(callback) { callback(0, 0, 390, 400); } }) }); }); },
     async update(callback = () => {}) { await act(async () => { callback(state); root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    async profileFocus(value) {
+      assert.equal(surface, 'profile', 'explicit profile navigation boundary');
+      assert.equal(typeof value, 'boolean');
+      await act(async () => {
+        if (profileFocused === value) return;
+        profileFocused = value;
+        for (const effect of profileFocusEffects) {
+          if (value) effect.cleanup = effect.callback();
+          else { effect.cleanup?.(); effect.cleanup = undefined; }
+        }
+      });
+    },
     async nativeFont(value) { await act(async () => { settingsIo?.fontSnapshot(value); state.nativeFont = value; [...listeners].forEach(callback => callback()); if (state.explicitProvider) root.update(React.createElement(App, { tick: ++state.tick })); }); },
     async systemScheme(value) { assert.ok(settingsIo, 'Settings-only appearance fixture'); await act(async () => settingsIo.setSystemScheme(value)); },
     async invokeRetired(index = retiredCallbacks.length - 1) { assert.ok(retiredCallbacks[index]); await act(async () => retiredCallbacks[index]()); },
@@ -381,6 +409,7 @@ function createHost({ surface = 'profile', initialSnapshot = snapshot(), explici
     async completeClose(event = h.closeAnimation(), finished = true) { await act(async () => event.callback(finished)); },
     deferProfileRead() { const queued = { ...deferred(), started: false }; profileReadQueue.push(queued); return queued; },
     deferSavedRead() { const queued = { ...deferred(), started: false }; savedReadQueue.push(queued); return queued; },
+    deferDiaryRead() { const queued = { ...deferred(), started: false }; diaryReadQueue.push(queued); return queued; },
     deferCommentsRead() { const queued = { ...deferred(), started: false }; commentsReadQueue.push(queued); return queued; },
     deferFriendsRead() { const queued = { ...deferred(), started: false }; friendsReadQueue.push(queued); return queued; },
     async resolvePost(value = state.post, index = gets.findIndex(call => typeof call.resolve === 'function')) { assert.ok(gets[index]?.resolve, 'deferred actual getPost transport'); await act(async () => gets[index].resolve(value)); },

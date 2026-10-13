@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Children, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { Text } from "./ui/NativeFontMetrics";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
@@ -48,6 +48,8 @@ type ScreenProps = {
   avoidKeyboard?: boolean;
   /** Clearance below a focused input, including an inline validation message. */
   focusBottomInset?: number;
+  /** Retire queued viewport layouts when this editor's existing native metrics change. */
+  inputViewportRevision?: unknown;
   scrollEnabled?: boolean;
   /** Pull-to-refresh on a live list: the same read the screen does on focus, so stale data has a way out. */
   onRefresh?: () => Promise<void>;
@@ -82,6 +84,10 @@ type ScreenProps = {
 /** The tablet column widths of `RudiScreen`'s `cot`. */
 const RONG_COT = { doc: COT_DOC, form: 560, rong: 960 } as const;
 
+const InputViewportContext = createContext<number | null>(null);
+/** Actual scroll viewport while this screen's IME is open; no native reads. */
+export function useRudiInputViewportHeight() { return useContext(InputViewportContext); }
+
 export function RudiScreen({
   children,
   scroll = true,
@@ -96,6 +102,7 @@ export function RudiScreen({
   testID,
   avoidKeyboard = false,
   focusBottomInset = 16,
+  inputViewportRevision,
   scrollEnabled = true,
   overlay,
   keepEnd = false,
@@ -107,9 +114,14 @@ export function RudiScreen({
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width, height: windowHeight } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  const viewportGeneration = useMemo(() => ({}), [avoidKeyboard, scroll, width, windowHeight, fontScale, keyboardOpen, inputViewportRevision]);
+  const [viewportLayout, setViewportLayout] = useState<{ generation: object; width: number; height: number | null }>(() => ({ generation: viewportGeneration, width, height: null }));
+  useLayoutEffect(() => {
+    setViewportLayout((previous) => previous.generation === viewportGeneration ? previous : { generation: viewportGeneration, width, height: previous.width === width ? previous.height : null });
+  }, [viewportGeneration, width]);
   const keyboardVisible = useRef(false);
   const keyboardReveal = useRef(false);
   const keyboardInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput> | null>(null);
@@ -151,6 +163,15 @@ export function RudiScreen({
         });
       });
     });
+  };
+  const recordViewport = (event?: LayoutChangeEvent) => {
+    // Layout may precede keyboardDidShow. Keep the last actual viewport, not a keyboard-height estimate.
+    const layout = event?.nativeEvent.layout;
+    if (avoidKeyboard && scroll && Platform.OS !== "web" && layout && cuon.current?.getNativeScrollRef()) {
+      const height = Number.isFinite(layout.width) && layout.width > 0 && Number.isFinite(layout.height) && layout.height > 0 ? layout.height : null;
+      setViewportLayout((previous) => previous.generation !== viewportGeneration || !cuon.current?.getNativeScrollRef() || previous.height === height ? previous : { generation: viewportGeneration, width, height });
+    }
+    revealFocusedField();
   };
   useLayoutEffect(() => {
     focusBottom.current = Number.isFinite(focusBottomInset) && focusBottomInset >= 0 ? focusBottomInset : 16;
@@ -240,6 +261,7 @@ export function RudiScreen({
       </View>
       <KheLopProvider khe={khe}>
       <CuonContext.Provider value={cuonMan}>
+      <InputViewportContext.Provider value={avoidKeyboard && scroll && keyboardOpen && viewportLayout.width === width ? viewportLayout.height : null}>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (
         // A keyline under the fixed header: content scrolling beneath it reads
@@ -254,7 +276,7 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
-          onLayout={revealFocusedField}
+          onLayout={recordViewport}
           onScroll={theoCuon}
           scrollEventThrottle={16}
           refreshControl={
@@ -274,7 +296,7 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
-          onLayout={revealFocusedField}
+          onLayout={recordViewport}
           onScroll={avoidKeyboard ? (event) => {
             cuonY.value = event.nativeEvent.contentOffset.y;
             if (!keyboardVisible.current) return;
@@ -316,6 +338,7 @@ export function RudiScreen({
         </View>
       ) : null}
       </KeyboardAvoidingView>
+      </InputViewportContext.Provider>
       </CuonContext.Provider>
       </KheLopProvider>
       {overlay}

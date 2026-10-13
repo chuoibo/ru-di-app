@@ -93,3 +93,26 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## Tiêu chuẩn riêng
 
 Counter giữ đủ nhãn `n/5000`, scaling native, trục với canvas/rail; không đưa vào footer. Layout event finite/positive mới được nhận; cùng height không khởi động reveal lần nữa. Epoch cũ và lease/unmount cũ không được đổi clearance. Giữ last known height qua thay font/width đến khi có actual layout mới; không reset về baseline nếu geometry không đổi. Native AFTER phải kiểm1776 nhập bình thường, IME100→200→100, unavailable nếu có, caret/selection, topic helper/error và cả empty phone/ordinary/tall. Host rectangles không là Yoga hoặc pixel proof; FINISH/beauty approval còn mở.
+
+
+## 13/10 · actual input viewport amendment
+
+# Composer · vùng viết khi IME mở
+
+Base6c737f8df7f5861663ed8b34bf7bfe52744d6c9b. Code-led Operate, `layout → polish`, giữ world và topology. Contract này viết trước private candidate; root chọn trước W.
+
+THESIS: Người viết thấy đoạn đang sửa, kể cả đầu hoặc giữa bài dài; ô viết dùng vùng thực còn lại trên bàn phím.
+
+OWN-WORLD: Giấy yên, mực rõ, coral cho đăng. Không tranh, token hay hộp phụ; sự gọn đến từ canvas và action dock cùng trục.
+
+STORY: Đặt caret → sửa đoạn → đọc counter → thêm công cụ → đăng. Khi IME mở, cuộn trong ô viết giữ đoạn đang sửa; cuộn trang vẫn dẫn tới tools/topic.
+
+FIRST VIEWPORT: Ô viết đủ nằm trong actual scroll viewport đã trừ header/footer; counter trọn và khoảng thở hiện hữu. IME đóng trả lại full canvas, không để một editor thấp vĩnh viễn.
+
+FORM: RudiScreen công bố height từ onLayout viewport đang có qua scoped context, dùng observer keyboard hiện hữu. ComposerBodyInput chỉ cap khi IME mở, trừ top16 và actual body tail; complete native line thắng nếu vùng quá nhỏ. Không đoán keyboard height, polling, owner/key/input replacement.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Cổng riêng
+
+Counter6c đã đủ glyph trong captures root nêu; chưa nhận toàn Composer. Agent mở composer-long-edit-start-light100.png: startZ/caret không thấy dù success receipt xác minh exact1777 tại offset0. Proposal chỉ bảo đảm input box có declared cap theo actual viewport; Android internal caret scroll phải được kiểm lại FIRST/MIDDLE/END với closeddriver, font100/200/return100 và IME open/close. Giữ R5 draft/lease/ACK/retry/media/topic clearance, toàn nhãn/scaling và reveal guard oversized. Unavailable font giữ nguyên RN scaling và minimum an toàn hiện hữu; nếu complete line lớn hơn viewport thì không ép nhỏ chữ và không nhận caret-fit PASS. Host rectangles không chứng minh pixels/caret.

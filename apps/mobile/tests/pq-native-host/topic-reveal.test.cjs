@@ -416,3 +416,131 @@ test('TR08 actual counter layout reserves the body tail without restarting settl
     assert.equal(vault.docNhapBai('synthetic-A', 'new:community'), null, 'a retired counter callback cannot recreate the old draft');
   });
 });
+
+test('TR09 actual IME viewport bounds the retained body for first middle and end edits while full native lines and closed canvas remain safe', async () => {
+  await withComposer(async (h, vault, lease) => {
+    const long = 'QC native long draft. The group walks around the lake and keeps a memory. '.repeat(24);
+    assert.equal(long.length, 1776);
+    await h.nativeFont(font(1)); await h.change(long);
+    const body = h.input(), input = h.native.node(body), container = scroll(h), target = h.native.node(container);
+    const owners = ['ComposerForm', 'MediaPicker', 'MentionPicker'].map(name => [name, h.owner(name)]);
+    const fieldHost = field(h), topicHost = topic(h), toolsHost = tools(h), observed = ownership(h);
+    const style = () => h.Native.StyleSheet.flatten(h.input().props.style);
+    const counter = () => {
+      const values = h.text(props => h.React.Children.toArray(props.children).join('') === `${h.input().props.value.length}/5000`);
+      assert.equal(values.length, 1, 'one actual body counter'); return values[0];
+    };
+    const counterLayout = async height => { await act(async () => counter().props.onLayout({ nativeEvent: { layout: { x: 16, y: 0, width: 288, height } } })); };
+    const viewportLayout = async (height, callback = container.props.onLayout, width = h.state.window.width) => { await act(async () => callback({ nativeEvent: { layout: { x: 0, y: 77, width, height } } })); };
+    const scrolled = async y => { await act(async () => container.props.onScroll({ nativeEvent: { contentOffset: { y } } })); };
+    async function measureBody(top, inputHeight, viewportHeight) {
+      await h.native.resolve(await viewport(h), [0, 77, h.state.window.width, viewportHeight]);
+      await h.native.resolve(latest(h, 'measureInWindow', input), [16, top, 288, inputHeight]);
+    }
+    function keep(expected) {
+      assert.equal(h.input() === body, true, 'viewport updates retain the actual native editor');
+      assert.equal(h.native.node(h.input()) === input, true); assert.equal(input.isFocused(), true);
+      assert.equal(h.input().props.value, expected); assert.equal(vault.docNhapBai('synthetic-A', 'new:community').body, expected);
+      assert.equal(vault.phienNhapBai('synthetic-A'), lease);
+      for (const [name, owner] of owners) assert.equal(h.owner(name) === owner, true, `same ${name}`);
+      assert.equal(field(h) === fieldHost, true); assert.equal(topic(h) === topicHost, true); assert.equal(tools(h) === toolsHost, true);
+      assert.deepEqual(ownership(h), observed, 'no new font subscription or owner churn');
+      assert.equal(Object.hasOwn(h.input().props, 'bottomClearance'), false, 'scoped clearance is not a native input prop');
+      assert.equal(h.input().props.maxLength, 5000); assert.equal(h.input().props.multiline, true);
+    }
+    await counterLayout(18);
+    const noIme = { minHeight: style().minHeight, maxHeight: style().maxHeight };
+    assert.equal(noIme.maxHeight, 640, 'closed phone keeps the incumbent full-window canvas ceiling');
+    // Android may resize this actual scroll viewport before keyboardDidShow.
+    await viewportLayout(240);
+    assert.equal(style().maxHeight, noIme.maxHeight, 'a viewport layout alone cannot compact the closed canvas');
+    await h.native.focus(body); await h.native.emitKeyboard('keyboardDidShow');
+    assert.equal(style().maxHeight, 186, 'actual pre-show viewport reserves top16 and measured counter tail38');
+    assert.equal(style().minHeight, noIme.minHeight, 'a fitting design minimum remains unchanged');
+    assert.equal(style().maxHeight + 16 + clearance(h) <= 240, true, 'the whole declared body box now fits its real screen viewport');
+    assert.equal(h.state.window.fontScale, 2, 'native100 is independent of stale window200');
+    const at100 = container.props.onLayout;
+    await scrolled(100); await measureBody(40, 186, 240);
+    assert.equal(commands(h).length, 1, 'the actual fitting editor receives upward reveal instead of the oversized reverse guard');
+    assert.equal(commands(h)[0].target, target.id); assert.deepEqual({ ...commands(h)[0].options }, { y: 47, animated: false });
+    await scrolled(47); await measureBody(93, 186, 240);
+    assert.equal(commands(h).length, 1, 'the top-revealed fitting editor settles without feedback oscillation');
+
+    // These are controlled-text edits at the real user's three closed positions.
+    // No caret rectangle, text-internal scrolling or native selection is simulated.
+    for (const offset of [0, 888, 1776]) {
+      const edited = long.slice(0, offset) + 'Z' + long.slice(offset);
+      await h.change(edited); keep(edited);
+      assert.equal(style().maxHeight + 16 + clearance(h) <= 240, true, `offset${offset} retains a fully revealable editor box`);
+      const attempt = h.attemptCount();
+      await act(async () => container.props.onContentSizeChange(288, 1777));
+      await measureBody(93, 186, 240);
+      assert.equal(commands(h).length, 1, 'a text edit does not reintroduce whole-input clipping');
+      assert.equal(h.attemptCount(), attempt, 'layout feedback does not replace the outgoing attempt');
+      await h.change(long); keep(long);
+    }
+    const productIO = { calls: h.calls.length, picks: h.picks.length, uploads: h.uploads.length, routes: h.routes.length, attempts: h.attemptCount() };
+    const saved = vault.docNhapBai('synthetic-A', 'new:community');
+    await h.nativeFont(font(2)); await counterLayout(36); await viewportLayout(234);
+    assert.equal(style().maxHeight, 162, 'native200 uses the current viewport and actual36dp counter');
+    const at200 = container.props.onLayout;
+    await viewportLayout(600, at100);
+    assert.equal(style().maxHeight, 162, 'retired100 viewport callback cannot replace committed200 geometry');
+    await measureBody(93, 162, 234); assert.equal(commands(h).length, 1);
+    await viewportLayout(100);
+    assert.equal(style().minHeight, 44, 'a tight IME viewport clamps the old140.8dp design minimum down to one complete36dp native line plus8 padding');
+    assert.equal(style().maxHeight, 44, 'the complete native line wins when the viewport cannot fit it with both clearances');
+    await viewportLayout(234); await h.nativeFont(snapshot(2, 201.25));
+    assert.equal(style().minHeight, 209.5); assert.equal(style().maxHeight, 209.5, 'extreme native line pitch is never clipped to an impossible viewport budget');
+    await h.nativeFont(font(1)); await counterLayout(18); await viewportLayout(240);
+    assert.equal(style().maxHeight, 186);
+    await viewportLayout(700, at200); assert.equal(style().maxHeight, 186, 'old200 cannot cross the native100→200→100 epoch');
+    const shortWindow = container.props.onLayout;
+    await h.update(state => { state.window = { ...state.window, height: 800 }; });
+    const tallWindow = container.props.onLayout;
+    await viewportLayout(900, shortWindow); assert.equal(style().maxHeight, 186, 'old window-height callback cannot enlarge the actual IME budget');
+    await viewportLayout(250); assert.equal(style().maxHeight, 196);
+    await h.update(state => { state.window = { ...state.window, height: 640 }; });
+    await viewportLayout(900, tallWindow); assert.equal(style().maxHeight, 196, 'window-height ABA rejects the retired middle epoch');
+    await viewportLayout(240); assert.equal(style().maxHeight, 186);
+    const beforeHide = container.props.onLayout;
+    await h.native.emitKeyboard('keyboardDidHide');
+    assert.equal(style().maxHeight, noIme.maxHeight); assert.equal(style().minHeight, noIme.minHeight, 'IME close restores original canvas constraints');
+    await viewportLayout(600, beforeHide); assert.equal(style().maxHeight, noIme.maxHeight, 'old keyboard layouts cannot compact a closed editor');
+    await viewportLayout(560); await h.native.emitKeyboard('keyboardDidShow');
+    assert.equal(style().maxHeight, 506, 'pre-show actual layout is retained across the keyboard epoch');
+    await viewportLayout(240); await viewportLayout(600, beforeHide);
+    assert.equal(style().maxHeight, 186, 'old keyboard session cannot replace the new viewport');
+
+    await h.native.emitKeyboard('keyboardDidHide'); const phoneLayout = container.props.onLayout;
+    await h.update(state => { state.window = { width: 768, height: 1024, fontScale: 1, scale: 1 }; });
+    assert.equal(style().maxHeight, undefined, 'closed wide canvas remains unbounded as before');
+    const wideMinimum = style().minHeight;
+    await viewportLayout(240, phoneLayout, 320); await h.native.emitKeyboard('keyboardDidShow');
+    assert.equal(style().maxHeight, undefined, 'retired phone width cannot invent a tablet viewport');
+    await viewportLayout(320); assert.equal(style().maxHeight, 266, 'the actual wide IME viewport also bounds its editor');
+    for (const [height, width] of [[0, 768], [-1, 768], [NaN, 768], [Infinity, 768], [320, 0]]) {
+      await viewportLayout(height, container.props.onLayout, width);
+      assert.equal(style().maxHeight, undefined, 'invalid actual viewport returns the incumbent wide policy');
+      assert.equal(Number.isFinite(style().minHeight), true);
+    }
+    await viewportLayout(320); await h.nativeFont({ status: 'unavailable', reason: 'module-inactive' });
+    assert.notEqual(h.input().props.allowFontScaling, false, 'unavailable font metrics preserve native scaling');
+    assert.equal(style().maxHeight, 266); assert.equal(style().minHeight, wideMinimum, 'unknown native pitch retains the incumbent safe minimum');
+    await viewportLayout(100); assert.equal(style().maxHeight, wideMinimum, 'fallback never guesses a smaller complete-line minimum');
+    await viewportLayout(320);
+    const bodyCap = style().maxHeight;
+    await h.native.focus(topic(h)); await tail(h);
+    assert.equal(clearance(h), 85); assert.equal(style().maxHeight, bodyCap, 'topic helper clearance does not replace the measured body tail');
+    await h.native.blur(topic(h)); await h.native.focus(body); keep(long);
+    assert.deepEqual(vault.docNhapBai('synthetic-A', 'new:community'), saved, 'font and viewport changes retain the exact RAM draft');
+    assert.deepEqual({ calls: h.calls.length, picks: h.picks.length, uploads: h.uploads.length, routes: h.routes.length, attempts: h.attemptCount() }, productIO, 'viewport and font updates admit no product I/O or logical attempts');
+    const retiredLayout = container.props.onLayout;
+    await h.update(state => { state.show = false; });
+    const afterUnmount = h.nativeHostCalls.length;
+    await viewportLayout(900, retiredLayout, 768); await frames(h);
+    assert.equal(h.nativeHostCalls.length, afterUnmount, 'detached viewport cannot revive native measurements or scroll');
+    assert.equal(h.native.pendingFrames(), 0); assert.equal(h.observation().live, 0);
+    assert.equal(h.observation().removals, h.observation().subscriptions);
+  });
+});

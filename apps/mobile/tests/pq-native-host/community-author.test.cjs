@@ -167,3 +167,44 @@ test('CH06 actual author controls keep routes, follow and pending like/save beha
     assert.equal(card(h) === root, true); observation(h);
   });
 });
+
+test('CH07 actual fallback monogram converts with its inherited owner without resizing the badge or profile target', async () => {
+  const row = fixture({ body: 'Synthetic fallback initial, separate from the media fixture.' });
+  await feed([row], {}, async h => {
+    const root = card(h), profile = action(root, 'Hồ sơ ' + row.author);
+    const avatar = one(profile.findAllByType(h.load('apps/mobile/src/rudi/ui/Avatar').Avatar), 'actual shared Avatar');
+    const frame = one(profile.findAllByType('RNView').filter(node => node.props.accessibilityLabel === row.author), 'actual named avatar frame');
+    const initial = text(frame, 'F'), initialRef = h.native.node(initial), profileRef = h.native.node(profile);
+    assert.equal(frame.findAllByType('RNExpoImage').length, 0, 'known absent avatar uses an initial, not cropped fixture artwork');
+    assert.equal(h.state.nativeFont.fontMetrics.spToDp.some(metric => metric.base === 16), false, 'fixture mirrors the native table without 16sp');
+    metrics(h, initial, { fontSize: 17, lineHeight: 23 });
+    const before = counters(h);
+    const partial = snapshot(2); partial.fontMetrics.spToDp = partial.fontMetrics.spToDp.filter(metric => metric.base !== 17);
+    for (const value of [snapshot(2), snapshot(), unavailable(), partial, snapshot(2), snapshot()]) {
+      await h.nativeFont(value); observation(h);
+      assert.equal(h.state.window.fontScale, 1, 'native conversion cannot depend on a fresh window scale');
+      assert.equal(card(h) === root, true); assert.equal(action(root, 'Hồ sơ ' + row.author) === profile, true);
+      assert.equal(profile.findAllByType(h.load('apps/mobile/src/rudi/ui/Avatar').Avatar)[0] === avatar, true);
+      assert.equal(text(frame, 'F') === initial, true, 'same native initial leaf through converted and fallback modes');
+      assert.equal(h.native.node(initial) === initialRef, true); assert.equal(h.native.node(profile) === profileRef, true);
+      assert.equal(frame.props.accessibilityLabel, row.author, 'full identity remains available');
+      assert.equal(style(frame).width, 42); assert.equal(style(frame).height, 42); assert.equal(style(frame).borderRadius, 21);
+      assert.equal(style(profile).minWidth, 48); assert.equal(style(profile).minHeight, 48);
+      assert.equal(style(initial).fontWeight, '600'); assert.equal(initial.props.maxFontSizeMultiplier, undefined);
+      assert.notEqual(initial.props.adjustsFontSizeToFit, true); assert.equal(initial.props.numberOfLines, undefined);
+      if (value.status === 'unavailable' || value === partial) {
+        assert.equal(initial.props.allowFontScaling, undefined, 'unusable metrics retain ordinary RN scaling');
+        assert.equal(style(initial).fontSize, 17); assert.equal(style(initial).lineHeight, 23);
+      } else {
+        metrics(h, initial, { fontSize: 17, lineHeight: 23 });
+      }
+      assert.equal(frame.findAllByType('RNExpoImage').length, 0);
+      assert.deepEqual(counters(h), before, 'font-only events cannot fetch avatars, write or navigate');
+    }
+    const relative = 'apps/mobile/src/rudi/ui/Avatar', file = h.consumed.get(relative);
+    assert.ok(file, 'actual shared Avatar source consumed');
+    assert.equal(fs.realpathSync(file).startsWith(fs.realpathSync(sourceRoot) + path.sep), true);
+    assert.equal(h.consumedHashes.get(relative), crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
+    await press(profile); assert.equal(h.routes.at(-1), '/people/' + row.author_id);
+  });
+});

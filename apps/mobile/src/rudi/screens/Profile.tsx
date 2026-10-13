@@ -1,4 +1,6 @@
 import { DiaryWall } from "../diary/Wall";
+import { useDiaryCollection } from "../diary/useDiaryCollection";
+import { DiaryLead, ProfileDiaryEmpty, ProfileDiaryFailure } from "./profile/DiaryLead";
 /**
  * Cá nhân, Tài chính and Hành trình: the person's own pages.
  *
@@ -7,11 +9,10 @@ import { DiaryWall } from "../diary/Wall";
  * achievements live in `ky-niem/AchievementsLive.tsx`. Signed out, each is
  * the sign-in door.
  *
- * UI v2 (đợt 7): a footprint, not a trophy page. The hero gradient, the
- * level badge and the three-number card are gone; what is left is the
- * person, one line about them, the next appointment (with a real countdown)
- * and a plain list of doors. Money pages answer «bạn đã chi bao nhiêu» first,
- * separate sums from ledger lines, and draw no chart for decoration.
+ * Identity and one actual saved diary lead the profile. Server facts and
+ * tools follow as context. Preview and shelf share one focus-scoped reader;
+ * changing the reading layout never starts another request. Money pages
+ * separate sums from ledger lines and draw no chart for decoration.
  */
 import { HoaDonGiay } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
@@ -28,13 +29,12 @@ import { ghiChuGioiHan, layTaiChinh, moTaGiaoDich, ngayNgan, tienCoDau, type Fin
 import { docLoiMoi } from "../../screens/ca-nhan/ban-be";
 import { docDaLuu } from "../kham-pha/dia-diem";
 import { useRudiSession } from "../session";
-import type { Phien } from "../../phien";
+import type { HoSoToi, Phien } from "../../phien";
 import { CuaDangNhap } from "../ui/CuaDangNhap";
 import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong, type ProfileEditorControls } from "./profile/HoSoSong";
 import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
-import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
 import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../ui";
 import { useLuiLop } from "../ui/useLuiLop";
 import { useTenCho } from "../to-giay/useTenCho";
@@ -75,6 +75,7 @@ function ProfileContent({ phien }: { phien: Phien }) {
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = `/people/${phien.person_id}`;
   const personId = phien.person_id;
+  const diaries = useDiaryCollection(personId, personId);
   // The row's subtitle is what this person told the server (M11), read on
   // focus rather than once: they may have just changed it on the step itself.
   const [soThich, setSoThich] = useState<SoThichSong>({ muc: [], khoang: null });
@@ -159,45 +160,18 @@ function ProfileContent({ phien }: { phien: Phien }) {
       <View style={editingProfile ? undefined : styles.profileHero}>
         {!editingProfile ? <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Cá nhân</Text> : null}
         {/* Settings keeps its single door in the management group below. */}
-        <HoSoSong phien={phien} onEditorChange={setEditor} />
-      </View>
-      {!editingProfile ? <>
+        <HoSoSong phien={phien} onEditorChange={setEditor} renderContent={(profile) => <>
       <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
         {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={styles.profileTab}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
       </View>
-      {page === "kept" ? <>
-      <DiaryWall person={phien.person_id} owner={phien.person_id} />
-      <HanhTrinhTeaser personId={personId} />
-      </> : <>
+      {page === "kept" ? <DiaryWall person={personId} owner={personId} collection={diaries} empty={<ProfileDiaryEmpty />} failure={diaries.error ? <ProfileDiaryFailure message={diaries.error} retry={diaries.retry} /> : undefined} /> : <>
+      <DiaryLead person={personId} collection={diaries} />
+      {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
+      <View style={styles.preferences}>
+        <Text style={[typography.note, { color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
+        <RudiButton full={false} label="Sở thích" variant="ghost" onPress={() => router.push("/personalization")} />
+      </View>
       <View style={styles.menuGroups}>
-        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
-          <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Kết nối &amp; gu</Text>
-          <View style={styles.hangMenu}>
-            <ListRow
-              iconTreatment="plain"
-              icon="people-outline"
-              onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
-              subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời đang chờ` : undefined}
-              title="Bạn bè"
-              trailing={
-                loiMoiCho > 0 ? (
-                  <View accessibilityLabel={`${loiMoiCho} lời mời đang chờ`} style={[styles.dem, { backgroundColor: colors.accent }]}>
-                    <Text style={[typography.caption, { color: colors.accentInk }]}>{loiMoiCho}</Text>
-                  </View>
-                ) : undefined
-              }
-            />
-          </View>
-          <View style={styles.hangMenu}>
-            <ListRow
-              iconTreatment="plain"
-              icon="sparkles-outline"
-              onPress={() => router.push("/personalization")}
-              subtitle={tomTat(soThich)}
-              title="Sở thích"
-            />
-          </View>
-        </View>
         <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Sổ của bạn</Text>
           <View style={styles.hangMenu}>
@@ -255,9 +229,35 @@ function ProfileContent({ phien }: { phien: Phien }) {
         </View>
       </View>
       </>}
-      </> : null}
+      </>} />
+      </View>
     </RudiScreen>
   );
+}
+
+/** Server facts are profile context, separate from the saved page's metadata. */
+function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pending: number; onFriends: () => void }) {
+  const { colors } = useRudiTheme();
+  const footprints = [
+    ["outings", profile.counts.outings, "kèo"],
+    ["places", profile.counts.places_checked_in, "điểm check-in"],
+    ["memories", profile.counts.memories, "khoảnh khắc"],
+  ] as const;
+  return <View testID="profile-counts" style={styles.profileContext}>
+    <View style={styles.relations}>
+      <Pressable testID="profile-fact-friends" accessibilityRole="button" accessibilityLabel={`${profile.counts.friends} bạn bè`} accessibilityHint={pending > 0 ? `${pending} lời mời đang chờ` : "Mở danh sách bạn bè"} onPress={onFriends} style={styles.friendsAction}>
+        <Text accessible={false} style={[typography.body, { color: colors.ink }]}>{`${profile.counts.friends} bạn bè`}</Text>
+        {pending > 0 ? <Text accessible={false} style={[typography.note, { color: colors.inkSoft }]}>{`${pending} lời mời đang chờ`}</Text> : null}
+      </Pressable>
+      <Text testID="profile-fact-contexts" style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${profile.counts.contexts} nhóm`}</Text>
+    </View>
+    <View style={styles.footprints}>
+      {footprints.map(([id, value, noun], index) => <View key={id} style={styles.footprint}>
+        {index > 0 ? <Text accessible={false} style={[typography.body, { color: colors.inkSoft }]}>·</Text> : null}
+        <Text testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
+      </View>)}
+    </View>
+  </View>;
 }
 
 /**
@@ -422,7 +422,14 @@ const styles = StyleSheet.create({
   profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
   profileTabIndicator: { position: "absolute", bottom: 0, width: 32, height: 2, borderRadius: 1 },
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
-  menuGroups: { paddingTop: 12, gap: 16 },
+  profileContext: { gap: 4, marginTop: 28 },
+  relations: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 20, rowGap: 4 },
+  friendsAction: { minWidth: 48, minHeight: 48, maxWidth: "100%", justifyContent: "center", gap: 3 },
+  contextWords: { minWidth: 0, flexShrink: 1 },
+  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 8, rowGap: 4 },
+  footprint: { maxWidth: "100%", flexDirection: "row", alignItems: "baseline", gap: 8 },
+  preferences: { alignItems: "flex-start", gap: 4, marginTop: 20 },
+  menuGroups: { paddingTop: 28, gap: 20 },
   menuGroup: { gap: 0, borderBottomWidth: StyleSheet.hairlineWidth },
   menuHeading: { marginBottom: 4 },
   hero: { gap: 10 },

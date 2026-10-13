@@ -7,7 +7,7 @@ import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions, type Layout
 import { docNhomCuaToi, type NhomTomTat } from "../../phien";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
+import { Field, RudiButton, RudiScreen, TopBar, useRudiInputViewportHeight } from "../ui";
 import { createPost, getPost, type Audience, type Media } from "./api";
 import { loiChuDe } from "./chu-de";
 import { CauTaiCho } from "../ui/CauTaiCho";
@@ -260,7 +260,7 @@ function ComposerForm() {
     if (loading || !editReady) return <RudiScreen material="quiet" cot="form"><TopBar title="Viết tiếp câu chuyện"/>{loading ? <SkeletonLines lines={5}/> : <CauTaiCho cau={error ?? "Chưa mở được bản viết."} hanhDong={{ label: "Thử lại", onPress: () => setRetry((n) => n + 1) }}/>}</RudiScreen>;
     const audienceLabel = { friends: "Bạn bè", public: "Cộng đồng", only_me: "Chỉ mình tôi", group: groups.find((g) => g.id === group)?.display_name ?? "Một nhóm" }[audience];
     const cannotSend = conflict || busy || uploading || pendingFile !== null || !body.trim() || (audience === "group" && !group) || loiChuDeGo !== null;
-    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard focusBottomInset={focusBottomInset} cot="form" contentStyle={styles.content} bottomInset={0} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
+    return <NativeFontMetricsProvider snapshot={nativeFont}><RudiScreen material="quiet" avoidKeyboard inputViewportRevision={nativeFont} focusBottomInset={focusBottomInset} cot="form" contentStyle={styles.content} bottomInset={0} footerInset={insets.bottom + 12} testID="community-composer" header={<TopBar title={params.edit ? "Sửa bài viết" : "Bài viết mới"}/>} footer={<View style={styles.footer}>
       {/* A refusal from the server is said right above the button that sent it, never at the end of the scroll (QA UI-133). */}
       <CauTaiCho cau={conflict ? "Bài đã thay đổi ở nơi khác. Nháp của bạn vẫn được giữ; mở bản mới sẽ bỏ nháp này." : error} hanhDong={conflict ? { label: "Bỏ nháp và mở bản mới", onPress: discardStaleDraft } : undefined} testID="cong-dong-loi-gui" />
       <RudiButton compact label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} loading={busy} disabled={cannotSend} style={cannotSend ? { borderStyle: "solid", borderWidth: 1, backgroundColor: colors.card } : undefined} lyDo={conflict ? "Đối chiếu bản mới trước khi gửi nháp này." : uploading ? "Chờ tệp chuẩn bị xong trước khi gửi." : pendingFile !== null ? "Thử lại hoặc bỏ tệp đang chờ." : !body.trim() ? "Viết nội dung để gửi." : loiChuDeGo !== null ? "Sửa phần chủ đề trước khi gửi." : audience === "group" && !group ? "Chọn một nhóm trước khi gửi." : undefined} onPress={() => void send()}/>
@@ -287,7 +287,7 @@ function ComposerForm() {
     {audience === "group" && !params.edit ? <><CauTaiCho cau={groupError} hanhDong={{ label: "Thử lại nhóm của bạn", onPress: () => setGroupRetry((n) => n + 1) }}/>{groupLoading ? <SkeletonLines lines={2}/> : !groupError && !groups.length ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn chưa ở nhóm đang hoạt động có tường chung. Chọn một mức người đọc khác để đăng.</Text> : null}{groups.map((g) => <RudiButton key={g.id} label={g.display_name} variant={group === g.id ? "solid" : "outline"} onPress={() => change({ group: g.id })}/>)}</> : null}
     <View style={styles.stage}>
     <View style={[styles.writing, { borderColor: colors.line }]}>
-      <ComposerBodyInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : Math.max(420, height), minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
+      <ComposerBodyInput bottomClearance={bodyClearance} testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Bạn muốn kể điều gì?" placeholderTextColor={colors.inkSoft} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change({ body: value })} style={[typography.body, KHONG_VIEN_WEB, styles.body, { color: colors.ink, maxHeight: expanded ? undefined : Math.max(420, height), minHeight: Math.min(240, Math.max(112, height * 0.22)) }]} />
       <Text onLayout={recordCounterLayout} style={[typography.note, styles.counter, { color: colors.inkSoft }]}>{body.length}/5000</Text>
     </View>
     <View ref={topicsTools} collapsable={false} onLayout={measureTopics} style={styles.tools}>
@@ -303,16 +303,22 @@ function ComposerForm() {
   </RudiScreen></NativeFontMetricsProvider>;
 }
 
-function ComposerBodyInput(props: TextInputProps) {
+function ComposerBodyInput({ bottomClearance, ...props }: TextInputProps & { bottomClearance: number }) {
+  const viewportHeight = useRudiInputViewportHeight();
   const metrics = useNativeTextInputMetrics(props.style, props);
   const original = StyleSheet.flatten(props.style) ?? {};
   const vertical = typeof original.paddingVertical === "number" ? original.paddingVertical : 0;
   const top = typeof original.paddingTop === "number" ? original.paddingTop : vertical;
   const bottom = typeof original.paddingBottom === "number" ? original.paddingBottom : vertical;
-  const minimum = metrics === null ? null : Math.max(typeof original.minHeight === "number" ? original.minHeight : 0, metrics.linePitch + top + bottom);
-  const geometry = minimum === null ? undefined : {
+  const requestedMinimum = typeof original.minHeight === "number" ? original.minHeight : 0;
+  const lineMinimum = metrics === null ? requestedMinimum : metrics.linePitch + top + bottom;
+  const naturalMinimum = Math.max(requestedMinimum, lineMinimum);
+  const available = viewportHeight === null ? null : Math.max(0, viewportHeight - 16 - bottomClearance);
+  const minimum = available === null ? naturalMinimum : Math.max(lineMinimum, Math.min(naturalMinimum, available));
+  const geometry = metrics === null && available === null ? undefined : {
     minHeight: minimum,
-    maxHeight: typeof original.maxHeight === "number" ? Math.max(original.maxHeight, minimum) : original.maxHeight,
+    // Bound the native editor, so its own scrolling can reveal a first or middle caret.
+    maxHeight: available === null ? typeof original.maxHeight === "number" ? Math.max(original.maxHeight, minimum) : original.maxHeight : Math.max(minimum, Math.min(typeof original.maxHeight === "number" ? original.maxHeight : Infinity, available)),
   };
   return <NativeMetricTextInput {...props} style={geometry ? [props.style, geometry] : props.style} />;
 }

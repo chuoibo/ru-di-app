@@ -51,3 +51,39 @@ Cài đặt dùng nhóm hàng và trạng thái lựa chọn thật. Giao diện
 Mốc tham chiếu mã là `75b7e52a486dc022d1977d075dd5ea37837ea262`. Mốc này có trước lần gọi pipeline hiện tại: hợp đồng này định hướng lần sửa tiếp theo, không hợp thức hoá ngược trình tự của mốc75. Bản hành trình hiện hành chưa được chủ sản phẩm nghiệm thu đẹp; hai gray-note cũ đã bị bác bỏ, không được phục hồi thành authority. Không có verdict `ship` mới trong draft. Root còn phải đưa ảnh AFTER đúng SHA cho reviewer mới và documenter theo FINISH.
 
 **Quality bar lưu trong repo:** `docs/design/nep-ui-implementation/QUALITY-BAR-NATIVE-20261013.md`. Verdict và ảnh native AFTER đúng checkpoint còn chờ; không có approved comp mới.
+
+
+## 13/10 · journal-first redesign
+
+# Cá nhân — một người, một trang thật họ đã giữ
+
+Base source `6c737f8df7f5861663ed8b34bf7bfe52744d6c9b`. Operate/Read, code-led trong thế giới hiện hữu; r3 là critique reference đã FIX direction, không phải approved comp. Không tạo brand seed mới, không ship raster từ board. Root ghi contract được chọn vào surface brief qua wrapper trước mọi W edit.
+
+## Direction contract
+
+THESIS: Identity và một trang thật đã giữ dẫn màn; con số và công cụ làm nền cho con người, không làm directory hoặc dashboard.
+
+OWN-WORLD: Giấy/mực/coral, navy dark và native font/token hiện có. Một preview nhật ký bằng chữ/cover thật; không illustration, shading, count icon, metric card hoặc divider tạo cells.
+
+STORY: Người → tabs → diary title, saved subtitle/excerpt → footer kind/privacy và Mở trang → quan hệ/gu thật → công cụ. Friends là một action48 duy nhất; bốn fact còn lại chỉ đọc theo server meanings. Mọi door hiện hữu còn tới được.
+
+FIRST VIEWPORT: 390×844/100 ưu tiên identity/bio/year, tabs và title/nội dung nhật ký. Facts/tools được ở dưới fold. 320/200, unavailable và expanded dùng reading flow/wrap, không font clamp, fixed-height text hoặc remount. Bio/title nở tự nhiên.
+
+FORM: Giữ Profile/HoSoSong/native metrics owner và editor draft/save/back/cancel. Một actor-scoped diary reader phục vụ preview/full shelf/pagination; chỉ focus, retry hoặc more mới đọc, không font/window/tab I/O. Loading/error/empty/no-cover riêng, không bịa text/ngày/chuyến đi hoàn tất. Existing world, không roll seed thay bản sắc.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Delta r3 đã chọn
+
+Title diary đứng đầu entry, không static “Những ngày muốn giữ” hoặc book/privacy eyebrow. Metadata nằm sau saved body, gần Mở trang. Bỏ toàn stats table/cross rules/vertical cells; friends48 + groups text là nhóm mở, ba dấu chân là normal-type wrap không prose “Quanh bạn/Hành trình”. Không early gear, không duplicate Friends/Settings. Utility rows ở tầng thứ cấp được phép dùng chuẩn hiện tại.
+
+## State và evidence contract
+
+- Preview lấy phần tử đầu first page theo server created_at DESC/id DESC; đó là trang mới tạo/giữ, không ngày đi. Không suy từ memories count. Kind/audience dùng đúng enum, không “Bạn bè” cho Diary private/public.
+- Cover dùng publishedPhoto/diaryImage auth hiện có; không cover/ảnh lỗi giữ title/saved text, không landscape thay thế. Excerpt chỉ là saved first-page text có route mở đầy đủ, không generated filler.
+- Local collection cache có actor/owner/generation; stale response, retry trùng, pagination lỗi và unmount không được thay data của actor mới. Source image ổn định khi chỉ font/window đổi; không auth cache qua actor.
+- HoSoSong read owner/form/input giữ identity qua metrics và profile/kept; account/saved panel giữ baseline hiện hữu. Không rewrite auth/store hoặc backend.
+- New actual-source async regressions phải kiểm route+actor, one shared read across tabs/metrics, loading khác empty, lỗi/retry/pagination, stale actor/unmount. Host không chứng minh Yoga, native targets, IME hay beauty.
+- Root native AFTER matrix: light/dark;320/390/768;100→200→100/unavailable; content/no-cover/image failure/loading/error/empty/long bio/title; lower doors/kept/account/saved/editIME. P1/P2 hiện partial, P3 unresolved; chưa có SHIP.
+
+Questions skipped: người dùng đã cho phép tự redesign/audit; root là executor duy nhất, đã chọn corrected diary-first direction và sẽ review contract/patch trước W.

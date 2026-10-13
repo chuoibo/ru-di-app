@@ -2060,6 +2060,14 @@
         "controlled-artifact"
       ],
       "reason": "Mockup ImageGen tổng hợp 4 màn để phản biện bố cục native theo yêu cầu chủ sản phẩm 10/10/2026. Root và fresh reviewer redesign_reference_safety_review đã mở ảnh trực tiếp, đọc BRIEF và kiểm độc lập nội dung/metadata; không ảnh người thật tải lên, dữ liệu tham gia hay credential. Counter/dữ liệu giả trong comp không dùng làm product truth. Chưa approved comp/PASS app. Pin đúng artifact reference v1; thay byte phải review lại."
+    },
+    {
+      "path": "docs/design/nep-ui-implementation/redesign-20261013/profile-journal-reference-r3.png",
+      "sha256": "c3b26b0f160411708afd078030bfb8215935bd2fa146dacf7aa230a6adf7b9f5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mockup built-in ImageGen tổng hợp để phản biện bố cục Cá nhân ngày 13/10. Root và fresh reviewer profile_mockup_fresh_review đã mở r3 trực tiếp và đọc prompt/provenance; không dữ liệu thật hay credential. Corrected direction bỏ bảng stats/eyebrow trong mockup; đây chỉ critique reference, không approved comp/native evidence/product asset. PNG được wrapper embed-prompt nguyên văn, không đổi pixels. Pin đúng artifact; thay byte phải review lại."
     }
   ]
 }
