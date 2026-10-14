@@ -2212,6 +2212,70 @@
         "vn-phone"
       ],
       "reason": "Root đã đọc toàn bộ provenance và đối chiếu output built-in ImageGen thực: dãy mười chữ số chỉ thuộc UUID tên file do tool sinh, không số điện thoại hoặc dữ liệu người tham gia. Giữ source path nguyên bản để truy vết; chỉ miễn vn-phone đúng file/hash, không đổi scanner hoặc các rule khác."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/preview-dark-320.png",
+      "sha256": "c301432605204f8cdd13ab99437ad48126ba80fdda3c2c4c1a9e1ec9b1cb8046",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/input-ime-dark-320.png",
+      "sha256": "08a6fa82d11b3dac0c00f294c701f5b8b3226b811a1fe2aeacffad11895b6b17",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/race-organizer-dark-320.png",
+      "sha256": "78d9cb87f25be8d7bfc403e4b4126d7da7b83889d6820b3caf003f1112740d9d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/race-peer-light-320.png",
+      "sha256": "4ac058d0c71c8845d7cc790b1cddf8400a1b4ddf4fd640a685518cec07a66335",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/finish-organizer-dark-320.png",
+      "sha256": "7a65811495ec1ba17a0d7f9b8d4a86f87953e98cd9d7b3f42ef1312ef98bf3a5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/finish-peer-light-320.png",
+      "sha256": "01002f15d13af25af2d63297c0545253b74a5f1a710bbcd21f8aee7424cbeeee",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/card-dark-font200.png",
+      "sha256": "714b182ac81c37981eaddb5f2452a246ef32c7216ef15ab36c4c3c3a204f7970",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/profile-light-open-finding.png",
+      "sha256": "b0b976a0b7d15eafc2ff501f271adc298f5ff0787e9477e6369e204d0ee57f78",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
     }
   ]
 }
