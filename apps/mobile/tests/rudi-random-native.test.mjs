@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { newNativeRandomRound, RandomSourceUnavailable } from "../dist-test/rudi/chat/e2ee/random-native.js";
-import { duongDua, khungDuongDua, MOC_DUONG_DUA } from "../dist-test/rudi/chat/e2ee/duong-dua.js";
+import { duongDua, khungDuongDua, MOC_DUONG_DUA, viTriVatDua } from "../dist-test/rudi/chat/e2ee/duong-dua.js";
 
 const options = [{ label: "Món A" }, { label: "Món B" }, { label: "Món C" }];
 const id = (word) => `${word}-cafe-4abc-8abc-abcdefabcdef`;
@@ -69,11 +69,18 @@ test("race pace permits overtakes before the final surge; it is not a fixed rank
 });
 
 test("eight runners keep a compact continuous arena and the winner beak reaches the finish", () => {
-  for (const width of [200, 288, 358, 560]) for (const count of [2, 4, 8]) {
-    const arena = khungDuongDua(width, count, false);
+  for (const width of [200, 288, 358, 560]) for (let count = 2; count <= 8; count++) for (const compact of [false, true]) {
+    const arena = khungDuongDua(width, count, compact);
+    const tops = viTriVatDua(arena, count, compact);
     assert.equal(arena.width, width);
     assert.ok(arena.height <= 306);
     assert.ok(12 + arena.travel + arena.duck <= width);
     assert.ok(Math.abs(12 + arena.travel + arena.duck * 0.95 - arena.finish) < 0.001);
+    assert.equal(tops.length, count);
+    assert.ok(tops[0] >= 12);
+    assert.ok(tops.at(-1) + arena.duck <= arena.height - 12);
+    for (let i = 1; i < tops.length; i++) {
+      assert.ok(tops[i] - tops[i - 1] >= arena.duck, `lanes ${i - 1} and ${i} must not overlap for count=${count} compact=${compact}`);
+    }
   }
 });

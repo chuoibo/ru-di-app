@@ -2,9 +2,12 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { createRequire, registerHooks } from "node:module";
+import * as nodeModule from "node:module";
 import { dirname, resolve, extname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import vm from "node:vm";
+
+const { createRequire } = nodeModule;
 
 const repo = process.env.RUDI_TEST_REPO ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const overlay = process.env.RUDI_TEST_SOURCE_ROOT;
@@ -121,7 +124,8 @@ function requestNames(source, state) {
     state.names.set(specifier, names);
   }
 }
-const loader = registerHooks({
+const hasRegisterHooks = typeof nodeModule.registerHooks === "function";
+const loader = hasRegisterHooks ? nodeModule.registerHooks({
   resolve(specifier, context, next) {
     const parent = identity(context.parentURL);
     if (!parent) return next(specifier, context);
@@ -169,7 +173,81 @@ const loader = registerHooks({
     });
     return { shortCircuit: true, format: "module", source };
   },
-});
+}) : { deregister() {} };
+
+function loadFallback(entryPath, id, cache = new Map()) {
+  if (cache.has(entryPath)) return cache.get(entryPath).exports;
+  const state = cases.get(id);
+  const path = effective(entryPath);
+  const rawSource = readFileSync(path, "utf8");
+  state.consumed.set(entryPath.slice(repo.length + 1), path);
+  if (extname(path) === ".json") {
+    const parsed = JSON.parse(rawSource);
+    const mod = { exports: { default: parsed, ...parsed } };
+    cache.set(entryPath, mod);
+    return mod.exports;
+  }
+  const esmResult = ts.transpileModule(rawSource, {
+    fileName: path,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
+    reportDiagnostics: true,
+  });
+  assert.deepEqual(
+    (esmResult.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error).map(d => ({
+      code: d.code,
+      start: d.start,
+      message: ts.flattenDiagnosticMessageText(d.messageText, "\n"),
+    })),
+    [],
+    `syntax diagnostics: ${path}`,
+  );
+  requestNames(esmResult.outputText, state);
+  const sanitized = rawSource.replace(/\brequire\((['"])([^'"]+)\1\)/g, (_match, _quote, asset) => {
+    assert.match(asset, /\.(?:png|jpg|jpeg|webp|ttf|otf|svg)$/i, `unexpected code require in ${path}`);
+    return JSON.stringify(`native-asset:${asset}`);
+  });
+  const cjsResult = ts.transpileModule(sanitized, {
+    fileName: path.replace(/\.mjs$/, ".ts"),
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.CommonJS,
+      esModuleInterop: true,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  });
+  const mod = { exports: {} };
+  cache.set(entryPath, mod);
+  const customRequire = (specifier) => {
+    if (specifier === "react" || specifier.startsWith("react/")) return require(specifier);
+    if (specifier.startsWith(".")) {
+      const target = resolve(dirname(entryPath), specifier);
+      const found = [target, `${target}.ts`, `${target}.tsx`, `${target}.mjs`, `${target}/index.ts`, `${target}/index.tsx`].find(
+        item => existsSync(item) && statSync(item).isFile(),
+      );
+      assert.ok(found, `unresolved actual source: ${specifier} from ${entryPath}`);
+      if ([apiPath, identityPath, sessionStoragePath, localStorePath].includes(found)) {
+        return state.external(found);
+      }
+      return loadFallback(found, id, cache);
+    }
+    const ext = state.external(specifier);
+    if (ext && typeof ext === "object" && "default" in ext && !ext.__esModule) {
+      return new Proxy(ext, {
+        get(target, prop, receiver) {
+          if (prop === "__esModule") return true;
+          return Reflect.get(target, prop, receiver);
+        },
+      });
+    }
+    return ext;
+  };
+  const fn = vm.runInThisContext(
+    `(function(exports, require, module, __filename, __dirname) {\n${cjsResult.outputText}\n})`,
+    { filename: path },
+  );
+  fn(mod.exports, customRequire, mod, path, dirname(path));
+  return mod.exports;
+}
 const oldError = console.error;
 console.error = (...args) => {
   if (String(args[0]).includes("react-test-renderer is deprecated")) return;
@@ -270,9 +348,12 @@ export async function withHost(run) {
   cases.set(id, state);
   const oldFetch = globalThis.fetch;
   globalThis.fetch = (...args) => state.finance(...args);
+  const fallbackCache = new Map();
   const h = {
     state, storage, events, consumed, rn, nativeRenders,
-    async load(path) { return import(version(resolve(repo, path), id)); },
+    async load(path) {
+      return hasRegisterHooks ? import(version(resolve(repo, path), id)) : loadFallback(resolve(repo, path), id, fallbackCache);
+    },
     async render(element) {
       await act(async () => { if (root) root.update(element); else root = TestRenderer.create(element); });
     },

@@ -1112,7 +1112,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
                 ) : tin.kind === "image" ? (
                   <View style={styles.anhKhoi}>
                     {anhTin(tin) === null ? (
-                      <Text style={[typography.caption, { color: cuaToi ? mauChat.bubbleInk : colors.inkFaint }]}>
+                      <Text style={[typography.caption, { color: colors.inkFaint }]}>
                         Ảnh này máy không mở được.
                       </Text>
                     ) : (
@@ -1120,7 +1120,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
                         accessibilityLabel={tin.body ? `Ảnh: ${tin.body}` : "Ảnh trong nhóm"}
                         contentFit="contain"
                         source={anhTin(tin)}
-                        style={[styles.anh, khungAnhChat(tin.image_width, tin.image_height), { borderRadius: radius.small }]}
+                        style={[styles.anh, khungAnhChat(tin.image_width, tin.image_height, Math.floor((Math.min(rongCuaSo, 640) - 32 - (benKia ? 38 : 0)) * 0.82) - 14), { borderRadius: radius.small }]}
                       />
                     )}
                     {tin.body ? <Text style={[typography.body, BE_CHU, { color: mucBong }]}>{tin.body}</Text> : null}
@@ -1522,7 +1522,7 @@ function GroupChatContent({ contextId }: { contextId: string }) {
       {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: khay === "random" || lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" || khay === "random" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}>{khay === "random" ? <RandomPicker
         draft={randomDraft} onChange={(draft) => { setRandomDraft(draft); setRandomError(null); }} onClose={() => setKhay(null)}
         onOpenPlace={(id) => router.push(randomPlacePath(id) as never)}
-        onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(`/random ${randomDraft.request}`, true); }}
+        onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(["/random", randomDraft.request].join(" "), true); }}
         onPlay={playRandom} round={randomRound} published={randomPublished} publishing={randomPublishing} searching={randomSearching}
         live={randomReplay ? null : randomLive}
         error={randomError} searchMessage={randomSearchMessage} searchReady={lenhSanSang(ai.capabilities, "random")} keyboardOpen={banPhimMo} sources={randomSources}

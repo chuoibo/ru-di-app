@@ -1,8 +1,9 @@
 /** Pure conversion contracts; no Android curve, host layout or paint proof. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import * as nodeModule from "node:module";
 import { test } from "node:test";
+import vm from "node:vm";
 import ts from "typescript";
 
 const source = readFileSync(new URL("../src/rudi/native-font-metrics.ts", import.meta.url), "utf8");
@@ -10,17 +11,27 @@ const { outputText, diagnostics } = ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true,
 });
 assert.deepEqual(diagnostics.filter(d => d.category === ts.DiagnosticCategory.Error), []);
-const productionUrl = "rudi-native-font-metrics:test";
-const loader = registerHooks({
-  resolve(specifier, context, next) {
-    return specifier === productionUrl ? { url: productionUrl, shortCircuit: true } : next(specifier, context);
-  },
-  load(url, context, next) {
-    return url === productionUrl ? { format: "module", source: outputText, shortCircuit: true } : next(url, context);
-  },
-});
-const { resolveTextMetrics } = await import(productionUrl);
-loader.deregister();
+let resolveTextMetrics;
+if (typeof nodeModule.registerHooks === "function") {
+  const productionUrl = "rudi-native-font-metrics:test";
+  const loader = nodeModule.registerHooks({
+    resolve(specifier, context, next) {
+      return specifier === productionUrl ? { url: productionUrl, shortCircuit: true } : next(specifier, context);
+    },
+    load(url, context, next) {
+      return url === productionUrl ? { format: "module", source: outputText, shortCircuit: true } : next(url, context);
+    },
+  });
+  ({ resolveTextMetrics } = await import(productionUrl));
+  loader.deregister();
+} else {
+  const cjs = ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+  });
+  const mod = { exports: {} };
+  vm.runInThisContext(`(function(exports, module) {\n${cjs.outputText}\n})`)(mod.exports, mod);
+  ({ resolveTextMetrics } = mod.exports);
+}
 const metrics = { density: 1.5, spToDp: [
   { base: 14, dp: 22 }, { base: 18, dp: 27 }, { base: 24, dp: 32 }, { base: -0.3, dp: -0.5 },
 ] };

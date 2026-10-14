@@ -65,6 +65,14 @@ test("cụm: cùng người, không dải giờ xen giữa, không phải thẻ"
     tin("c2", A, 2030, 9, 27, 13, 28),
     tin("c1", A, 2030, 9, 27, 13, 27),
     tin("p", A, 2030, 9, 27, 13, 26, "ai_card"),
+    tin("t1", A, 2030, 9, 27, 13, 26),
+    { ...tin("pv2", A, 2030, 9, 27, 13, 26), poll_v2: { question: "Ăn gì?", options: [{ id: "1", label: "Phở" }, { id: "2", label: "Bún" }], votesByDevice: {}, closed: false } },
+    tin("t2", A, 2030, 9, 27, 13, 26),
+    { ...tin("rv2", A, 2030, 9, 27, 13, 26), random_v2: { v: 1, id: "r1", request: "", mode: "ducks", options: [{ label: "A" }, { label: "B" }], seed: "0".repeat(32), winner: 0 } },
+    tin("t3", A, 2030, 9, 27, 13, 26),
+    { ...tin("rlv2", A, 2030, 9, 27, 13, 26), random_live_v2: { v: 1, id: "r2", request: "", mode: "ducks", options: [{ label: "A" }, { label: "B" }], seed: "0".repeat(32), winner: 0, startsAt: "2030-09-27T06:26:05Z", finishesAt: "2030-09-27T06:26:20Z" } },
+    tin("t4", A, 2030, 9, 27, 13, 26),
+    tin("st", A, 2030, 9, 27, 13, 26, "sticker"),
     tin("b", B, 2030, 9, 27, 13, 25),
   ];
   const hang = nhomTheoQuang(ds, homNay);
@@ -74,6 +82,10 @@ test("cụm: cùng người, không dải giờ xen giữa, không phải thẻ"
   assert.equal(viTri("c2"), "giua");
   assert.equal(viTri("c1"), "dau");
   assert.equal(viTri("p"), "mot", "thẻ bình chọn không nhập vào cụm bong bóng");
+  assert.equal(viTri("pv2"), "mot", "thẻ bình chọn v2 không nhập vào cụm bong bóng");
+  assert.equal(viTri("rv2"), "mot", "thẻ chọn ngẫu nhiên v2 không nhập vào cụm bong bóng");
+  assert.equal(viTri("rlv2"), "mot", "thẻ chọn ngẫu nhiên live v2 không nhập vào cụm bong bóng");
+  assert.equal(viTri("st"), "mot", "sticker không nhập vào cụm bong bóng");
   assert.equal(viTri("b"), "mot");
   assert.equal(cungGiong(hang[0], undefined), false);
 });

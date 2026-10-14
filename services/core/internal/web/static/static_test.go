@@ -16,7 +16,7 @@ import (
 // own choice rather than Python's, the row says so.
 func TestTheMeasuredPythonContract(t *testing.T) {
 	const css = "guest.css"
-	const size = 10534
+	const size = 11296
 
 	etag := entries[css].etag
 	lastMod := lastModified.Format(httpDateForm)
@@ -38,32 +38,32 @@ func TestTheMeasuredPythonContract(t *testing.T) {
 		body    string // "" means empty; "<full>" means the whole file
 	}{
 		{"GET a css file", "GET", "/static/guest.css", nil, 200,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10534|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=11296|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
 		{"GET the js file", "GET", "/static/guest.js", nil, 200,
 			"content-type=text/javascript; charset=utf-8|accept-ranges=bytes|content-length=4940|last-modified=" + lastMod + "|etag=" + entries["guest.js"].etag, "<full>"},
 		{"HEAD sends the headers and no body", "HEAD", "/static/guest.css", nil, 200,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10534|last-modified=" + lastMod + "|etag=" + etag, ""},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=11296|last-modified=" + lastMod + "|etag=" + etag, ""},
 
 		// The ETag ALONE. A 304 that also carried Last-Modified would be the
 		// tidy-looking version and would be a divergence.
 		{"if-none-match matching", "GET", "/static/guest.css", hdr("If-None-Match", etag), 304, "etag=" + etag, ""},
 		{"if-modified-since matching", "GET", "/static/guest.css", hdr("If-Modified-Since", lastMod), 304, "etag=" + etag, ""},
 		{"if-none-match not matching", "GET", "/static/guest.css", hdr("If-None-Match", `"stale"`), 200,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10534|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=11296|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
 
 		{"a byte range", "GET", "/static/guest.css", hdr("Range", "bytes=0-9"), 206,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 0-9/10534", "<first10>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 0-9/11296", "<first10>"},
 		{"a suffix range", "GET", "/static/guest.css", hdr("Range", "bytes=-10"), 206,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 10524-10533/10534", "<last10>"}, // repo-guard: allow=long-number reason=http-byte-range
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 11286-11295/11296", "<last10>"}, // repo-guard: allow=long-number reason=http-byte-range
 		{"if-range matching keeps the range", "GET", "/static/guest.css", hdr("If-Range", etag, "Range", "bytes=0-9"), 206,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 0-9/10534", "<first10>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10|last-modified=" + lastMod + "|etag=" + etag + "|content-range=bytes 0-9/11296", "<first10>"},
 		{"if-range stale serves the whole file", "GET", "/static/guest.css", hdr("If-Range", `"stale"`, "Range", "bytes=0-9"), 200,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10534|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=11296|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
 
 		// text/plain and an EMPTY body: not the JSON the 404 and 405 on this
 		// same mount use, and not http.Error's sentence.
 		{"a range past the end", "GET", "/static/guest.css", hdr("Range", "bytes=99999-100000"), 416, // repo-guard: allow=long-number reason=http-byte-range
-			"content-range=*/10534|content-length=0|content-type=text/plain; charset=utf-8", ""},
+			"content-range=*/11296|content-length=0|content-type=text/plain; charset=utf-8", ""},
 
 		{"a file that is not there", "GET", "/static/khong-co.css", nil, 404, "content-length=22|content-type=application/json", `{"detail":"Not Found"}`},
 		{"HEAD a file that is not there", "HEAD", "/static/khong-co.css", nil, 404, "content-length=22|content-type=application/json", `{"detail":"Not Found"}`},
@@ -79,7 +79,7 @@ func TestTheMeasuredPythonContract(t *testing.T) {
 		// comparison could ever match on either side. Ignoring Range and
 		// sending the whole file is a legal answer and a deterministic one.
 		{"a multi-range is served whole", "GET", "/static/guest.css", hdr("Range", "bytes=0-1,5-6"), 200,
-			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=10534|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
+			"content-type=text/css; charset=utf-8|accept-ranges=bytes|content-length=11296|last-modified=" + lastMod + "|etag=" + etag, "<full>"},
 	}
 
 	full := string(entries[css].body)

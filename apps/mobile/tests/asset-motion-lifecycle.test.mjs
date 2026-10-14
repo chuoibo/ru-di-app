@@ -6,21 +6,26 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
-import { registerHooks } from "node:module";
+import * as nodeModule from "node:module";
 import React, { act } from "react";
 import TestRenderer from "react-test-renderer";
 import { AccessibilityInfo, AppState } from "react-native-web";
 import { CLOCK, DEVICE, NavigationContext, advance, finish, isAnimating, resetClock } from "./stubs/motion-platform.mjs";
 
 const platformUrl = new URL("./stubs/motion-platform.mjs", import.meta.url).href;
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    if (["react-native-reanimated", "expo-haptics", "expo-router/build/react-navigation/core/NavigationContext"].includes(specifier)) {
-      return { url: platformUrl, shortCircuit: true };
-    }
-    return nextResolve(specifier, context);
-  },
-});
+const redirectedSpecifiers = ["react-native-reanimated", "expo-haptics", "expo-router/build/react-navigation/core/NavigationContext"];
+if (typeof nodeModule.registerHooks === "function") {
+  nodeModule.registerHooks({
+    resolve(specifier, context, nextResolve) {
+      if (redirectedSpecifiers.includes(specifier)) {
+        return { url: platformUrl, shortCircuit: true };
+      }
+      return nextResolve(specifier, context);
+    },
+  });
+} else {
+  nodeModule.register("./stubs/motion-platform.mjs", import.meta.url);
+}
 const { useConfirmedProgress } = await import("../dist-test/rudi/asset-pack/react-native/useConfirmedProgress.js");
 const { useKhoanhKhac } = await import("../dist-test/rudi/ui/useKhoanhKhac.js");
 const { daDienRoi, quenKhoanhKhac } = await import("../dist-test/rudi/khoanh-khac.js");

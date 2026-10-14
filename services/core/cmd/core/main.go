@@ -546,7 +546,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	// present but the schema not as this binary expects, or the question not
 	// answerable, refuses to start; only a database that never had chat v2
 	// runs without the guard.
-	if pool != nil {
+	if pool != nil && (chat.on || getenv("MOBILE_CHAT_V2_ENABLED") == "1") {
 		check, cancel := context.WithTimeout(ctx, 10*time.Second)
 		installed, err := chatv2.Installed(check, pool)
 		if err == nil && installed {

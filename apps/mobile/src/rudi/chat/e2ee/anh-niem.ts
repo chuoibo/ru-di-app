@@ -12,10 +12,11 @@ export function nguonAnhNiemDaMo(raw: string | null): { uri: string } | null {
 }
 
 /** Fits the authenticated image dimensions into a quiet photo frame. */
-export function khungAnhChat(width?: number, height?: number): { width: number; height: number } {
+export function khungAnhChat(width?: number, height?: number, maxWidth = 208): { width: number; height: number } {
+  const cap = Number.isFinite(maxWidth) && maxWidth >= 96 ? Math.min(208, Math.floor(maxWidth)) : 208;
   if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width! < 1 || height! < 1) {
-    return { width: 208, height: 208 };
+    return { width: cap, height: cap };
   }
-  const scale = Math.min(208 / width!, 300 / height!);
+  const scale = Math.min(cap / width!, 300 / height!);
   return { width: Math.max(1, Math.round(width! * scale)), height: Math.max(1, Math.round(height! * scale)) };
 }

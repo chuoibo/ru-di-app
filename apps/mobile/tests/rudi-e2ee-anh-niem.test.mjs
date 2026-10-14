@@ -16,10 +16,12 @@ test("ảnh mở từ native dùng bytes tại chỗ, không gửi header bearer
 
 test("ảnh ngang/dọc giữ tỷ lệ và không vượt khung chat; không tin kích thước không hợp lệ", () => {
   assert.deepEqual(khungAnhChat(960, 640), { width: 208, height: 139 });
+  assert.deepEqual(khungAnhChat(960, 640, 191), { width: 191, height: 127 });
   assert.deepEqual(khungAnhChat(640, 800), { width: 208, height: 260 });
   assert.deepEqual(khungAnhChat(640, 1600), { width: 120, height: 300 });
   for (const [w, h] of [[undefined, undefined], [0, 640], [640, -1], [NaN, 640], [1.5, 640], [Infinity, 640]]) {
     assert.deepEqual(khungAnhChat(w, h), { width: 208, height: 208 });
+    assert.deepEqual(khungAnhChat(w, h, 180), { width: 180, height: 180 });
   }
 });
 

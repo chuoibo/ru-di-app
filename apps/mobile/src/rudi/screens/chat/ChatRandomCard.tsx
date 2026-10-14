@@ -34,11 +34,11 @@ export function ChatRandomCard({ round, acceptedAt, clock, onNew, onView, onCrea
       <View style={styles.title}><Ionicons name={round.mode === "wheel" ? "disc-outline" : "flag-outline"} size={22} color={colors.accent} />
         <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>{round.mode === "wheel" ? "Vòng quay chọn" : "Đua vịt chọn"}</Text></View>
       {revealed ? <Text style={[typography.h2, { color: colors.ink }]}>{round.options[round.winner].label}</Text>
-        : <Text style={[typography.note, { color: colors.inkSoft }]}>{status}</Text>}
+        : !showGame ? <Text style={[typography.note, { color: colors.inkSoft }]}>{status}</Text> : null}
       {round.request ? <Text style={[typography.note, { color: colors.inkSoft }]}>{round.request}</Text> : null}
     </Pressable>
-    {round.v === 2 && live && showGame && cardWidth > 32 ? <RandomGame mode={round.mode} options={round.options} round={round} live={live}
-      width={Math.min(280, cardWidth - 32)} compact /> : null}
+    {round.v === 2 && live && showGame && cardWidth > 32 ? <View style={styles.stage}><RandomGame mode={round.mode} options={round.options} round={round} live={live}
+      width={Math.min(round.mode === "ducks" ? 520 : 280, cardWidth - 32)} compact /></View> : null}
     <Pressable accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpanded(!expanded)} style={styles.expand}>
       <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>{expanded ? "Thu các lựa chọn" : `Xem ${round.options.length} lựa chọn`}</Text>
       <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={colors.inkSoft} />
@@ -58,6 +58,7 @@ export function ChatRandomCard({ round, acceptedAt, clock, onNew, onView, onCrea
 }
 const styles = StyleSheet.create({
   card: { width: "100%", borderWidth: 1, borderRadius: 18, overflow: "hidden" }, summary: { gap: 8, padding: 16, minHeight: 48 },
+  stage: { paddingHorizontal: 16 },
   title: { flexDirection: "row", alignItems: "center", gap: 8 }, flex: { flex: 1, minWidth: 0 },
   expand: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   choices: { paddingHorizontal: 16, paddingBottom: 12, gap: 8 }, actions: { flexDirection: "row", flexWrap: "wrap", padding: 12, gap: 8, borderTopWidth: 1 },

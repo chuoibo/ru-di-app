@@ -5,12 +5,17 @@
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import * as nodeModule from "node:module";
+import { dirname } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 import React, { act, useCallback, useState } from "react";
 import TestRenderer from "react-test-renderer";
 import ts from "typescript";
+
+const require = nodeModule.createRequire(import.meta.url);
+const hasRegisterHooks = typeof nodeModule.registerHooks === "function";
 
 // This proposed tracked test belongs in apps/mobile/tests/ after root review.
 const urls = Object.fromEntries(Object.entries({
@@ -48,7 +53,7 @@ function forCase(url, id) {
   versioned.searchParams.set(parameter, id);
   return versioned.href;
 }
-const loader = registerHooks({
+const loader = hasRegisterHooks ? nodeModule.registerHooks({
   resolve(specifier, context, nextResolve) {
     const parent = identify(context.parentURL);
     if (parent && specifier === "react-native") {
@@ -90,14 +95,63 @@ const loader = registerHooks({
     assert.deepEqual((result.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error), [], "production source must transpile without syntax diagnostics");
     return { format: "module", source: result.outputText, shortCircuit: true };
   },
-});
+}) : null;
+
+function loadFallback(targetHref, id, cache) {
+  if (cache.has(targetHref)) return cache.get(targetHref).exports;
+  consumed.get(id).add(targetHref);
+  const filePath = fileURLToPath(targetHref);
+  const source = readFileSync(filePath, "utf8");
+  if (targetHref === urls.tokens.href) {
+    const parsed = JSON.parse(source);
+    const mod = { exports: { default: parsed, ...parsed } };
+    cache.set(targetHref, mod);
+    return mod.exports;
+  }
+  const esmResult = ts.transpileModule(source, {
+    fileName: filePath,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
+    reportDiagnostics: true,
+  });
+  assert.deepEqual((esmResult.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error), [], "production source must transpile without syntax diagnostics");
+  const cjsResult = ts.transpileModule(source, {
+    fileName: filePath,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
+  });
+  const mod = { exports: {} };
+  cache.set(targetHref, mod);
+  const b = boundaries.get(id);
+  const customRequire = (specifier) => {
+    if (specifier === "react-native") {
+      return {
+        Text: b.Text, TextInput: b.TextInput, View: b.View, StyleSheet: b.StyleSheet,
+        Platform: b.Platform, Appearance: b.Appearance, useWindowDimensions: b.useWindowDimensions,
+      };
+    }
+    if (specifier.startsWith(".")) {
+      const relative = new URL(specifier, targetHref).href;
+      const target = [relative, `${relative}.ts`, `${relative}.tsx`].find(url => productionUrls.has(url));
+      assert.ok(target, `unhandled real production dependency: ${specifier}`);
+      return loadFallback(target, id, cache);
+    }
+    assert.ok(specifier === "react" || specifier === "react/jsx-runtime", `unexpected native dependency: ${specifier}`);
+    return require(specifier);
+  };
+  const fn = vm.runInThisContext(
+    `(function(exports, require, module, __filename, __dirname) {\n${cjsResult.outputText}\n})`,
+    { filename: filePath },
+  );
+  fn(mod.exports, customRequire, mod, filePath, dirname(filePath));
+  return mod.exports;
+}
+
 const oldConsoleError = console.error;
 console.error = (...args) => {
   if (String(args[0]).includes("react-test-renderer is deprecated")) return;
   oldConsoleError(...args);
 };
 after(() => {
-  loader.deregister();
+  loader?.deregister();
   console.error = oldConsoleError;
   delete globalThis[registryKey];
   if (oldActEnvironment === undefined) delete globalThis.IS_REACT_ACT_ENVIRONMENT;
@@ -151,9 +205,17 @@ async function withCase(run) {
   consumed.set(id, new Set());
   let root;
   let nextHost = 0;
-  const [api, stepper, input] = await Promise.all([
-    import(forCase(urls.wrapper, id)), import(forCase(urls.stepper, id)), import(forCase(urls.input, id)),
-  ]);
+  let api, stepper, input;
+  if (hasRegisterHooks) {
+    [api, stepper, input] = await Promise.all([
+      import(forCase(urls.wrapper, id)), import(forCase(urls.stepper, id)), import(forCase(urls.input, id)),
+    ]);
+  } else {
+    const cache = new Map();
+    api = loadFallback(urls.wrapper.href, id, cache);
+    stepper = loadFallback(urls.stepper.href, id, cache);
+    input = loadFallback(urls.input.href, id, cache);
+  }
   const h = {
     api, boundary, Stepper: stepper.Stepper, ONhapMuc: input.ONhapMuc,
     get root() { return root; },

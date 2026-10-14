@@ -2174,6 +2174,9 @@ for f in "$FLOWS"/*.yaml; do
     # Nó chạy sau 30 trong cùng lượt và thừa hưởng nhóm «Hoi QA» của flow đó,
     # nên không cần bước chuẩn bị riêng.
     48-*)        [ "$ACCOUNT" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    # 49: chat v2 E2EE hai chiều với thiết bị tổng hợp (`tests/drill/ban-doi-tac.mjs`),
+    # cần biến môi trường E2EE=1 (hoặc chạy riêng với cặp TK/MK/NHOM/TIN đã dựng).
+    49-*)        [ "$ACCOUNT" = 1 ] && [ "${E2EE:-0}" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
     # 50: cửa tài khoản trọn vòng (mật khẩu sai, đúng, phiên sống qua lần tắt,
     # đăng xuất) bằng người B, chạy CUỐI lượt sau khi mọi flow khác đã xong.
     50-*)        [ "$ACCOUNT" = 1 ] || continue ;;

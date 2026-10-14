@@ -97,3 +97,15 @@ export const NotificationFeedbackType = { Success: "success" };
 export async function selectionAsync() { CLOCK.haptics.push("selection"); }
 export async function impactAsync() { CLOCK.haptics.push("impact"); }
 export async function notificationAsync() { CLOCK.haptics.push("success"); }
+
+const REDIRECTED = new Set([
+  "react-native-reanimated",
+  "expo-haptics",
+  "expo-router/build/react-navigation/core/NavigationContext",
+]);
+export async function resolve(specifier, context, nextResolve) {
+  if (REDIRECTED.has(specifier)) {
+    return { url: import.meta.url, shortCircuit: true };
+  }
+  return nextResolve(specifier, context);
+}

@@ -144,7 +144,6 @@ body {
 }
 .card:not(.card--quiet) {
   position: relative;
-  border-radius: 2px;
   margin-block: 6px;
 }
 /* The receipt edge belongs to the paper; live words and controls keep their

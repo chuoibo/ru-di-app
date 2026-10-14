@@ -5,12 +5,17 @@
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import * as nodeModule from "node:module";
+import { dirname } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 import React, { act, useEffect } from "react";
 import TestRenderer from "react-test-renderer";
 import ts from "typescript";
+
+const require = nodeModule.createRequire(import.meta.url);
+const hasRegisterHooks = typeof nodeModule.registerHooks === "function";
 
 const hookUrl = new URL("../src/rudi/chia-bill/useBillFontScale.ts", import.meta.url);
 const wrapperUrl = new URL("../modules/rudi-font-scale/index.ts", import.meta.url);
@@ -37,7 +42,7 @@ function forCase(url, id) {
   return versioned.href;
 }
 
-const loader = registerHooks({
+const loader = hasRegisterHooks ? nodeModule.registerHooks({
   resolve(specifier, context, nextResolve) {
     const parent = identify(context.parentURL);
     if (parent?.base === hookUrl.href && specifier === "../../../modules/rudi-font-scale") {
@@ -78,7 +83,50 @@ const loader = registerHooks({
     }
     return nextLoad(url, context);
   },
-});
+}) : null;
+
+function loadFallback(targetUrl, id, cache = new Map()) {
+  const baseHref = targetUrl.href;
+  if (cache.has(baseHref)) return cache.get(baseHref).exports;
+  consumed.get(id).add(baseHref);
+  const filePath = fileURLToPath(baseHref);
+  const raw = readFileSync(filePath, "utf8");
+  const esmResult = ts.transpileModule(raw, {
+    fileName: filePath,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    reportDiagnostics: true,
+  });
+  assert.deepEqual(
+    (esmResult.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error),
+    [],
+    "production observer source must transpile without syntax diagnostics",
+  );
+  const cjsResult = ts.transpileModule(raw, {
+    fileName: filePath,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true },
+  });
+  const mod = { exports: {} };
+  cache.set(baseHref, mod);
+  const boundary = boundaries.get(id);
+  const customRequire = (specifier) => {
+    if (baseHref === hookUrl.href && specifier === "../../../modules/rudi-font-scale") {
+      return loadFallback(wrapperUrl, id, cache);
+    }
+    if (baseHref === wrapperUrl.href && specifier === "expo-modules-core") {
+      return { requireOptionalNativeModule: boundary.requireOptionalNativeModule };
+    }
+    if (baseHref === wrapperUrl.href && specifier === "react-native") {
+      return { Platform: boundary.Platform };
+    }
+    return require(specifier);
+  };
+  const fn = vm.runInThisContext(
+    `(function(exports, require, module, __filename, __dirname) {\n${cjsResult.outputText}\n})`,
+    { filename: filePath },
+  );
+  fn(mod.exports, customRequire, mod, filePath, dirname(filePath));
+  return mod.exports;
+}
 
 const originalConsoleError = console.error;
 console.error = (...args) => {
@@ -86,7 +134,7 @@ console.error = (...args) => {
   originalConsoleError(...args);
 };
 after(() => {
-  loader.deregister();
+  loader?.deregister();
   console.error = originalConsoleError;
   delete globalThis[registryKey];
 });
@@ -185,7 +233,7 @@ async function withHook(options, run) {
     return null;
   }
   try {
-    ({ useBillFontScale } = await import(forCase(hookUrl, id)));
+    ({ useBillFontScale } = hasRegisterHooks ? await import(forCase(hookUrl, id)) : loadFallback(hookUrl, id));
     assert.deepEqual([...consumed.get(id)].sort(), [...productionUrls].sort(), "both production modules were loaded for this case");
     await act(async () => { root = TestRenderer.create(React.createElement(Probe, { tick })); });
     await run(harness);

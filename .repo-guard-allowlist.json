@@ -2030,6 +2030,14 @@
       "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
     },
     {
+      "path": "docs/design/nep-ui-implementation/HANDOFF.md",
+      "sha256": "15b0220b71ba0b862295e2316893e539da462e49b0c6d2e8df5e41d7a3bf135c",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS tại bản đóng gói c3e86df2 trước khi chuyển sang hex ở c5610c17, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA lịch sử qua tip_config và rule long-number; không sửa scanner."
+    },
+    {
       "path": "docs/design/nep-ui-implementation/TEST-RESULTS.md",
       "sha256": "051f3bc6f99131ed501c2c2fc75d40a78314199eb51e9cafcfb38994040274d7",
       "rules": [

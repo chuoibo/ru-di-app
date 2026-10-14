@@ -58,6 +58,16 @@ export function nhomTheoQuang(tin: readonly Tin[], homNay: Date = new Date(), ng
   return ra;
 }
 
+function laBongCuaNguoi(t: Tin): boolean {
+  return (
+    t.kind !== "ai_card" &&
+    t.kind !== "sticker" &&
+    t.poll_v2 === undefined &&
+    t.random_v2 === undefined &&
+    t.random_live_v2 === undefined
+  );
+}
+
 /**
  * Two neighbouring rows are one voice: both messages by the same person, with
  * no band between them. A model card or a poll is an object, never part of a
@@ -66,7 +76,7 @@ export function nhomTheoQuang(tin: readonly Tin[], homNay: Date = new Date(), ng
 export function cungGiong(a: HangHienThi | undefined, b: HangHienThi | undefined): boolean {
   return (
     a !== undefined && b !== undefined && a.loai === "tin" && b.loai === "tin" &&
-    a.tin.kind !== "ai_card" && b.tin.kind !== "ai_card" &&
+    laBongCuaNguoi(a.tin) && laBongCuaNguoi(b.tin) &&
     a.tin.author_id !== null && a.tin.author_id === b.tin.author_id
   );
 }
