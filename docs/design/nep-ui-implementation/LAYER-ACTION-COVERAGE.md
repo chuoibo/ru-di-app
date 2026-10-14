@@ -1,5 +1,7 @@
 # Coverage layer và action tại source triển khai
 
+> Tiếp nhận recovery hiện tại tại [HANDOFF-20261014](../nep-ui-recovery-20261006/HANDOFF-20261014.md): code bd3, QC Random hai Android có giới hạn và runtime receipts đã stale sau đổi boot. Inventory dưới đây là lịch sử, không final-source/native pass.
+
 Inventory này tách từng layer/action reachable, dựa trên source kế thừa `nep-ui-20261005` và chốt ở checkout `nep-ui-final-20261006`, packet G–I `/tmp/rudi-nep-asset-lifecycle-ff1q_850/GHI-coverage.json`, packet J/K/L/P/Q/R/S `/tmp/nep-ui-jklpqrs-handoff.md` và surface contract A–F trong `.impeccable/surfaces/apps-mobile-src-rudi-screens-welcome-tsx.md`.
 
 “Đã triển khai” là trạng thái source đã sửa hoặc kế thừa renderer/primitives đã sửa; không phải runtime pass. “BỊ CHẶN — kiểm web cuối” là thiếu proof tại source cuối do quyền browser/socket; không phải kết quả fail của action và không phủ nhận API/native checkpoint riêng. Hàng đã thao tác guest giữ mô tả bounded của state thực đã mở. Các ảnh pilot trước sửa/đổi fixture chỉ là baseline lịch sử, không tính kiểm chứng state hiện tại. N/A chỉ ghi khi source không expose action, không phải vì chưa chạy provider/native. iOS, Google/email, GPS/camera, permissions và provider vẫn là cổng runtime chưa kiểm trong lượt này.

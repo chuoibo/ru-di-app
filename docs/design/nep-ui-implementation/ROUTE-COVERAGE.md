@@ -1,5 +1,7 @@
 # Coverage route tại source triển khai
 
+> Tiếp nhận recovery hiện tại tại [HANDOFF-20261014](../nep-ui-recovery-20261006/HANDOFF-20261014.md): code bd3, QC Random hai Android có giới hạn và runtime receipts đã stale sau đổi boot. Inventory dưới đây là lịch sử, không final-source/native pass.
+
 **Theo dõi lượt Android ngày08/10 tại [NATIVE-UI-QC-20261008.md](./NATIVE-UI-QC-20261008.md).**
 Catalogue dưới đây giữ checkpoint lịch sử; nhãn chặn web không đại diện runtime
 native hiện tại. Chức năng và độ đẹp so mockup được ghi riêng trong ledger mới.

@@ -2007,11 +2007,11 @@
     },
     {
       "path": "docs/design/nep-ui-implementation/LAYER-ACTION-COVERAGE.md",
-      "sha256": "f33e961c7d4d2b1a8e2f3f13b3e5dc6d00bbd635233a93c135f64ee4ba51750c",
+      "sha256": "524a67929bd87bf5c9ba908c5a4d86e3cc1013b37244d8df5c6d20721e323a06",
       "rules": [
         "aggregate-base64-fragments"
       ],
-      "reason": "Bảng Markdown kiểm kê 700 layer/action source, có đường dẫn TSX/CamelCase lặp và markup; không là payload base64, không có media hay capability thật. Đã duyệt nội dung tổng hợp; pin đúng path/hash và chỉ miễn detector cộng lexical fragment, giữ mọi rule dữ liệu/credential khác."
+      "reason": "Bảng Markdown kiểm kê 700 layer/action source, có đường dẫn TSX/CamelCase lặp và markup; không là payload base64, không có media hay capability thật. Đã duyệt nội dung tổng hợp; pin đúng path/hash và chỉ miễn detector cộng lexical fragment, giữ mọi rule dữ liệu/credential khác. Handoff chỉ thêm pointer trạng thái mới ở đầu; bỏ đúng dòng mới khôi phục bytes/hash bd3, toàn inventory giữ nguyên."
     },
     {
       "path": "docs/design/nep-ui-implementation/ASSET-PROVENANCE.md",
@@ -2024,14 +2024,6 @@
     {
       "path": "docs/design/nep-ui-implementation/BLOCKERS.md",
       "sha256": "62349b024b85a266a68c94e6a0591315ade3eb1cd698f24f8aacf89b8080de3d",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "Chỉ số byte công khai của export Expo synthetic Web/Android/iOS, đối chiếu expo-export-all-final-summary.json; không phải số điện thoại/tài khoản hoặc dữ liệu người tham gia. Chỉ cho phép đúng đường dẫn, SHA và rule long-number; không sửa scanner."
-    },
-    {
-      "path": "docs/design/nep-ui-implementation/HANDOFF.md",
-      "sha256": "b918110691b4dfbd63d56d30e224c35956dce72a5591339cfb8ae9bb335882d2",
       "rules": [
         "long-number"
       ],
