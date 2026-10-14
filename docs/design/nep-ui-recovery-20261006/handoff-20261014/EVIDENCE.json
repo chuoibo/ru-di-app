@@ -118,10 +118,133 @@
       "synthetic_only": true,
       "root_opened": true,
       "visual_approval": false
+    },
+    {
+      "path": "screenshots/after-preview-dark-320.png",
+      "sha256": "7bfea811b30dbcf88d7d54b62b83b1ad5ba84c1667c8ae22f4f91186aabfa5f9",
+      "bytes": 144832,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-preview-dark-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-countdown-atomic-dark-320.png",
+      "sha256": "3816768b620e8a0d676ce777a2c012be8307b86bee21cf740f09a5b39ea571e1",
+      "bytes": 160660,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-race-countdown-dark-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-card-inflight-dark-320.png",
+      "sha256": "113b4ac141279caee863db1662369506272fee865cfb1b7bc86704d565e064f4",
+      "bytes": 131694,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-card-inflight-dark-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-card-finished-dark-320.png",
+      "sha256": "6c66cc7c9a1d591cb4d5b143c768b09fa37b00fe2c019ad85d2593665e51ea42",
+      "bytes": 131799,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-card-finished-dark-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-card-finished-dark-font200.png",
+      "sha256": "cfb56a3bff6457b3449a9b76518162a369e3165c097e553ef5bb3b30b42653d6",
+      "bytes": 138752,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-card-finished-dark-320-200.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-card-8-inflight-light-320.png",
+      "sha256": "6feead1ffd147e06baff86f541e188b150cacc4efb87341376c068a582aad5b0",
+      "bytes": 180117,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-card-inflight-light-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-card-8-finished-light-320.png",
+      "sha256": "e10196606af2ea05d7bd7332582027ad198a047299053fd73940fe163d13c3d3",
+      "bytes": 181325,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-card-finished-light-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-input-8-ime-dark-320.png",
+      "sha256": "fd5b34dc3daf56a7deeb825ad2b4657ec590a9d90689eef3ff709d9b7320f688",
+      "bytes": 41513,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-editor-8-ime-dark-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
+    },
+    {
+      "path": "screenshots/after-profile-light-320.png",
+      "sha256": "da6885a3df05a8cbe59ffa38daa1cf5e1a1accc3833c138cf51f01176ed1c9fd",
+      "bytes": 36674,
+      "source_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+      "source_private_relative": "native-audit-3b25618a/screenshots/screen-profile-facts-light-320-100.png",
+      "synthetic_only": true,
+      "root_opened": true,
+      "visual_approval": true
     }
   ],
+  "finalization_20261015": {
+    "code_checkpoint": "3b25618a0a7f057fb9921e5e25b27dd18b82d3d6",
+    "strict_gate_stages_passed": 19,
+    "strict_gate_stages_total": 19,
+    "node_tests_passed": 1949,
+    "node_test_files": 261,
+    "pytest_passed": 3044,
+    "screens_reachable": 75,
+    "screens_total": 75,
+    "repo_guard_tree_files": 5287,
+    "repo_guard_range_scans": 1630,
+    "mutants_killed": 3,
+    "imp_detect_findings": 0,
+    "native_emulator_avd": "rudi-nep-merged-20261006",
+    "native_viewports_verified": [
+      "320x640",
+      "390x844",
+      "768x1024"
+    ],
+    "native_themes_verified": [
+      "dark",
+      "light"
+    ],
+    "native_font_scales_verified": [
+      "1.0",
+      "2.0"
+    ],
+    "native_app_pid": 1531,
+    "native_app_pid_changes": 0,
+    "native_oom_events": 0,
+    "random_finish_review_verdict": "ship"
+  },
   "runtime_receipts_stale_after_host_boot_change": true,
   "main_merge": false,
   "production_deploy": false,
   "wholeapp_ship": false
 }
+

@@ -2276,6 +2276,78 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh QC Android đã mở và kiểm thủ công: chỉ tài khoản fixture và lựa chọn món tổng hợp, không dữ liệu người thật, không credential. Sao chép nguyên bytes từ checkpoint bd3; bằng chứng layout có finding mở, không asset sản phẩm hoặc nghiệm thu toàn app."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-preview-dark-320.png",
+      "sha256": "7bfea811b30dbcf88d7d54b62b83b1ad5ba84c1667c8ae22f4f91186aabfa5f9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font100: chỉ tài khoản fixture Minh QA và bốn lựa chọn tổng hợp Pho/Bun/Com/Pizza, không dữ liệu người thật, không credential. Chứng minh sân preview bốn vịt có pitch dọc 43dp, không còn chồng vịt/badge."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-countdown-atomic-dark-320.png",
+      "sha256": "3816768b620e8a0d676ce777a2c012be8307b86bee21cf740f09a5b39ea571e1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font100: chỉ tài khoản fixture và bốn lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh pha đếm ngược đầu tiên hiển thị đồng bộ nền sông và cả bốn vịt cùng lúc sau preload bitmap."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-card-inflight-dark-320.png",
+      "sha256": "113b4ac141279caee863db1662369506272fee865cfb1b7bc86704d565e064f4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font100: chỉ tài khoản fixture và bốn lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh thẻ chat đang đua căn thẳng trục trái 16dp và bỏ dòng tóm tắt lặp."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-card-finished-dark-320.png",
+      "sha256": "6c66cc7c9a1d591cb4d5b143c768b09fa37b00fe2c019ad85d2593665e51ea42",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font100: chỉ tài khoản fixture và bốn lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh thẻ chat sau khi về đích tách rời bốn vịt và badge số 1..4."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-card-finished-dark-font200.png",
+      "sha256": "cfb56a3bff6457b3449a9b76518162a369e3165c097e553ef5bb3b30b42653d6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font200: chỉ tài khoản fixture và bốn lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh thẻ chat chữ 200% hiển thị trọn phần đầu thẻ, kết quả Bun và sân đua bốn vịt trong viewport."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-card-8-inflight-light-320.png",
+      "sha256": "6feead1ffd147e06baff86f541e188b150cacc4efb87341376c068a582aad5b0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 light font100: chỉ tài khoản fixture và tám lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh thẻ chat tám vịt đang đua ở giao diện sáng tách bạch tám làn và căn lề 16dp."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-card-8-finished-light-320.png",
+      "sha256": "e10196606af2ea05d7bd7332582027ad198a047299053fd73940fe163d13c3d3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 light font100: chỉ tài khoản fixture và tám lựa chọn tổng hợp, không dữ liệu người thật, không credential. Chứng minh thẻ chat tám vịt khi về đích tách rời cả tám sprite vịt và badge compact 1..8."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-input-8-ime-dark-320.png",
+      "sha256": "fd5b34dc3daf56a7deeb825ad2b4657ec590a9d90689eef3ff709d9b7320f688",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 dark font100: chỉ lựa chọn món tổng hợp thứ tám khi mở bàn phím thật, không dữ liệu người thật, không credential. Chứng minh ô nhập thứ tám và caret hiển thị rõ phía trên IME."
+    },
+    {
+      "path": "docs/design/nep-ui-recovery-20261006/handoff-20261014/screenshots/after-profile-light-320.png",
+      "sha256": "da6885a3df05a8cbe59ffa38daa1cf5e1a1accc3833c138cf51f01176ed1c9fd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh QC Android AFTER đã mở và kiểm thủ công ở 320x640 light font100: chỉ tài khoản fixture Minh QA, không dữ liệu người thật, không credential. Ghi nhận trạng thái thật của khối ProfileFacts, Sở thích căn trái và mục Sổ của bạn."
     }
   ]
 }

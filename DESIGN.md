@@ -4023,6 +4023,13 @@ nằm ở `docs/claude/2026-10-01/ui-ux-upgrade/` (`change-log.md`,
   - `CHUA_VE` trống;
   - `lyDo` có cổng `nut-tat-co-ly-do.test.mjs`.
 
+**Đợt hoàn thiện Đua vịt và Chat E2EE 15/10 (nhánh `codex/nep-ui-recovery-handoff-20261014`).**
+Đã đóng các finding mở từ đợt bàn giao 14/10 và kiểm chứng trực tiếp trên Android emulator (`320×640`, `390×844`, `768×1024`, sáng/tối, chữ `1.0`/`2.0`, IME mở):
+
+- **Sân sông và làn vịt (`duong-dua.ts`, `RandomGame.tsx`):** pitch dọc tách đủ cho cả full stage và compact stage ở 2–8 lựa chọn (4 lựa chọn: full `216dp` / compact `176dp`; 8 lựa chọn: full `306dp`, sprite `36dp` / compact `256dp`, sprite `28dp`, badge thu gọn `18×18dp` khi `> 6` làn) để không chồng vịt hoặc badge tại vạch xuất phát và vạch đích caro. Nền sông và các cutout vịt đang dùng được preload bằng `Image.prefetch` với timeout hữu hạn `450ms` trước khi hiển thị lớp nghệ thuật của sân, không để nhịp đếm ngược đầu tiên hiện nền phẳng hoặc thiếu vịt.
+- **Thẻ Đua vịt trong chat (`ChatRandomCard.tsx`):** sân thu gọn nằm trong `stageWrap` có đệm ngang `16dp` khớp trục lề trái của dòng trạng thái `Đang đua · Xs`; ẩn dòng tóm tắt lặp khi sân thu gọn đang hiển thị trực tiếp.
+- **Ranh giới cụm tin và khung ảnh (`nhip-tin.ts`, `anh-niem.ts`, `GroupChatLive.tsx`):** tin đã giải mã thành thẻ bình chọn hoặc thẻ Nếp chọn giúp (`poll`/`random`) là tin độc lập, không nhập vào cụm `dau`/`giua`/`cuoi` của tin chữ liền kề; khung ảnh co theo bề rộng khả dụng của cột (`availableWidth - 18`, sàn `132dp`, trần `208dp`); chú thích ảnh chưa tải được của tin mình dùng bảng màu theo nền bong bóng thật, đảm bảo tương phản ở cả giao diện sáng và tối.
+
 ## Cổng phải xanh trước khi đổi hệ này
 
 ```bash
@@ -4059,7 +4066,7 @@ node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, s�
 node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
 ```
 
-Cổng của đợt nâng cấp UI/UX 01–04/10 (cũng trong `npm test`, cùng bước dựng như trên):
+Cổng của đợt nâng cấp UI/UX 01–04/10 và hoàn thiện Đua vịt / Chat E2EE 15/10 (cũng trong `npm test`, cùng bước dựng như trên):
 
 ```bash
 node --test tests/nut-pha-huy-tong-warn.test.mjs  # mọi RudiButton có nhãn phá huỷ mang tone="warn"; ngoại lệ có tên và lý do; quét ≥ 10 nút
@@ -4068,9 +4075,11 @@ node --test tests/cau-loi-theo-ma.test.mjs        # câu lỗi theo code trướ
 node --test tests/o-nhap-muc.test.mjs             # ONhapMuc: không hộp, chỉ gạch; ô nhập 48; gạch 2dp khi viết/sai mà chữ không nhích; lỗi thay dòng phụ và được đọc
 node --test tests/khe-lop.test.mjs                # LenLop đưa con lên khe lớp của RudiScreen, giữ state và callback
 node --test tests/rudi-b9-ke-va-tuong.test.mjs    # khoangNgayChuyen («28 - 29/09», «30/09 - 02/10»), thangNamVN
+node --test tests/rudi-random-native.test.mjs tests/rudi-chat-nhip-tin.test.mjs tests/rudi-e2ee-anh-niem.test.mjs  # pitch làn vịt 2..8 lựa chọn, preload sân, lề 16dp thẻ chat, tách cụm poll/random và co khung ảnh
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của
 hợp đồng): light/1.0, dark/1.3, tablet bằng `wm size`, rồi đọc ảnh và đo
 pixel; tsc, web export và detector đã mù với ba lỗi thật ở lát này (crash
 `transform: undefined`, crash parse `d`, vân dừng ở một phần ba).
+
