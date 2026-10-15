@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { coGiDeDoi, doiNhom, roiNhom } from "../../chat/nhom-cai-dat";
@@ -11,6 +11,7 @@ import { Field, Heading, ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
 import { congTac } from "../../ui/cong-tac";
 import { toggleState } from "../../../ui/a11y";
+import { Text } from "../../ui/NativeFontMetrics";
 
 export type NhomCaiDat = {
   id: string;
@@ -51,6 +52,7 @@ export function CaiDatNhomSheet({
   const [dangLuu, setDangLuu] = useState<"ten" | "theme" | "roi" | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [xacNhanRoi, setXacNhanRoi] = useState(false);
+  const writeLock = useRef(false);
   const attempts = useRef<Record<string, Attempt>>({});
   const laPair = nhom.kind === "pair";
   const mauChon = bangMauChat(nhom.theme, dark);
@@ -67,7 +69,8 @@ export function CaiDatNhomSheet({
     setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
 
   const luuTen = async () => {
-    if (!coGiDeDoi({ display_name: ten }) || dangLuu !== null) return;
+    if (!coGiDeDoi({ display_name: ten }) || writeLock.current) return;
+    writeLock.current = true;
     setDangLuu("ten");
     setLoi(null);
     try {
@@ -76,12 +79,14 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
 
   const chonTheme = async (slug: ThemeChat) => {
-    if (dangLuu !== null || slug === nhom.theme) return;
+    if (writeLock.current || slug === nhom.theme) return;
+    writeLock.current = true;
     setDangLuu("theme");
     setLoi(null);
     try {
@@ -90,12 +95,14 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
 
   const roi = async () => {
-    if (dangLuu !== null) return;
+    if (writeLock.current) return;
+    writeLock.current = true;
     setDangLuu("roi");
     setLoi(null);
     try {
@@ -107,22 +114,33 @@ export function CaiDatNhomSheet({
     } catch (error) {
       baoLoi(error);
     } finally {
+      writeLock.current = false;
       setDangLuu(null);
     }
   };
 
   return (
-    <Sheet accessibilityLabel={laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} open={open} testID="cai-dat-nhom">
+    <Sheet accessibilityLabel={xacNhanRoi ? "Xác nhận rời nhóm" : laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} onBack={xacNhanRoi ? () => setXacNhanRoi(false) : undefined} open={open} testID="cai-dat-nhom"
+      footer={xacNhanRoi ? <View style={styles.quyetDinh}>
+        <RudiButton disabled={dangLuu !== null} label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
+        <RudiButton disabled={dangLuu !== null} label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
+      </View> : undefined}
+    >
+      {xacNhanRoi ? <View style={styles.khoi}>
+        <Heading size="h2" title="Rời nhóm này?" />
+        <Text style={[typography.body, { color: colors.ink }]}>Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{loi}</Text> : null}
+      </View> : <>
       <Heading size="h2" title={laPair ? "Cuộc trò chuyện" : "Cài đặt nhóm"} />
       {!laPair ? (
         <View style={styles.khoi}>
-          <Field accessibilityLabel="Ô tên nhóm" label="Tên nhóm" onChangeText={setTen} value={ten} />
+          <Field editable={dangLuu === null} accessibilityLabel="Ô tên nhóm" label="Tên nhóm" onChangeText={setTen} value={ten} />
           {/* ADR-0038 §2.2: the save appears once there is something to
               save, instead of a greyed button under an unchanged name. */}
           {ten.trim() !== nhom.display_name ? (
             <RudiButton
               compact
-              disabled={!coGiDeDoi({ display_name: ten })}
+              disabled={dangLuu !== null || !coGiDeDoi({ display_name: ten })}
               full={false}
               label="Lưu tên"
               loading={dangLuu === "ten"}
@@ -145,6 +163,7 @@ export function CaiDatNhomSheet({
           <Text style={[typography.note, { color: mauChon.bubbleInk }]}>Phố cổ nhé!</Text>
         </View>
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeRail}>
       <View accessibilityRole="radiogroup" style={styles.themes}>
         {THEME_CHAT.map((slug) => {
           const mau = bangMauChat(slug, dark);
@@ -160,20 +179,19 @@ export function CaiDatNhomSheet({
                 {
                   borderRadius: radius.control,
                   backgroundColor: mau.bubble,
-                  // The theme's own accent is often the bubble's colour, so a
-                  // border in it vanished (blind read, S9): the chosen swatch
-                  // is ringed in ink and carries a tick.
-                  borderColor: chon ? colors.ink : colors.lineStrong,
-                  borderWidth: chon ? 3 : 1,
+                  borderColor: colors.lineStrong,
                 },
               ]}
             >
-              {chon ? <Ionicons color={mau.bubbleInk} name="checkmark" size={16} /> : null}
+              {/* Selection never changes a target's measured box or text baseline. */}
+              {chon ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderWidth: 3, borderColor: colors.ink, borderRadius: radius.control }]} /> : null}
+              <View style={styles.themeMark}>{chon ? <Ionicons color={mau.bubbleInk} name="checkmark" size={16} /> : null}</View>
               <Text style={[typography.label, { color: mau.bubbleInk }]}>Aa</Text>
             </Pressable>
           );
         })}
       </View>
+      </ScrollView>
       <Text style={[typography.caption, { color: colors.inkFaint }]}>
         {nhanTheme(nhom.theme ?? "mac-dinh")}. {laPair ? "Hai bạn thấy cùng một màu." : "Cả nhóm thấy cùng một màu."}
       </Text>
@@ -215,28 +233,24 @@ export function CaiDatNhomSheet({
           title="Thành viên"
         />
       ) : null}
-      {loi ? <Text style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
+      {loi ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
       {/* Leaving sits apart, under a rule, well away from the rows above. */}
       {!laPair ? <View style={[styles.ke, { backgroundColor: colors.line }]} /> : null}
       {!laPair ? (
-        xacNhanRoi ? (
-          <View style={styles.khoi}>
-            <Text style={[typography.body, { color: colors.ink }]}>Rời nhóm này? Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
-            <RudiButton label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
-            <RudiButton label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
-          </View>
-        ) : (
-          <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} tone="warn" variant="ghost" />
-        )
+        <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} tone="warn" variant="ghost" />
       ) : null}
+      </>}
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
   khoi: { gap: 8, paddingBottom: 8 },
-  themes: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingVertical: 8 },
-  oTheme: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
+  quyetDinh: { gap: 8, paddingTop: 16 },
+  themeRail: { flexGrow: 1 },
+  themes: { flex: 1, minWidth: 272, flexDirection: "row", alignItems: "stretch", gap: 8, paddingVertical: 8 },
+  oTheme: { flex: 1, minWidth: 48, minHeight: 52, paddingVertical: 4, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  themeMark: { height: 16, alignItems: "center", justifyContent: "center" },
   hangCongTac: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   hangChu: { flex: 1, gap: 2 },
   xemTruoc: { borderWidth: StyleSheet.hairlineWidth, padding: 12, gap: 6 },

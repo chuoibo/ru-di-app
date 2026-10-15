@@ -48,9 +48,12 @@ const (
 	LenhHoi      Lenh = "hoi"
 	LenhPlan     Lenh = "plan"
 	LenhChiaBill Lenh = "chia_bill"
+	LenhRandom   Lenh = "random"
 )
 
-func (v Lenh) Valid() bool { return v == LenhHoi || v == LenhPlan || v == LenhChiaBill }
+func (v Lenh) Valid() bool {
+	return v == LenhHoi || v == LenhPlan || v == LenhChiaBill || v == LenhRandom
+}
 
 // Guard is the input policy's outcome, and nothing finer: which kind of
 // attack, or which kind of harm, is never stored against a person.

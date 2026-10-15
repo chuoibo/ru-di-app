@@ -24,7 +24,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, type TextInput } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type TextInput } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -56,9 +56,11 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
+import { CommunityFontMetrics } from "../../community/Comments";
+import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
-import { SanThanhPho } from "../../ui/SanThanhPho";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { Canh } from "../../ui/art/Canh";
 import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
@@ -114,12 +116,16 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
   };
 }
 
-export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau }) {
+export function ExploreLiveScreen(props: { phien: Phien; dau?: DungDau }) {
+  return <CommunityFontMetrics><ExploreLiveContent {...props} /></CommunityFontMetrics>;
+}
+
+function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  // Large text: the search box takes the whole line and the assistant button
-  // drops under it. The placeholder here is thirty characters; it draws itself
-  // on one line now (F44), and the full width is what keeps most of it legible.
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // Unusable native metrics keep a generous layout without inventing font scale.
+  const largeText = bodyMetrics === null || (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25;
   const motion = useMotion();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [daLuu, setDaLuu] = useState<string[]>([]);
@@ -199,16 +205,24 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
     }, [nap]),
   );
 
+  const luuLock = useRef(new Set<string>());
+  const [dangLuu, setDangLuu] = useState<string[]>([]);
   const doiLuu = async (place: Place) => {
-    const truoc = daLuu;
-    setDaLuu(daoLuu(daLuu, place.id));
+    if (luuLock.current.has(place.id)) return;
+    luuLock.current.add(place.id);
+    setDangLuu([...luuLock.current]);
+    const truoc = daLuu.includes(place.id);
+    setDaLuu((current) => daoLuu(current, place.id));
     setLoiLuu(null);
     try {
-      if (truoc.includes(place.id)) await boLuuDiaDiem(phien.person_id, place.id);
+      if (truoc) await boLuuDiaDiem(phien.person_id, place.id);
       else await luuDiaDiem(phien.person_id, place.id);
     } catch (error) {
-      setDaLuu(truoc);
+      setDaLuu((current) => current.includes(place.id) === truoc ? current : daoLuu(current, place.id));
       setLoiLuu(loiRaChu(error));
+    } finally {
+      luuLock.current.delete(place.id);
+      setDangLuu([...luuLock.current]);
     }
   };
 
@@ -255,7 +269,10 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
   // A search session (a name, a question, an answer) keeps the top of the
   // screen for the results: the city's stage folds away.
-  const gapSan = dangLoc || query !== "";
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // Composition follows the viewport, so hot text scaling never moves the
+  // same place name between the header and the metadata below its picture.
+  const compactLead = screenWidth < 600 && screenHeight < 700;
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
@@ -265,17 +282,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
     setSoHang(HANG_MOI_LUOT);
   }, [khoaKetQua, query, diemDen?.id]);
   const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated);
-  // The lead is a photograph at reading size. A catalogue that has no picture
-  // for its first place (a fresh server, no licensed photos yet) would open
-  // on a screenful of empty frame, so without a photo nothing is promoted
-  // and every place is a row (report §7.3: a placeholder must be honest,
-  // not a stage).
+  // Promote the first real result with either credited media or labelled category artwork.
   const daNhat = danhSach[0];
-  const coAnhDan = daNhat !== undefined && anhBiaThe(daNhat) !== null;
-  const dan = coAnhDan ? daNhat : undefined;
+  const dan = daNhat;
   // Two candidates to compare before the list: the same axis for both, so the
   // choice starts as a comparison (`taiSoSanh`).
-  const { soSanh, hang: conLai } = taiSoSanh(coAnhDan ? danhSach.slice(1) : danhSach);
+  const { soSanh, hang: conLai } = taiSoSanh(danhSach.slice(1));
   const rong = danhSach.length === 0;
   // An empty list for a city with nothing in it is not an empty search: it
   // must not advise dropping a filter that is not there (QA UI-028).
@@ -286,7 +298,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
 
 
   return (
-    <RudiScreen bottomInset="tab" header={dau?.()} onRefresh={nap} testID="explore-screen">
+    <RudiScreen bottomInset="tab" header={dau?.()} contentStyle={compactLead ? { gap: 12 } : undefined} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         {/* The destination is a control, not a caption: the city in ink, the
             way to change it in the invitation's coral (owner's mockup). */}
@@ -298,12 +310,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
         >
           <Ionicons color={colors.accent} name="location" size={16} />
           {diemDen !== null ? (
-            <Text style={[typography.label, { color: colors.ink }]}>
+            <Text style={[typography.label, styles.tenViTri, { color: colors.ink }]}>
               {diemDen.name}
               <Text style={{ color: colors.accent }}> · đổi nơi khác</Text>
             </Text>
           ) : (
-            <Text style={[typography.label, { color: colors.ink }]}>
+            <Text style={[typography.label, styles.tenViTri, { color: colors.ink }]}>
               {trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
             </Text>
           )}
@@ -314,14 +326,20 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           what the server says about the place. It stands up once per city and
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
-      {diemDen !== null ? (
-        <SanThanhPho gap={gapSan} id={diemDen.id} ten={diemDen.name} />
+      {diemDen !== null && !dangLoc && query.trim() === "" ? (
+        <View style={styles.buuThiep}>
+          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 80 : 150} />
+          <View pointerEvents="none" style={[styles.nhanMinhHoa, { backgroundColor: colors.card }]}>
+            <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ hành trình</Text>
+          </View>
+        </View>
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
       <View style={styles.timRow}>
         <View style={styles.flex}>
           <SearchField
+            nativeMetrics
             accessibilityLabel="Ô tìm địa điểm"
             oRef={oTim}
             onChangeText={(t) => {
@@ -336,7 +354,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
         </View>
         {/* The assistant stands beside the search, not above the places: one
             tap drops a sample question in so the person sees what to ask. */}
-        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={bamHoi} selected tone="ai" />
+        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={bamHoi} selected tone="ai" style={styles.hoiAi} />
       </View>
       {choGui ? (
         <Text style={[typography.caption, { color: colors.ai }]}>Sửa câu cho đúng ý bạn, rồi chạm ✦ hoặc Enter để hỏi Rủ Đi AI.</Text>
@@ -393,19 +411,21 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             </View>
           ) : null}
           {loiLuu !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiLuu}</Text> : null}
-          <SectionHeader
-            action={dangLoc || query !== "" ? "Xóa lọc" : undefined}
-            onAction={dangLoc || query !== "" ? boTim : undefined}
-            // The city comes from the answer, not from a string typed here:
-            // this line used to say «Đà Lạt» over a list of anywhere. Not
-            // the mockup's near-you-and-to-taste heading: the catalogue comes in
-            // the server's order (ORDER BY places.id), not by distance or
-            // taste, so the heading claims neither; the count moves under it.
-            title={dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
-          />
-          {!dangLoc ? (
-            <Text style={[typography.caption, styles.soNoi, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
-          ) : null}
+          <View style={styles.dauKetQua}>
+            <View style={styles.tenKetQua}>
+              {/* The destination and count come from the response; neither
+                  the heading nor the artwork implies a distance ranking. */}
+              <Text style={[typography.h2, styles.tenKhu, { color: colors.ink }]}>
+                {dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
+              </Text>
+              {dangLoc || query !== "" ? (
+                <Pressable accessibilityRole="button" onPress={boTim} style={({ pressed }) => [styles.xoaLoc, pressed && styles.bam]}>
+                  <Text style={[typography.label, { color: colors.accent }]}>Xóa lọc</Text>
+                </Pressable>
+              ) : (
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
+              )}
+            </View>
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
               button, because it is the one state the person can fix. */}
           {/* Whose taste a list follows is nothing to say over a city with no places. */}
@@ -430,8 +450,10 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
               ) : null}
             </View>
           )}
+          </View>
           {thanhPhoRong ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Đổi điểm đến", onPress: () => router.push("/destinations") }}
               body="Danh mục của Rủ Đi chưa có chỗ nào ở đây. Chọn một điểm đến khác để xem chỗ hay."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -441,6 +463,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             />
           ) : rong && giongCauHoi ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Hỏi Rủ Đi AI", onPress: () => void hoi() }}
               body="Câu này giống một câu hỏi hơn một cái tên. Để Rủ Đi AI tìm theo ý câu này."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -451,6 +474,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             />
           ) : rong ? (
             <EmptyState
+              nativeMetrics
               action={{ label: "Xóa lọc", onPress: boTim }}
               body="Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục."
               illustration={<Canh id="tim-khong-ra" width={168} />}
@@ -462,14 +486,19 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             <Animated.View entering={hienRa} key={khoaKetQua} style={styles.ketQua}>
               {dan !== undefined ? (
                 <PlaceLead
+                  nativeMetrics
+                  compact={compactLead}
                   daLuu={daLuu.includes(dan.id)}
                   dd={hienThiDiaDiem(dan)}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}
                   onSave={() => void doiLuu(dan)}
+                  saving={dangLuu.includes(dan.id)}
                 />
               ) : null}
               {soSanh !== null ? (
                 <PlaceCompare
+                  nativeMetrics
+                  largeText={largeText}
                   daLuu={(id) => daLuu.includes(id)}
                   items={[hienThiDiaDiem(soSanh[0]), hienThiDiaDiem(soSanh[1])]}
                   onOpen={(id) => router.push(`/places/${id}` as never)}
@@ -477,6 +506,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                     const place = soSanh.find((p) => p.id === id);
                     if (place !== undefined) void doiLuu(place);
                   }}
+                  saving={(id) => dangLuu.includes(id)}
                   testID="explore-compare"
                 />
               ) : null}
@@ -484,11 +514,14 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
                 <ResponsiveRow gap={0} minItemWidth={300}>
                   {conLai.slice(0, soHang).map((place) => (
                     <PlaceRow
+                      nativeMetrics
+                      largeText={largeText}
                       daLuu={daLuu.includes(place.id)}
                       dd={hienThiDiaDiem(place)}
                       key={place.id}
                       onOpen={() => router.push(`/places/${place.id}` as never)}
                       onSave={() => void doiLuu(place)}
+                      saving={dangLuu.includes(place.id)}
                     />
                   ))}
                 </ResponsiveRow>
@@ -509,21 +542,27 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
 }
 
 const styles = StyleSheet.create({
-  // Close under its heading, as one block (the column's gap is 18).
-  soNoi: { marginTop: -14 },
+  dauKetQua: { gap: 4 },
+  tenKetQua: { flexDirection: "row", alignItems: "center", gap: 12 },
+  tenKhu: { flex: 1, minWidth: 0 },
+  xoaLoc: { minWidth: 48, minHeight: 48, justifyContent: "center" },
   flex: { flex: 1 },
   // Above the city stage, whose sky rises under this line (SanThanhPho).
   dau: { gap: 6, zIndex: 1 },
-  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
-  timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  buuThiep: { alignItems: "center", alignSelf: "center", marginTop: -12, overflow: "hidden", borderRadius: 8 },
+  nhanMinhHoa: { position: "absolute", left: 10, bottom: 8, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, maxWidth: "100%", alignSelf: "flex-start" },
+  tenViTri: { flexShrink: 1, minWidth: 0 },
+  timRow: { flexDirection: "row", alignItems: "stretch", gap: 8 },
+  hoiAi: { height: "auto", minHeight: 48, alignSelf: "stretch" },
   khung: { gap: 12 },
   // Keep a paper gutter between scrolling labels and Nếp's bookmark rail.
   cuonLoai: { marginLeft: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   theAi: { gap: 4, padding: 14, borderRadius: 14 },
-  guRow: { marginTop: -8, gap: 2 },
+  guRow: { gap: 2 },
   // Only while it is a button does the sentence need a 48dp target.
-  guNut: { minHeight: 48, justifyContent: "center", marginTop: -14 },
+  guNut: { minHeight: 48, justifyContent: "center" },
   bam: { opacity: 0.7 },
   ketQua: { gap: 20 },
 });

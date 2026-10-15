@@ -1,18 +1,3 @@
-/**
- * THESIS: The group unfolds its day as a map and a page from its trip notebook.
- * OWN-WORLD: Existing paper, ink, coral and place sketches; no new palette.
- * STORY: Read the route, inspect a stop, compare changes before keeping them.
- * FIRST VIEWPORT: Geography above a compact, collapsible day page; wide screens
- * keep the page beside the map. Important times remain with their stops.
- * FORM: Approved itinerary extension, code-led; no replacement visual world.
- * Inherits the app's roll, never re-rolled: v3 «Sân khấu giấy» (ADR-0037,
- * app/_layout.tsx) on the v2 seed c8e88116.
- * FINISH (bản đồ hành trình): stops are paper stamps that say their state by shape and
- * word (reached = pencil + tick, next = coral, lifted); the plan is one ink
- * line with its minutes on it, a draft is a broken pencil line; the page head
- * names the day and stamps what the line is -- a real road, a draft, or «chưa
- * tính được» -- so a straight line is never read as a road.
- */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,7 +22,7 @@ export type NeoNgay = { xuatPhat: string | null; ketThuc: string | null; veDiemD
 
 import { useMotion } from "../ui/useMotion";
 import { useNhuongChoNep } from "../nep/NepProvider";
-import { Canh } from "../ui/art/Canh";
+import { AssetIllustration } from "../asset-pack/react-native/AssetIllustration";
 import { NenGiay } from "../ui/NenGiay";
 import { MoNgang } from "../ui/MoNgang";
 import { hinhTrangXe } from "../art/giay";
@@ -182,11 +167,24 @@ export function ManHinhHanhTrinh({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- neighbours are read at the tick of toiDem
   }, [mocChon?.id, mocChon?.lat, mocChon?.lng, toiDem]);
   const trang = useRef<ScrollView>(null);
-  // A chosen stop's card opens at the top of the page, where the strip was:
-  // below the fold, choosing a stop looked like nothing happened.
-  useEffect(() => { if (selectedActivityId) trang.current?.scrollTo({ y: 0, animated: false }); }, [selectedActivityId]);
-
   const coMoc = tom.soChangCoViTri > 0;
+  const nativePhone = Platform.OS !== "web" && !wide && coMoc;
+  const footerInScroll = nativePhone;
+  const [bodyTop, setBodyTop] = useState(0);
+  // Only a new selection opens the page. Measuring a folded head must not
+  // undo the person's fold when its transport row leaves the layout.
+  useEffect(() => {
+    if (selectedActivityId) setCollapsed(false);
+  }, [selectedActivityId]);
+  // Reveal the selected card after layout, without changing the fold state.
+  useEffect(() => {
+    if (collapsed) {
+      trang.current?.scrollTo({ y: 0, animated: false });
+      return;
+    }
+    if (!selectedActivityId) return;
+    trang.current?.scrollTo({ y: nativePhone ? bodyTop : 0, animated: false });
+  }, [selectedActivityId, nativePhone, bodyTop, collapsed]);
   // An empty day has nothing to fold away from: the fold row is not drawn
   // there, and a page folded on another day opens again.
   const gapLai = collapsed && coMoc;
@@ -252,6 +250,23 @@ export function ManHinhHanhTrinh({
     : tuyen === "khongTinhDuoc" ? "CHƯA TÍNH ĐƯỜNG"
     : "NÉT NHÁP";
 
+  const pageHead = <>
+    <View style={[styles.dauTrang, nativePhone && { minHeight: 28 }]}>
+      <Text accessibilityRole="header" numberOfLines={1} style={[typography.h2, styles.dauChu, { color: colors.ink }]}>{tieuDeTrang ?? "Trang ngày"}</Text>
+      {coMoc ? <Stamp label={dauTuyen} tone={tuyen === "that" ? "accent" : "ink"} tilt={tuyen === "that" ? -2 : 0} testID="hanh-trinh-dau-tuyen" /> : null}
+    </View>
+    {coMoc ? <View style={styles.hangSo}>
+      <Text style={[typography.label, styles.so, styles.dauChu, { color: colors.inkSoft }]}>{tomChu}</Text>
+      <Pressable accessibilityLabel={gapLai ? "Mở trang ngày" : "Thu gọn trang ngày"} accessibilityRole="button" aria-expanded={!gapLai} hitSlop={12} onPress={() => setCollapsed(!collapsed)} style={styles.nutGap}>
+        <Text style={[typography.caption, { color: colors.accent }]}>{gapLai ? "Mở trang" : "Thu gọn"}</Text>
+      </Pressable>
+    </View> : null}
+    {coMoc && !gapLai && !nativePhone ? chonPhuongTien : null}
+  </>;
+  // 204dp leaves room for the 128dp camera padding, the 48dp marker and
+  // the torn edge. At 130% the old map was 71dp; at 200% it was 0dp.
+  const nativePageHeight = Math.max(96, availableHeight - 204 + XE * 2);
+
   return (
     <View onLayout={(e) => setAvailableHeight(e.nativeEvent.layout.height)} style={[styles.khung, wide && { flexDirection: "row" }]}>
       {/* Clipped: the map is as tall as this room, never hanging under the page. */}
@@ -302,39 +317,22 @@ export function ManHinhHanhTrinh({
             const t = hinhTrangXe(w, h, wide ? "trai" : "tren", XE);
             return { nen: t.nen, vien: t.vien, them: t.lo };
           }}
-          style={[styles.the, wide ? styles.theRong : styles.theHep, !coMoc && styles.theCoLai, { paddingBottom: 12 + chanDuoi, maxHeight: wide || Platform.OS !== "web" || !coMoc ? undefined : availableHeight * 0.6, width: wide ? 360 : undefined }]}
+          style={[styles.the, wide ? styles.theRong : styles.theHep, !coMoc && styles.theCoLai, { paddingBottom: 12 + chanDuoi, maxHeight: wide || Platform.OS !== "web" || !coMoc ? undefined : availableHeight * 0.6, width: wide ? 360 : undefined }, nativePhone && { height: gapLai ? Math.min(nativePageHeight, 132 * fontScale) : nativePageHeight, minHeight: 0, flexShrink: 0 }]}
         >
           {/* The page head, three short rows: which day (and the fold), the
               day's numbers beside the stamp that says what the line is, and
               how the group gets around. At 390×844 a taller head left no
               room at all for the stop strip, the one list that names every
               stop (web, 2026-09-29). */}
-          <View style={styles.dauTrang}>
-            <Text accessibilityRole="header" numberOfLines={1} style={[typography.h2, styles.dauChu, { color: colors.ink }]}>{tieuDeTrang ?? "Trang ngày"}</Text>
-            {coMoc ? <Stamp label={dauTuyen} tone={tuyen === "that" ? "accent" : "ink"} tilt={tuyen === "that" ? -2 : 0} testID="hanh-trinh-dau-tuyen" /> : null}
-          </View>
-          {coMoc ? (
-            <View style={styles.hangSo}>
-              <Text style={[typography.label, styles.so, styles.dauChu, { color: colors.inkSoft }]}>{tomChu}</Text>
-              <Pressable accessibilityLabel={gapLai ? "Mở trang ngày" : "Thu gọn trang ngày"} accessibilityRole="button" aria-expanded={!gapLai} hitSlop={12} onPress={() => setCollapsed(!collapsed)} style={styles.nutGap}>
-                <Text style={[typography.caption, { color: colors.accent }]}>{gapLai ? "Mở trang" : "Thu gọn"}</Text>
-              </Pressable>
-            </View>
-          ) : null}
-          {coMoc && !gapLai ? chonPhuongTien : null}
-          {/* A fixed height on a phone: a card that grew on selection shrank
-              the map after the camera had framed the stop, and the next stop
-              ended up cut by the page edge (review, 2026-09-29).
-              Never squeezed below one stop strip: the head and the button
-              must not leave the list that names every stop with no height.
-              Only this middle scrolls and only it is capped: capping the
-              whole page pushed «Xem cách đi gọn hơn» under the gesture bar
-              at font 1.3 (emulator, 2026-09-29), and on a phone the map
-              keeps the rest -- about half the screen. A browser has no
-              gesture bar and a page cap that holds; there the page is capped
-              and this middle takes what is left. */}
-          {gapLai ? null : <ScrollView ref={trang} showsVerticalScrollIndicator={Platform.OS !== "web"} style={{ flexShrink: 1, minHeight: coMoc ? 84 * Math.min(fontScale, 1.3) : 0, ...(wide || Platform.OS === "web" || !coMoc ? {} : { height: Math.max(92 * Math.min(fontScale, 1.3), availableHeight * 0.2) }) }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
-
+          {nativePhone ? null : pageHead}
+          {/* A fixed native page height keeps the camera's usable viewport
+              stable when a selected card opens. Its head, stops and action
+              scroll together, so a fixed footer cannot hide a short page.
+              Web and wide layouts retain their separate fixed page head. */}
+          {gapLai && !nativePhone ? null : <ScrollView ref={trang} showsVerticalScrollIndicator={Platform.OS !== "web"} style={nativePhone ? { flex: 1, minHeight: 0 } : { flexShrink: 1, minHeight: coMoc ? 84 * Math.min(fontScale, 1.3) : 0 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+          {nativePhone ? pageHead : null}
+          <View onLayout={(e) => setBodyTop(e.nativeEvent.layout.y)} style={{ gap: 8 }}>
+          {gapLai ? null : <>
           {mocChon ? (
             <TheMoc
               chang={doanToi(doanHien, mocChon.id)}
@@ -343,10 +341,11 @@ export function ManHinhHanhTrinh({
               truoc={changTruoc(hanh.activities, mocChon.id)}
             />
           ) : null}
-          {coMoc ? <Text style={[typography.label, { color: colors.ink }]}>Các chặng trong ngày</Text> : null}
+          {coMoc && !nativePhone ? <Text style={[typography.label, { color: colors.ink }]}>Các chặng trong ngày</Text> : null}
           {coMoc ? (
             <ThanhChang
-              doc={wide}
+              doc={wide || nativePhone}
+              phone={nativePhone}
               mocs={mocs}
               onChon={(id) => (id === selectedActivityId ? onNen() : onChonMoc(id))}
             />
@@ -384,7 +383,7 @@ export function ManHinhHanhTrinh({
               {/* The drawing only where the window has room for it: on a
                   short one it pushed the sentence and «Về Lịch trình» off the
                   page (QA UI-033, 390×460). */}
-              {availableHeight >= 560 ? <Canh id="tim-khong-ra" width={144} /> : null}
+              {availableHeight >= 560 ? <AssetIllustration name="spot-map" width={144} height={108} resolution="small" /> : null}
               {chuaXep && soChuaXep > 0 ? (
                 <>
                   <Text style={[typography.h2, { color: colors.ink }]}>Ngày này chưa có chặng nào</Text>
@@ -405,14 +404,18 @@ export function ManHinhHanhTrinh({
               )}
             </View>
           )}
+          {nativePhone && coMoc ? chonPhuongTien : null}
           {actions}
           {goiYGhim && coMoc ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{goiYGhim}</Text> : null}
+          {footerInScroll ? primaryAction : null}
+          </>}
+          </View>
           </ScrollView>}
           {/* The scroll's lower edge fades into the page, so a control cut by
               it reads as "more below", not as a broken half button. */}
           {/* Only over the stop list: on an empty day it faded out the
               explanation's last line (QA UI-033). */}
-          {gapLai || wide || !coMoc ? null : (
+          {gapLai || wide || !coMoc || footerInScroll ? null : (
             <View pointerEvents="none" style={styles.mo}>
               <Svg height="100%" width="100%">
                 <Defs>
@@ -430,7 +433,7 @@ export function ManHinhHanhTrinh({
               review). */}
           {!coMoc && onVeLichTrinh ? (
             <RudiButton accessibilityLabel="Về Lịch trình" compact label="Về Lịch trình" onPress={onVeLichTrinh} variant="ghost" />
-          ) : coMoc ? primaryAction : null}
+          ) : coMoc && !footerInScroll && !(nativePhone && gapLai) ? primaryAction : null}
         </NenGiay>
     </View>
   );
@@ -449,11 +452,13 @@ function ThanhChang({
   mocs,
   onChon,
   doc = false,
+  phone = false,
 }: {
   mocs: readonly MocBanDo[];
   onChon: (id: string) => void;
   /** Wide page: one ruled row per stop instead of the rail. */
   doc?: boolean;
+  phone?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   const rail = useRef<ScrollView>(null);
@@ -470,7 +475,7 @@ function ThanhChang({
           onPress={() => onChon(moc.id)}
           style={[
             styles.chang,
-            doc ? styles.changDoc : styles.changNgang,
+            doc ? [styles.changDoc, phone && styles.changPhone] : styles.changNgang,
             {
               backgroundColor: moc.chon ? colors.accentSoft : "transparent",
               borderColor: moc.chon ? colors.accent : "transparent",
@@ -615,6 +620,7 @@ const styles = StyleSheet.create({
   chang: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1 },
   changNgang: { maxWidth: 210 },
   changDoc: { minHeight: 56 },
+  changPhone: { minHeight: 48, paddingVertical: 6, paddingHorizontal: 0 },
   changSo: { minWidth: 26, height: 26, borderRadius: 6, borderWidth: 1.5, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
   changSoChu: { fontSize: 13, fontWeight: "800", lineHeight: 16, fontVariant: ["tabular-nums"] },
   // Wraps rather than clips: at 800dp the stamp ran past the page edge.

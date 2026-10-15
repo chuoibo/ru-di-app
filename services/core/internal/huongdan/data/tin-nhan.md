@@ -2,12 +2,12 @@
 {
   "man": "messages",
   "tieu_de": "Tin nhắn",
-  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Thêm bạn bằng username", "Đồng ý vào nhóm", "Nhóm mới", "Đặt tên cho hội", "Mở nhóm", "Lên plan", "Tên tài khoản", "Gửi lời mời"],
+  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Thêm bạn bằng tên tài khoản", "Đồng ý vào nhóm", "Nhóm mới", "Đặt tên cho hội", "Mở nhóm", "Lên plan", "Tên tài khoản", "Gửi lời mời"],
   "di_toi": [
     {"nhan": "Mở nhóm …", "man": "groups/[id]/chat"},
     {"nhan": "Mở cuộc trò chuyện với …", "man": "groups/[id]/chat"},
     {"nhan": "Tạo nhóm", "man": "groups/new"},
-    {"nhan": "Thêm bạn bằng username", "man": "friends/add"}
+    {"nhan": "Thêm bạn bằng tên tài khoản", "man": "friends/add"}
   ],
   "tien": false
 }
@@ -32,5 +32,5 @@ Tab «Tin nhắn» liệt kê các nhóm và các cuộc trò chuyện hai ngư�
 
 ## Thêm bạn
 
-1. Bấm «Thêm bạn bằng username».
+1. Bấm «Thêm bạn bằng tên tài khoản».
 2. Điền «Tên tài khoản» của bạn ấy rồi bấm «Gửi lời mời».

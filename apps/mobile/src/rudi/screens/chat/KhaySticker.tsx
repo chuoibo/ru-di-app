@@ -1,10 +1,12 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { nhanSticker, stickerChoKhay, type StickerId } from "../../chat/sticker";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
 import { Sticker } from "../../ui/stickers/Sticker";
+import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 
 /**
  * The sticker tray (ADR-0021 §2.1): a sheet with one tile per id in the
@@ -12,12 +14,10 @@ import { Sticker } from "../../ui/stickers/Sticker";
  * tiles are labelled with the sticker's words so a flow taps «Đi thôi!» and a
  * screen reader hears the same.
  *
- * The label is allowed TWO lines and the grid gives up columns as the reader's
- * text grows. «Cà phê không?» was arriving as «Cà phê khôn…» in a 22%-wide
- * tile with `numberOfLines={1}` (review delta 08/09): the eight words are a
- * locked vocabulary shared with the server, so the layout is what has to give,
- * not the words. Two lines are reserved whether or not a label needs them, so
- * eight tiles stay the same height and the grid does not comb.
+ * The vocabulary is locked, so labels grow naturally rather than lose words.
+ * Measured columns include their gaps and the artwork's padding; percentages
+ * previously overflowed the row and left three narrow columns on a phone.
+ * Native caption metrics share the chat's owner and update during hot changes.
  */
 export function KhaySticker({
   open,
@@ -36,13 +36,19 @@ export function KhaySticker({
   capDoi?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
-  const { fontScale } = useWindowDimensions();
-  // Four across at the default text size, then fewer as the words get bigger.
-  // Below four the grid is still even: eight tiles divide by two and by four.
-  // Written as literals rather than composed: `tests/receipt.test.mjs` reads
-  // every «…%» a build can produce, because ADR-0009 forbids showing the model
-  // a confidence percentage, and a computed one would land on that list.
-  const beRong = fontScale >= 1.6 ? "48.5%" : fontScale >= 1.25 ? "31.3%" : "22.7%";
+  const { width } = useWindowDimensions();
+  const [rongLuoi, setRongLuoi] = useState<number | null>(null);
+  const caption = useNativeStandaloneTextMetrics(typography.caption);
+  const budget = caption === null ? null : Math.max(
+    (caption.fontSize ?? typography.caption.fontSize) / typography.caption.fontSize,
+    (caption.lineHeight ?? typography.caption.lineHeight) / typography.caption.lineHeight,
+  );
+  const rong = Math.max(0, rongLuoi ?? Math.min(width, 640) - 32);
+  // Four or two balanced columns; unknown metrics keep natural full-width text.
+  const toiThieu = Math.max(96, Math.ceil(50 * (budget ?? 1)) + 18);
+  const cot = budget === null ? 1 : rong >= 4 * toiThieu + 3 * 10 ? 4 : rong >= 2 * toiThieu + 10 ? 2 : 1;
+  const beRong = Math.max(0, Math.floor((rong - (cot - 1) * 10) / cot * 10) / 10);
+  const haiDong = caption?.lineHeight === undefined ? 0 : Math.ceil(caption.lineHeight * 2);
   return (
     <Sheet accessibilityLabel="Khay sticker" onClose={onClose} open={open} testID="khay-sticker">
       <Heading size="h2" subtitle="Một hình thay cho một câu." title="Sticker" />
@@ -60,7 +66,7 @@ export function KhaySticker({
 
   function nhom(ids: readonly StickerId[]) {
     return (
-      <View style={styles.luoi}>
+      <View onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); if (w > 0 && w !== rongLuoi) setRongLuoi(w); }} style={styles.luoi}>
         {/* Each tile is a well of `ground` inside the `card` sheet, so a sticker
             drawn in paper (`card`) shows its faces here exactly as it does in a
             bubble on the page; on `card` tiles the paper vanished on the dark
@@ -77,7 +83,7 @@ export function KhaySticker({
             ]}
           >
             <Sticker id={id} size={64} tilt={i % 2 === 0 ? -1 : 1} />
-            <Text numberOfLines={2} style={[typography.caption, styles.nhan, { color: colors.inkSoft }]}>
+            <Text style={[typography.caption, styles.nhan, { minHeight: haiDong, color: colors.inkSoft }]}>
               {nhanSticker(id)}
             </Text>
           </Pressable>
@@ -88,9 +94,8 @@ export function KhaySticker({
 }
 
 const styles = StyleSheet.create({
-  luoi: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingBottom: 8 },
-  o: { alignItems: "center", gap: 4, paddingVertical: 8, paddingHorizontal: 2, borderWidth: 1 },
-  // Two lines of caption, reserved: the tiles keep one height whether a label
-  // wraps or not, so the grid stays a grid at every text size.
-  nhan: { textAlign: "center", minHeight: 36 },
+  luoi: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", justifyContent: "center", gap: 10, paddingBottom: 8 },
+  o: { alignItems: "center", gap: 8, paddingVertical: 10, paddingHorizontal: 8, borderWidth: 1 },
+  // Stretch the paragraph to its tile and let the tallest label size its row.
+  nhan: { alignSelf: "stretch", textAlign: "center" },
 });

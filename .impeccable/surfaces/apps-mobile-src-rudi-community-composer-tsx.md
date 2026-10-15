@@ -1,0 +1,158 @@
+---
+version: 1
+slug: "apps-mobile-src-rudi-community-composer-tsx"
+primary_target: "apps/mobile/src/rudi/community/Composer.tsx"
+related_targets: []
+---
+
+# Composer · vùng viết và dock hành động
+
+**Primary target:** `apps/mobile/src/rudi/community/Composer.tsx`.
+**Related targets:** `community/MediaPicker.tsx`, `community/MentionPicker.tsx`, shell `RudiScreen` và bộ đo chữ native dùng sẵn; chưa đề xuất sửa shared source.
+**Mode / flow:** Operate, Read cho giải thích phạm vi; code-led, `layout` → `polish`. Kế thừa giấy/mực/coral hiện hữu, không chọn brand/seed mới. Đây là BODY r3 prospective sau ảnh ee42 trên cửa sổ cao; giữ lịch sử r1/r2 và e338 bên dưới.
+
+## Direction contract
+
+THESIS: Vùng viết nhận khoảng thở; công cụ và đăng thành một dock liền mạch, không có hàng nút nổi giữa khoảng trống.
+
+OWN-WORLD: Giấy yên, mực rõ, một trục nội dung. Coral chỉ dẫn chọn và hành động chính; đường nét phân vai, không thêm tranh hoặc nhiều hộp.
+
+STORY: Biết ai đọc → viết → bổ sung nếu cần → đăng. Phạm vi và duyệt bài đi cùng tác giả; tệp lỗi ở gần cách phục hồi.
+
+FIRST VIEWPORT: Top bar; avatar/tên/phạm vi và giải thích; canvas co giãn ở giữa. Khi thu gọn, rail ba công cụ sát quyết định đăng ở đáy, cùng cột; lý do/lỗi thuộc dock. Phần mở thêm cuộn trong thân.
+
+FORM: Form một cột, canvas nhập nhận phần dư và dock liền. Compact giữ ceiling hữu hạn bằng max(420dp, chiều cao cửa sổ); expanded giữ policy hiện tại. Một dòng native trọn vẹn vẫn thắng ceiling. Rail tách target8dp, giữ48dp tối thiểu và các owner/ref/handler. Kế thừa world, code-led refinement; không concept-seed mới.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Quyết định về bố cục
+
+Khoảng dư trên một form ngắn phải nằm trong canvas viết. Rail «Ảnh/video / Chủ đề / Gắn bạn» và nút đăng đọc như một nhóm thao tác ở đáy: không có dải trống vô nghĩa tách chúng, không dùng spacer cao cố định hoặc phép trừ chiều cao màn hình để giả tạo vị trí. Tên tác giả, audience và lời duyệt bài vẫn là một cụm ở đầu, không kéo lời duyệt xuống dock để lấp khoảng trống.
+
+Dock không được trở thành một form dài bị ghim. Ảnh, tiến trình/retry/bỏ tệp, bộ chọn bạn và ô chủ đề/lỗi/helper của ô nằm trong vùng cuộn; nhãn công cụ giữ đủ chữ. Chữ lớn và IME được đổi cấu trúc/scroll theo khoảng thật. Nếu chiều cao chỉ đủ cho một phần, người dùng vẫn thấy field đang focus và tới được quyết định đăng cùng lý do; không thu font hay giấu recovery.
+
+Counter thuộc cuối canvas. Tool rail, counter, ảnh và footer giữ cùng cột ở phone/tablet; safe area ở ngoài nhóm hành động, không chen giữa rail và Submit. Loading/disabled/error/selected có thứ bậc rõ trong sáng/tối. Không nhân đôi toolbar hoặc hành động đăng để đạt ảnh mong muốn.
+
+## Hợp đồng chức năng
+
+Giữ một ComposerForm, một MediaPicker và một MentionPicker ổn định qua font/layout/theme; không remount để chữa ảnh. Giữ body/topic refs, `topicsTools`, đo helper/error và callback-generation safeguards; trường đang focus không bị che bởi dock hay IME. Giữ native font owner, input/selection, RAM draft/lease/actor, attempts, payload, ACK/newer-ACK/retry, pending-file/send/pick/canEdit locks và mọi handler hiện có.
+
+Giữ tất cả audience/nhóm/moderation/edit scope,5000 ký tự, tag/chủ đề và lý do disabled. Upload thất bại không làm mất tệp hoặc lời nhập; conflict giữ nháp cho đối chiếu. Đổi font/theme/layout không phát I/O. Câu giải thích có nghĩa không bị xoá để làm footer ngắn.
+
+## Bằng chứng và hướng đã chốt
+
+Người dùng đã bác Composer hiện tại từ `/tmp/codex-clipboard-Ziur7u.png`: rail nổi, khoảng lớn trước Submit, thiếu nhóm thao tác hợp lý. Agent đã mở độc lập ảnh này; source75 do root xác nhận, ảnh riêng không chứng minh fingerprint, scale hoặc hitbox. Phản hồi này thắng mọi kết quả source/host trước đó.
+
+Ở mã75, `expanded` chỉ là `width >= 600`; ở phone, content không opt-in grow, stage dùng `flexGrow: 0`, còn shell giữ ScrollView flex1 và footer bên ngoài. Đây là lời giải thích từ cấu trúc, chưa là đo Yoga native. Sau reviewer độc lập, root chọn bước nhỏ: content/stage/writing nhận growth ở mọi chiều rộng, basis tự nhiên và không co nội dung; bỏ đệm cuộn cuối để dùng khe8 của shell trước Submit. MediaPicker/Mention/Field và `topicsTools` giữ nguyên cây cuộn, không reparent shell hoặc chuyển field vào footer.
+
+Đây là candidate cần native xác nhận, không lời hứa flex tự bảo đảm geometry. Khi phần mở đang hiện, nó thuộc cụm công cụ cuộn và có thể đứng giữa rail với quyết định đăng; không giấu phần ấy để giả hai nút sát nhau. Ở200/IME, field và các công cụ phải tiếp cận được bằng cuộn, không ép vừa viewport. Nếu ảnh thật vẫn chia cắt quyết định hoặc IME che field/recovery, slice này chưa đạt và phải ghi finding, không ghim thêm nội dung dài để chữa vội.
+
+Mốc base `75b7e52a486dc022d1977d075dd5ea37837ea262` có trước invocation; r2 áp dụng cho lần sửa tiếp theo. Dùng `quality-bar.md` đi kèm để review native AFTER đúng SHA, không dùng ship lịch sử hoặc host green thay phán đoán đẹp. FINISH còn mở.
+
+**Quality bar lưu trong repo:** `docs/design/nep-ui-implementation/QUALITY-BAR-NATIVE-20261013.md`. Ảnh native AFTER và verdict e338 được đối chiếu bên dưới; không có approved comp mới.
+
+## Đối chiếu built artifact e338 · 13/10/2026
+
+Correction đã nằm trong `e338740b73e98eada580bffae3edb239acb9ab5c`: content/stage/writing/body grow ở mọi chiều rộng, shrink0/basis auto; bỏ bottomInset16, giữ footer/safe-area shell. `expanded` chỉ còn chính sách maxHeight input theo width. MediaPicker/MentionPicker/Field, `topicsTools` và mọi handler giữ trong cây cuộn; không có một toolbar thứ hai hoặc field dài ghim chân màn. Ảnh [phone tối100](../review/e338740b/composer-mobile.png) và [cửa sổ tablet tối100](../review/e338740b/composer-tablet.png) cho thấy rail sát vùng đăng, khoảng dư nằm trong canvas. Documenter đã mở cả hai, thêm ảnh chủ đề200/IME trong bó private; không đo pixel/hitbox hoặc suy mượt từ ảnh.
+
+Bó native ngoài repo: `native-audit-e338740b` dưới `~/.local/share/rudi-nep-ui/runtime-private-merged-20261006/`. `source-screen-receipt.json` gắn fingerprint sourcee338/PID2884; `root-visual-review.json` ghi root mở26 PNG, pin52 PNG/XML cho cả Composer và Search. Đây không phải26 trạng thái Composer. `ready-e338` là loading trắng; `search-after-dark-100-sample-settled` thực tế là Profile, loại khỏi verdict Search. `sample-ime` là mẫu câu đã hiện nhưng bàn phím đóng, chỉ dùng cho sample-state.
+
+AFTER Composer hiện phủ form rỗng, focus và chủ đề: light/dark100, phone dark200 với cuộn và IME body/topic, cùng cửa sổ768×1024 font100 sáng/tối trên một emulator. Chưa có native e338 cho bài đã nhập dài, media/pending/retry, validation/conflict, audience/edit/nhóm hoặc đăng/ACK; không dùng host tests thay các scene đó. Phone thường/landscape, tablet200/IME, TalkBack, contrast/target đo thật, reduced motion và phần cứng/iOS cũng chưa phủ đầy quality bar.
+
+Root chạy clean exacte3389/9: Node subset246 file,1880/1880, fail/skip/cancel/todo0; Go chỉ gói hướng dẫn98/98. Năm file browser bị loại theo receipt. Không phải full gate/main/deploy hoặc nghiệm thu đẹp. Native555 mẫu, PID2884 không đổi, OOM0 ở các scope được theo dõi chỉ mô tả lượt kiểm; không chứng nhận hiệu năng hay mọi hành vi.
+
+Verdict độc lập `impeccable-finish-review-e338-private-20261013-r1/scoped-verdict-five-sections.md` là **FIX**, sau khi reviewer mở23 ảnh (12 Composer,10 Search,1 source). F1 đã giải quyết trong dock thu gọn đã chụp; F2 đã giải quyết trong canvas rỗng đã chụp. F3 chỉ đạt một phần: cụm author/audience và ô chủ đề rỗng khi focus/IME được kiểm, còn typed body/topic, caret/selection với nội dung, Mention và helper/error/phục hồi chưa có native proof mới. Không suy những state đó hỏng, cũng không gọi F3 resolved.
+
+FINISH và quality bar rộng còn mở. Đây là tài liệu lịch sử e338; sửa tab Khám phá sau e338 là slice khác, chưa được chứng minh bởi các ảnh này. Nếu Composer thay đổi tiếp, cần đối chiếu source và capture mới trước khi cập nhật kết luận; không tái dùng ship lịch sử.
+
+
+## Amendment r3 · canvas thật trên cửa sổ cao
+
+Native ee42 cho thấy counter→target công cụ13dp ở320×640,33dp ở390×844 và131dp ở320×960. Cap420 làm phần dư nằm sau counter, ngoài EditText. Sửa đúng caller thành ceiling compact `Math.max(420, height)`, dùng chiều cao cửa sổ đã quan sát sẵn, không thêm phép trừ/spacer/observer; native complete-line minimum vẫn thắng ceiling. Đây là đổi chính sách long-text từ420dp sang tối thiểu một cửa sổ, không được gọi long-text geometry giữ nguyên. Bài dài vẫn có cap hữu hạn; tablet vẫn không cap như hiện tại.
+
+Đúng ba target công cụ cách nhau8dp cả hàng ngang và stack200; giữ min48dp, chữ đầy đủ, count chọn và baseline. Không thêm artwork, remount, di chuyển field/recovery vào footer hoặc đổi payload/lease/attempt/locks. Recapture phone320, ordinary390×844, tall320×960 rỗng/đã nhập,100/200/return100 và bài tổng hợp1776ký tự với IME/caret để kiểm reveal và cuộn. Giữ kiểm minimum nguyên dòng khi native line pitch vượt ceiling. F1/F2/F3 của reviewer ee42 vẫn mở tới AFTER/verdict/documenter đúng source mới.
+
+
+## Amendment r4 · counter khi mở bàn phím
+
+
+Base `d8b06b1f82eb766def1a2ec42b90330746ef9f01`; amendment code-led `layout → polish`, giữ world và contract hiện hữu. Viết trước candidate. Không tạo raster/token.
+
+THESIS: Counter đọc trọn ở cuối canvas; bàn phím không biến dòng phụ thành mảnh chữ bị cắt.
+
+OWN-WORLD: Giấy yên, mực rõ, coral dành cho quyết định đăng. Chất riêng nằm ở nhịp và quan hệ, không thêm hộp/tranh.
+
+STORY: Viết và giữ caret → biết giới hạn ký tự → bổ sung nếu cần → đăng. Counter thuộc vùng viết; tools theo sau trong cùng cột.
+
+FIRST VIEWPORT: Giữ tác giả/phạm vi và canvas. Khi IME mở, thân cuộn chừa đủ counter cộng khoảng thở hiện hữu; tools dài vẫn tiếp cận bằng cuộn, không ép cả rail200 vào màn đầu.
+
+FORM: Một cột. Nhận chiều cao thật từ counter onLayout, chỉ đổi clearance của body; topic tiếp tục đo helper/error và dùng baseline16 khi chờ. Không thêm native measurement loop, ref, owner, key hoặc đổi draft/ACK/media/audience.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Tiêu chuẩn riêng
+
+Counter giữ đủ nhãn `n/5000`, scaling native, trục với canvas/rail; không đưa vào footer. Layout event finite/positive mới được nhận; cùng height không khởi động reveal lần nữa. Epoch cũ và lease/unmount cũ không được đổi clearance. Giữ last known height qua thay font/width đến khi có actual layout mới; không reset về baseline nếu geometry không đổi. Native AFTER phải kiểm1776 nhập bình thường, IME100→200→100, unavailable nếu có, caret/selection, topic helper/error và cả empty phone/ordinary/tall. Host rectangles không là Yoga hoặc pixel proof; FINISH/beauty approval còn mở.
+
+
+## 13/10 · actual input viewport amendment
+
+# Composer · vùng viết khi IME mở
+
+Base6c737f8df7f5861663ed8b34bf7bfe52744d6c9b. Code-led Operate, `layout → polish`, giữ world và topology. Contract này viết trước private candidate; root chọn trước W.
+
+THESIS: Người viết thấy đoạn đang sửa, kể cả đầu hoặc giữa bài dài; ô viết dùng vùng thực còn lại trên bàn phím.
+
+OWN-WORLD: Giấy yên, mực rõ, coral cho đăng. Không tranh, token hay hộp phụ; sự gọn đến từ canvas và action dock cùng trục.
+
+STORY: Đặt caret → sửa đoạn → đọc counter → thêm công cụ → đăng. Khi IME mở, cuộn trong ô viết giữ đoạn đang sửa; cuộn trang vẫn dẫn tới tools/topic.
+
+FIRST VIEWPORT: Ô viết đủ nằm trong actual scroll viewport đã trừ header/footer; counter trọn và khoảng thở hiện hữu. IME đóng trả lại full canvas, không để một editor thấp vĩnh viễn.
+
+FORM: RudiScreen công bố height từ onLayout viewport đang có qua scoped context, dùng observer keyboard hiện hữu. ComposerBodyInput chỉ cap khi IME mở, trừ top16 và actual body tail; complete native line thắng nếu vùng quá nhỏ. Không đoán keyboard height, polling, owner/key/input replacement.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Cổng riêng
+
+Counter6c đã đủ glyph trong captures root nêu; chưa nhận toàn Composer. Agent mở composer-long-edit-start-light100.png: startZ/caret không thấy dù success receipt xác minh exact1777 tại offset0. Proposal chỉ bảo đảm input box có declared cap theo actual viewport; Android internal caret scroll phải được kiểm lại FIRST/MIDDLE/END với closeddriver, font100/200/return100 và IME open/close. Giữ R5 draft/lease/ACK/retry/media/topic clearance, toàn nhãn/scaling và reveal guard oversized. Unavailable font giữ nguyên RN scaling và minimum an toàn hiện hữu; nếu complete line lớn hơn viewport thì không ép nhỏ chữ và không nhận caret-fit PASS. Host rectangles không chứng minh pixels/caret.
+
+
+## 13/10 · actual context compatibility
+
+# Composer · compatibility sau full gate f3 RED
+
+Basef3c001a87f45330c5eff6b682064187c74f4a422. Giữ direction IME viewport đã chọn, chỉ làm actual context và style forwarding minh bạch. Contract viết trước private representation change; root chọn trước W.
+
+THESIS: Editor dùng đúng viewport từ owner thật và giữ toàn style của caller; host không bỏ qua context để đổi lấy test xanh.
+
+OWN-WORLD: Giấy/mực/coral hiện hữu. Không đổi typography, khoảng cách, rail, footer hoặc artwork; đây là compatibility của cùng layout.
+
+STORY: Actual screen đo viewport → context thật tới input → bounds an toàn → draft/attachment/retry giữ nguyên. Owner absence có defaultnull thật; owner có height phải được đọc.
+
+FIRST VIEWPORT: Canvas khôngIME và editor IME giữ contract hiện tại. Không thay caret finding bằng một stub hook luônnull; native recapture vẫn phải làm.
+
+FORM: Tách pure viewport context/hook thành leaf module thật; ui dùng/reexport cùng context. Legacy host delegate actualhook và có explicit actualprovider seam. Wrapper nhận props identifier, local rest bỏ bottomClearance, explicit props.style tới native input ở cả hai nhánh.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+Không sửa scanner để bỏ assertion. Regression bổ sung phải cho thấy height được provide thay đổi maxHeight qua actual hook, cùng native input/body/draft; null/default thuộc actual context absence. TR01–09/LP08 thật vẫn kiểm owner/reveal/line floor riêng. Native first/middle/end caret và beauty chưa được nhận PASS.
+
+
+## 13/10 · correction F1–F4 từ fresh native review adfc
+
+# Composer · chuyển vùng viết sang công cụ khi mở IME
+
+Base adfc0584e3574de862dacd79b86d91fa1684c0e1. Direction private trước candidate; native AFTER/root chọn còn pending.
+
+THESIS: Khi đang viết, vùng nhìn kết thúc sạch sau bộ đếm; khay công cụ không lộ một mảnh viền không thể đọc.
+
+OWN-WORLD: Giữ giấy/mực/coral và khay hiện hữu. Không thêm artwork, token, chữ, nút, clamp hoặc font cap.
+
+STORY: Soạn thảo và bộ đếm thành một cụm; công cụ kế tiếp cuộn tới được; gửi vẫn ở footer cố định. Các đường nhập/media/topic/Mention và recovery giữ nguyên.
+
+FIRST VIEWPORT: Hai actual IME dark100/200 cho thấy counter đầy nhưng rail ló 8px. Dùng khoảng chuyển 16dp bằng tail đang dành sẵn; noIME phần trống tiếp tục thuộc canvas đàn hồi.
+
+FORM: Giữ stage gap8, thêm tools marginTop8. Không đổi input bounds, counter clearance, reveal/epoch, refs/keys/owners hoặc observer. Nội dung dài và font200 vẫn cuộn; complete-line minimum vẫn ưu tiên. Kiểm lại cả lúc đóng IME và scroll tới công cụ.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

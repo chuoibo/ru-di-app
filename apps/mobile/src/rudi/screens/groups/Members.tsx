@@ -7,12 +7,12 @@
  * design system does not colour people.
  *
  * UI v2: rows on the paper, the group's two memory doors as plain rows, the
- * invite as the one action at the foot.
+ * invite as a quiet action in the fixed header.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import {
@@ -29,13 +29,12 @@ import { useRudiSession } from "../../session";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ChuThichLe } from "../../ui/ChuThichLe";
-import { StampButton } from "../../ui/StampButton";
-import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, IconButton, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { LuoiNguoi } from "../../ui/LuoiNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
-import { Stamp } from "../../ui/Stamp";
+import { RudiIcon } from "../../ui/RudiIcon";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang =
@@ -45,9 +44,12 @@ type Trang =
 
 export function GroupMembersScreen() {
   const router = useRouter();
+  const { width, fontScale } = useWindowDimensions();
+  const compactWidth = width < 380 || fontScale > 1.3;
   const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
+  const [readError, setReadError] = useState<string | null>(null);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangDoiVaiTro, setDangDoiVaiTro] = useState<string | null>(null);
   // A refused role change is said under the row it was pressed on (QA UI-095 pattern).
@@ -55,21 +57,24 @@ export function GroupMembersScreen() {
   // QA UI-074: stepping down from admin cannot be undone by oneself; it asks
   // in the row first.
   const [hoiTuBo, setHoiTuBo] = useState(false);
+  const [chiTietQuanTri, setChiTietQuanTri] = useState(false);
   // QA UI-075: «Người lập nhóm» is the person who opened the group, read from
   // the group itself; every other admin is «Quản trị». Unknown until it answers.
   const [nguoiLap, setNguoiLap] = useState<string | null>(null);
   // One attempt per (person, target role): a re-render never mints a second key.
+  const actionLock = useRef(false);
   const attempts = useRef<Record<string, Attempt>>({});
 
   const nap = useCallback(async () => {
     if (phien === null || typeof id !== "string") return;
     try {
-      setTrang({ pha: "xong", thanhVien: await danhSachThanhVien(id, phien.person_id) });
+      const thanhVien = await danhSachThanhVien(id, phien.person_id);
+      setReadError(null);
+      setTrang({ pha: "xong", thanhVien });
     } catch (error) {
-      setTrang({
-        pha: "hong",
-        loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-      });
+      const loi = error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
+      setReadError(loi);
+      setTrang((held) => held.pha === "xong" ? held : { pha: "hong", loi });
     }
   }, [id, phien]);
 
@@ -92,13 +97,14 @@ export function GroupMembersScreen() {
 
   /** Promote or demote one member (ADR-0021 L1 wires the M2 route into the roster). */
   const doiVaiTro = async (tv: ThanhVien, daHoi = false) => {
-    if (dangDoiVaiTro !== null) return;
+    if (actionLock.current) return;
     const vaiTro = vaiTroDoiThanh(tv);
     if (tv.person_id === phien.person_id && vaiTro === "member" && !daHoi) {
       setHoiTuBo(true);
       setLoiVaiTro(null);
       return;
     }
+    actionLock.current = true;
     setDangDoiVaiTro(tv.person_id);
     setLoiVaiTro(null);
     try {
@@ -108,25 +114,27 @@ export function GroupMembersScreen() {
     } catch (error) {
       setLoiVaiTro({ id: tv.person_id, cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
     } finally {
+      actionLock.current = false;
       setDangDoiVaiTro(null);
     }
   };
-  // The caption names the role unless the row already wears the «Quản trị»
-  // stamp; the one who opened the group is always said.
-  const nhanVaiTro = (tv: ThanhVien, coDau: boolean): string | null => {
+  // Native text measures and wraps the full role at every font scale.
+  const nhanVaiTro = (tv: ThanhVien): string => {
     if (tv.state === "invited") return "Đã mời, chưa đồng ý";
     if (nguoiLap === tv.person_id) return "Người lập nhóm";
-    if (tv.role === "admin" && tv.state === "active") return coDau ? null : "Quản trị";
+    if (tv.role === "admin" && tv.state === "active") return "Quản trị";
     return "Thành viên";
   };
 
   return (
     // A list of people is read, not stretched: the reading column on a tablet
     // keeps each action beside its name (QA UI-081: 487–679px apart).
-    <RudiScreen cot="doc" testID="group-members-screen">
-      <TopBar title={tenNhom} />
+    <RudiScreen material="quiet" cot="doc" bottomInset={16} testID="group-members-screen"
+      header={<TopBar title="Thành viên" right={conSong.some((member) => member.person_id === phien.person_id && member.state === "active" && member.role === "admin")
+        ? <IconButton quiet icon="person-add-outline" accessibilityLabel="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} /> : undefined} />}
+    >
       <Heading
-        title="Thành viên"
+        title={tenNhom}
         subtitle={
           trang.pha === "xong"
             ? `${conSong.filter((tv) => tv.state === "active").length} đang ở trong nhóm, ${conSong.filter((tv) => tv.state === "invited").length} đang được mời.`
@@ -135,10 +143,7 @@ export function GroupMembersScreen() {
               : "Đang đọc danh sách thành viên…"
         }
       />
-      <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
-        <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
-        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
-      </View>
+      {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow />
@@ -153,14 +158,14 @@ export function GroupMembersScreen() {
             const laToi = tv.person_id === phien.person_id;
             const duocMoi = tv.state === "invited";
             const coNut = coTheDoiVaiTro(conSong, phien.person_id, tv) && !(laToi && hoiTuBo);
-            const coDau = !coNut && tv.role === "admin" && tv.state === "active" && !(laToi && hoiTuBo);
-            const vai = nhanVaiTro(tv, coDau);
+            const vai = nhanVaiTro(tv);
             const nutVaiTro = coNut ? (
               <RudiButton
                 accessibilityLabel={laToi ? "Bỏ quyền quản trị của bạn" : tv.role === "admin" ? `Bỏ quyền quản trị của ${ten}` : `Đặt ${ten} làm quản trị`}
                 compact
                 full={false}
                 label={nhanNutVaiTro(tv)}
+                disabled={dangDoiVaiTro !== null}
                 loading={dangDoiVaiTro === tv.person_id}
                 onPress={() => void doiVaiTro(tv)}
                 // A quiet word, not a pill: the action repeats on every
@@ -171,7 +176,7 @@ export function GroupMembersScreen() {
             return { key: tv.id, node: (luoi: boolean) => (
               // In the grid a cell fills its line, so neighbours share one hairline.
               <View style={[styles.hangKhoi, luoi && styles.oLuoi, { borderBottomColor: colors.line }]}>
-                <View style={styles.hang}>
+                <View style={[styles.hang, compactWidth && { flexDirection: "column", alignItems: "stretch" }]}>
                   {/* The person is the way to their profile (QA UI-076); the role
                       action stands beside it, never inside it. */}
                   <Pressable
@@ -187,18 +192,16 @@ export function GroupMembersScreen() {
                         {ten}
                         {laToi ? " (bạn)" : ""}
                       </Text>
-                      {vai ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{vai}</Text> : null}
+                      <Text style={[typography.note, { color: colors.inkSoft }]}>{vai}{nguoiLap === tv.person_id && tv.role === "admin" && tv.state === "active" ? " · Quản trị" : ""}</Text>
                     </View>
                   </Pressable>
                   {/* Beside the name on a phone; under it, in the text column, in
                       a two-column grid, where beside it broke the name in two. */}
-                  {nutVaiTro && !luoi ? (
+                  {nutVaiTro && !luoi && !compactWidth ? (
                     nutVaiTro
-                  ) : coDau ? (
-                    <Stamp label="Quản trị" tilt={-3} tone="ink" />
                   ) : null}
                 </View>
-                {nutVaiTro && luoi ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
+                {nutVaiTro && (luoi || compactWidth) ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
                 {laToi && hoiTuBo ? (
                   <View style={styles.hoi}>
                     <HoiTaiHang
@@ -215,10 +218,19 @@ export function GroupMembersScreen() {
               </View>
             ) };
           })} />
-          {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
+          {nhacQuanTriCuoi ? <View style={styles.quanTriNote}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Giải thích bảo vệ quản trị" accessibilityState={{ expanded: chiTietQuanTri }} onPress={() => setChiTietQuanTri((open) => !open)} style={styles.quanTriToggle}>
+              <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Bạn là quản trị duy nhất. Đặt thêm quản trị trước khi bỏ quyền.</Text>
+              <RudiIcon name={chiTietQuanTri ? "chevron-up" : "chevron-down"} size={18} color={colors.inkSoft} />
+            </Pressable>
+            {chiTietQuanTri ? <Text style={[typography.note, { color: colors.inkSoft }]}>{nhacQuanTriCuoi}</Text> : null}
+          </View> : null}
         </View>
       ) : null}
-      <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
+      <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
+        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
+      </View>
       {/* Consent, said where the invitation starts: a margin note, still read. */}
       <ChuThichLe icon="mail-open-outline">
         Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
@@ -239,4 +251,7 @@ const styles = StyleSheet.create({
   // The ghost button's own padding (14) aligned to the text column (52).
   nutDuoi: { alignItems: "flex-start", marginTop: -12, paddingLeft: 38 },
   oLuoi: { flexGrow: 1 },
+  flex: { flex: 1, minWidth: 0 },
+  quanTriNote: { paddingVertical: 8, gap: 4 },
+  quanTriToggle: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 },
 });

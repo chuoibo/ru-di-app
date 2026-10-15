@@ -68,16 +68,21 @@ var hoiSQL string
 //go:embed schema_v2.sql
 var v2SQL string
 
+// Version 8 adds a catalogue-only search for random game choices.
+//
+//go:embed schema_random.sql
+var randomSQL string
+
 // SchemaVersion is the chat AI schema this binary reads and writes. `serve`
 // and `work` refuse to start below it: every claim names the columns of
 // version 5, so an older schema would turn each job into an error behind a
 // healthy /healthz instead of one loud refusal at startup.
-const SchemaVersion = 7
+const SchemaVersion = 8
 
 // SchemaFiles are the embedded versions in order, for the gates that read
 // what the schema does (aigate).
 func SchemaFiles() []string {
-	return []string{schemaSQL, draftsSQL, scopeSQL, luongSQL, hangDoiSQL, hoiSQL, v2SQL}
+	return []string{schemaSQL, draftsSQL, scopeSQL, luongSQL, hangDoiSQL, hoiSQL, v2SQL, randomSQL}
 }
 
 // SchemaCurrent reports whether every chat AI schema version up to
@@ -131,7 +136,7 @@ func migrateDen(ctx context.Context, pool *pgxpool.Pool, den int) error {
 			return err
 		}
 	}
-	for v, step := range []func(context.Context, pgx.Tx) error{migrateDrafts, migrateScope, migrateLuong, migrateHangDoi, migrateHoi, migrateV2} {
+	for v, step := range []func(context.Context, pgx.Tx) error{migrateDrafts, migrateScope, migrateLuong, migrateHangDoi, migrateHoi, migrateV2, migrateRandom} {
 		if v+2 > den {
 			break
 		}
@@ -140,6 +145,26 @@ func migrateDen(ctx context.Context, pool *pgxpool.Pool, den int) error {
 		}
 	}
 	return tx.Commit(ctx)
+}
+
+// migrateRandom installs version 8 without changing any applied checksum.
+func migrateRandom(ctx context.Context, tx pgx.Tx) error {
+	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(randomSQL)))
+	var old string
+	if err := tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_ai_schema_migrations WHERE version=8),'')`).Scan(&old); err != nil {
+		return err
+	}
+	if old != "" {
+		if old != digest {
+			return fmt.Errorf("chat AI random migration checksum mismatch")
+		}
+		return nil
+	}
+	if _, err := tx.Exec(ctx, randomSQL); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(8,$1)`, digest)
+	return err
 }
 
 // migrateHangDoi installs version 5 on top of version 4. Its trigger calls

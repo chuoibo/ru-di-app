@@ -119,3 +119,26 @@ func TestExplicitOnInDevRefusesToStart(t *testing.T) {
 		t.Fatalf("refusal does not say why: %s", logs.String())
 	}
 }
+
+// Opting out of chat features (as the container healthcheck does with a dummy
+// database URL) must not query PostgreSQL at startup for the legacy chat guard
+// unless MOBILE_CHAT_V2_ENABLED=1 is explicitly set.
+func TestOptOutOfChatFeaturesStartsWithUnreachableDatabase(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	env := map[string]string{
+		"MOBILE_PYTHON_UPSTREAM":        "http://127.0.0.1:9",
+		"MOBILE_DATABASE_URL":           "postgresql://none@127.0.0.1:9/none",
+		"MOBILE_CHAT_CHANGES_CANDIDATE": "0",
+		"MOBILE_ACCOUNT_AUTH_ENABLED":   "0",
+		"MOBILE_LISTEN_ADDR":            "127.0.0.1:0",
+		"MOBILE_LIVENESS_ADDR":          "127.0.0.1:0",
+	}
+	var logs bytes.Buffer
+	if code := serveUntil(ctx, func(k string) string { return env[k] }, &logs); code != 0 {
+		t.Fatalf("exit %d, want 0 when chat features are opted out; log: %s", code, logs.String())
+	}
+	if !strings.Contains(logs.String(), "core starting") {
+		t.Fatalf("expected core starting log, got: %s", logs.String())
+	}
+}

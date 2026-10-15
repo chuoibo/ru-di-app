@@ -879,6 +879,7 @@ jobs:
 
       # The ABI driven end to end through its own extern functions.
       - if: steps.ffi.outputs.found == 'true'
+        name: Drive the C ABI through its extern functions
         run: |
           set -o pipefail
           cargo test --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml 2>&1 | tee /tmp/ffi.log
@@ -919,6 +920,7 @@ jobs:
 
       # A cdylib that exports nothing is a file, not a bridge.
       - if: steps.ffi.outputs.found == 'true'
+        name: Every Android library exports the ABI and carries a SONAME
         run: |
           ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
           nm="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"

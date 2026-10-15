@@ -5,6 +5,9 @@
  * that message is later deleted (it reads as deleted).
  */
 import type { Operation, Received } from "./kieu";
+import { chuDongBinhChon, docBinhChonV2, type BinhChonV2 } from "./binh-chon-v2";
+import { decodeRandomRound, type RandomRound } from "./random-v2";
+import { decodeRandomLiveRound, type RandomLiveRound } from "./random-live";
 
 export type TinV2 = {
   id: string;
@@ -21,6 +24,9 @@ export type TinV2 = {
   sticker: { packId: string; stickerId: string } | null;
   /** An `ai_card`: drawn as the assistant's only once checked against the server's receipt. */
   ai: { invocationId: string; card: string } | null;
+  poll?: BinhChonV2;
+  random?: RandomRound;
+  randomLive?: RandomLiveRound;
 };
 
 export type SoTin = { order: string[]; byId: Record<string, TinV2> };
@@ -48,10 +54,21 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
     reactions: Object.create(null) as Record<string, string[]>, media: null, sticker: null, ai: null, ...patch,
   });
   switch (op.type) {
-    case "text":
-      return them(so, moi({ body: op.body }));
-    case "reply":
-      return them(so, moi({ body: op.body, replyTo: op.reply_to }));
+    case "text": {
+      const poll = docBinhChonV2(op.body, nhan.logical_send_id, sequence);
+      const decoded = decodeRandomRound(op.body);
+      const random = decoded?.id === nhan.logical_send_id ? decoded : null;
+      const live = decodeRandomLiveRound(op.body);
+      const randomLive = live?.id === nhan.logical_send_id ? live : null;
+      return them(so, moi({ body: op.body, ...(poll ? { poll } : {}), ...(random ? { random } : {}), ...(randomLive ? { randomLive } : {}) }));
+    }
+    case "reply": {
+      const decoded = decodeRandomRound(op.body);
+      const random = decoded?.id === nhan.logical_send_id ? decoded : null;
+      const live = decodeRandomLiveRound(op.body);
+      const randomLive = live?.id === nhan.logical_send_id ? live : null;
+      return them(so, moi({ body: op.body, replyTo: op.reply_to, ...(random ? { random } : {}), ...(randomLive ? { randomLive } : {}) }));
+    }
     case "image":
       return them(so, moi({ body: op.caption, media: op }));
     case "voice":
@@ -61,9 +78,22 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
     case "ai_card":
       return them(so, moi({ replyTo: op.reply_to, ai: { invocationId: op.invocation_id, card: op.card } }));
     case "edit":
-      return sua(so, op.message_id, (t) => (t.authorId !== tac || t.deleted || t.media?.type === "voice" || t.ai !== null ? null : { ...t, body: op.body, edited: true }));
+      return sua(so, op.message_id, (t) => {
+        if (t.authorId !== tac || t.deleted || t.media?.type === "voice" || t.ai !== null || t.random !== undefined || t.randomLive !== undefined) return null;
+        if (t.poll) {
+          if (t.poll.closed || t.body === null || op.body !== chuDongBinhChon(t.body)) return null;
+          return { ...t, body: op.body, edited: true, poll: { ...t.poll, closed: true, closedAt: at, revision: sequence } };
+        }
+        return { ...t, body: op.body, edited: true };
+      });
     case "delete":
-      return sua(so, op.message_id, (t) => (t.authorId !== tac ? null : { ...t, body: null, media: null, sticker: null, ai: null, deleted: true, reactions: Object.create(null) as Record<string, string[]> }));
+      return sua(so, op.message_id, (t) => {
+        if (t.authorId !== tac) return null;
+        const deleted = { ...t, body: null, media: null, sticker: null, ai: null, ...(t.poll ? { poll: undefined } : {}), deleted: true, reactions: Object.create(null) as Record<string, string[]> };
+        delete deleted.random;
+        delete deleted.randomLive;
+        return deleted;
+      });
     case "reaction":
       return sua(so, op.message_id, (t) => {
         if (t.deleted) return null;
@@ -78,7 +108,12 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
         return { ...t, reactions };
       });
     case "vote":
-      return so;
+      return sua(so, op.poll_id, (t) => {
+        if (t.deleted || !t.poll || t.poll.closed || !t.poll.options.some((option) => option.id === op.option_id)) return null;
+        const ballots: Record<string, string> = Object.assign(Object.create(null), t.poll.ballots);
+        ballots[tac] = op.option_id;
+        return { ...t, poll: { ...t.poll, ballots, revision: sequence } };
+      });
   }
 }
 

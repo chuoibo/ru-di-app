@@ -50,7 +50,7 @@ appId: com.lakiet.rudi
 - tapOn: "Cài đặt cuộc trò chuyện"
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
-    visible: "Một chỗ cho chuyện hai mình"
+    visible: "Cùng hẹn nhau, giữ lại những cuộc đi. Chỉ mở khi cả hai đồng ý."
     timeout: 60000
 - takeScreenshot: 47a-chua-co-so
 - tapOn: "Đề nghị lập sổ"
@@ -112,7 +112,7 @@ appId: com.lakiet.rudi
     visible: "Hai người cũng thành một hội"
     timeout: 60000
 - assertNotVisible: "Rủ đi chơi"
-- tapOn: "Mở sổ cặp đôi"
+- tapOn: "Chọn loại sổ"
 - tapOn:
     id: "loai-so-doi"
 - tapOn: "Đề nghị bật «Một đôi»"
@@ -143,7 +143,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - assertNotVisible: "Tờ giấy của hai mình"
 - tapOn: '.*đề nghị hai bạn là «Một đôi»\. Mở để xem và trả lời\.'
-- tapOn: "Mở sổ cặp đôi"
+- tapOn: "Chọn loại sổ"
 - tapOn: "Đồng ý là một đôi"
 # Agreeing closes the sheet by itself; the header now names the couple.
 - extendedWaitUntil:

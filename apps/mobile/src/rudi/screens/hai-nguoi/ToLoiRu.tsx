@@ -61,6 +61,7 @@ export function ToLoiRu({
   toiId,
   tenNguoiKia,
   dan,
+  dangLam = false,
   onGui,
   onSuaNhap,
   onBoNhap,
@@ -81,6 +82,7 @@ export function ToLoiRu({
   tenNguoiKia?: string;
   /** This sheet is the thing to do now on this surface. */
   dan?: boolean;
+  dangLam?: boolean;
   onGui?: () => void;
   onSuaNhap?: () => void;
   onBoNhap?: () => void;
@@ -188,7 +190,9 @@ export function ToLoiRu({
               // «Con dấu rơi xuống» là khoảnh khắc ký của thế giới này, và nó
               // chỉ đúng khi trạng thái vừa đổi DƯỚI NGÓN TAY người đang nhìn.
               dong={vuaDoi}
-              label={nhanDau(to, toiId, tenNguoiKia)}
+              label={nhanDau(to, toiId, tenNguoiKia).toLocaleUpperCase("vi-VN")}
+              labelStyle={styles.chuDauTrangThai}
+              style={styles.dauTrangThai}
               testID={testID ? `${testID}-stamp` : undefined}
               tilt={vuaDoi ? -2 : 0}
               tone="ink"
@@ -231,7 +235,7 @@ export function ToLoiRu({
         <View style={[styles.nutChinh, doc && styles.nutDoc, { gap: space.sm }]}>
           {chinh.map((n, i) => (
             <View key={n} style={doc ? styles.nutFull : styles.nutNua}>
-              <RudiButton label={chuNut(n, pb)} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
+              <RudiButton loading={dangLam} disabled={dangLam} label={chuNut(n, pb)} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
             </View>
           ))}
         </View>
@@ -244,7 +248,7 @@ export function ToLoiRu({
         // trông như «Tuần này nghỉ»; tờ xác nhận ở dưới mới nói ra hậu quả.
         <View style={[styles.thoat, { borderTopColor: colors.line, gap: space.sm }]}>
           {phu.map((n) => (
-            <RudiButton key={n} label={chuNut(n, pb)} onPress={bam[n]!} tone={n === "bo" || n === "huy" ? "warn" : undefined} variant="ghost" />
+            <RudiButton disabled={dangLam} key={n} label={chuNut(n, pb)} onPress={bam[n]!} tone={n === "bo" || n === "huy" ? "warn" : undefined} variant="ghost" />
           ))}
         </View>
       ) : null}
@@ -333,6 +337,11 @@ const styles = StyleSheet.create({
   butChi: { borderBottomWidth: 1, borderStyle: "dashed", paddingBottom: 3 },
   nepGui: { alignItems: "flex-end" },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
+  // Android's condensed caps need more than the intrinsic 46dp at font 1.0.
+  // Allot the seal room and let its label use it; other Stamp callers keep
+  // their own geometry. At larger font scales the natural width still grows.
+  dauTrangThai: { minWidth: 88 },
+  chuDauTrangThai: { alignSelf: "stretch", textAlign: "center" },
   // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
   lyDo: {},
   moc: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", paddingVertical: 4 },

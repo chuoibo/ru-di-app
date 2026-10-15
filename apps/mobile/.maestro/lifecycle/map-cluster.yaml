@@ -1,0 +1,33 @@
+# Two real catalogue stops at the same coordinate, in the owned QC context.
+# Selection and cancellation change client state only.
+appId: com.lakiet.rudi
+---
+- openLink: "rudi://outings/${KEO_ID}?ctx=${CTX_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "outing-screen"
+    timeout: 30000
+- assertVisible: "${TIEU_DE}"
+- tapOn:
+    id: "che-do-hanh-trinh"
+- extendedWaitUntil:
+    visible: "2 điểm hẹn gần nhau. Chạm để chọn."
+    timeout: 30000
+- tapOn:
+    id: "map-marker-${FIRST_STOP_ID}"
+- assertVisible: "Chọn điểm hẹn"
+- takeScreenshot: native-cluster-complete-choices
+- tapOn: "${CHON_2}"
+- assertVisible:
+    id: "hanh-trinh-selected-stop"
+    text: "${CHANG_THU_HAI}"
+- takeScreenshot: native-cluster-second-selected
+- tapOn:
+    id: "map-marker-${FIRST_STOP_ID}"
+- assertVisible: "Chọn điểm hẹn"
+- back
+- assertNotVisible: "Chọn điểm hẹn"
+- assertVisible:
+    id: "hanh-trinh-selected-stop"
+    text: "${CHANG_THU_HAI}"
+- takeScreenshot: native-cluster-back-preserves-selection

@@ -24,7 +24,7 @@ func TestKhongMayThiTuChoiRo(t *testing.T) {
 	}
 	w := n.f.request("GET", "/contexts/"+n.f.context+"/chat-capabilities", n.f.token, nil)
 	requireCode(t, w, 200)
-	for _, lenh := range []string{"plan", "chia_bill", "hoi"} {
+	for _, lenh := range []string{"plan", "chia_bill", "hoi", "random"} {
 		if !strings.Contains(w.Body.String(), `"`+lenh+`":{"available":false,"reason":"provider_unavailable"}`) {
 			t.Fatalf("keyless capabilities for %s: %s", lenh, w.Body.String())
 		}

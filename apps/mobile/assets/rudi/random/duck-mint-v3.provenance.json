@@ -1,0 +1,23 @@
+{
+  "tool": "built-in image_gen",
+  "source": "/home/lakiet/.codex/generated_images/01a1192e-6adb-7ec1-8aba-b662fbdce6ac/exec-cc83e411-c906-466f-b207-a0595689297a.png",
+  "references": [
+    "/home/lakiet/.codex/generated_images/01a1192e-6adb-7ec1-8aba-b662fbdce6ac/exec-35d723da-bfa3-418e-a7f1-30b0582b3a38.png"
+  ],
+  "prompt_sha256": "0570921d7551f1097d3318bc8afeda6b054ffdf269db7cf7ba5da9af50971a17",
+  "generated_sha256": "cdc04f360f488eb172690688debbbf3c930f44afd2ba2b752884343321236908",
+  "rgba_sha256_before_metadata": "e2a1df241e021328067bde45bd0838cbc0869aa677e11122b4c34682bf413d6a",
+  "size": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "purpose": "shipping game asset",
+  "embedded_sha256": "e36baf2af5ef48e837b0baf1c7c15e878245ccfe5bbbbb859d4b78e8c0932b9b",
+  "rgba_sha256_after_metadata": "e2a1df241e021328067bde45bd0838cbc0869aa677e11122b4c34682bf413d6a",
+  "metadata_verification": "PNG tEXt raw Latin-1 bytes equal UTF-8 prompt bytes; decoded RGBA unchanged"
+}

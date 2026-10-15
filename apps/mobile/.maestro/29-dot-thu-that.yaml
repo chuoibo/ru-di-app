@@ -22,7 +22,8 @@ appId: com.lakiet.rudi
 # The profile tab may still be leaving a screen pushed on it: wait for its own
 # heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Không gian của riêng bạn"
+    visible:
+      id: "profile-screen"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
@@ -50,10 +51,20 @@ appId: com.lakiet.rudi
     visible: "Quyết toán"
     timeout: 60000
 # Chưa có đợt nào: các khoản chuyển ở trên mới là đề xuất.
+- scrollUntilVisible:
+    element:
+      text: "Chưa có đợt thu nào.*"
+    direction: DOWN
+    timeout: 30000
 - extendedWaitUntil:
     visible: "Chưa có đợt thu nào.*"
     timeout: 60000
 - takeScreenshot: 29-quyet-toan-chua-co-dot
+- scrollUntilVisible:
+    element:
+      text: "Tạo đợt thu từ sổ"
+    direction: DOWN
+    timeout: 30000
 - tapOn: "Tạo đợt thu từ sổ"
 # Máy chủ gom mọi khoản chưa vào đợt: một nghĩa vụ C → D 75.000đ, chưa phát.
 - extendedWaitUntil:
@@ -116,7 +127,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Sổ không còn ai nợ ai.*"
     timeout: 60000
-- assertNotVisible: "Cách chuyển gọn nhất, tính từ sổ.*"
+- assertNotVisible: "Cách cân lại sổ.*"
 - assertNotVisible: "Tạo đợt thu từ sổ"
 - assertVisible: "Sổ không còn khoản nào ngoài đợt.*"
 - takeScreenshot: 29-quyet-toan-co-dot

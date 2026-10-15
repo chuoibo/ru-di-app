@@ -1,12 +1,13 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
-import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import { Children, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import { Text } from "./ui/NativeFontMetrics";
+import { InputViewportContext } from "./ui/InputViewport";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,6 +15,8 @@ import { luiVe as luiVeAnToan } from "./lui-ve";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
 import { Grain } from "./ui/Grain";
+import type { AssetIconName } from "./asset-pack/react-native/AssetIcon";
+import { RudiIcon, type IconName } from "./ui/RudiIcon";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
@@ -25,7 +28,8 @@ import { useChamLaiTab } from "./ui/cham-lai-tab";
 import { useMotion } from "./ui/useMotion";
 import { TABLIST, giuState, tabState, toggleState } from "../ui/a11y";
 
-export type IconName = ComponentProps<typeof Ionicons>["name"];
+export type { IconName } from "./ui/RudiIcon";
+export { useRudiInputViewportHeight } from "./ui/InputViewport";
 
 type ScreenProps = {
   children: ReactNode;
@@ -39,9 +43,15 @@ type ScreenProps = {
   contentStyle?: StyleProp<ViewStyle>;
   /** `cover` when the first child is a CoverBand: the status-bar area is indigo, not paper. */
   surface?: "page" | "cover";
+  /** Quiet reading ground; texture belongs to the task's paper object. */
+  material?: "journal" | "quiet";
   testID?: string;
   /** Only opt in when this screen owns the composer; live chat owns its own IME. */
   avoidKeyboard?: boolean;
+  /** Clearance below a focused input, including an inline validation message. */
+  focusBottomInset?: number;
+  /** Retire queued viewport layouts when this editor's existing native metrics change. */
+  inputViewportRevision?: unknown;
   scrollEnabled?: boolean;
   /** Pull-to-refresh on a live list: the same read the screen does on focus, so stale data has a way out. */
   onRefresh?: () => Promise<void>;
@@ -86,8 +96,11 @@ export function RudiScreen({
   footerInset = 0,
   contentStyle,
   surface = "page",
+  material = "journal",
   testID,
   avoidKeyboard = false,
+  focusBottomInset = 16,
+  inputViewportRevision,
   scrollEnabled = true,
   overlay,
   keepEnd = false,
@@ -99,9 +112,71 @@ export function RudiScreen({
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width, height: windowHeight } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  const viewportGeneration = useMemo(() => ({}), [avoidKeyboard, scroll, width, windowHeight, fontScale, keyboardOpen, inputViewportRevision]);
+  const [viewportLayout, setViewportLayout] = useState<{ generation: object; width: number; height: number | null }>(() => ({ generation: viewportGeneration, width, height: null }));
+  useLayoutEffect(() => {
+    setViewportLayout((previous) => previous.generation === viewportGeneration ? previous : { generation: viewportGeneration, width, height: previous.width === width ? previous.height : null });
+  }, [viewportGeneration, width]);
+  const keyboardVisible = useRef(false);
+  const keyboardReveal = useRef(false);
+  const keyboardInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput> | null>(null);
+  const keyboardFrame = useRef<number | null>(null);
+  const focusBottom = useRef(16);
+  const keyboardGeneration = useRef(0);
+  const cancelKeyboardReveal = () => {
+    keyboardGeneration.current += 1;
+    if (keyboardFrame.current !== null) { cancelAnimationFrame(keyboardFrame.current); keyboardFrame.current = null; }
+  };
+  // The footer remains available above the IME; reveal the focused field
+  // after the scroll viewport has resized so the two never overlap.
+  const revealFocusedField = () => {
+    if (!avoidKeyboard || !scroll || Platform.OS === "web" || !keyboardVisible.current || !keyboardReveal.current) return;
+    cancelKeyboardReveal();
+    const generation = keyboardGeneration.current;
+    const active = () => keyboardGeneration.current === generation && keyboardVisible.current && keyboardReveal.current;
+    keyboardFrame.current = requestAnimationFrame(() => {
+      if (!active()) return;
+      keyboardFrame.current = requestAnimationFrame(() => {
+        if (!active()) return;
+        keyboardFrame.current = null;
+        const input = TextInput.State.currentlyFocusedInput();
+        const viewport = cuon.current?.getNativeScrollRef();
+        if (!input || !viewport || !keyboardVisible.current) return;
+        // ScrollView's keyboard helper assumes a full-screen viewport. Measure
+        // this form's actual viewport instead, which excludes its fixed footer.
+        viewport.measureInWindow((_x, top, _width, height) => {
+          if (!active() || !Number.isFinite(top) || !Number.isFinite(height) || height <= 0) return;
+          input.measureInWindow((_inputX, inputTop, _inputWidth, inputHeight) => {
+            if (!active() || TextInput.State.currentlyFocusedInput() !== input || cuon.current?.getNativeScrollRef() !== viewport || !Number.isFinite(inputTop) || !Number.isFinite(inputHeight) || inputHeight <= 0) return;
+            const bottomDelta = inputTop + inputHeight + focusBottom.current - (top + height);
+            const topDelta = inputTop - top - 16;
+            const fitsWithClearance = inputHeight + 16 + focusBottom.current <= height;
+            // An oversized input cannot satisfy both edges; keep the revealed bottom stable.
+            const delta = bottomDelta > 0 ? bottomDelta : fitsWithClearance && topDelta < 0 ? topDelta : 0;
+            if (delta !== 0) cuon.current?.scrollTo({ y: Math.max(0, cuonY.value + delta), animated: false });
+          });
+        });
+      });
+    });
+  };
+  const recordViewport = (event?: LayoutChangeEvent) => {
+    // Layout may precede keyboardDidShow. Keep the last actual viewport, not a keyboard-height estimate.
+    const layout = event?.nativeEvent.layout;
+    if (avoidKeyboard && scroll && Platform.OS !== "web" && layout && cuon.current?.getNativeScrollRef()) {
+      const height = Number.isFinite(layout.width) && layout.width > 0 && Number.isFinite(layout.height) && layout.height > 0 ? layout.height : null;
+      setViewportLayout((previous) => previous.generation !== viewportGeneration || !cuon.current?.getNativeScrollRef() || previous.height === height ? previous : { generation: viewportGeneration, width, height });
+    }
+    revealFocusedField();
+  };
+  useLayoutEffect(() => {
+    focusBottom.current = Number.isFinite(focusBottomInset) && focusBottomInset >= 0 ? focusBottomInset : 16;
+    // A measured inline error can grow after the viewport's own layout event.
+    revealFocusedField();
+    return cancelKeyboardReveal;
+  }, [focusBottomInset, avoidKeyboard, scroll]);
   // The scroll a stage folds with; published only when the screen has one.
   const coCanh = canh !== undefined && canh !== null && canh !== false;
   const cuonY = useSharedValue(0);
@@ -134,10 +209,25 @@ export function RudiScreen({
   useChamLaiTab(bottomInset === "tab" ? () => cuon.current?.scrollTo({ y: 0, animated: !motion.reduced }) : null);
   useEffect(() => {
     if (!avoidKeyboard) return;
-    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
-    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
-    return () => { show.remove(); hide.remove(); };
-  }, [avoidKeyboard]);
+    const show = Keyboard.addListener("keyboardDidShow", () => {
+      keyboardVisible.current = true;
+      keyboardReveal.current = true;
+      keyboardInput.current = TextInput.State.currentlyFocusedInput();
+      setKeyboardOpen(true);
+      revealFocusedField();
+    });
+    const hide = Keyboard.addListener("keyboardDidHide", () => {
+      keyboardVisible.current = false;
+      keyboardReveal.current = false;
+      cancelKeyboardReveal();
+      setKeyboardOpen(false);
+    });
+    return () => {
+      show.remove(); hide.remove();
+      keyboardVisible.current = false;
+      cancelKeyboardReveal();
+    };
+  }, [avoidKeyboard, scroll]);
   const tablet = layout.sizeClass !== "compact";
   const inner = [
     styles.screenInner,
@@ -165,10 +255,11 @@ export function RudiScreen({
             table — the ground is the cover cloth (its weave measures ≈ 8 grey levels at
             0.30; the paper tile measured ≈ 2 on the dark ground, i.e. flat), and every
             drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
-        {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
+        {material === "journal" ? (dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />) : null}
       </View>
       <KheLopProvider khe={khe}>
       <CuonContext.Provider value={cuonMan}>
+      <InputViewportContext.Provider value={avoidKeyboard && scroll && keyboardOpen && viewportLayout.width === width ? viewportLayout.height : null}>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (
         // A keyline under the fixed header: content scrolling beneath it reads
@@ -183,6 +274,7 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
+          onLayout={recordViewport}
           onScroll={theoCuon}
           scrollEventThrottle={16}
           refreshControl={
@@ -202,7 +294,22 @@ export function RudiScreen({
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : undefined}
+          onLayout={recordViewport}
+          onScroll={avoidKeyboard ? (event) => {
+            cuonY.value = event.nativeEvent.contentOffset.y;
+            if (!keyboardVisible.current) return;
+            const input = TextInput.State.currentlyFocusedInput();
+            if (input !== keyboardInput.current) {
+              keyboardInput.current = input;
+              keyboardReveal.current = true;
+            }
+            // Android can finish its own focus scroll after the IME layout.
+            // Recheck that final viewport, until the person scrolls by hand.
+            if (keyboardReveal.current) revealFocusedField();
+          } : undefined}
+          onScrollBeginDrag={avoidKeyboard ? () => { keyboardReveal.current = false; cancelKeyboardReveal(); } : undefined}
+          scrollEventThrottle={avoidKeyboard ? 16 : undefined}
+          onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : avoidKeyboard ? revealFocusedField : undefined}
           refreshControl={
             keoLamMoi ? (
               <RefreshControl colors={[colors.accent]} onRefresh={() => void keoLamMoi()} progressBackgroundColor={colors.card} refreshing={dangKeo} tintColor={colors.accent} />
@@ -218,6 +325,7 @@ export function RudiScreen({
       )}
       {footer ? (
         <View
+          onLayout={revealFocusedField}
           style={[
             styles.screenFooter,
             { paddingHorizontal: tablet ? space.lg : space.md, paddingBottom: keyboardOpen ? 8 : footerInset },
@@ -228,6 +336,7 @@ export function RudiScreen({
         </View>
       ) : null}
       </KeyboardAvoidingView>
+      </InputViewportContext.Provider>
       </CuonContext.Provider>
       </KheLopProvider>
       {overlay}
@@ -307,6 +416,7 @@ export function TopBar({
           <IconButton
             accessibilityLabel="Quay lại"
             icon="chevron-back"
+            glyphOffsetX={-7}
             onPress={luiVe}
             quiet
           />
@@ -362,7 +472,7 @@ export function Logo({ compact = false, ink }: { compact?: boolean; ink?: string
         start={{ x: 0, y: 0 }}
         style={[styles.logoMark, compact && styles.logoMarkCompact]}
       >
-        <Text style={[styles.logoMarkType, compact && styles.logoMarkTypeCompact]}>
+        <Text allowFontScaling={false} style={[styles.logoMarkType, compact && styles.logoMarkTypeCompact]}>
           Rủ{"\n"}Đi
         </Text>
       </LinearGradient>
@@ -445,7 +555,7 @@ export function SectionHeader({
   const { colors } = useRudiTheme();
   return (
     <View style={styles.sectionHeader}>
-      <Text style={[typography.h2, { color: colors.ink }]}>{title}</Text>
+      <Text style={[typography.h2, styles.sectionTitle, { color: colors.ink }]}>{title}</Text>
       {action ? (
         <Pressable
           accessibilityRole="button"
@@ -517,10 +627,13 @@ type ButtonProps = {
   loading?: boolean;
   compact?: boolean;
   full?: boolean;
+  labelAlign?: "left" | "center";
   style?: StyleProp<ViewStyle>;
   /** When the visible label is not enough on its own («Nhắn tin» on a row
    *  that names somebody): the sentence a screen reader, and Maestro, get. */
   accessibilityLabel?: string;
+  /** Disclosure controls expose the same state their visible label names. */
+  expanded?: boolean;
   /**
    * ADR-0038 §2.2: why a disabled button cannot be used yet («Chọn một tấm
    * ảnh trước đã.»), printed under it and given to a screen reader as the
@@ -550,8 +663,10 @@ export function RudiButton({
   loading = false,
   compact = false,
   full = true,
+  labelAlign = "center",
   style,
   accessibilityLabel,
+  expanded,
   lyDo,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
@@ -585,8 +700,8 @@ export function RudiButton({
   const body = (
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
-      {!loading && icon ? <Ionicons color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
-      <Text numberOfLines={1} style={[typography.label, styles.buttonLabel, { color: foreground }]}>
+      {!loading && icon ? <RudiIcon color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
+      <Text style={[typography.label, styles.buttonLabel, full && styles.buttonLabelFull, { color: foreground, textAlign: labelAlign }]}>
         {label}
       </Text>
     </>
@@ -600,7 +715,8 @@ export function RudiButton({
       accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      accessibilityState={{ disabled: disabled || loading, busy: loading, expanded }}
+      aria-expanded={expanded}
       disabled={disabled || loading}
       onPress={onPress}
       pressedScale={0.98}
@@ -626,7 +742,7 @@ export function RudiButton({
     <View style={[styles.nutCoLyDo, full ? styles.nutCoLyDoFull : null]}>
       {nut}
       <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
-        <Ionicons color={chuTat} name="information-circle-outline" size={16} />
+        <RudiIcon color={chuTat} name="information-circle-outline" size={16} />
         <Text style={[typography.caption, styles.lyDoChu, { color: chuTat }]}>{lyDo}</Text>
       </View>
     </View>
@@ -635,9 +751,10 @@ export function RudiButton({
 
 export function IconButton({
   icon,
+  assetIcon,
   onPress,
   accessibilityLabel,
-  selected = false,
+  selected,
   quiet = false,
   solid = false,
   dim = false,
@@ -645,8 +762,11 @@ export function IconButton({
   disabled = false,
   tone = "accent",
   tron = false,
+  glyphOffsetX = 0,
+  style,
 }: {
   icon: IconName;
+  assetIcon?: AssetIconName;
   onPress?: () => void;
   accessibilityLabel: string;
   selected?: boolean;
@@ -663,6 +783,10 @@ export function IconButton({
   loading?: boolean;
   disabled?: boolean;
   tone?: RudiTone;
+  /** Optical alignment of the drawn glyph, without moving its 48dp target. */
+  glyphOffsetX?: number;
+  /** Layout inside the owning row; defaults remain a 48dp square. */
+  style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useRudiTheme();
   // ADR-0038 §2.2: a primary icon with nothing to act on yet (send, with the
@@ -693,7 +817,7 @@ export function IconButton({
       accessibilityRole="button"
       aria-busy={loading}
       aria-disabled={disabled || loading}
-      {...giuState(Boolean(selected))}
+      {...(selected === undefined ? {} : giuState(selected))}
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
@@ -703,9 +827,10 @@ export function IconButton({
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
         tatSolid && { borderColor: colors.lineStrong, borderStyle: "dashed" as const, borderWidth: 1.5 },
         tron && styles.iconButtonTron,
+        style,
       ]}
     >
-      {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}
+      {loading ? <ActivityIndicator color={glyph} size="small" /> : <View pointerEvents="none" style={glyphOffsetX ? { transform: [{ translateX: glyphOffsetX }] } : undefined}><RudiIcon assetIcon={assetIcon} assetSize={24} color={glyph} name={icon} size={22} /></View>}
     </PressScale>
   );
 }
@@ -714,7 +839,7 @@ export function IconButton({
  * The kit's text field. The box, the input and the placeholder live in
  * `ui/Field.tsx`, which imports nothing native so a node test can render it
  * (audit native 09/09, F44); this wrapper only turns an icon NAME into the
- * `Ionicons` element that file cannot import.
+ * decorative glyph element that file cannot import.
  *
  * A `const`, not a `function` declaration, on purpose: the non-text contrast
  * gate (`services/api/tests/web/test_contrast_floor.py`) reads the kit as text
@@ -725,10 +850,10 @@ export function IconButton({
  */
 export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) => {
   const { colors } = useRudiTheme();
-  return <FieldCore {...props} leading={icon ? <Ionicons color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
+  return <FieldCore {...props} leading={icon ? <RudiIcon color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
 };
 
-export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & { oRef?: FieldCoreProps["oRef"] }) {
+export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & Pick<FieldCoreProps, "oRef" | "trailing" | "nativeMetrics">) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 
@@ -797,6 +922,7 @@ export function Chip({
   icon,
   leading,
   selected = false,
+  disabled = false,
   tone = "accent",
   onPress,
   accessibilityLabel,
@@ -808,6 +934,8 @@ export function Chip({
   /** Authored artwork in the icon's place (a `GuGlyph`), so a taxonomy is drawn with one pen everywhere. */
   leading?: ReactNode;
   selected?: boolean;
+  /** Block pointer and keyboard changes while the server recalculates the choice. */
+  disabled?: boolean;
   tone?: RudiTone;
   onPress?: () => void;
   /** When the same label appears on several rows, say which row this one is. */
@@ -841,7 +969,7 @@ export function Chip({
           },
         ]}
       >
-        {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={14} /> : null)}
+        {leading ?? (icon ? <RudiIcon color={foreground} name={icon} size={14} /> : null)}
         <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
           {label}
         </Text>
@@ -851,7 +979,9 @@ export function Chip({
   return (
     <PressScale
       accessibilityLabel={accessibilityLabel}
-      {...(vaiTab ? tabState(selected) : vaiRadio ? toggleState("radio", selected, onPress) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
+      {...(vaiTab ? tabState(selected) : vaiRadio ? toggleState("radio", selected, disabled ? undefined : onPress) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
+      aria-disabled={disabled}
+      disabled={disabled}
       onPress={onPress}
       pressedScale={0.96}
       style={[
@@ -866,8 +996,8 @@ export function Chip({
       ]}
     >
       {/* Selected is said twice: fill and a check, so it does not rest on color alone. */}
-      {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={16} /> : null)}
-      {icon === undefined && leading === undefined && selected ? <Ionicons color={foreground} name="checkmark" size={16} /> : null}
+      {leading ?? (icon ? <RudiIcon color={foreground} name={icon} size={16} /> : null)}
+      {icon === undefined && leading === undefined && selected ? <RudiIcon color={foreground} name="checkmark" size={16} /> : null}
       <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
         {label}
       </Text>
@@ -940,7 +1070,7 @@ export function Stat({
     <View style={styles.stat}>
       {icon ? (
         <View style={[styles.statIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
-          <Ionicons color={toneColor(colors, tone)} name={icon} size={19} />
+          <RudiIcon color={toneColor(colors, tone)} name={icon} size={19} />
         </View>
       ) : null}
       {/* Never shrunk to fit: a figure that does not fit wraps to its own line (report §7.1). */}
@@ -959,7 +1089,7 @@ export function AiNote({ children }: { children: ReactNode }) {
   const { colors } = useRudiTheme();
   return (
     <View style={[styles.aiNote, { borderColor: colors.ai }]}>
-      <Ionicons color={colors.ai} name="sparkles" size={17} style={styles.aiIcon} />
+      <RudiIcon color={colors.ai} name="sparkles" size={17} style={styles.aiIcon} />
       <View style={styles.flex}>
         <Text style={[typography.label, styles.aiText, { color: colors.ink }]}>{children}</Text>
         <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI gợi ý</Text>
@@ -988,12 +1118,14 @@ export function Segmented({
   onSelect,
   tone = "accent",
   testIDs,
+  disabled = false,
 }: {
   items: string[];
   selected: number;
   onSelect: (index: number) => void;
   tone?: RudiTone;
   testIDs?: (string | undefined)[];
+  disabled?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   return (
@@ -1006,6 +1138,8 @@ export function Segmented({
             accessibilityLabel={item}
             accessibilityRole="tab"
             aria-selected={active}
+            accessibilityState={{ selected: active, disabled }}
+            disabled={disabled}
             onPress={() => onSelect(index)}
             testID={testIDs?.[index]}
             style={[
@@ -1031,6 +1165,7 @@ export function ListRow({
   tone = "accent",
   onPress,
   chevron = true,
+  iconTreatment = "tile",
 }: {
   icon: IconName;
   title: string;
@@ -1040,6 +1175,8 @@ export function ListRow({
   onPress?: () => void;
   /** False for a row that acts on the spot (copy, reply): a chevron promises somewhere to go. */
   chevron?: boolean;
+  /** Plain ink keeps navigation quiet within a screen's existing groups. */
+  iconTreatment?: "tile" | "plain";
 }) {
   const { colors } = useRudiTheme();
   return (
@@ -1050,14 +1187,14 @@ export function ListRow({
       pressedScale={0.985}
       style={styles.listRow}
     >
-      <View style={[styles.listIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
-        <Ionicons color={toneColor(colors, tone)} name={icon} size={20} />
+      <View style={[styles.listIcon, { backgroundColor: iconTreatment === "plain" ? "transparent" : toneSoftColor(colors, tone) }]}>
+        <RudiIcon color={iconTreatment === "plain" ? colors.inkSoft : toneColor(colors, tone)} name={icon} size={20} />
       </View>
       <View style={styles.listText}>
         <Text style={[typography.label, { color: colors.ink }]}>{title}</Text>
         {subtitle ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{subtitle}</Text> : null}
       </View>
-      {trailing ?? (onPress && chevron ? <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
+      {trailing ?? (onPress && chevron ? <RudiIcon color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
     </PressScale>
   );
 }
@@ -1173,7 +1310,9 @@ const styles = StyleSheet.create({
   // `width: 100%` so the column fills up to its `maxWidth`; centred without it,
   // the column shrank to whatever its widest child happened to be.
   tabletInner: { alignSelf: "center", width: "100%", maxWidth: 960, paddingTop: 22 },
-  topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  // The glyph aligns with the content gutter; its 48dp target extends into
+  // the gutter rather than adding another 12dp of visible indentation.
+  topBar: { minHeight: 52, marginHorizontal: -12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   // Sides are at least the 48dp target wide and always equal (see TopBar), so
   // the title is centred on the screen even next to a badge.
   topBarSide: { minWidth: 52, flexShrink: 0, alignItems: "flex-start" },
@@ -1182,7 +1321,7 @@ const styles = StyleSheet.create({
   topBarSideInnerRight: { alignItems: "center", alignSelf: "flex-end", flexDirection: "row", gap: 4 },
   topBarRight: { alignItems: "flex-end" },
   topBarTitleWrap: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
-  topBarTitle: { textAlign: "center" },
+  topBarTitle: { textAlign: "center", width: "100%" },
   doChu: { position: "absolute", left: 0, top: 0, opacity: 0 },
   logoRow: { flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 9 },
   logoMark: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-4deg" }] },
@@ -1195,18 +1334,22 @@ const styles = StyleSheet.create({
   center: { alignSelf: "center", alignItems: "center" },
   headingSubtitle: { maxWidth: 560 },
   sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 3 },
+  // Fill the available row: native font measurement otherwise wraps short
+  // headings inside their intrinsic width even when the page has room.
+  sectionTitle: { flex: 1, minWidth: 0 },
   // A text action is still a target: 48dp tall, so a 13dp glyph is not the whole hit box.
-  sectionAction: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
+  sectionAction: { minHeight: 48, flexShrink: 0, justifyContent: "center", paddingHorizontal: 6 },
   card: { borderWidth: 1, padding: 16 },
   cardPressed: { opacity: 0.94, transform: [{ scale: 0.992 }] },
   pressed: { opacity: 0.68 },
   // `minWidth` pairs with `minHeight`: a content-sized button («Bỏ», `full={false}`)
   // measured 47.2dp wide on device once it stopped being full-width (finish
   // review 10/09, F41). The floor lives here so every future short label gets it.
-  button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
+  button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   buttonFull: { width: "100%" },
-  buttonCompact: { minHeight: 48, paddingHorizontal: 14 },
-  buttonLabel: { zIndex: 1 },
+  buttonCompact: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10 },
+  buttonLabel: { zIndex: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
+  buttonLabelFull: { flexGrow: 1 },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
   nutCoLyDoFull: { alignSelf: "stretch" },

@@ -17,45 +17,47 @@ import { Sheet } from "../../ui/Sheet";
  * khoá» for half a second before the real count arrived would be asking
  * somebody to agree to the wrong thing.
  */
-export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } | null; onDong: () => void; testID?: string }) {
+export function DongSo({ open, onClose, xemTruoc, onDong, dangLam = false, loi = null, loiPreview = null, onRetryPreview, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } | null; onDong: () => void; dangLam?: boolean; loi?: string | null; loiPreview?: string | null; onRetryPreview?: () => void; testID?: string }) {
   const { colors, space } = useRudiTheme();
   if (xemTruoc === null) {
     return (
-      <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
+      <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} showsVerticalScrollIndicator testID={testID ?? "dong-so"}>
         <View style={[styles.noiDung, { gap: space.md }]}>
           <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ lời hẹn?" />
           <Text style={[typography.body, { color: colors.inkSoft }]} testID="dong-so-dang-dem">
-            Đang đếm những gì sẽ đóng lại…
+            {loiPreview ?? "Đang đếm những gì sẽ đóng lại…"}
           </Text>
+          {loiPreview && onRetryPreview ? <RudiButton label="Đọc lại bản xem trước" onPress={onRetryPreview} variant="outline" /> : null}
           <RudiButton label="Giữ sổ" onPress={onClose} variant="ghost" />
         </View>
       </Sheet>
     );
   }
   return (
-    <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
+    <Sheet accessibilityLabel="Đóng sổ lời hẹn" onClose={onClose} open={open} showsVerticalScrollIndicator testID={testID ?? "dong-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ lời hẹn?" />
-        <View style={styles.khoi} testID="dong-so-xem-truoc">
+        <View style={{ gap: space.sm }} testID="dong-so-xem-truoc">
           {xemTruoc.so_nhap_bo > 0 ? (
-            <Text style={[typography.body, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>
+            <Text style={[typography.body, styles.tacDong, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>
           ) : null}
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_to_huy > 0 && styles.tacDong, { color: xemTruoc.so_to_huy > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_to_huy === 0 ? "· Không có tờ nào đang chờ trả lời." : `· ${xemTruoc.so_to_huy} tờ đang chờ trả lời sẽ huỷ.`}
           </Text>
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_to_khoa > 0 && styles.tacDong, { color: xemTruoc.so_to_khoa > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_to_khoa === 0 ? "· Không có buổi đã chốt nào." : `· ${xemTruoc.so_to_khoa} buổi đã chốt sẽ khoá, chỉ còn đọc.`}
           </Text>
-          <Text style={[typography.body, { color: colors.ink }]}>
+          <Text style={[typography.body, xemTruoc.so_de_nghi_huy > 0 && styles.tacDong, { color: xemTruoc.so_de_nghi_huy > 0 ? colors.ink : colors.inkSoft }]}>
             {xemTruoc.so_de_nghi_huy === 0 ? "· Không có lời đề nghị nào đang chờ." : `· ${xemTruoc.so_de_nghi_huy} lời đề nghị đang chờ sẽ huỷ.`}
           </Text>
           <Text style={[typography.body, { color: colors.ink }]}>· Ký ức đã giữ vẫn đọc được, không sửa được.</Text>
         </View>
-        <RudiButton label="Đóng sổ" onPress={onDong} variant="outline" />
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+        <RudiButton loading={dangLam} disabled={dangLam} tone="warn" label="Đóng sổ" onPress={onDong} variant="outline" />
         <RudiButton label="Giữ sổ" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>
   );
 }
 
-const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, khoi: { gap: 6 } });
+const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, tacDong: { fontWeight: "600" } });

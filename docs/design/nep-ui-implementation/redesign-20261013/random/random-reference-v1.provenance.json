@@ -1,0 +1,22 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-13",
+  "use_case": "ui-mockup",
+  "purpose": "critique reference, not native evidence",
+  "prompt_file": "random-reference-v1.prompt.txt",
+  "prompt_sha256": "0611feb536f2f2127e2250fbf97629fa6f367f3e2bc2ae23642eec556dbb649f",
+  "references": [],
+  "original_sha256": "7e18e8e4b98f1f380a10a2a1277fd9b176dc5b813a4104fd7288c705a2e00976",
+  "png_sha256": "ad69f16ccc181a4bcde5a94273b622de78b05fe2f2adec74a0b44d608a0d1f4d",
+  "decoded_rgba_sha256": "9188cafb30ae90e143040704bcea1d5348715f3fe9e374e75665ebad161d9f22",
+  "width": 1476,
+  "height": 1065,
+  "mode": "RGB",
+  "alpha_extrema": [
+    255,
+    255
+  ],
+  "pixel_identity_after_metadata_embed": true,
+  "synthetic": true,
+  "native_qc": "OPEN"
+}

@@ -765,11 +765,12 @@ export async function proposeSplit(
   attempt: Attempt,
   items: ExpenseItemWire[] = [],
   outingId?: string,
+  actorId = draft.advancerId,
 ): Promise<PendingProposal> {
   const body = expenseBody({
     contextId,
     occasion: draft.occasion,
-    actorId: draft.advancerId,
+    actorId,
     payerId: draft.advancerId,
     participantIds: draft.participants.map((person: Participant) => person.id),
     totalVnd: draft.totalVnd,
@@ -777,11 +778,11 @@ export async function proposeSplit(
     occurredAt: attempt.at,
     outingId,
   });
-  // As the advancer, like `previewSplit`, and for the reason spelled out there.
+  // The recorder is the signed-in member, even when someone else paid.
   const result = await translatedAsActor<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {
     body,
     attempt,
-    actorId: draft.advancerId,
+    actorId,
     contexts: contextId,
   });
 
@@ -809,6 +810,7 @@ export async function proposeSplit(
 export async function confirmExpense(
   proposal: PendingProposal,
   attempt: Attempt,
+  actorId = proposal.advancerId,
 ): Promise<{ expenseVersionId: string; acknowledged: boolean }> {
   const result = await translatedAsActor<{
     expense_version_id: string;
@@ -817,9 +819,9 @@ export async function confirmExpense(
     body: {
       proposal: proposal.serverProposal,
       expected_allocations: proposal.allocations,
-      acknowledge_as_advancer: true,
+      acknowledge_as_advancer: actorId === proposal.advancerId,
     },
-    actorId: proposal.advancerId,
+    actorId,
     attempt,
     contexts: proposal.contextId,
   });
@@ -2293,6 +2295,8 @@ export async function luuGanMon(
 
 /** What the server makes of a STORED bill's ticks. */
 export type ChiaBill = {
+  /** The server's complete participant set, including members with zero shares. */
+  participantIds: string[];
   /** Person id -> đồng. Integer đồng throughout; the server sends integers and
    *  nothing on this side divides. */
   allocations: Record<string, number>;
@@ -2318,6 +2322,7 @@ export type ChiaBill = {
  * omission that is not there -- the headers below have always been sent.
  */
 type ChiaBillWire = {
+  participant_ids: string[];
   allocation: {
     allocations: Record<string, number>;
     exact_shares: Record<string, string>;
@@ -2334,16 +2339,14 @@ type ChiaBillWire = {
  *
  * Not `previewSplit`. That one posts a fresh `POST /expenses` built from the
  * matrix this phone is holding, which is the right call while somebody is still
- * ticking boxes. This one names a bill id and nothing else: the server reads the
+ * ticking boxes. This one names a bill id: the server reads the
  * shares IT has, against the roster IT has, and answers. So it is the only way
  * to ask "what does the server think this bill costs each of us" -- and the only
  * way for the two to be caught disagreeing.
  *
- * The body carries no identity. `BillSplitRequest` has a `paid_by_id`, which is
- * for writing the split into the ledger; a preview does not need one and does
- * not send one, so there is no field here in which a caller could name somebody
- * else. `for_ledger` stays at its `false` default for the same reason: this call
- * must not write.
+ * The actor comes from the session. The optional payer is bill metadata:
+ * the allocator uses it to break remainder ties, before and after recording.
+ * `for_ledger` stays false, so previewing never writes money.
  *
  * Nothing is computed on this side. Every dong shown from this response is a
  * dong the allocator produced -- two divisions in one product is how one dinner
@@ -2354,16 +2357,18 @@ export async function docChiaBill(
   actorId: string,
   contextId: string,
   attempt: Attempt,
+  paidById?: string,
 ): Promise<ChiaBill> {
   const result = await callAsActor<ChiaBillWire>(`/bills/${billId}/split`, {
     method: "POST",
-    // Empty on purpose -- see above. `for_ledger` defaults false server-side.
-    body: {},
+    // `for_ledger` defaults false server-side; naming a payer does not write.
+    body: paidById === undefined ? {} : { paid_by_id: paidById },
     actorId,
     attempt,
     contexts: contextId,
   });
   return {
+    participantIds: [...result.participant_ids],
     allocations: result.allocation.allocations,
     exactShares: result.allocation.exact_shares,
     roundingGainers: result.allocation.rounding_gainers,

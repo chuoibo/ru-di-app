@@ -8,10 +8,10 @@
  * crop), the caption sits under it like a line on an Instax, and the group
  * it goes to is named beside the button. The draft survives a failed send.
  */
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -22,7 +22,8 @@ import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Nep } from "../../ui/art/Nep";
+import { MemoryPhoto } from "../../ui/MemoryPhoto";
+import { RudiIcon } from "../../ui/RudiIcon";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 
 function loiRaChu(error: unknown): string {
@@ -39,6 +40,7 @@ function cauGiaiDoan(giaiDoan: GiaiDoanTaiAnh | null): string | null {
 
 export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ place?: string; ten?: string }>();
   // Mở từ màn một địa điểm thì ảnh được gắn vào chỗ ấy (M12, ADR-0017 §2.4).
   // Chỉ id đi lên máy chủ; TÊN chỗ ở đây thuần tuý để nói cho người đăng biết
@@ -60,6 +62,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const [ban, setBan] = useState(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  const posting = useRef(false);
   // Leaving keeps the pick and the words as a draft; sharing, «Bỏ ảnh» or
   // «Bỏ bản nháp» is what lets the picked file go.
   const daGuiRef = useRef(false);
@@ -76,7 +79,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 
   if (contextId === null) {
     return (
-      <RudiScreen testID="share-moment-screen">
+      <RudiScreen material="quiet" testID="share-moment-screen">
         <TopBar title="Thả khoảnh khắc" />
         <Heading title="Vào một nhóm trước" subtitle="Khoảnh khắc đăng vào tường của một nhóm; chưa có nhóm thì chưa có tường." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
@@ -98,7 +101,9 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   };
 
   const chiaSe = async () => {
-    if (anh === null) return;
+    if (anh === null || posting.current) return;
+    Keyboard.dismiss();
+    posting.current = true;
     setBan(true);
     setThongBao(null);
     try {
@@ -107,12 +112,13 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       boNhapDang(khoaNhap);
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
-      // The caption stays, but `nenVaDung` discarded the picked file.
-      setAnh(null);
-      setThongBao(`${loiRaChu(error)} Chọn lại ảnh rồi thử lần nữa.`);
+      // Compression discards its own copy, while the picked original survives
+      // a refused upload. Keep the preview and caption for the same retry.
+      setThongBao(`${loiRaChu(error)} Ảnh và lời viết vẫn ở đây; bạn thử lại nhé.`);
     } finally {
       setGiaiDoan(null);
       setBan(false);
+      posting.current = false;
     }
   };
 
@@ -121,23 +127,24 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 
   return (
     <RudiScreen
+      material="quiet"
+      cot="doc"
+      avoidKeyboard
       contentStyle={styles.screen}
       // The one action stays on screen however tall the photo is: under the
       // print and the caption it was pushed past the fold (QA 23/09).
       footer={
         <View style={styles.footer}>
-          <RudiButton disabled={ban || anh === null} lyDo={!ban && anh === null ? "Chọn ảnh trước." : undefined} icon="paper-plane-outline" label={laDoi ? "Giữ vào kỷ niệm của hai bạn" : "Chia sẻ ngay vào nhóm"} loading={ban} onPress={() => void chiaSe()} />
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{laDoi ? `Chỉ hai bạn · ${nhom?.display_name || "Người ấy"}` : `Thành viên nhóm · ${tenNhom}`}</Text>
+          {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{thongBao}</Text> : null}
+          <RudiButton disabled={ban || anh === null} lyDo={!ban && anh === null ? "Chọn ảnh trước." : undefined} icon="paper-plane-outline" label={thongBao !== null && anh !== null ? "Thử gửi lại" : "Chia sẻ"} loading={ban} onPress={() => void chiaSe()} />
           {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
         </View>
       }
-      footerInset={12}
+      footerInset={insets.bottom + 12}
       testID="share-moment-screen"
     >
       <TopBar title="Thả khoảnh khắc" />
-      <Heading
-        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Hai bạn xem được; mỗi người có thể chọn ảnh này vào sổ chuyến đi của mình.` : `Ảnh và một câu, lên tường của ${tenNhom}. Hội mình xem được; thành viên có thể chọn ảnh này vào sổ chuyến đi của mình.`}
-        title={laDoi ? "Giữ một khoảnh khắc" : "Một khoảnh khắc cho nhóm"}
-      />
       {conNhapCu && (anh !== null || caption.trim() !== "") ? (
         <View style={styles.nhapCu} testID="tha-khoanh-khac-nhap-cu">
           <Text style={[typography.note, styles.flexNhap, { color: colors.inkSoft }]}>Bản nháp lần trước còn đây.</Text>
@@ -149,38 +156,36 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
           {`Gắn vào ${tenCho ?? "địa điểm bạn vừa mở"}: ảnh sẽ hiện ở màn chỗ đó, cho người trong nhóm.`}
         </Text>
       )}
-      {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
       {/* The print: the picture whole on paper, the caption written by hand on
           its white margin (ADR-0037 D1, plan S6). An empty print is itself
           the way to pick a photo. */}
       <View style={[styles.instax, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(2, dark)]}>
         {anh === null ? (
           <Pressable accessibilityLabel="Chưa chọn ảnh, chạm để chọn" accessibilityRole="button" disabled={ban} onPress={() => void chon()} style={[styles.khungTrong, { backgroundColor: colors.ground, borderColor: colors.lineStrong }]}>
-            <Nep gap="trang" pose="giu-khung" size={88} />
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chạm để chọn một tấm.</Text>
+            <RudiIcon color={colors.accent} name="camera-outline" size={32} />
+            <Text style={[typography.h2, { color: colors.ink }]}>Chọn một tấm ảnh</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft, textAlign: "center" }]}>Một cuộc đi, một điều muốn giữ lại.</Text>
           </Pressable>
         ) : (
-          // The frame takes the photo's own shape, within a portrait-to-wide
-          // range: a square frame put two grey bands beside every portrait
-          // photo and read as a card still loading, not as a print (QA 23/09).
-          // Filled as the wall fills it (QA UI-102): a 9:16 photo showed whole
-          // here and lost a quarter of its height on the wall; the preview now
-          // shows exactly the part the wall will.
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), backgroundColor: colors.ground }]} />
+          // The bounded paper slot shows the entire image, including extreme ratios.
+          <MemoryPhoto label="Ảnh đã chọn" ratio={tiLeKhung(anh)} source={{ uri: anh.uri }} />
         )}
         <ONhapMuc
           accessibilityLabel="Ô câu chú thích"
           helper={`${conLai} ký tự còn lại`}
           maxLength={CAPTION_DAI_NHAT}
           multiline
-          numberOfLines={2}
+          numberOfLines={3}
           onChangeText={setCaption}
-          placeholder="Sài Gòn về đêm"
+          placeholder="Viết một câu về tấm ảnh này…"
           value={caption}
         />
       </View>
-      <RudiButton disabled={ban} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chon()} variant="outline" />
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
+      {anh !== null ? <View style={styles.doiAnh}>
+        <RudiButton compact full={false} disabled={ban} icon="images-outline" label="Đổi ảnh" onPress={() => void chon()} variant="ghost" />
+        <RudiButton compact full={false} disabled={ban} label="Bỏ ảnh" onPress={() => { void boAnh(anh); setAnh(null); setThongBao(null); }} variant="ghost" />
+      </View> : null}
+      <Text style={[typography.note, { color: colors.inkSoft }]}>Ảnh được xoá vị trí và thông tin máy chụp trước khi lưu. Thành viên có thể chọn ảnh vào sổ chuyến đi của mình.</Text>
     </RudiScreen>
   );
 }
@@ -191,8 +196,7 @@ const styles = StyleSheet.create({
   screen: { maxWidth: 640 },
   // An instax print: narrow sides, a deep bottom margin for the words.
   instax: { gap: 14, padding: 12, paddingBottom: 22, borderWidth: 1, borderRadius: 3 },
-  khungTrong: { alignItems: "center", justifyContent: "center", gap: 8, aspectRatio: 1, borderWidth: 1, borderStyle: "dashed" },
-  anh: { width: "100%" },
-  footer: { paddingHorizontal: 16, gap: 6 },
-  chuThich: { textAlign: "center" },
+  khungTrong: { alignItems: "center", justifyContent: "center", gap: 10, padding: 24, minHeight: 180, borderWidth: 1, borderStyle: "dashed" },
+  doiAnh: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  footer: { gap: 10, paddingTop: 10 },
 });

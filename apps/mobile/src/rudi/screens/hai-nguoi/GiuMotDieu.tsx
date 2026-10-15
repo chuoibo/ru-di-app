@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
@@ -11,14 +11,15 @@ import { Sheet } from "../../ui/Sheet";
  * one button. The first kept line turns the sheet into a memory (`da_giu`);
  * the notebook does not ask for a rating, a photo, or a second line.
  */
-export function GiuMotDieu({ open, onClose, onGiu, testID }: { open: boolean; onClose: () => void; onGiu: (line: string) => void; testID?: string }) {
+export function GiuMotDieu({ open, onClose, onGiu, dangLam = false, loi = null, testID }: { open: boolean; onClose: () => void; onGiu: (line: string) => Promise<boolean>; dangLam?: boolean; loi?: string | null; testID?: string }) {
   const { colors, space } = useRudiTheme();
   const [dong, setDong] = useState("");
+  const lock = useRef(false);
   const sach = dong.trim();
-  const giu = () => {
-    if (!sach) return;
-    onGiu(sach);
-    setDong("");
+  const giu = async () => {
+    if (!sach || dangLam || lock.current) return;
+    lock.current = true;
+    try { if (await onGiu(sach)) setDong(""); } finally { lock.current = false; }
   };
   return (
     <Sheet accessibilityLabel="Giữ lại một điều" onClose={onClose} open={open} testID={testID ?? "giu-mot-dieu"}>
@@ -30,14 +31,16 @@ export function GiuMotDieu({ open, onClose, onGiu, testID }: { open: boolean; on
         <Field
           label="Điều muốn giữ"
           onChangeText={setDong}
-          onSubmitEditing={giu}
+          onSubmitEditing={() => void giu()}
+          editable={!dangLam}
           placeholder="Hàng chè đầu hẻm, lần sau lại."
           returnKeyType="done"
           testID="giu-mot-dieu-o"
           value={dong}
         />
         <Text style={[typography.caption, { color: colors.inkSoft }]}>Chỉ hai bạn đọc được dòng này.</Text>
-        <RudiButton disabled={sach.length === 0} label="Giữ lại" lyDo={sach.length === 0 ? "Viết một điều trước." : undefined} onPress={giu} />
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+        <RudiButton loading={dangLam} disabled={dangLam || sach.length === 0} label="Giữ lại" lyDo={sach.length === 0 ? "Viết một điều trước." : undefined} onPress={() => void giu()} />
       </View>
     </Sheet>
   );

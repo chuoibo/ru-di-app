@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: transparent shipping duck-racer sprite, mint-cap variant.
+Input image: the reference is the original coral-bandana duck sprite and is the edit target.
+Primary request: keep the same adorable buttery golden yellow toy duck's sculpted body, expression, proportions, clean silhouette, painterly texture, right-facing three-quarter side view, square crop and lighting. Change only its accessory: REMOVE the coral bandana entirely; add a small soft MINT GREEN baseball cap worn normally on its head, with a little brim above its eyes, not covering the face. Its neck stays plain yellow. Same premium game illustration identity. Keep full duck within canvas and approximately88 percent canvas width.
+Constraints: true transparent alpha background preserved. Exactly one duck, no numbers, labels, badges, water, shadows outside silhouette, extra props, UI, background, logos, trophy or crown. Do not change facing direction or render style.

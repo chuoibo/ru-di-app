@@ -3,7 +3,8 @@
  * the dishes as a caption under the name; the dishes nobody has yet close the
  * list in the warning colour, because that is the one thing left to do here.
  */
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "./NativeFontMetrics";
 
 import { cauMonCuaNguoi, type AiCoGi as BangAiCoGi } from "../chia-bill/ai-co-gi";
 import { typography, useRudiTheme } from "../theme";

@@ -123,7 +123,7 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   /** Resolves true once every changed box has landed; false if any did not. */
   datRangBuoc: (rb: Partial<RangBuoc>) => Promise<boolean>;
   /** `revision` is the one the person just read. The fixture ignores it. */
-  dongSo: (revision: string) => void;
+  dongSo: (revision: string) => Promise<boolean>;
 
   /** Đồng ý một lời đề nghị người kia vừa gửi. */
   dongYDeNghi: (id: string) => Promise<boolean>;
@@ -132,16 +132,16 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   ruDiChoi: () => void;
   /** Read the notebook again now (a wait on the other person is news only they can make). */
   lamMoi: () => void;
-  suaNhap: (id: string, content: NoiDungTo, lyDo: string | null) => void;
-  gui: (id: string) => void;
-  boNhap: (id: string) => void;
-  dongY: (id: string) => void;
-  deNghiSua: (id: string, content: NoiDungTo, lyDo: string | null) => void;
-  rut: (id: string) => void;
-  nghiTuan: (id: string) => void;
-  daDi: (id: string) => void;
-  giu: (id: string, line: string) => void;
-  huy: (id: string) => void;
+  suaNhap: (id: string, content: NoiDungTo, lyDo: string | null) => Promise<boolean>;
+  gui: (id: string) => Promise<boolean>;
+  boNhap: (id: string) => Promise<boolean>;
+  dongY: (id: string) => Promise<boolean>;
+  deNghiSua: (id: string, content: NoiDungTo, lyDo: string | null) => Promise<boolean>;
+  rut: (id: string) => Promise<boolean>;
+  nghiTuan: (id: string) => Promise<boolean>;
+  daDi: (id: string) => Promise<boolean>;
+  giu: (id: string, line: string) => Promise<boolean>;
+  huy: (id: string) => Promise<boolean>;
 
 }
 

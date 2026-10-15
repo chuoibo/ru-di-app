@@ -21,7 +21,7 @@ env:
     direction: DOWN
 - tapOn: "Khép cuộc đi"
 - extendedWaitUntil:
-    visible: "Mang theo điều gì vào sổ?"
+    visible: "Những điều bạn muốn giữ"
     timeout: 30000
 - assertVisible: "${PHOTO_COUNT} / 40 ảnh đã chọn"
 - takeScreenshot: diary-02-sources

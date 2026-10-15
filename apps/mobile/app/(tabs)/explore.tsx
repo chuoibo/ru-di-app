@@ -23,7 +23,7 @@ export default function ExploreTab() {
   useFocusEffect(useCallback(() => ghiMucKhamPha("explore"), []));
   // The section switch is a navigation written here, in the route file, so the
   // guide's extractor (tools/rut-huong-dan.mjs) sees explore -> community.
-  const dau = (phai?: ReactNode) => <DauKhamPha muc="explore" onDoiMuc={() => router.navigate("/community")} phai={phai} />;
+  const dau = (phai?: ReactNode) => <DauKhamPha nativeMetrics muc="explore" onDoiMuc={() => router.navigate("/community")} phai={phai} />;
   // The server's catalogue; no session, the sign-in door.
   if (!phienDaDoc) return null;
   if (phien === null) return <CuaDangNhap tiep="/explore" />;

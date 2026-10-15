@@ -12,7 +12,7 @@ test("chọn «Một đôi» mở sheet bậc, không đề nghị ngay", () => 
   const kgg = doc("screens/hai-nguoi/KhongGianGiay.tsx");
   const loaiSo = kgg.slice(kgg.indexOf("<LoaiSo "), kgg.indexOf("/>", kgg.indexOf("<LoaiSo ")));
   assert.doesNotMatch(loaiSo, /onChonDoi=\{so\.deNghiBatDoi\}/);
-  assert.match(loaiSo, /setMo\("bat-doi"\)/);
+  assert.match(loaiSo, /openChild\("bat-doi"\)/);
   assert.match(loaiSo, /onDongY=\{deNghiBatDoi && !deNghiBatDoi\.cuaToi \? \(\) => void so\.dongYDeNghi\(deNghiBatDoi\.id\)/);
 });
 

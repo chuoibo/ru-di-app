@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: transparent shipping duck-racer sprite, navy-goggles variant.
+Input image: original coral-bandana duck sprite is the edit target.
+Primary request: preserve the exact adorable buttery yellow toy duck body, lively expression, proportions, painterly paper texture, full-body square crop, right-facing three-quarter side view and soft lighting. REMOVE the coral bandana entirely. Add small midnight NAVY swimming goggles with warm ivory glass highlights worn on its forehead just ABOVE the eyes; the duck's expressive eyes remain visible. Plain yellow neck. Refined funny athletic personality in the same premium illustrated game family.
+Constraints: ONE duck only, full character fits approximately88 percent width, genuine transparent alpha preserved, no background, numbers, labels, badges, water, splashes, props, trophy, crown, logos or UI. No shadows outside the silhouette. Do not change facing direction.

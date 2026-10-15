@@ -10,6 +10,7 @@ import { IconButton, Inline, RudiScreen } from "../src/rudi/ui";
 import { Canh } from "../src/rudi/ui/art/Canh";
 import { EmptyState } from "../src/rudi/ui/EmptyState";
 import { OpeningApp } from "../src/rudi/ui/OpeningApp";
+import { KHONG_VIEN_WEB } from "../src/rudi/ui/khong-vien-web";
 
 /**
  * Any path the router does not know. App B (the legacy shell behind `/legacy`
@@ -31,10 +32,10 @@ export default function UnknownRoute() {
     return () => cancelAnimationFrame(frame);
   }, [phienDaDoc]);
   if (!phienDaDoc) return <OpeningApp />;
-  return <RudiScreen testID="unknown-route-screen">
+  return <RudiScreen material="quiet" cot="form" testID="unknown-route-screen">
     <Inline>
       <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => luiVeVe(router, manDau(phien))} quiet />
-      <Text ref={title} accessibilityRole="header" {...(Platform.OS === "web" ? { tabIndex: -1 } : {})} style={[typography.label, { color: colors.ink, flex: 1 }]}>Không tìm thấy trang</Text>
+      <Text ref={title} accessibilityRole="header" {...(Platform.OS === "web" ? { tabIndex: -1 } : {})} style={[typography.title, KHONG_VIEN_WEB, { color: colors.ink, flex: 1, textAlign: "center", paddingRight: 48 }]}>Không tìm thấy trang</Text>
     </Inline>
     <EmptyState kind="no-results" title="Trang này chưa có trong Rủ Đi"
       body="Có thể đường dẫn đã đổi. Về trang đầu để tiếp tục nhé."

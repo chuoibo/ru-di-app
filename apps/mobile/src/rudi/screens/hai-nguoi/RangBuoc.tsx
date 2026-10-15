@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import type { RangBuoc as RangBuocKieu } from "../../to-giay/so-fixture";
@@ -17,6 +17,12 @@ import { Sheet } from "../../ui/Sheet";
  */
 export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, dangLuu = false, loi = null, testID }: { open: boolean; onClose: () => void; toi: RangBuocKieu; nguoiKia: RangBuocKieu; tenNguoiKia: string; onLuu: (rb: RangBuocKieu) => void; dangLuu?: boolean; loi?: string | null; testID?: string }) {
   const { colors, space } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const caoToiThieu = 3 * typography.body.lineHeight * fontScale;
+  const caoToiDa = 8 * typography.body.lineHeight * fontScale;
+  const [caoKhongAn, setCaoKhongAn] = useState(0);
+  const [caoDung, setCaoDung] = useState(0);
+  const kieuNhap = (cao: number) => ({ minHeight: caoToiThieu, maxHeight: caoToiDa, height: Math.min(caoToiDa, Math.max(caoToiThieu, Math.ceil(cao))) });
   const [khongAn, setKhongAn] = useState(toi.khong_an_duoc);
   const [dung, setDung] = useState(toi.dung);
   useEffect(() => {
@@ -27,22 +33,22 @@ export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, dan
   }, [open, toi.khong_an_duoc, toi.dung]);
   const doi = khongAn.trim() !== toi.khong_an_duoc || dung.trim() !== toi.dung;
   return (
-    <Sheet accessibilityLabel="Những điều cần tránh" onClose={onClose} open={open} testID={testID ?? "rang-buoc"}>
+    <Sheet accessibilityLabel="Những điều cần tránh" onClose={onClose} open={open} avoidKeyboard prioritizeFooter showsVerticalScrollIndicator testID={testID ?? "rang-buoc"} footer={
+      <View style={{ gap: space.xs, paddingTop: space.sm }}>
+        <CauTaiCho cau={loi} />
+        {doi || dangLuu ? <RudiButton disabled={dangLuu} label="Lưu điều cần tránh" loading={dangLuu} onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} /> : null}
+        <RudiButton label={doi ? "Bỏ thay đổi" : "Xong"} onPress={onClose} variant="ghost" />
+      </View>
+    }>
       <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Ghi món bạn không ăn được và điều bạn muốn tránh. Người kia đọc được; bạn không cần giải thích lý do." title="Những điều cần tránh" />
-        <Field label="Không ăn được" onChangeText={setKhongAn} placeholder="Hải sản" testID="rang-buoc-khong-an" value={khongAn} />
-        <Field label="Đừng" multiline onChangeText={setDung} placeholder="Đừng rủ sau 21:00 ngày thường." testID="rang-buoc-dung" value={dung} />
+        <Heading size="h2" subtitle="Người kia đọc được những điều bạn ghi ở đây. Không cần giải thích lý do." title="Những điều cần tránh" />
+        <Field label="Không ăn được" multiline numberOfLines={3} style={kieuNhap(caoKhongAn)} onContentSizeChange={(event) => setCaoKhongAn(event.nativeEvent.contentSize.height)} onChangeText={setKhongAn} placeholder="Hải sản" testID="rang-buoc-khong-an" value={khongAn} />
+        <Field label="Đừng" multiline numberOfLines={3} style={kieuNhap(caoDung)} onContentSizeChange={(event) => setCaoDung(event.nativeEvent.contentSize.height)} onChangeText={setDung} placeholder="Đừng rủ sau 21:00 ngày thường." testID="rang-buoc-dung" value={dung} />
         <View style={[styles.cuaNguoiKia, { borderTopColor: colors.line }]}>
           <Text style={[typography.label, { color: colors.ink }]}>{tenNguoiKia} đã ghi</Text>
           <Text style={[typography.body, { color: colors.inkSoft }]}>Không ăn được: {nguoiKia.khong_an_duoc || "chưa ghi"}</Text>
           <Text style={[typography.body, { color: colors.inkSoft }]}>Đừng: {nguoiKia.dung || "chưa ghi"}</Text>
         </View>
-        {/* Right above the button that failed, announced once (`CauTaiCho`). */}
-        <CauTaiCho cau={loi} />
-        {/* Shown once there is something to save, like «Lưu tên» in ADR-0038 §2.2:
-            a disabled button with no reason under it was the alternative (QA UI-091). */}
-        {doi || dangLuu ? <RudiButton disabled={dangLuu} label="Lưu điều cần tránh" loading={dangLuu} onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} /> : null}
-        <RudiButton label="Đóng" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>
   );

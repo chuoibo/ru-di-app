@@ -14,13 +14,14 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { displayFace, typography, useRudiTheme } from "../theme";
 import { ONhapMuc } from "./ONhapMuc";
 import { THU_NGAN, cungNgay, dinhDangNgay, docNgay, luoiThang, tenThang, tenThu, thangSau, type NgayLich } from "./lich/lich-thang";
 import { useMotion } from "./useMotion";
+import { useLuiLop } from "./useLuiLop";
 import { giuState } from "../../ui/a11y";
 
 function homNayThat(): NgayLich {
@@ -44,10 +45,12 @@ export interface ChonNgayLichProps {
 
 export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel, homNay, testID }: ChonNgayLichProps) {
   const { colors, radius } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const motion = useMotion();
   const hn = homNay ?? homNayThat();
   const ngay = docNgay(giaTri);
   const [mo, setMo] = useState(false);
+  useLuiLop(mo, () => setMo(false));
   const [rongLuoi, setRongLuoi] = useState(7 * O_TOI_DA);
   const o = Math.max(1, Math.min(O_TOI_DA, Math.floor(rongLuoi / 7)));
   const [xem, setXem] = useState({ thang: ngay?.thang ?? hn.thang, nam: ngay?.nam ?? hn.nam });
@@ -65,7 +68,7 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
           accessibilityRole="button"
           aria-expanded={mo}
           onPress={moLich}
-          style={({ pressed }) => [styles.la, { borderColor: colors.lineStrong, backgroundColor: colors.card, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}
+          style={({ pressed }) => [styles.la, { width: Platform.OS === "web" ? 84 : 84 * Math.max(1, fontScale), borderColor: colors.lineStrong, backgroundColor: colors.card, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}
           testID={testID ? `${testID}-la` : undefined}
         >
           <View style={[styles.bangLa, { backgroundColor: colors.accent }]}>

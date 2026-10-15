@@ -14,9 +14,10 @@
  */
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import type { Card } from "../../chat/e2ee/kieu";
 import { cungKhoa, dauKhoa, docThietBi, goThietBi, type ThietBiWire } from "../../chat/e2ee/thiet-bi";
 import { coMaHoa, theCuaMay } from "../../chat/e2ee/useTinNhanV2";
@@ -24,6 +25,7 @@ import { ngayVN } from "../../ngay-viet";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
@@ -36,6 +38,8 @@ type Trang =
 
 export function ThietBiMaHoaScreen() {
   const { colors } = useRudiTheme();
+  const { width, fontScale } = useWindowDimensions();
+  const hangDoc = width < 380 || fontScale >= 1.3;
   const { phien, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangGo, setDangGo] = useState<string | null>(null);
@@ -71,9 +75,10 @@ export function ThietBiMaHoaScreen() {
   };
 
   if (!phienDaDoc) return null;
+  if (phien === null) return <CuaDangNhap tiep="/settings/thiet-bi" />;
 
   return (
-    <RudiScreen testID="thiet-bi-ma-hoa-screen">
+    <RudiScreen material="quiet" cot="form" testID="thiet-bi-ma-hoa-screen">
       <TopBar title="Thiết bị nhắn tin mã hoá" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>
         Tin trong phòng mã hoá đầu cuối chỉ mở được trên các máy dưới đây. Thấy máy lạ thì gỡ ngay: máy đã gỡ không đọc
@@ -91,7 +96,12 @@ export function ThietBiMaHoaScreen() {
         </View>
       ) : null}
       {trang.pha === "hong" ? (
-        <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách thiết bị" />
+        <ErrorState
+          body={trang.loi}
+          illustration={<PaperObject name="document" width={140} />}
+          onRetry={() => void nap()}
+          title="Chưa đọc được danh sách thiết bị"
+        />
       ) : null}
       {/* This phone holds keys the server does not list (or lists under
           another id): the list cannot be trusted, and it is said. */}
@@ -109,7 +119,9 @@ export function ThietBiMaHoaScreen() {
       {trang.pha === "xong" && trang.ds.length === 0 ? (
         <EmptyState
           body="Mở một cuộc trò chuyện trên máy có bản ứng dụng mới nhất, máy đó sẽ hiện ở đây."
+          illustration={<PaperObject name="envelope" width={140} />}
           kind="first-use"
+          layout="inline"
           title="Chưa có thiết bị nào"
         />
       ) : null}
@@ -125,8 +137,8 @@ export function ThietBiMaHoaScreen() {
                 const lech = mayNay && trang.mayNay !== null && !cungKhoa(d.card, trang.mayNay);
                 const dau = mayNay && trang.mayNay !== null ? dauKhoa(trang.mayNay) : dauKhoa(d.card);
                 return (
-                  <View key={d.card.device_id} style={styles.hang}>
-                    <View style={styles.hangChu}>
+                  <View key={d.card.device_id} style={[styles.hang, { borderColor: colors.line }, hangDoc && styles.hangDoc]}>
+                    <View style={[styles.hangChu, hangDoc && styles.chuDoc]}>
                       <Text style={[typography.label, { color: colors.ink }]}>{d.label}</Text>
                       <Text style={[typography.caption, { color: colors.inkFaint }]}>Thêm ngày {ngayVN(d.created_at)}</Text>
                       <Text selectable style={[typography.caption, styles.dau, { color: colors.inkSoft }]}>
@@ -168,9 +180,11 @@ export function ThietBiMaHoaScreen() {
 
 const styles = StyleSheet.create({
   khoi: { gap: 12 },
-  canhBao: { gap: 4 },
-  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
-  hangChu: { flex: 1, gap: 2 },
+  canhBao: { gap: 6, paddingVertical: 12 },
+  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangDoc: { flexDirection: "column", alignItems: "flex-start" },
+  hangChu: { flex: 1, minWidth: 0, gap: 6 },
+  chuDoc: { flex: 0, width: "100%" },
   // Monospace so two phones' marks line up group by group when compared.
   dau: { fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }) },
 });

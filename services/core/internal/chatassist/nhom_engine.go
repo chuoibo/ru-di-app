@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -11,6 +12,7 @@ import (
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/chatintent"
 	"mobile/services/core/internal/domain/companion"
 	"mobile/services/core/internal/domain/tree"
@@ -37,12 +39,25 @@ import (
 // of the conversation is read, and a v2 room has no text for the server to
 // read: its shared messages then bill nobody.
 
-// WithNhomEngine runs the group's jobs on the Go engine in this process; it
-// also says this process has a model (WithCoMay).
+// WithNhomEngine supplies group command readiness and the engine workers
+// use. It marks the model configured but does not start a worker.
 func (h *Handler) WithNhomEngine(e *aiharness.Engine) *Handler {
 	h.nhomEngine = e
 	h.coMay = h.coMay || e != nil
 	return h
+}
+
+// WithRandomNguon supplies a split producer's read-only catalogue port.
+// It neither marks a provider configured nor starts inference or a worker.
+func (h *Handler) WithRandomNguon(nguon truyhoi.Retriever) *Handler {
+	h.randomNguon = nguon
+	return h
+}
+
+// randomSanSang reports source readiness for queue admission, not worker
+// liveness. A worker executes only through its independently built engine.
+func (h *Handler) randomSanSang() bool {
+	return h.randomNguon != nil || h.nhomEngine.RandomSanSang()
 }
 
 // obsLenh is the job's command as the engine's closed set names it.
@@ -54,6 +69,8 @@ func obsLenh(command string) (obs.Lenh, bool) {
 		return obs.LenhChiaBill, true
 	case lenhHoi:
 		return obs.LenhHoi, true
+	case lenhRandom:
+		return obs.LenhRandom, true
 	}
 	return "", false
 }
@@ -64,6 +81,12 @@ func obsLenh(command string) (obs.Lenh, bool) {
 // called. chatintent.Parse is that syntax's one reader (contract §8: a
 // consent gate, never intent guessing).
 func loiNhoNhom(prompt string) string {
+	// This Go-only command leaves the legacy chatintent oracle unchanged.
+	// Only the exact leading slash token is syntax; the rest is caller data.
+	fields := strings.Fields(prompt)
+	if len(fields) > 0 && strings.EqualFold(fields[0], "/random") {
+		return strings.TrimSpace(strings.TrimSpace(prompt)[len(fields[0]):])
+	}
 	if p := chatintent.Parse(prompt); p != nil {
 		return p.Args
 	}
@@ -307,7 +330,7 @@ func maNhom(err error) string {
 // A job from a client that names no trigger gets the one text card it has
 // always drawn (GroundCard).
 func (h *Handler) theNhomEngine(ctx context.Context, j work, res aiharness.Result) ([]byte, error) {
-	places, err := h.hangCatalogue(ctx, res.QuanIDs)
+	places, err := h.hangCatalogue(ctx, res.QuanIDs, j.command == lenhRandom)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +366,7 @@ func (h *Handler) theNhomEngine(ctx context.Context, j work, res aiharness.Resul
 }
 
 // hangCatalogue reads the catalogue rows of ids.
-func (h *Handler) hangCatalogue(ctx context.Context, ids []string) ([]*tree.OrderedMap, error) {
+func (h *Handler) hangCatalogue(ctx context.Context, ids []string, withSource bool) ([]*tree.OrderedMap, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -362,5 +385,21 @@ func (h *Handler) hangCatalogue(ctx context.Context, ids []string) ([]*tree.Orde
 	for _, r := range rows {
 		cards = append(cards, service.PlaceRow(r))
 	}
-	return treejson.MapsTo(service.ClientPlaces(cards)), tx.Commit(ctx)
+	filtered := service.ClientPlaces(cards)
+	if withSource {
+		// Only new random cards add provenance. ClientPlaces keeps every
+		// older answer byte-compatible; this field comes from the database,
+		// after its safety filter, and never from model output.
+		sources := make(map[string]string, len(rows))
+		for _, row := range rows {
+			sources[row.ID] = row.Source
+		}
+		for _, card := range filtered {
+			id, _ := card.Get("id")
+			if id, ok := id.(pyjson.String); ok {
+				card.Set("source", pyjson.String(sources[string(id)]))
+			}
+		}
+	}
+	return treejson.MapsTo(filtered), tx.Commit(ctx)
 }

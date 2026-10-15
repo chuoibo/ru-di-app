@@ -59,6 +59,7 @@ const CHI_TIET_THAT = {
 
 /** `POST /bills/{id}/split`, exactly as answered. Four diners, uneven shares. */
 const CHIA_THAT = {
+  participant_ids: ["476be708-7bee-851c-b70e-2ba88cfedad7", "74ceeaf8-0823-88a9-91d9-ed10ba5d48a9", "b2331f3e-1d88-8969-bd27-330b62e31747", "ede484c6-bdd6-84b3-94e8-8a178eca1964"],
   allocation: {
     allocations: {
       "476be708-7bee-851c-b70e-2ba88cfedad7": 162500,
@@ -187,6 +188,8 @@ test("chia bill: tổng phân bổ đúng bằng tổng hoá đơn", async () =>
   for (const v of Object.values(s.allocations)) assert.ok(Number.isInteger(v));
   assert.equal(Object.keys(s.exactShares).length, 4);
   assert.equal(s.assignmentState, "confirmed");
+  assert.deepEqual(s.participantIds, CHIA_THAT.participant_ids);
+  assert.notEqual(s.participantIds, CHIA_THAT.participant_ids);
 });
 
 test("chia bill: thân yêu cầu không mang danh tính ai cả", async () => {
@@ -200,6 +203,14 @@ test("chia bill: thân yêu cầu không mang danh tính ai cả", async () => {
   assert.deepEqual(JSON.parse(daGoi[0].body), {});
   assert.equal(daGoi[0].headers["X-Actor-ID"], "nguoi-1");
   assert.equal(daGoi[0].headers["Idempotency-Key"], "k");
+});
+
+test("preview bill mang người trả để giữ đúng đồng lẻ khi ghi sổ", async () => {
+  const { doFetch, daGoi } = mayChu(CHIA_THAT);
+  globalThis.fetch = doFetch;
+  await docChiaBill("bill-1", "nguoi-1", "nhom-1", { key: "k-payer", at: 0 }, "nguoi-tra");
+  assert.deepEqual(JSON.parse(daGoi[0].body), { paid_by_id: "nguoi-tra" });
+  assert.equal(daGoi[0].headers["X-Actor-ID"], "nguoi-1");
 });
 
 /* -------------------------------------------------- 5. (rời khỏi bộ năm màn)

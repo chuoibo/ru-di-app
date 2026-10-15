@@ -1,5 +1,6 @@
 import { Image, type ImageSource } from "expo-image";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
 
 import { chuDau } from "../../screens/ca-nhan/ban-be";
 import { MOTION_MS } from "../motion";
@@ -39,6 +40,12 @@ export function Avatar({ name, source = null, size = 44, ring = false, tone = "a
   const mucRieng = personId ? mucNguoi(personId, dark) : null;
   const soft = mucRieng ? colors.card : tone === "accent" ? colors.accentSoft : tone === "split" ? colors.splitSoft : colors.aiSoft;
   const ink = mucRieng ?? colors[tone];
+  const initialSize = Math.max(11, Math.round(size * 0.38));
+  // The 42dp badge resolves to 16sp, outside the native metrics table. Keep
+  // its monogram on the existing 17/23sp pair so hot scaling updates its box.
+  const initialMetrics = initialSize === 16
+    ? { fontSize: typography.title.fontSize, lineHeight: typography.title.lineHeight }
+    : { fontSize: initialSize, lineHeight: undefined };
   // The photograph comes from `AvatarNguoi` (the one live photo path, with its
   // refusal memory); this frame only draws what it is handed.
   const nguon = source;
@@ -61,7 +68,7 @@ export function Avatar({ name, source = null, size = 44, ring = false, tone = "a
           style={[StyleSheet.absoluteFill, { borderRadius: size / 2 }]}
         />
       ) : (
-        <Text style={[typography.label, { color: ink, fontSize: Math.max(11, Math.round(size * 0.38)), lineHeight: undefined }]}>
+        <Text style={[typography.label, { color: ink, ...initialMetrics }]}>
           {chuDau(name)}
         </Text>
       )}

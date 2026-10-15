@@ -1,0 +1,169 @@
+# Lịch sử commit recovery
+
+165 commit tính đến checkpoint code bd3; commit đóng gói tài liệu nằm sau danh sách này.
+
+- `e90ff41b369b15a10b156af8bb072c4eadd004b8` — feat(ui): triển khai frontend Nếp A–S và bàn giao bằng chứng
+- `9f476f3605a900836057606a1dbe0ab320711170` — ui: ghép giao diện Nếp trên nền chat mã hoá của main
+- `9f7bdfd214e8045545a728c5a07ea81c7e6767ac` — ui: khớp bố cục và vật liệu Nếp với mockup
+- `df41215cba26fc70fc203514fb3f46cb6538d19c` — ui: hoàn thiện giấy, nhãn bìa và điều khiển đọc sổ Nếp
+- `419f6f2a89222acc0565427cbf81a6dfb99957b5` — test(ui): giữ ràng buộc trạng thái rỗng sau thay đổi bố cục Nếp
+- `8a063cc120ecc985d1b0ddb73bfc0ed8d718877d` — fix(chat): giữ kho chat cũ chỉ đọc khi thiếu E2EE
+- `d27e8f6f13f28caa2d5e52e5c123b728fdd3a3b8` — fix(chat): giữ thao tác kho cũ có đường đi thật
+- `c541823f6eee6d5499a44bbb0a223eeef554fd70` — fix(ui): nhường điều hướng nền khi bảng đang mở
+- `612ecb55ddda635ebfd083afdced537b2acae351` — fix(mobile): giữ đúng bản chia bill đã xem khi ghi sổ
+- `1b0e022f085ea6d00419f3c3404b1de882ecb288` — fix(mobile): đồng bộ hướng dẫn và cổng sau sửa bill
+- `b87a16f111e016f7d5074d6f9e60f7116075f254` — test(native): cuộn tới điều khiển và dùng tài khoản retry mới
+- `34be9ff51acd2616e6f5ffd7c5bb99090b7dda11` — test(native): giữ assert và cuộn tới hồ sơ, địa điểm, timeline
+- `7e26b0364b9ed2e70081c99b7265b7b9ad340b98` — fix(mobile): đưa form hồ sơ về đầu và tránh bàn phím
+- `822f647338f6c86af5a4ba6a5a5c80e0bd90eb72` — test(mobile): cuộn tới phần gán món và đợt thu trên Android
+- `fb3330cc92548c78940e1c9bfceba9c727ca0084` — fix(mobile): dành đủ chiều rộng cho tiêu đề mục trên Android
+- `869164f23f90feba16c66fdde47f4f7e37b1a742` — test(mobile): tham số hoá câu ghi bill mà giữ kiểm xác nhận
+- `914d98c42a3c1d3f83936d96328ba5c16ffa5e96` — fix(mobile): giữ tên và nhãn nút đủ chỗ khi chữ lớn
+- `377cf3bdd4a9fc67596fec1ac4df3b2de76bce2c` — fix(mobile): dành chỗ nhập bình chọn trên bàn phím Android
+- `6a8883c32ae397240c2199b30d504409744b22d5` — fix(mobile): dựng và bỏ phiếu từ sổ chat mã hoá đầu cuối
+- `04b95dd4f1231b7e6f1d1838ec32cb83c1521703` — fix(mobile): bỏ vòng phụ thuộc kiểu của view bình chọn
+- `54b5dc0e0cafedf05fa4436445b128d67820fa07` — fix(chat): chặn epoch cũ khi ghi danh thiết bị mới
+- `5fd01940fee1892dcf0981950afc4f6a9dfbdf6e` — docs: bắt buộc đối chiếu độ đẹp UI với mockup
+- `742e1fbcc456f6d11cae761c6c7a938154872ab5` — fix(mobile): hiển thị bytes ảnh đã mở từ MLS
+- `2fc1c73f9be1c0919069b550ef741a4e7192dd41` — ui(chat): giữ tỷ lệ ảnh và khung giấy nhẹ
+- `0fa8773cd5cac0586aa7714b12a1a5b8db3e68ea` — ui(welcome): giữ minh hoạ trên điện thoại nhỏ
+- `1ff2b4e356f07eb3beac3b32224cf2a173c28a17` — ui(welcome): giữ link đủ chữ khi đổi chương
+- `f26c3dd7bbdcaa3d84fc2e01bb00ee3cce424a10` — ui(welcome): hoàn thiện cảnh giấy sau review độc lập
+- `34d57ca9dbcf032bf9c8b21b41e6b059a6f4e00c` — ui(media): giữ trọn preview và chiều sâu giấy welcome
+- `fb713ea930a352a7b45a4d630ab38736b47b6c05` — fix(ui): cho nút inline giữ chiều rộng theo chữ
+- `04f20b88cd0cd30fc538d9e2cd584c76f6bf1b8b` — fix(story): tạo lại khung khi thay ảnh khác tỷ lệ
+- `8b73a8a13910430588d402ffaff601e6f0509577` — docs(design): ghi Welcome đã review trên Android nhỏ
+- `3b71838e057c2daef6500f04a91b44edf7d20b4e` — fix(story): giữ khung ảnh khi xác nhận xoá
+- `2c1189d72bbec87bf12ddbb979f1665a07d78739` — feat(avatar): mở trình cắt vuông trước khi tải ảnh
+- `c9a3f541d0a3e0a02aae608ed66f01f447b37005` — fix(story): làm rõ và cô lập câu hỏi xoá
+- `52b6ba1d58a0ed262c288cffd8da2048a4f7291a` — docs(design): chốt review Story native có giới hạn
+- `59e2700369ea8f24661337ef6182c274465f152a` — fix(community): giữ ô soạn Nếp trên bàn phím
+- `9723d98b033ff648e75f2b6a753d0eb8c3ad7ac9` — fix(ui): ưu tiên nội dung trên màn Android thấp
+- `eba8678a3418271645f8332ce30261938c8a1fbc` — fix(nep): dành chỗ cho nút quyết định trong sheet
+- `63438ad47dbbb26c056adcee194cd783c5759a22` — fix(community): đo đủ nhãn để sau trước khi xuống hàng
+- `bd2b94429132b9f38dd99b2f9148f2b71c474e05` — fix(community): dùng nút inline chung cho để sau
+- `6f3f5af2d1ae2b32145908f2da9409b254b1535d` — fix(community): giữ hai từ nhãn để sau cùng dòng
+- `6045dd5902218283e80aff268ff0e20f4b451559` — docs(ui): ghi phạm vi ship Nếp và audit Gu Khám phá native
+- `d3c4a3aa3db5ee40ca28229103ae87f874a04dcd` — fix(gu): đo nhãn theo bề rộng sticker và phong bì
+- `6f7a3bd958ee4362e25c021d37b654a1841856b6` — docs(ui): chốt nhãn Gu qua sáu bộ ảnh Android
+- `5d4f06f20a8ccf040371dfaf1a40cb7b36e9b4bd` — fix(map): chờ MapLibre native trước khi chiếu mốc
+- `312553f68e6696c0e8a90c209935a3800dc9e5de` — fix(map): mở nhãn và action trợ năng cho mốc native
+- `2f20a30179d0e21a1f4b3244dfbd685b5bade7e9` — fix(android): cấp bounds thật cho marker MapLibre
+- `41e79674f339f3fdaf1a2a222f5590d82a923cfa` — fix(map): chọn mốc qua Pressable native
+- `8802bb4d6f4edb742777d67a891092d61da9f543` — fix(keo): giữ dấu thêm chặng phía trên bàn phím
+- `405759dca7ef554a9df4354c54abc85bda9e110b` — fix(map): đưa chọn mốc gộp ra khỏi khung bị cắt
+- `9007c3bb7069bf834903340ebdc2f9d9c00b58da` — fix(mobile): giữ vùng chạm bản đồ và chữ lớn trong form
+- `5569633cca4abd1799868f1cdc19b674a3d6e934` — fix(mobile): ưu tiên chặng và giữ form rõ trên Android
+- `36f1c5ad6b907e646c498b39b4dff320fb905a5e` — fix(mobile): giữ trọn nhãn tiền, giờ và đầu trang gấp
+- `3bb47ef84bf294a242fbcc5f8910ceeb02478ca0` — fix(mobile): cân lại ảnh và thông tin thẻ khám phá gọn
+- `a409b499f2276eceba1d09888eb5e1bdb4e041ec` — docs(ui): chốt bằng chứng native sửa card C/D–01
+- `d9c06bf4dd8612bd2d2e31b3f6a1cd51bbc6ca2b` — ui: thiết kế lại bố cục chính và thanh ngân sách native
+- `9a6d69563a503860774f291f22b4806082b970a6` — ui: sửa bố cục native theo review chín màn
+- `797a3f52d77919adcfa86ed639e17b01476a8f2d` — ui: bỏ khoảng trống thừa dưới nút lưu hồ sơ
+- `32215de2df0f63e39959ac512c715ca368b0a440` — docs: ghi review native bảy finding và coverage còn mở
+- `c9c08be7aa2959e3f6ee3049135d4583dbdb2145` — ui: sửa sổ kỷ niệm theo từng trang, bìa tự giãn
+- `b76f616d45b263feae63ecd717254d6ae60af145` — ui: hoàn thiện trang soạn và nhịp đọc sổ ở chữ lớn
+- `5cab4701199a4ab9332fc20e28c0f0e3d67ddf89` — ui: bỏ đường kẻ trang trí khi chữ lớn
+- `fb756b1b0ecc84376cec6f42ae09537622a8361b` — docs: ghi nhận bốn finding sổ đã khép theo phạm vi native
+- `a20200a8799e485e957dec49282e8e4baa99d749` — ui: gom nội dung nhóm và bạn bè quanh thao tác chính
+- `af37cdefb58b63a2138af1133aaed809dab8f047` — fix(mobile): chừa vùng điều hướng cho form nhóm và bạn
+- `fa735354989e10eb366446a6fc6de2286a9aa8cd` — test(mobile): đồng bộ flow mời nhóm với heading mới
+- `601994b413d1033dc735c509474aeb6dbe08c024` — ui: sửa sáu finding nhóm và bạn bè native
+- `c941f09ecacdcde712a29ce645a2327dc5ac7a21` — fix(ui): giữ riêng tư recovery và kiểm nút rời nhóm
+- `d91e66d16a06b3beea166963c75890ef2b69da7a` — ui(H): thu gọn quyết định rời nhóm và nhãn bìa rộng
+- `59af44b5b3f318510dfc949c506e94c1a3016dc9` — docs(ui): ghi sáu fixes H đã đối chiếu Android native
+- `f4337c3dbc14c5a8da1e53887c2375dd411a6387` — ui(I1): gom luồng chọn người và giao kèo hai bên
+- `50e4c52b417210dc5dad62b34762548e33b8802c` — test(I1): đợi đúng heading sổ đã đổi
+- `0019092de4733d89abdad2e74cdf98016421992d` — fix(mobile): giữ đủ chiều ngang điều khoản sổ hai người
+- `4a491dc09fb5549482cc1232b3731a68522fc061` — mobile: làm rõ nghi thức đồng thuận sổ hai người
+- `62c1a73b3fb5bb85c966670d26cea782eac56c43` — fix(mobile): cấp đủ chiều ngang cho nhãn Để sau
+- `7dcacedf164f1a84192be62392c6dbfa4148174e` — fix(mobile): giữ trọn nhãn chọn loại sổ sau mở
+- `9d56d87459f3faa9f772068230a71e13276eb76f` — docs(mobile): chốt bảy sửa I1 và ghi baseline I2 native
+- `8a524234b4facc7209b57d8ba8f88200bafc560d` — feat(mobile): làm rõ mục lục và quyết định trong sổ hai người
+- `a24cb4bf5377f1716a9e9073b292158962e11ed0` — fix(mobile): sửa geometry tem và ô ghi điều cần tránh
+- `814ea5c979629acb8548215c24a5ff5f5c560b73` — fix(mobile): gom lỗi Gu với nút phục hồi ở chữ lớn
+- `5671e3dfdc336c114bbe69396dc82a1ff02b53db` — docs(mobile): chốt review I2 và chuyển QC khoảnh khắc
+- `3feb7edf8ad884401135efb75bfd2320656572ae` — ui(mobile): đưa ảnh dẫn khoảnh khắc và gom tác vụ J
+- `fdd0ed6a395b8cb0844c3de07a63fd08b2b78ac0` — chore(mobile): cập nhật bản đồ hướng dẫn theo nút J
+- `2085f8b50ca84d5f4da7228731bfeaf2019dcd4b` — test(mobile): đồng bộ flow32 với composer và bảng bình luận J
+- `bd475fc728825493f89d07f79b28f97e9edece35` — ui: gom bố cục chat, cộng đồng và cá nhân trên Android
+- `7093841851a11eb1206e043cf850c1bf8a2fa114` — test(mobile): đồng bộ điều khiển GPL gọn với flow native
+- `b614175927b1b7e975800066049b49004f62dcac` — fix(mobile): gọn nhãn cá nhân và giữ footer trong vùng native
+- `c3b04ae8afc1cb005c650e7d35de522d7c5ac231` — fix(mobile): giữ khay chat co theo vùng hiển thị
+- `7cf58966f0da6871f5e3a21534bd7d8c636a38af` — fix(mobile): giữ cột thao tác và phục hồi bảng tin khi quay lại
+- `b0065de3348992448f68d9b6d3eaf5cbfd89c111` — test(mobile): đồng bộ reset readiness với hợp đồng bảng tin
+- `8ec8071ebefeff96f9da0be3dc17f015935bd271` — fix(mobile): cấp chiều rộng cho nhãn sửa hồ sơ
+- `0489152dc1d960635d93bd81c254cbccecc8518d` — fix(mobile): gom icon và nhãn hồ sơ thành thao tác gọn
+- `1e56b2f432f4cb60622e4a6ae881718abf90d886` — debug(mobile): đo hình học nhãn hồ sơ trên Android
+- `814e086fd750844964251c75f791c72770f6e5f0` — fix(mobile): giữ đủ phần lẻ của chiều rộng nhãn native
+- `061d8d7afad9d145ee34180d4ed14250c67db5c6` — fix(mobile): đo lại chiều cao nhãn hồ sơ theo width native
+- `42c369d42e846cef7ed7334d01ccafa1a7caed21` — docs(ui): ghi verdict GPL/J và hướng chia bill native
+- `878071e42685171969caefd9d83f8518fabf6d70` — ui(M): gom receipt và sổ chi theo việc đang làm
+- `2801d706042a2059b16451d9f6d4a36494b2edd6` — fix(ui): mở món còn lại khi bắt đầu gán bill
+- `a21309eb28b1210ce8da66130cdd749f5f4a7685` — docs(nep): cập nhật bản đồ nút chia bill đã đổi
+- `2528a901d88495cb681baaec0f514cbf7cc5b57a` — fix(mobile): giữ bố cục bill khi đổi cỡ chữ Android
+- `64df955c4d66a2546fef4556049813f8461f6268` — fix(mobile): đo lại bố cục khi Android đổi cỡ chữ
+- `2886f6a4a72c2de13f4703a69b80e4809492ae68` — fix(mobile): thử refresh font trước layout native
+- `fe41410ea73d0908d3f19ba0d445b9afa73a5ea1` — build(mobile): khai báo dependency React Native cho font module
+- `0b15db02ccfbfb7cf777548a030b6b6b31ac1dba` — fix(mobile): thử metric SP native cho luồng hóa đơn
+- `b1931bc734824aa67e40f83575b66700a5dc791d` — test(mobile): giữ ranh giới biên dịch metric và kiểm host
+- `445865b54392581307a8156cb1a7fe2f0d29125d` — fix(mobile): nhập đủ type trạng thái observer
+- `b7005b2fa58778cb3824877283974a8ca142004c` — fix(mobile): giữ ô tiền trong lề hóa đơn khi đổi cỡ chữ
+- `5956be42ddcc0f6deb6204bfc543a5939c87d269` — fix(mobile): sắp lại trang quyết toán và bảng thu
+- `01d8d52af7be6b508cd196db2b71f1d89574435d` — docs(mobile): lưu bằng chứng native hóa đơn và lề tiền
+- `e74fcb51bf341258b6c614a58384723692062080` — fix(mobile): giữ chữ quyết toán đủ khi đổi cỡ chữ
+- `779f96c9f0a3221a71eed56bcdcf5d254a3f9da6` — fix(ui): giữ nhãn sổ tài chính trong hướng dẫn Nếp
+- `9765304afe8aac1ba59ddff60da21cb0f784770b` — fix(ui): giữ nháp và một ô bình luận xuyên chuyển màn
+- `448c74fafa9dc38b2c8094ca2b71ffc32a3da129` — fix(ui): đo lại nhãn con dấu khi đổi cỡ chữ Android
+- `5e2ffd88939e7bdc778691a153eb39b7e35f3322` — fix(ui): khóa tệp và gửi bài trong cùng lượt chạm
+- `edccaf00bf9af5f0ed1f553f27244745d49418c3` — fix(ui): thu gọn bình luận, giữ tệp chờ và đo tem native
+- `320d61499639bc9f5cf439c1270dbca1f232e4e0` — fix(ui): giữ khung chữ native và footer bình luận trên bàn phím
+- `29bdbefc29dce4bb13c28ac9ff2e8e69be1d1157` — test(ui): quét ô nhập qua alias và wrapper có chuyển tiếp style
+- `1c3f4020eca9ceb70043ab00c29c4c94b6ed785d` — fix(ui): tự giãn bình luận theo chữ native
+- `6baa184792bac092098715bc41b76eee845e4b98` — fix(ui): giữ vị trí bài viết qua handoff bình luận
+- `7f37dea03185b7e38d29c895d8697cddd986cba8` — fix(ui): gom gọn thanh bình luận và hàng chữ
+- `fc13684757baf103e0c7abf91aca2e9859ee4527` — fix(ui): giữ gate bình luận theo bố cục đã gom
+- `35eaddb3e2331115d20151e421d9931fcb355f9f` — fix(ui): gom hồ sơ và mở danh sách gắn bạn rõ ràng
+- `4ef4fa71d931a911ad150513fd82da17584da0fd` — fix(ui): cân số liệu hồ sơ và gọn thanh viết bài
+- `86fba6db4ed77877e87560e18174115b67aab90e` — fix(ui): giữ bố cục theo cỡ chữ native
+- `d0696daa3bd6065e8fab8f22fb312d5f01fb4d01` — fix(ui): gọn tab và vùng soạn Nếp trên bàn phím
+- `600318ef7bf2eefce54988e113790e1a28a37317` — fix(mobile): giữ nháp Nếp và thử lại đúng thao tác
+- `4efbdee47b318cad6057080107ffb010e2560024` — test(mobile): kiểm lỗi Nếp theo tài liệu trong sheet
+- `8d60e8f3408790202e7bc198197b0eaae94607c0` — fix(ui): gọn ghi chép và giữ chữ lớn theo metrics native
+- `49787df2b0fcfbfb0ddcd4d195810abb01808332` — fix(mobile): giữ panel bình luận ngoài flow khi ẩn trên native
+- `c215d75065328f564df8141d9c806037af75793d` — fix(ui): đưa tên địa điểm lên trước ảnh trên màn nhỏ
+- `2aff8e9ca28c793e87e6739674b0137ba6ba5334` — test(mobile): loại binding Nếp không render và footer sai
+- `f3f31696f32309d543cb2ac7eca0121e2d998e5a` — test(mobile): ghi rõ trạng thái rỗng gọn của Keeps
+- `a2ac74f1d316026b3699cce1f02fe1d140881964` — mobile: dùng metrics native cho chữ Khám phá
+- `7a255c3557093a0689d195ae314e94a8511975ef` — ui: chỉnh khung địa điểm, tab và Tin nhắn
+- `35b357708b31dac3aaa61a06df15c970064719e5` — ui: cân lại tab, thẻ địa điểm và bố cục Cá nhân
+- `f5013998cac3f791c980c6a49a5f2c90620b539f` — ui: thu gọn Cộng đồng và cân nhịp chữ địa điểm, hồ sơ
+- `1ff5c7d879d6cf4c31c38fd53518a4525c6217aa` — ui: sắp xếp tác giả Cộng đồng theo cỡ chữ native
+- `e1f7720583b2f90117bcd79e9b66a083e5555c18` — ui: kể lại dấu chân hồ sơ và gom nhịp bảng tin
+- `5588b63e34d997dce966152478c4cf7f4053ea0e` — ui: dựng dấu chân hồ sơ và thu gọn khay Tạo, Cài đặt
+- `ab1ff388137cf35f97cde8061c8352067fb7c2b5` — ui: đồng bộ hướng dẫn khay Tạo và trục dấu chân hồ sơ
+- `75b7e52a486dc022d1977d075dd5ea37837ea262` — ui: làm nhẹ menu hồ sơ và tổ chức vùng viết bài
+- `e338740b73e98eada580bffae3edb239acb9ab5c` — ui: nối vùng viết với thao tác và cân hàng tìm địa điểm
+- `ee42d3cb39f1a3cd0f110d1a96be5f29387c64ad` — ui: giữ đủ hai mục Khám phá khi chữ lớn
+- `0cdc77f2542cf9c3f40359a9fd28af9d388b46c6` — ui: mở vùng viết theo chiều cao cửa sổ
+- `d8b06b1f82eb766def1a2ec42b90330746ef9f01` — ui: giữ vùng nhập dài ổn định và tách hàng cập nhật
+- `6c737f8df7f5861663ed8b34bf7bfe52744d6c9b` — ui: chừa đủ bộ đếm bài viết khi mở bàn phím
+- `01cc27aafe4ada10f429bd5607164762e8480173` — ui: đưa trang đã giữ dẫn Cá nhân và gọn ô viết
+- `f3c001a87f45330c5eff6b682064187c74f4a422` — fix(ui): đồng bộ hướng dẫn với Cá nhân mới
+- `adfc0584e3574de862dacd79b86d91fa1684c0e1` — test(ui): nối context viewport thật qua host Composer
+- `2c96ce60a61a558856b3db0632dd8ede327717e3` — fix(ui): chỉnh nhịp Cá nhân và mép công cụ viết bài
+- `c6717455c914b687e1e04e72f4f32d563defe2c9` — fix(ui): cập nhật đo chữ trong hội thoại native
+- `823e6106a235a22c31269de74714c9d4f4aa73bc` — mobile: cân lại khay sticker, bình chọn và màu chat
+- `7d31ef7109caf0d39953bdc025072995440dd44f` — test: ghim vòng mực chọn màu ở lớp phủ không đổi geometry
+- `86f323698c146f2db234b0de9dd9ed141acf10d7` — mobile: dành vùng nhập thật cho bình chọn khi mở bàn phím
+- `b8d4eb97e95628728890af8990bece40ef664b22` — test: cập nhật guard vùng lịch sử khi editor bình chọn mở
+- `229497dd4767757bf4312d064b173a7106a79c3d` — mobile: thêm vòng quay và đua vịt trong chat
+- `84255c18a6fbbd8c00d042b78d5dfd55ec74f524` — test: đồng bộ bản đồ hướng dẫn sau cửa Random
+- `1ad95c9abe90f47b610cc5cc3989984ffa618389` — fix(mobile): nói rõ nút chờ và giữ guard cho Random
+- `317bb116f85965108fe16d20c865875d1c3c71fe` — fix(chat): giữ nguồn quán và nhận Random ở producer tách worker
+- `b64627362cd977fec5437e2b148ba79fca39faf6` — fix(mobile): tách khóa catalogue khỏi chữ hiển thị
+- `e5eb6c4c9e272515efd2d557adf746fd8dbcceca` — fix(mobile): căn cụm tin và thu gọn màn chọn ngẫu nhiên
+- `6f70bfcc38617358c82ec3081c749be67f45bee0` — fix(mobile): ưu tiên lựa chọn và giấu payload ở inbox
+- `a084eaacb6451d61474ed02278e6d4cdd80af6e0` — feat(mobile): dựng sân đua vịt và lịch chung cho nhóm
+- `d91d565956dcbf8bc2f67f0fe18cbc84792c62c8` — fix(mobile): dùng token sân đua và nối nhịp đồng hồ
+- `bd3ca28b2864589fd16d714414e3d35baf5bcccf` — fix(mobile): giữ lịch đua khi ACK có offset và mở trọn sân

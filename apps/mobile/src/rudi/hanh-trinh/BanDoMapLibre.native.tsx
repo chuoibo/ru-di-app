@@ -7,6 +7,9 @@ import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef, type MapRef 
 import Svg, { Path } from "react-native-svg";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useNhipDau } from "../ui/useNhipDau";
+import { LenLop } from "../ui/KheLop";
+import { Sheet } from "../ui/Sheet";
+import { typography } from "../theme";
 import { TAM_MAC_DINH, chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
 
 
@@ -33,12 +36,18 @@ export function BanDo({
   const [groups, setGroups] = useState<string[][]>([]);
   const [choosing, setChoosing] = useState<string[]>([]);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [mapReady, setMapReady] = useState(false);
+  const nativeReady = useRef(false);
   const projection = useRef(0);
   const updateGroups = async () => {
+    // Android's project() dereferences the native map before resolving its
+    // promise. A JS catch cannot recover that crash while the map is loading.
+    const currentMap = map.current;
+    if (!nativeReady.current || !currentMap) return;
     const sequence = ++projection.current;
     try {
-      const points = await Promise.all(mocs.map(async (m) => ({ id: m.id, pixel: await map.current?.project([m.lng, m.lat]) })));
-      if (sequence !== projection.current) return;
+      const points = await Promise.all(mocs.map(async (m) => ({ id: m.id, pixel: await currentMap.project([m.lng, m.lat]) })));
+      if (sequence !== projection.current || currentMap !== map.current) return;
       const pending = points.filter((p) => p.pixel);
       const next: string[][] = [];
       while (pending.length) {
@@ -50,7 +59,14 @@ export function BanDo({
       setGroups(next);
     } catch { /* The map may have unmounted during a camera transition. */ }
   };
-  useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
+  useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [mapReady, cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
+  const mapLoading = () => {
+    nativeReady.current = false;
+    projection.current++;
+    setMapReady(false);
+    setGroups([]);
+  };
+  useEffect(() => () => { nativeReady.current = false; projection.current++; }, []);
   const vuaMoc = useRef(0);
   const duLieu = useMemo(() => tapHop(doan) as never, [doan]);
   const lop = useMemo(() => lopDuong(mau), [mau]);
@@ -62,7 +78,7 @@ export function BanDo({
   const hopBanDau = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
 
   useEffect(() => {
-    if (fitDem === 0 || !viewport.width || !viewport.height) return;
+    if (!mapReady || fitDem === 0 || !viewport.width || !viewport.height) return;
     const hop = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
     // Fit after the map's measured frame reaches native, including a tablet
     // layout change. A hidden view reports zero and keeps its previous frame.
@@ -72,10 +88,10 @@ export function BanDo({
     });
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitDem, cameraKey, padding, viewport.width, viewport.height]);
+  }, [mapReady, fitDem, cameraKey, padding, viewport.width, viewport.height]);
 
   useEffect(() => {
-    if (!toi) return;
+    if (!mapReady || !toi) return;
     // The journey panel covers the bottom of the map, so the geometric centre
     // is behind it: pad the camera by the same amount Fit Journey uses, or a
     // chosen stop eases to a spot the person cannot see. The stop is shown
@@ -84,7 +100,7 @@ export function BanDo({
     const hop = toi.ke?.length ? hopGioi([toi, ...toi.ke]) : null;
     if (hop) void cam.current?.fitBounds(hop, { padding, duration });
     else void cam.current?.easeTo({ center: [toi.lng, toi.lat], duration, padding, zoom: 14 });
-  }, [toi?.dem, padding]);
+  }, [mapReady, toi?.dem, padding]);
 
   return (
     <View style={styles.fill} onLayout={(e) => {
@@ -121,7 +137,9 @@ export function BanDo({
         if (e.nativeEvent.userInteraction) onUserMove();
         void updateGroups();
       }}
-      onDidFinishLoadingMap={() => { void updateGroups(); onSan?.(); }}
+      onWillStartLoadingMap={mapLoading}
+      onDidFailLoadingMap={mapLoading}
+      onDidFinishLoadingMap={() => { nativeReady.current = true; setMapReady(true); onSan?.(); }}
       scaleBar={false}
       style={[styles.fill, { backgroundColor: mauNen }]}
     >
@@ -185,6 +203,11 @@ export function BanDo({
         const mat = chum ? mocChum(group.map((id) => mocs.find((m) => m.id === id)!).filter(Boolean)) : moc;
         const tem = hinhTem(mat, mau);
         const neo = chuNeo(mat.neo);
+        const choose = () => {
+          vuaMoc.current = Date.now();
+          if (chum) setChoosing(group);
+          else { setChoosing([]); onChonMoc(moc.id); }
+        };
         return (
           <Marker
             anchor="center"
@@ -194,15 +217,17 @@ export function BanDo({
             // Two stops can share a pixel; the chosen one must be the one on
             // top. Child order alone does not decide that for native markers.
             style={{ zIndex: moc.chon ? 2 : 1 }}
-            onPress={() => {
-              vuaMoc.current = Date.now();
-              if (chum) setChoosing(group);
-              else { setChoosing([]); onChonMoc(moc.id); }
-            }}
+            onPress={choose}
           >
-            <View
+            <Pressable
+              accessible
+              testID={`map-marker-${moc.id}`}
               accessibilityLabel={chum ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : nhanMoc(moc)}
               accessibilityRole="button"
+              accessibilityState={{ selected: mat.chon }}
+              accessibilityActions={[{ name: "activate", label: "Chọn chặng" }]}
+              onAccessibilityAction={(event) => { if (event.nativeEvent.actionName === "activate") choose(); }}
+              onPress={choose}
               // The stamp is 44dp; the slop makes the finger target 48dp+.
               hitSlop={4}
               style={styles.hopTem}
@@ -224,7 +249,7 @@ export function BanDo({
                   </View>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
           </Marker>
         );
       })}
@@ -233,10 +258,13 @@ export function BanDo({
     <Pressable accessibilityLabel="Bản quyền dữ liệu bản đồ: OpenStreetMap, OpenFreeMap" accessibilityRole="link" hitSlop={8} onPress={() => void Linking.openURL("https://www.openstreetmap.org/copyright")} style={[styles.banQuyen, { backgroundColor: mau.giay }]}>
       <Text maxFontSizeMultiplier={1.3} style={[styles.banQuyenChu, { color: mau.netChi }]}>© OpenStreetMap · OpenFreeMap</Text>
     </Pressable>
-    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mau.vien }]}>
+    {/* A cluster's choices must escape the clipped map frame. At 320x640 its
+        second row was under the day page; the shared sheet also owns Back. */}
+    <LenLop><Sheet accessibilityLabel="Chọn điểm hẹn" open={choosing.length > 1} onClose={() => setChoosing([])} showsVerticalScrollIndicator>
+      <Text accessibilityRole="header" style={[typography.h2, { color: mau.chu, marginBottom: 12 }]}>Chọn điểm hẹn</Text>
       {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mau.chu }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
       <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mau.chu }}>Đóng</Text></Pressable>
-    </View> : null}
+    </Sheet></LenLop>
     </View>
   );
 }
@@ -284,7 +312,6 @@ function thuTuVe(mocs: BanDoProps["mocs"]): BanDoProps["mocs"] {
 
 const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 0 },
-  chooser: { position: "absolute", top: 60, left: 16, right: 16, borderWidth: 1, borderRadius: 12, padding: 8 },
   banQuyen: { position: "absolute", top: 8, right: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   banQuyenChu: { fontSize: 11, lineHeight: 14 },
   choice: { minHeight: 48, justifyContent: "center", padding: 8 },

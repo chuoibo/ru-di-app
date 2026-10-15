@@ -8,6 +8,7 @@
     "target": "es2022"
   },
   "include": [
+    "src/rudi/chat/e2ee/anh-niem.ts",
     "src/rudi/account.ts",
     "src/rudi/community/api.ts",
     // B7 (QA N14): the composer's topic rules held to the server's, and the
@@ -15,6 +16,8 @@
     "src/rudi/community/chu-de.ts",
     "src/rudi/community/bang-tin.ts",
     "src/rudi/nhom/loi-moi-nhom.ts",
+    "src/rudi/nhom/tim-cuoc-tro-chuyen.ts",
+    "src/rudi/keo/ngan-sach-keo.ts",
     "src/rudi/diary/api.ts",
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
@@ -314,6 +317,7 @@
     // Một cách viết ngày (QA UI-104) và khoảng ngày của chuyến trên kệ album (QA UI-103).
     "src/rudi/ngay-viet.ts",
     "src/rudi/ngu-canh-mo.ts",
+    "src/rudi/duong-cu.ts",
     // Hành trình (ADR-0026): chiếu lịch trình lên địa lý. Compile vì luật
     // phủ định — chặng không toạ độ không thành marker, hiệu suất không bịa,
     // OSRM fail thì geodesic — chỉ đo được khi chạy hàm.
@@ -341,6 +345,11 @@
     "src/rudi/chat/e2ee/kieu.ts",
     "src/rudi/chat/e2ee/api-v2.ts",
     "src/rudi/chat/e2ee/so-tin.ts",
+    "src/rudi/chat/e2ee/random-v2.ts",
+    "src/rudi/chat/e2ee/random-live.ts",
+    "src/rudi/chat/e2ee/useRandomLive.ts",
+    "src/rudi/chat/e2ee/duong-dua.ts",
+    "src/rudi/chat/e2ee/random-native.ts",
     "src/rudi/chat/e2ee/may-ma-hoa.ts",
     "src/rudi/chat/e2ee/so-phong.ts",
     "src/rudi/chat/e2ee/thiet-bi.ts",
@@ -501,6 +510,12 @@
     "src/rudi/art/nep-roi.ts",
     "src/rudi/art/nep-dien.ts",
     "src/rudi/khoanh-khac.ts",
+    // Asset selection and event clocks are run under the real React scheduler.
+    // The harness replaces only device APIs, not these decision functions.
+    "src/rudi/asset-pack/resolution.ts",
+    "src/rudi/ky-niem/nhap-dang.ts",
+    "src/rudi/asset-pack/react-native/useConfirmedProgress.ts",
+    "src/rudi/ui/useKhoanhKhac.ts",
     // S0.5 primitives' arithmetic: the month grid a tear-off calendar leafs
     // through, the dial's quarter hours, the sentence with blanks, and the
     // avatars that failed this session.

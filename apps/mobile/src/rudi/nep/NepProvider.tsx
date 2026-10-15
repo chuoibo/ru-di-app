@@ -136,6 +136,11 @@ export function useNepGui(): ((su: SuKienNep) => void) | null {
   return useContext(NepGuiContext);
 }
 
+/** Global navigation yields to the same counted sheets as the paper edge. */
+export function useSoSheetDangMo(): number {
+  return useContext(NepContext)?.dock.coSheet ?? 0;
+}
+
 export function useNep(): NepDieuKhien {
   const gia = useContext(NepContext);
   if (!gia) throw new Error("useNep phải nằm trong NepProvider");

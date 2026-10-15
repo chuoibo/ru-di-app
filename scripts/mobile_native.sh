@@ -192,6 +192,7 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$HOME/.maestro/
 command -v adb >/dev/null 2>&1 || khong_do_duoc "không có adb. Đặt ANDROID_HOME (mặc định ~/Android/Sdk)."
 command -v maestro >/dev/null 2>&1 || khong_do_duoc "không có maestro trên PATH. https://maestro.mobile.dev"
 [ -d "$APP/node_modules" ] || khong_do_duoc "apps/mobile/node_modules chưa có. Chạy 'npm ci' trong apps/mobile."
+node "$APP/tools/sua-maplibre-marker.mjs" --kiem || khong_do_duoc "bản sửa bounds marker MapLibre native chưa khớp; chạy postinstall rồi dựng lại APK."
 [ -d "$APP/$FLOWS" ] || khong_do_duoc "không thấy $APP/$FLOWS"
 
 # --- thiết bị --------------------------------------------------------------
@@ -2173,6 +2174,9 @@ for f in "$FLOWS"/*.yaml; do
     # Nó chạy sau 30 trong cùng lượt và thừa hưởng nhóm «Hoi QA» của flow đó,
     # nên không cần bước chuẩn bị riêng.
     48-*)        [ "$ACCOUNT" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    # 49: chat v2 E2EE hai chiều với thiết bị tổng hợp (`tests/drill/ban-doi-tac.mjs`),
+    # cần biến môi trường E2EE=1 (hoặc chạy riêng với cặp TK/MK/NHOM/TIN đã dựng).
+    49-*)        [ "$ACCOUNT" = 1 ] && [ "${E2EE:-0}" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
     # 50: cửa tài khoản trọn vòng (mật khẩu sai, đúng, phiên sống qua lần tắt,
     # đăng xuất) bằng người B, chạy CUỐI lượt sau khi mọi flow khác đã xong.
     50-*)        [ "$ACCOUNT" = 1 ] || continue ;;

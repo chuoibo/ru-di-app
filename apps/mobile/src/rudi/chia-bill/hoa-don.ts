@@ -11,6 +11,7 @@
  * pin the three money laws already live.
  */
 import {
+  ApiError,
   attemptFor,
   confirmExpense,
   docChiaBill,
@@ -68,8 +69,8 @@ export async function luuGanMonTrenMayChu(
   return luuGanMon(billId, reading, assignment, personId, contextId, attempt);
 }
 
-export async function chiaTrenMayChu(billId: string, personId: string, contextId: string, attempt: Attempt): Promise<ChiaBill> {
-  return docChiaBill(billId, personId, contextId, attempt);
+export async function chiaTrenMayChu(billId: string, personId: string, contextId: string, attempt: Attempt, paidById?: string): Promise<ChiaBill> {
+  return docChiaBill(billId, personId, contextId, attempt, paidById);
 }
 
 /** Members that appear in at least one share, in roster order. */
@@ -89,12 +90,29 @@ export async function ghiVaoSo(input: {
   roster: readonly ThanhVien[];
   contextId: string;
   payerId: string;
+  /** The signed-in recorder; only the payer can acknowledge their own advance. */
+  actorId?: string;
   occasion: string;
   attempts: Record<string, Attempt>;
+  /** The split the person saw before pressing the ledger stamp. */
+  reviewedSplit?: Pick<ChiaBill, "participantIds" | "allocations" | "totalAmountVnd">;
   /** The trip the bill is written from, when it is (ADR-0054). */
   outingId?: string;
 }): Promise<{ expenseVersionId: string; acknowledged: boolean }> {
-  const participants = nguoiThamGia(input.reading, input.assignment, input.roster);
+  const reviewedAllocations = input.reviewedSplit === undefined ? undefined : { ...input.reviewedSplit.allocations };
+  const reviewedTotal = input.reviewedSplit?.totalAmountVnd;
+  const changed = () => new ApiError(409, "proposal_changed", "Khoản chi đã đổi kể từ lúc bạn nhìn. Quay lại xem con số mới trước khi ghi vào sổ.");
+  let participants = nguoiThamGia(input.reading, input.assignment, input.roster);
+  if (input.reviewedSplit !== undefined) {
+    const ids = [...input.reviewedSplit.participantIds];
+    const byId = new Map(input.roster.map((person) => [person.id, person]));
+    if (reviewedTotal !== itemsTotalVnd(input.reading) || new Set(ids).size !== ids.length ||
+        ids.length !== Object.keys(reviewedAllocations!).length ||
+        ids.some((id) => !byId.has(id) || !Object.hasOwn(reviewedAllocations!, id))) throw changed();
+    // Keep the bill server's participant set, including zero shares, instead
+    // of constructing a different expense from the visible nonzero diners.
+    participants = ids.map((id) => byId.get(id)!);
+  }
   const items = itemsForWire(input.reading, input.assignment);
   const draft = {
     participants,
@@ -103,8 +121,14 @@ export async function ghiVaoSo(input: {
     occasion: input.occasion,
   };
   const khoa = `khoan-chi:${input.payerId}:${draft.totalVnd}:${input.occasion}:${participants.map((p) => p.id).join(",")}`;
-  const proposal = await proposeSplit(input.contextId, draft, attemptFor(input.attempts, khoa), items, input.outingId);
-  return confirmExpense(proposal, attemptFor(input.attempts, `xac-nhan:${proposal.expenseId}`));
+  const actorId = input.actorId ?? input.payerId;
+  const proposal = await proposeSplit(input.contextId, draft, attemptFor(input.attempts, khoa), items, input.outingId, actorId);
+  if (reviewedAllocations !== undefined &&
+      (proposal.serverProposal.total_amount_vnd !== reviewedTotal ||
+       Object.keys(proposal.allocations).length !== Object.keys(reviewedAllocations).length ||
+       Object.entries(reviewedAllocations).some(([id, amount]) => proposal.allocations[id] !== amount))) throw changed();
+  // Confirmation must carry the reviewed amounts, not an unseen second split.
+  return confirmExpense({ ...proposal, allocations: reviewedAllocations ?? proposal.allocations }, attemptFor(input.attempts, `xac-nhan:${proposal.expenseId}`), actorId);
 }
 
 /** A member's name for the screen; never the id. */

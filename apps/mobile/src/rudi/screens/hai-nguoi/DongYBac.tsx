@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton } from "../../ui";
+import { Heading } from "../../ui";
 import { ChuKy } from "../../ui/ChuKy";
+import { PressScale } from "../../ui/PressScale";
 import { Sheet } from "../../ui/Sheet";
 import { useGiuKhiDong } from "../../ui/giu-khi-dong";
 import { StampButton } from "../../ui/StampButton";
@@ -40,6 +41,8 @@ function BacDongY({
   nhanDeNghi,
   tenNguoiKia,
   testID,
+  dangLam = false,
+  loi = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,8 +66,12 @@ function BacDongY({
   /** Who is waiting on this, by name; the app knows it, so it says it. */
   tenNguoiKia?: string;
   testID: string;
+  dangLam?: boolean;
+  loi?: string | null;
 }) {
   const { colors, space } = useRudiTheme();
+  const { width, fontScale } = useWindowDimensions();
+  const xepDoc = width < 600 || fontScale >= 1.3;
   const { phien } = useRudiSession();
   // Closing, the sheet keeps what it said open (QA UI-084).
   const { dangCho, deNghiCuaToi } = useGiuKhiDong(open, { dangCho: dangChoSong, deNghiCuaToi: deNghiCuaToiSong });
@@ -79,68 +86,65 @@ function BacDongY({
   useEffect(() => {
     truoc.current = open ? toiKy : null;
   }, [open, toiKy]);
+  const actions = <View style={styles.actions}>
+    {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+    {dangCho ? (
+      <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-${deNghiCuaToi ? "dang-cho" : "ho-de-nghi"}`}>
+        {deNghiCuaToi ? `Đã đề nghị. Chờ ${ho} đồng ý trên máy của họ.` : `${ho} đã đề nghị. ${testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}`}
+      </Text>
+    ) : null}
+    {dangCho && !deNghiCuaToi ? (
+      <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
+    ) : !dangCho ? (
+      <StampButton wrapLabel style={styles.dau} disabled={dangLam} loading={dangLam} label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
+    ) : null}
+    <PressScale accessibilityRole="button" onPress={onClose} pressedScale={0.98} style={styles.deSau}>
+      <Text style={[typography.label, styles.deSauLabel, { color: colors.inkSoft }]}>Để sau</Text>
+    </PressScale>
+  </View>;
   return (
-    <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID}>
+    <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID} footer={actions} showsVerticalScrollIndicator>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" title={tieuDe} />
         <TrangSo ke={false} tone="accent" testID={`${testID}-giao-keo`}>
-          <View style={styles.haiCot}>
-            <View style={styles.cot}>
+          <View style={[styles.haiCot, xepDoc && styles.doc]}>
+            <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Cho phép" />
-              {choPhep.map((d) => (
+              {choPhep.map((d, i) => (
                 <View key={d} style={styles.dieu}>
                   <Ionicons color={colors.ink} name="checkmark" size={16} style={styles.dauDieu} />
-                  <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{d}</Text>
+                  <Text testID={`${testID}-cho-phep-${i}`} style={[typography.body, styles.flex, { color: colors.ink }]}>{d}</Text>
                 </View>
               ))}
             </View>
-            <View style={styles.cot}>
+            <View style={[styles.cot, xepDoc && styles.cotDoc]}>
               <DongSo dau trai="Không kéo theo" />
-              {khongKeoTheo.map((d) => (
+              {khongKeoTheo.map((d, i) => (
                 <View key={d} style={styles.dieu}>
                   <Ionicons color={colors.inkSoft} name="close" size={16} style={styles.dauDieu} />
-                  <Text style={[typography.body, styles.flex, { color: colors.inkSoft }]}>{d}</Text>
+                  <Text testID={`${testID}-khong-keo-theo-${i}`} style={[typography.body, styles.flex, { color: colors.inkSoft }]}>{d}</Text>
                 </View>
               ))}
             </View>
           </View>
-          <View style={styles.chuKy}>
-            <ChuKy choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
-            <ChuKy choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
+          <View style={[styles.chuKy, xepDoc && styles.doc]}>
+            <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
+            <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
           </View>
+          <Text style={[typography.caption, { color: colors.inkSoft, marginTop: 16 }]}>Im lặng không phải đồng ý.</Text>
         </TrangSo>
-        {dangCho && !deNghiCuaToi ? (
-          // Người ấy đề nghị: việc của màn này là một nút, không phải một câu
-          // nói rằng đang chờ chính mình.
-          <>
-            <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
-            </Text>
-            <StampButton label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
-          </>
-        ) : dangCho ? (
-          <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
-            Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
-          </Text>
-        ) : (
-          <StampButton label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
-        )}
-        <RudiButton label="Để sau" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string; dangLam?: boolean; loi?: string | null }) {
   return (
     <BacDongY
       {...props}
       choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Những điều cần tránh: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
-      // Said as far as it is true: only the two of them can open the notebook
-      // in the app, but the chat is not end to end encrypted yet (its lock
-      // label says so), and «nobody but you two sees this» beside an open lock
-      // promised more than the product keeps (QA 23/09).
-      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
+      // Notebook consent grants neither couple status nor access to chat.
+      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không tự đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app. Quyền riêng tư của tin nhắn không đổi."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
       tieuDe="Lập sổ lời hẹn"
@@ -148,7 +152,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; tenNguoiKia?: string; dangLam?: boolean; loi?: string | null }) {
   return (
     <BacDongY
       {...props}
@@ -165,11 +169,18 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
 
 const styles = StyleSheet.create({
   noiDung: { paddingBottom: 8 },
+  actions: { gap: 8, paddingTop: 16 },
+  dau: { maxWidth: "100%" },
+  deSau: { minHeight: 48, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
+  deSauLabel: { alignSelf: "stretch", textAlign: "center" },
   flex: { flex: 1 },
   // Two columns when there is room for both at reading width, one under the other otherwise.
   haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   cot: { flexGrow: 1, flexBasis: 200, gap: 4 },
+  doc: { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", width: "100%" },
+  cotDoc: { flexGrow: 0, flexBasis: "auto", width: "100%" },
+  chuKyDoc: { flex: 0, flexBasis: "auto", width: "100%" },
   dieu: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
   dauDieu: { marginTop: 3 },
-  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 16, marginTop: 14 },
+  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 24, marginTop: 24 },
 });

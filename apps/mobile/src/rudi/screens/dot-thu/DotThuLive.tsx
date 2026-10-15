@@ -27,7 +27,9 @@
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 
 import { chiaSe, type KetQuaChiaSe } from "../../web/chia-se";
 
@@ -94,11 +96,17 @@ function daVeRoi(trangThai: NghiaVu["trangThai"]): boolean {
 }
 
 export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: string }) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><DotThuPage phien={phien} batchId={batchId} /></NativeFontMetricsProvider>;
+}
+
+function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
   const router = useRouter();
   const { colors, dark, radius } = useRudiTheme();
   const contextId = phien.context_id;
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
+  const [dauWidths, setDauWidths] = useState<Record<string, number>>({});
   // A failure is said where it happened: under the row whose action failed,
   // under the publish seal, beside «Làm mới» -- not at the top of the page.
   const [loiTai, setLoiTai] = useState<{ noi: string; cau: string } | null>(null);
@@ -118,8 +126,8 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   // board's figures are read, not only in its card at the foot.
   const [dieuChinh, setDieuChinh] = useState<{ dangMo: boolean; canToiTraLoi: boolean }>({ dangMo: false, canToiTraLoi: false });
 
-  const doc = useCallback(async () => {
-    if (contextId === null) return;
+  const doc = useCallback(async (): Promise<NghiaVu[] | null> => {
+    if (contextId === null) return null;
     const [bang, danhSach, links] = await Promise.all([
       docBangThu(contextId, batchId, phien.person_id),
       docDotThuCuaNhom(contextId, phien.person_id),
@@ -127,6 +135,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
     ]);
     const dot = danhSach.find((d) => d.id === batchId);
     setTrang({ pha: "xong", nghiaVu: bang.nghiaVu, soTranhCai: bang.soTranhCai, trangThai: dot === undefined ? null : dot.trangThai, links });
+    return bang.nghiaVu;
   }, [batchId, contextId, phien.person_id]);
 
   useEffect(() => {
@@ -147,7 +156,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
 
   if (contextId === null) {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen avoidKeyboard cot="form" material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <Heading title="Vào một nhóm trước" subtitle="Đợt thu là của nhóm; chưa có nhóm thì chưa có ai để thu." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} tone="split" variant="outline" />
@@ -192,11 +201,11 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
       setVuaNhan(n.id);
     });
 
-  const docLai = () => chay("lam-moi", doc);
+  const docLai = () => chay("lam-moi", async () => { await doc(); });
 
   if (trang.pha === "dang-doc") {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen avoidKeyboard cot="form" material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="50%" lineHeight={24} lines={2} />
@@ -208,7 +217,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   }
   if (trang.pha === "hong") {
     return (
-      <RudiScreen tone="split" testID="collection-batch-screen">
+      <RudiScreen avoidKeyboard cot="form" material="quiet" tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
         <ErrorState body={trang.loi} onRetry={docLai} title="Chưa đọc được bảng thu" />
       </RudiScreen>
@@ -222,30 +231,22 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   const bang = [...trang.nghiaVu].sort((a, b) => Number(daVeRoi(a.trangThai)) - Number(daVeRoi(b.trangThai)));
 
   return (
-    <RudiScreen tone="split" testID="collection-batch-screen">
+    <RudiScreen avoidKeyboard cot="form" material="quiet" tone="split" testID="collection-batch-screen">
       <TopBar subtitle={trang.trangThai === null ? undefined : cauTrangThaiDot(trang.trangThai)} title="Đợt thu" />
-      {/* The head of the collection's page: the count the server derived from
-          receipts, a strip of teal tape that fills as transfers arrive, and
-          Nếp bowing its thanks when money has just arrived (M4) -- at the head
-          of the page, never on a row. */}
+      {/* Progress describes published obligations; an unissued round leads
+          with its board, not a zero-progress hero. */}
       <View style={styles.dau}>
-        <Text style={[typography.h1, { color: colors.ink }]}>
-          {tom.daVe}/{tom.tong} lượt chuyển đã về
+        {daPhatRoi ? (
+          <Text style={[typography.label, { color: colors.ink }]}>{tom.daVe}/{tom.tong} lượt chuyển đã về</Text>
+        ) : (
+          <Text style={[typography.label, { color: colors.ink }]}>{tom.tong} lượt chuyển trong đợt</Text>
+        )}
+        {daPhatRoi ? <DaiTienDo da={tom.daVe} tong={tom.tong} testID="dai-tien-do" /> : null}
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+          {tom.nguoiGui !== tom.tong ? `${tom.nguoiXong} trên ${tom.nguoiGui} người đã xong phần mình. ` : ""}
+          {daPhatRoi ? "Đã phát: mỗi người xem phần của mình qua link riêng." : "Chưa phát: chưa ai bị nhắn gì."}
         </Text>
-        {/* Nếp stands beside the tape and the sentence, never beside the count
-            it would push onto two lines. */}
-        <View style={styles.dauTrang}>
-          <View style={[styles.flex, styles.dau]}>
-            <DaiTienDo da={tom.daVe} tong={tom.tong} testID="dai-tien-do" />
-            {/* The people count only when it says something the heading does
-                not: someone with two transfers makes the two differ. */}
-            <Text style={[typography.body, { color: colors.inkSoft }]}>
-              {tom.nguoiGui !== tom.tong ? `${tom.nguoiXong} trên ${tom.nguoiGui} người đã xong phần mình. ` : ""}
-              {daPhatRoi ? "Đã phát: mỗi người xem phần của mình qua link riêng." : "Chưa phát: chưa ai bị nhắn gì."}
-            </Text>
-          </View>
-          <NepDien khoanhKhac="M4" suKien={vuaNhan} />
-        </View>
+        <NepDien khoanhKhac="M4" suKien={vuaNhan} />
         {dieuChinh.dangMo ? (
           <ChuThichLe icon="create-outline" testID="bao-dieu-chinh">
             {dieuChinh.canToiTraLoi
@@ -271,8 +272,10 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
           <View key={nguoiNhan} style={styles.nhom}>
             <View accessibilityRole="header" style={[styles.dauNhom, { borderBottomColor: colors.lineStrong }]}>
               <Avatar name={tenCua(roster, nguoiNhan)} personId={nguoiNhan} size={28} />
-              <Text style={[typography.title, styles.flex, { color: colors.ink }]}>{`Chuyển cho ${tenCua(roster, nguoiNhan)}`}</Text>
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} lượt`}</Text>
+              <View style={styles.flex}>
+                <Text style={[typography.title, { color: colors.ink }]}>{`Chuyển cho ${tenCua(roster, nguoiNhan)}`}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} lượt`}</Text>
+              </View>
             </View>
             {ds.map((n) => {
               const ve = daVeRoi(n.trangThai);
@@ -281,38 +284,39 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
                 <View key={n.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
                   <View style={styles.dong}>
                     <Avatar name={tenCua(roster, n.senderId)} personId={n.senderId} size={32} />
-                    <View style={[styles.flex, styles.cot]}>
-                      <Text style={[typography.label, { color: colors.ink }]}>{tenCua(roster, n.senderId)}</Text>
-                      {dau !== null || n.tranhCai ? (
-                        <View style={styles.dauHang}>
-                          {dau !== null ? <Stamp dong={vuaNhan === n.id && ve} label={dau} tone="split" variant={ve ? "ink" : "outline"} /> : null}
-                          {n.tranhCai && n.trangThai !== "disputed" ? (
-                            <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
-                          ) : null}
-                        </View>
-                      ) : (
-                        <Text style={[typography.caption, { color: colors.inkSoft }]}>chưa về</Text>
-                      )}
-                    </View>
-                    {/* The amount, and under it the row's own action: nineteen
-                        full-width «Tiền đã về từ …» buttons, each on a line of
-                        its own, turned the ledger into a wall of buttons (B4). */}
-                    <View style={styles.cotPhai}>
-                      <Money size="label" tone={ve ? "split" : "ink"} vnd={n.amountVnd} />
-                      {daPhatRoi && toiNhan.has(n.id) && !ve ? (
-                        <RudiButton
-                          accessibilityLabel={`Tiền đã về từ ${tenCua(roster, n.senderId)}`}
-                          compact
-                          disabled={ban}
-                          full={false}
-                          icon="checkmark-done-outline"
-                          label="Đã về"
-                          onPress={() => void daNhan(n)}
-                          tone="split"
-                          variant="outline"
-                        />
+                    <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{tenCua(roster, n.senderId)}</Text>
+                  </View>
+                  {/* The measured seal uses this status column; native pixels
+                      still decide whether exact label width prevents clipping. */}
+                  {dau !== null || n.tranhCai ? (
+                    <View style={styles.dauHang} onLayout={(event) => {
+                      const width = event.nativeEvent.layout.width;
+                      if (Number.isFinite(width) && width >= 0) setDauWidths((old) => old[n.id] === width ? old : { ...old, [n.id]: width });
+                    }}>
+                      {dau !== null ? <Stamp dong={vuaNhan === n.id && ve} measureLabel labelColumnWidth={dauWidths[n.id] ?? 0} label={dau} tone="split" variant={ve ? "ink" : "outline"} /> : null}
+                      {n.tranhCai && n.trangThai !== "disputed" ? (
+                        <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
                       ) : null}
                     </View>
+                  ) : (
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>chưa về</Text>
+                  )}
+                  <View style={styles.dongTien}>
+                    <Money numberOfLines={0} size="label" style={styles.soDayDu} tone={ve ? "split" : "ink"} vnd={n.amountVnd} />
+                    {daPhatRoi && toiNhan.has(n.id) && !ve ? (
+                      <RudiButton
+                        accessibilityLabel={`Tiền đã về từ ${tenCua(roster, n.senderId)}`}
+                        compact
+                        disabled={ban}
+                        full={false}
+                        icon="checkmark-done-outline"
+                        label="Đã về"
+                        onPress={() => void daNhan(n)}
+                        style={styles.nutDongTien}
+                        tone="split"
+                        variant="outline"
+                      />
+                    ) : null}
                   </View>
                   <CauTaiCho cau={loiO(n.id)} />
                 </View>
@@ -325,12 +329,12 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
       {/* Publishing is a decision about money: the teal seal (ADR-0037 D14).
           What it cannot undo is written in full beside it, never under a flap. */}
       {!daPhatRoi && !sapPhat ? (
-        <>
-          <StampButton disabled={ban} label="Phát đợt thu" onPress={() => setSapPhat(true)} size="vua" tilt={-1} tone="split" />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+        <View style={styles.quyetDinh}>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>
             Phát là không hoàn lại: mỗi người nợ nhận một link riêng để xem phần của mình, nghĩa vụ chỉ tồn tại từ lúc đó. Link chỉ hiện một lần và được giữ trên máy này. Chỉ phát được khi người ứng tiền đã xác nhận.
           </Text>
-        </>
+          <StampButton disabled={ban} label="Phát đợt thu" onPress={() => setSapPhat(true)} size="vua" tilt={-1} tone="split" />
+        </View>
       ) : null}
       {!daPhatRoi && sapPhat ? (
         <View style={[styles.xacNhan, { borderColor: colors.split, borderRadius: radius.base, backgroundColor: colors.card }]}>
@@ -363,31 +367,30 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
                 <View key={env.senderId} style={[styles.hang, { borderBottomColor: colors.line }]}>
                   <View style={styles.dong}>
                     <Avatar name={env.senderName} personId={env.senderId} size={28} />
-                    <View style={styles.flex}>
-                      <Text style={[typography.label, { color: mucNguoi(env.senderId, dark) }]}>{env.senderName}</Text>
-                      <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: daMoKhay[env.senderId] === "khong-duoc" ? colors.warn : colors.inkSoft }]}>
-                        {cauGuiLink(daMoKhay[env.senderId], env.senderName)}
-                      </Text>
-                      {daMoKhay[env.senderId] === "khong-duoc" ? (
-                        <Text selectable style={[typography.caption, { color: colors.ink }]}>
-                          {env.url}
-                        </Text>
-                      ) : null}
-                    </View>
-                    <View style={styles.cotPhai}>
-                      <Money size="label" vnd={env.amountVnd} />
-                      <RudiButton
-                        accessibilityLabel={daMoKhay[env.senderId] !== undefined ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
-                        compact
-                        disabled={ban}
-                        full={false}
-                        icon="share-social-outline"
-                        label={daMoKhay[env.senderId] !== undefined ? "Gửi lại" : "Gửi"}
-                        onPress={() => void guiLink(env)}
-                        tone="split"
-                        variant="outline"
-                      />
-                    </View>
+                    <Text style={[typography.label, styles.flex, { color: mucNguoi(env.senderId, dark) }]}>{env.senderName}</Text>
+                  </View>
+                  <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: daMoKhay[env.senderId] === "khong-duoc" ? colors.warn : colors.inkSoft }]}>
+                    {cauGuiLink(daMoKhay[env.senderId], env.senderName)}
+                  </Text>
+                  {daMoKhay[env.senderId] === "khong-duoc" ? (
+                    <Text selectable style={[typography.caption, { color: colors.ink }]}>
+                      {env.url}
+                    </Text>
+                  ) : null}
+                  <View style={styles.dongTien}>
+                    <Money numberOfLines={0} size="label" style={styles.soDayDu} vnd={env.amountVnd} />
+                    <RudiButton
+                      accessibilityLabel={daMoKhay[env.senderId] !== undefined ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
+                      compact
+                      disabled={ban}
+                      full={false}
+                      icon="share-social-outline"
+                      label={daMoKhay[env.senderId] !== undefined ? "Gửi lại" : "Gửi"}
+                      onPress={() => void guiLink(env)}
+                      style={styles.nutDongTien}
+                      tone="split"
+                      variant="outline"
+                    />
                   </View>
                 </View>
               ))}
@@ -402,7 +405,6 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
         <DieuChinhDot
           actorId={phien.person_id}
           batchId={batchId}
-          bang={trang.nghiaVu}
           contextId={contextId}
           docLaiBang={doc}
           links={trang.links}
@@ -418,18 +420,18 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   khung: { gap: 14 },
-  dauTrang: { flexDirection: "row", alignItems: "center", gap: 12 },
   dau: { gap: 8 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   dong: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
-  cot: { gap: 4 },
   dauHang: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
-  // The amount, and the row's own action under it.
-  cotPhai: { alignItems: "flex-end", gap: 6 },
+  dongTien: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, minWidth: 0 },
+  quyetDinh: { gap: 12 },
+  soDayDu: { maxWidth: "100%", minWidth: 0 },
+  nutDongTien: { maxWidth: "100%", marginStart: "auto" },
   nhom: { gap: 0 },
-  dauNhom: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 14, paddingBottom: 8, borderBottomWidth: 1 },
+  dauNhom: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingTop: 14, paddingBottom: 8, borderBottomWidth: 1 },
   xacNhan: { gap: 10, padding: 16, borderWidth: 1.5, borderStyle: "dashed" },
 });
 

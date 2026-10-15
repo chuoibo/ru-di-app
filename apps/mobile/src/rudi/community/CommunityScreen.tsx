@@ -1,9 +1,11 @@
+import { AssetIllustration } from "../ui/AssetIllustration";
 import { translatedAsActor, newAttempt } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, View, useWindowDimensions, type ViewToken } from "react-native";
+import { Text } from "../ui/NativeFontMetrics";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { duongDangNhap } from "../duong-vao";
 import { useRudiSession } from "../session";
@@ -14,15 +16,16 @@ import { HangChuTab, type MucChuTab } from "../ui/HangChuTab";
 import { useChamLaiTab } from "../ui/cham-lai-tab";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { EmptyState } from "../ui/EmptyState";
-import { Canh } from "../ui/art/Canh";
 import { Sheet } from "../ui/Sheet";
+import { NBSP } from "../ui/chu";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
+import { PressScale } from "../ui/PressScale";
 import { docGiaoDienAsync } from "../kho";
 import { feedback, follow, likePost, mergePosts, readFeed, type FeedMode, type Post, type Preferences } from "./api";
 import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, traVeCho, type ThongBao } from "./bang-tin";
 import { PostCard } from "./PostCard";
-import { Comments } from "./Comments";
+import { Comments, CommunityFontMetrics } from "./Comments";
 import { useCommunityStream } from "./useCommunityStream";
 import { useViewSignal } from "./useViewSignal";
 import { TABLIST, tabState } from "../../ui/a11y";
@@ -50,7 +53,10 @@ const TABS = CHE_DO.slice(0, 3).map((c) => ({ mode: c.id, label: c.nhan }));
  * (`/community/topic`, a stack route with no strip and no stamp) it keeps its
  * own header.
  */
-export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
+export function CommunityScreen(props: { dau?: DungDau } = {}) {
+  return <CommunityFontMetrics><CommunityScreenContent {...props}/></CommunityFontMetrics>;
+}
+function CommunityScreenContent({ dau }: { dau?: DungDau }) {
   const router = useRouter();
   const params = useLocalSearchParams<{
     topic?: string;
@@ -94,15 +100,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   const [theoDoiChuDe, setTheoDoiChuDe] = useState<boolean | null>(null);
   // The bell: a dot when a notification is newer than this phone last looked (QA UI-147).
   const [coMoi, setCoMoi] = useState(false);
-  // The «Bảng tin có cập nhật» band sits under the header as laid out, not at a
-  // fixed 136: at 320 the subtitle wrapped and the band covered a tab (QA UI-143).
-  const [caoDau, setCaoDau] = useState(136);
   const list = useRef<FlatList<Post>>(null);
   const generation = useRef(0);
   const fetching = useRef(false);
   // Which feed is on screen. Coming back to the same one keeps it, its scroll
   // and every card opened to the end; a different one starts over (QA UI-135).
   const dangHien = useRef<string | null>(null);
+  // An accepted empty page is ready too; a first request cancelled by blur is not.
+  const daNhanTrangDau = useRef(false);
   // The reader's place in the list, kept while the screen is in front. The web
   // resets a hidden list's scroll when a post page covers it, so coming back
   // puts the reader where they were (QA UI-135).
@@ -115,38 +120,50 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   personRef.current = person;
   const topic = typeof params.topic === "string" && params.topic !== "" ? params.topic : undefined;
   useViewSignal(person, active, prefs?.personalized === true);
-  const load = useCallback(async (after?: string | null) => {
-    if (!person || fetching.current) return;
+  const load = useCallback(async (after?: string | null): Promise<number | null> => {
+    if (!person || fetching.current) return null;
     fetching.current = true;
     const seq = ++generation.current;
     setLoading(true);
     setError(null);
     try {
       const page = await readFeed(person, mode, after, topic);
-      if (seq !== generation.current) return;
+      if (seq !== generation.current) return null;
       setPosts((old) => (after ? mergePosts(old, page.posts) : page.posts));
       setNext(page.next_cursor);
-      if (!after) setFresh(false);
+      if (!after) {
+        daNhanTrangDau.current = true;
+        setFresh(false);
+      }
+      return seq;
     } catch (e) {
       if (seq === generation.current) setError(e instanceof Error ? e.message : "Chưa đọc được bảng tin.");
+      return null;
     } finally {
-      fetching.current = false;
-      if (seq === generation.current) setLoading(false);
+      if (seq === generation.current) {
+        fetching.current = false;
+        setLoading(false);
+      }
     }
   }, [person, mode, topic]);
   useFocusEffect(useCallback(() => {
     fetching.current = false;
+    setLoading(false);
     const khoa = `${person ?? ""}|${mode}|${topic ?? ""}`;
     dangTruoc.current = true;
     if (dangHien.current !== khoa) {
       dangHien.current = khoa;
+      daNhanTrangDau.current = false;
       viTriCuon.current = 0;
       setPosts([]);
       setDaAn(new Set());
       void load();
-    } else if (viTriCuon.current > 0) {
-      const y = viTriCuon.current;
-      requestAnimationFrame(() => list.current?.scrollToOffset({ offset: y, animated: false }));
+    } else {
+      if (!daNhanTrangDau.current) void load();
+      if (viTriCuon.current > 0) {
+        const y = viTriCuon.current;
+        requestAnimationFrame(() => list.current?.scrollToOffset({ offset: y, animated: false }));
+      }
     }
     if (person) {
       void translatedAsActor<Preferences>(COMMUNITY_ERRORS, "/v2/community/preferences", { actorId: person, method: "GET" }).then(setPrefs).catch(() => { });
@@ -163,7 +180,11 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   }, [load, person, mode, topic]));
   // On the tab, tapping the lit Khám phá column again goes back to the top of the feed.
   useChamLaiTab(dau ? () => { viTriCuon.current = 0; list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); } : null);
-  const refresh = async () => { await load(); list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); };
+  const refresh = async () => {
+    const appliedSeq = await load();
+    if (appliedSeq === null || appliedSeq !== generation.current || !dangTruoc.current) return;
+    list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced });
+  };
   // A (re)connection is not news by itself: it offers the refresh band instead
   // of rebuilding the list under the reader (ADR-0040: never push the scroll).
   const connected = useCommunityStream(person, [], (e) => {
@@ -281,26 +302,33 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   };
   const dongCaiDat = () => { setSettings(false); setXacNhanXoa(false); setDaXoaLichSu(false); };
   if (!person)
-    return <RudiScreen header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
+    return <RudiScreen material="quiet" header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
   // A mode with a tab names itself in the row; only the hidden posts need a title.
   const tieuDeRieng = mode === "hidden" ? "Những bài bạn đã ẩn" : !dau && mode === "mine" ? "Những điều bạn đã kể" : !dau && mode === "saved" ? "Để dành cho một ngày" : null;
-  const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={() => { setCoMoi(false); router.push("/community/notifications" as never); }} style={styles.icon}>
+  const moThongBao = () => { setCoMoi(false); router.push("/community/notifications" as never); };
+  const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={moThongBao} style={styles.icon}>
     <Ionicons name="notifications-outline" size={24} color={colors.ink}/>
     {coMoi ? <View style={[styles.cham, { backgroundColor: colors.accent, borderColor: colors.ground }]} /> : null}
   </Pressable>;
   const nutCaiDat = <Pressable accessibilityRole="button" accessibilityLabel="Cài đặt bảng tin" onPress={() => setSettings(true)} style={styles.icon}><Ionicons name="options-outline" size={24} color={colors.ink}/></Pressable>;
-  const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
-  return <RudiScreen header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
+  const nutBangTin = <PressScale accessibilityRole="button" accessibilityLabel={coMoi ? "Tuỳ chọn Cộng đồng, có thông báo mới" : "Tuỳ chọn Cộng đồng"} accessibilityState={{ expanded: settings }} onPress={() => setSettings(true)} pressedScale={0.94} style={styles.icon}>
+    <Ionicons name="ellipsis-horizontal" size={24} color={colors.ink}/>
+    {coMoi ? <View style={[styles.cham, { backgroundColor: colors.accent, borderColor: colors.ground }]} /> : null}
+  </PressScale>;
+  const oTim = <SearchField nativeMetrics accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
+  return <RudiScreen material="quiet" header={dau?.(nutBangTin)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
-      {/* One rhythm (finish review 03/10): the title close over its line, 16 to
-          the actions, 8 between every action, the quiet ones too. */}
       <View style={styles.caiDat}>
       <View style={styles.caiDatDau}>
-      <Text style={[typography.h1, { color: colors.ink }]}>Bảng tin của bạn</Text>
-      <Text style={[typography.body, { color: colors.inkSoft }]}>Chỉ dùng những gì bạn xem và tương tác trong cộng đồng. Bạn luôn có thể đổi ý.</Text>
+      <Text style={[typography.h2, { color: colors.ink }]}>Bảng tin của bạn</Text>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>Chỉ dùng lượt xem và tương tác trong cộng đồng để gợi ý bài. Bạn luôn có thể đổi ý.</Text>
       </View>
       <View style={styles.caiDatNut}>
-      <RudiButton label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} onPress={() => void consent(!prefs?.personalized)}/>
+      {dau ? <FeedAction icon="notifications-outline" label={coMoi ? "Thông báo · có điều mới" : "Thông báo"} chevron onPress={() => { dongCaiDat(); moThongBao(); }} /> : null}
+      <FeedAction icon="options-outline" label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} checked={Boolean(prefs?.personalized)} onPress={() => void consent(!prefs?.personalized)} />
+      <FeedAction icon="eye-off-outline" label="Bài đã ẩn" chevron onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
+      <FeedAction icon="bookmark-outline" label="Điều mình muốn giữ" chevron onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
+      <View style={styles.historyAction}>
       {xacNhanXoa ? (
         // One step to undo nothing: what goes, and what stays, before it goes.
         <View style={styles.xacNhan} testID="cong-dong-xac-nhan-xoa">
@@ -309,28 +337,30 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
           <RudiButton label="Giữ lại" variant="ghost" onPress={() => setXacNhanXoa(false)}/>
         </View>
       ) : (
-        <RudiButton label="Xóa lịch sử đề xuất" tone="warn" variant="outline" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
+        <FeedAction icon="refresh-outline" label="Xóa lịch sử đề xuất" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
       )}
       {daXoaLichSu ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đã xoá lịch sử đề xuất. Bảng tin bắt đầu lại từ những gì mới.</Text> : null}
-      {/* «Đã lưu» and «Bài của tôi» are tabs now, and the bell sits on the header. */}
-      <RudiButton label="Bài đã ẩn" variant="ghost" onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
-      <RudiButton label="Điều mình muốn giữ" variant="ghost" onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
+      </View>
       </View>
       </View>
     </Sheet>
-    <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <>
+    <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <View style={styles.caiDat}>
+      <View style={styles.caiDatDau}>
       <Text style={[typography.h2, { color: colors.ink }]}>Câu chuyện này</Text>
-      <Text style={[typography.body, { color: colors.inkSoft }]}>{selected.why}</Text>
-      <RudiButton label={selected.saved ? "Bỏ lưu" : "Lưu để đọc lại"} onPress={() => void act(async () => { await feedback(person, selected.id, "saved", !selected.saved); update({ ...selected, saved: !selected.saved }); setSelected(null); })}/>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>{selected.why}</Text>
+      </View>
+      <View>
+      <FeedAction icon={selected.saved ? "bookmark" : "bookmark-outline"} label={selected.saved ? "Bỏ lưu" : "Lưu để đọc lại"} onPress={() => void act(async () => { await feedback(person, selected.id, "saved", !selected.saved); update({ ...selected, saved: !selected.saved }); setSelected(null); })}/>
       {mode === "hidden"
-        ? <RudiButton label="Bỏ ẩn" variant="outline" onPress={() => void boAn(selected)}/>
-        : <RudiButton label="Không quan tâm" variant="outline" onPress={() => void anBai(selected)}/>}
-      {selected.author_id === person ? <RudiButton label="Mở bài và quản lý" variant="ghost" onPress={() => { router.push(`/community/posts/${selected.id}` as never); setSelected(null); }}/> : <RudiButton label="Báo cáo bài viết" variant="ghost" onPress={() => { router.push({ pathname: "/community/posts/[id]", params: { id: selected.id, report: "1" } } as never); setSelected(null); }}/>}
-    </> : null}</Sheet>
+        ? <FeedAction icon="eye-outline" label="Bỏ ẩn" onPress={() => void boAn(selected)}/>
+        : <FeedAction icon="eye-off-outline" label="Không quan tâm" onPress={() => void anBai(selected)}/>}
+      {selected.author_id === person ? <FeedAction icon="create-outline" label="Mở bài và quản lý" chevron onPress={() => { router.push(`/community/posts/${selected.id}` as never); setSelected(null); }}/> : <FeedAction icon="flag-outline" label="Báo cáo bài viết" chevron onPress={() => { router.push({ pathname: "/community/posts/[id]", params: { id: selected.id, report: "1" } } as never); setSelected(null); }}/>}
+      </View>
+    </View> : null}</Sheet>
     <Sheet open={comments !== null} onClose={() => setComments(null)} accessibilityLabel="Bình luận">{comments ? <Comments person={person} post={comments}/> : null}</Sheet>
   </>}>
     <View style={styles.readingColumn}>
-    {dau ? null : <View onLayout={(e) => setCaoDau(Math.round(e.nativeEvent.layout.height))} style={[styles.header, topic ? styles.headerChuDe : null, { borderBottomColor: colors.line }]}>
+    {dau ? null : <View style={[styles.header, topic ? styles.headerChuDe : null, { borderBottomColor: colors.line }]}>
       {topic ? (
         // A topic is a page pushed onto the feed: it has the way back every
         // other community page has, and follows its topic where it stands
@@ -363,12 +393,11 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         </>
       )}
     </View>}
-    {fresh ? <Animated.View entering={FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} exiting={FadeOut.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} style={[styles.newPosts, { top: dau ? 8 : caoDau + 8 }]}><RudiButton compact label="Bảng tin có cập nhật" icon="arrow-up" onPress={() => void refresh()}/></Animated.View> : null}
     <FlatList
       ref={list}
       data={posts}
       keyExtractor={(p) => p.id}
-      renderItem={({ item }) => daAn.has(item.id) ? (
+      renderItem={({ item, index }) => <>{daAn.has(item.id) ? (
         // The card's own place, kept: one line says what happened and how to take it back.
         <View style={[styles.daAn, { borderBottomColor: colors.line }]} testID={`community-hidden-${item.id}`}>
           <Text accessibilityLiveRegion="polite" style={[typography.note, styles.flex, { color: colors.inkSoft }]}>Đã ẩn bài của {item.author}. Bài này không hiện trong bảng tin của bạn nữa.</Text>
@@ -376,7 +405,23 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         </View>
       ) : (
         <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void luu(item)} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
-      )}
+      )}{index === 0 ? <>
+        {/* Asked where it changes something: only «Dành cho bạn» learns from
+            what one reads, and after the first story gives it context. An empty feed carries no ask;
+            consent remains explicit before any personalised learning begins. */}
+        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? (
+          <View style={[styles.consent, { borderColor: colors.line }]}>
+            <View style={styles.consentCopy}>
+              <Text style={[typography.title, { color: colors.ink }]}>Một góc hợp với bạn</Text>
+              <Text style={[typography.body, styles.consentBody, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text>
+            </View>
+            <View style={styles.consentActions}>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label="Cá nhân hóa" onPress={() => void consent(true)}/>
+              <RudiButton full={false} compact variant="ghost" style={styles.consentAction} label={`Để${NBSP}sau`} accessibilityLabel="Để sau" onPress={() => void consent(false)}/>
+            </View>
+          </View>
+        ) : null}
+      </> : null}</>}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60, minimumViewTime: 1000 }}
       onViewableItemsChanged={viewable.current}
       initialNumToRender={5}
@@ -389,21 +434,17 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
       onEndReachedThreshold={0.4}
       onScroll={(e) => { if (dangTruoc.current) viTriCuon.current = e.nativeEvent.contentOffset.y; }}
       scrollEventThrottle={64}
-      ListHeaderComponent={<View style={styles.intro}>
+      ListHeaderComponent={<View style={[styles.intro, Boolean(dau) && posts.length > 0 && styles.populatedIntro]}>
         {/* Khám phá › Cộng đồng, in the mockup's order: the search field as on
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
-        {dau ? <HangChuTab giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
+        {dau ? <HangChuTab nativeMetrics giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
         {/* Named once there is a list to name: over an empty one the title and
             the empty state's own heading stacked at one rank, and over the
             skeleton it swapped for that heading when the list came back empty
             (finish review 03/10). */}
         {tieuDeRieng && posts.length > 0 ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
         {dau || topic ? null : oTim}
-        {/* Asked where it changes something: only «Dành cho bạn» learns from
-            what one reads, and only once there is something to read; over an
-            empty feed it was a second coral ask beside the scene's. */}
-        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
         {/* Said where the list is, with the way on; a failed reload keeps the cards already shown. */}
         <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bang-tin" />
       </View>}
@@ -413,23 +454,36 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         mode === "hidden" ? <EmptyState body="Bài bạn chọn «Không quan tâm» sẽ nằm ở đây, để bỏ ẩn khi đổi ý." kind="first-use" layout="inline" style={styles.empty} title="Chưa ẩn bài nào" />
         // The reader's own two lists say what goes in them, and how; saved
         // posts, like followed people, are found in the feeds.
-        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<Canh id="chua-luu-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
-        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<Canh id="chua-co-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
+        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<AssetIllustration name="spot-keeps" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
+        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<AssetIllustration name="spot-memory" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
         // Following fills by finding someone to follow, and they are found
         // in the feeds; writing a post of one's own does not fill it.
-        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<Canh id="chua-co-ban" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
-        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<Canh id="chua-co-ky-niem" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
+        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<AssetIllustration name="spot-map" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
+        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<AssetIllustration name="spot-memory" width={rongCanh + 64} height={(rongCanh + 64) * 0.85} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
     />
+    {/* Keep the reader's offset and the search field clear: updates take
+        their own place at the bottom of the reading column. */}
+    {fresh ? <Animated.View entering={FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} exiting={FadeOut.duration(motion.ms("standard")).reduceMotion(motion.reanimated)} style={[styles.newPosts, { borderTopColor: colors.line }]}><RudiButton compact variant="ghost" label="Xem cập nhật" accessibilityLabel="Bảng tin có cập nhật" labelAlign="left" icon="arrow-up" onPress={() => void refresh()}/></Animated.View> : null}
     </View>
   </RudiScreen>;
 }
+function FeedAction({ icon, label, onPress, chevron = false, checked }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; chevron?: boolean; checked?: boolean }) {
+  const { colors } = useRudiTheme();
+  return <Pressable accessibilityRole={checked === undefined ? "button" : "switch"} accessibilityLabel={label} accessibilityState={checked === undefined ? undefined : { checked }} onPress={onPress} style={({ pressed }) => [styles.feedAction, { borderBottomColor: colors.line, opacity: pressed ? 0.65 : 1 }]}>
+    <Ionicons name={icon} size={21} color={colors.inkSoft} />
+    <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{label}</Text>
+    {checked !== undefined ? <View pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants"><Switch value={checked} trackColor={{ false: colors.lineStrong, true: colors.accent }} thumbColor={colors.card} /></View> : chevron ? <Ionicons name="chevron-forward" size={18} color={colors.inkSoft} /> : null}
+  </Pressable>;
+}
 const styles = StyleSheet.create({
   moiVao: { paddingTop: 16, gap: 18 },
-  caiDat: { gap: 16 },
-  caiDatDau: { gap: 6 },
-  caiDatNut: { gap: 8 },
+  caiDat: { gap: 20 },
+  caiDatDau: { gap: 8 },
+  caiDatNut: { gap: 0 },
+  historyAction: { marginTop: 16 },
+  feedAction: { flexDirection: "row", alignItems: "center", minHeight: 56, gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   readingColumn: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
   header: { paddingHorizontal: 20, paddingTop: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   headerChuDe: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8 },
@@ -448,13 +502,17 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 32 },
   // 16 like the posts and Khám phá's header above, so one gutter runs down the screen.
   intro: { padding: 16, gap: 16 },
-  consent: { padding: 20, gap: 12, borderRadius: 16 },
-  row: { flexDirection: "row", gap: 12 },
-  later: { minHeight: 48, paddingHorizontal: 16, justifyContent: "center" },
+  // The first post already separates a populated feed from its tabs by 24dp.
+  populatedIntro: { paddingBottom: 0 },
+  consent: { marginHorizontal: 16, paddingVertical: 8, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
+  consentCopy: { gap: 3 },
+  consentBody: { fontSize: 15, lineHeight: 22 },
+  consentActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 },
+  consentAction: { maxWidth: "100%", flexShrink: 1 },
   xacNhan: { gap: 8 },
   // On the gutter the search field and the tabs start on; the tab row's
   // rule already sets it apart, so no space over it.
   empty: { marginHorizontal: 16, paddingTop: 0 },
   daAn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  newPosts: { position: "absolute", alignSelf: "center", zIndex: 3 },
+  newPosts: { flexShrink: 0, paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
 });

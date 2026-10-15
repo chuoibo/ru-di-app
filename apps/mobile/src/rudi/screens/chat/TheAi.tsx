@@ -28,6 +28,7 @@ import { typography, useRudiTheme, type RudiTone } from "../../theme";
 import { Money } from "../../ui/Money";
 import { HangChang } from "../keo/HangChang";
 import type { BinhChonSong } from "../../chat/thay-doi";
+import type { KetQuaPhieuV2 } from "../../chat/e2ee/binh-chon-v2";
 import { RudiButton } from "../../ui";
 import { hinhVanTay } from "../../art/giay";
 import { mucNguoi } from "../../nguoi/muc-nguoi";
@@ -74,6 +75,8 @@ export function TheAiView({
   daCoToHen,
   tenToHen,
   banToHen,
+  readOnly = false,
+  sealedPoll,
 }: {
   the: TheAi;
   contextId: string;
@@ -81,7 +84,7 @@ export function TheAiView({
   tenNguoi: (id: string | null) => string;
   /** Who the card speaks for on the poll's author line (roster name or «Bạn»). */
   tacGia: string;
-  vote?: BinhChonSong;
+  vote?: BinhChonSong | KetQuaPhieuV2;
   onOpenPlan?: () => void;
   /** Opens the group's shared sheet from a decided poll. */
   onMoToHen?: (voteId: string, goiY: string) => void;
@@ -90,6 +93,8 @@ export function TheAiView({
   /** That sheet's title and revision, so the card can name what it feeds. */
   tenToHen?: string | null;
   banToHen?: number | null;
+  readOnly?: boolean;
+  sealedPoll?: HanhDongPhieuV2;
 }) {
   const { colors } = useRudiTheme();
   switch (the.loai) {
@@ -151,19 +156,19 @@ export function TheAiView({
           {nhap ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
               {dangMo
-                ? `Cả hội sửa được tờ này · bản ${nhap.revision}`
+                ? `Tờ hẹn đang mở · bản ${nhap.revision}`
                 : daThanhKeo
                   ? `${the.the.chang.length} chặng · đã thành kèo`
                   : "Tờ này đã được bỏ."}
             </Text>
           ) : null}
           {!daThanhKeo && !nhap ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Xem lại ngày, ngân sách và chặng trước khi tạo kèo.</Text> : null}
-          {onOpenPlan ? <RudiButton label={daThanhKeo ? "Mở kèo của hội" : dangMo ? "Sửa cùng hội" : "Sửa tờ hẹn này"} variant="outline" onPress={onOpenPlan} /> : null}
+          {onOpenPlan && (!readOnly || daThanhKeo) ? <RudiButton label={daThanhKeo ? "Mở kèo của hội" : dangMo ? "Sửa cùng hội" : "Sửa tờ hẹn này"} variant="outline" onPress={onOpenPlan} /> : null}
         </ToGiay>
       );
     }
     case "poll":
-      return <ThePoll the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
+      return <ThePoll sealedPoll={sealedPoll} readOnly={readOnly} the={the} contextId={contextId} personId={personId} tacGia={tacGia} live={vote} onMoToHen={onMoToHen} daCoToHen={daCoToHen} tenToHen={tenToHen} banToHen={banToHen} />;
     case "expense_draft":
       return (
         <ToGiay nhan="Nháp chia bill từ chat" tone="split">
@@ -193,6 +198,8 @@ export function TheAiView({
   }
 }
 
+export type HanhDongPhieuV2 = { cast(optionId: string): Promise<void>; close(): Promise<void>; refresh(): Promise<void> };
+
 function ThePoll({
   the,
   contextId,
@@ -203,19 +210,23 @@ function ThePoll({
   daCoToHen,
   tenToHen,
   banToHen,
+  readOnly = false,
+  sealedPoll,
 }: {
   the: Extract<TheAi, { loai: "poll" }>;
   contextId: string;
   personId: string;
   tacGia: string;
-  live?: BinhChonSong;
+  live?: BinhChonSong | KetQuaPhieuV2;
   onMoToHen?: (voteId: string, goiY: string) => void;
   daCoToHen?: boolean;
   tenToHen?: string | null;
   banToHen?: number | null;
+  readOnly?: boolean;
+  sealedPoll?: HanhDongPhieuV2;
 }) {
   const { colors, dark } = useRudiTheme();
-  const [ketQua, setKetQua] = useState<CuocBinhChonWire | null>(null);
+  const [ketQua, setKetQua] = useState<CuocBinhChonWire | KetQuaPhieuV2 | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangBo, setDangBo] = useState<string | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
@@ -233,6 +244,7 @@ function ThePoll({
   }, [live]);
 
   const nap = useCallback(async () => {
+    if (sealedPoll) { await sealedPoll.refresh(); return; }
     const version = ++readVersion.current;
     try {
       const response = await docBinhChon(the.vote_id, personId, contextId);
@@ -240,17 +252,18 @@ function ThePoll({
     } catch (error) {
       if (mounted.current && version === readVersion.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     }
-  }, [the.vote_id, personId, contextId]);
+  }, [the.vote_id, personId, contextId, sealedPoll]);
 
   useEffect(() => {
     if (!live) void nap();
   }, [nap]);
 
   const bo = async (optionId: string) => {
+    if (readOnly) return;
     setDangBo(optionId);
     try {
-      await boPhieu(the.vote_id, optionId, personId, contextId);
-      await nap();
+      if (sealedPoll) await sealedPoll.cast(optionId);
+      else { await boPhieu(the.vote_id, optionId, personId, contextId); await nap(); }
     } catch (error) {
       if (mounted.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
@@ -259,8 +272,13 @@ function ThePoll({
   };
 
   const closePoll = async () => {
+    if (readOnly) return;
     setDangBo("close");
-    try { await dongBinhChon(the.vote_id, personId, contextId); await nap(); if (mounted.current) setConfirmClose(false); }
+    try {
+      if (sealedPoll) await sealedPoll.close();
+      else { await dongBinhChon(the.vote_id, personId, contextId); await nap(); }
+      if (mounted.current) setConfirmClose(false);
+    }
     catch (error) { if (mounted.current) setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null)); }
     finally { if (mounted.current) setDangBo(null); }
   };
@@ -272,7 +290,7 @@ function ThePoll({
   const highest = Math.max(0, ...dem.values());
   const leading = the.options.filter((option) => dem.get(option.id) === highest);
   const summary = highest === 0 ? "Chưa có phiếu" : leading.length === 1 ? `${leading[0].label} · ${highest} phiếu` : `${leading.length} lựa chọn ngang phiếu`;
-  const cuaNguoiTao = !dong && ketQua?.created_by_id === personId;
+  const cuaNguoiTao = !readOnly && !dong && ketQua?.created_by_id === personId;
 
   if (live?.deleted) return <View style={[styles.card, { borderColor: colors.line, backgroundColor: colors.card }]}><Text style={[typography.caption, { color: colors.inkSoft }]}>Bình chọn này không còn.</Text></View>;
 
@@ -294,14 +312,14 @@ function ThePoll({
             const muc = cuaToi ? colors.accent : colors.inkSoft;
             return (
               <Pressable
-                {...toggleState("radio", cuaToi, dangBo !== null || dong ? undefined : () => void bo(o.id))}
-                accessibilityLabel={`Bỏ phiếu ${o.label}`}
+                {...toggleState("radio", cuaToi, readOnly || dangBo !== null || dong ? undefined : () => void bo(o.id))}
+                accessibilityLabel={readOnly ? `${o.label}: ${so} phiếu, kho cũ chỉ đọc` : `Bỏ phiếu ${o.label}`}
                 // The count is said by value on native, so the name stays the one
                 // the manual quotes. Not on the web: `aria-valuetext` is not an
                 // attribute a radio may carry (axe aria-allowed-attr).
                 accessibilityValue={Platform.OS !== "web" && so > 0 ? { text: `${so} phiếu` } : undefined}
-                aria-disabled={dangBo !== null || dong}
-                disabled={dangBo !== null || dong}
+                aria-disabled={readOnly || dangBo !== null || dong}
+                disabled={readOnly || dangBo !== null || dong}
                 key={o.id}
                 onPress={() => void bo(o.id)}
                 style={({ pressed }) => [styles.luaChon, thu > 0 && { borderTopColor: colors.line, borderTopWidth: StyleSheet.hairlineWidth }, pressed && styles.bam]}
@@ -375,7 +393,7 @@ function ThePoll({
       {dong ? <RudiButton label={showClosedVotes ? "Thu gọn phiếu" : "Xem các phiếu"} variant="ghost" compact onPress={() => setShowClosedVotes((value) => !value)} /> : null}
       {/* Where a decision turns into a plan. Without this the vote ends and the
           group is back to one person filling a private form (reviewer C1/C6). */}
-      {dong && onMoToHen ? (
+      {!readOnly && dong && onMoToHen ? (
         <View style={styles.tiepTheo}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
             {tenToHen

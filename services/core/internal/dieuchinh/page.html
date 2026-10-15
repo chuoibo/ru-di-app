@@ -25,7 +25,7 @@
     {{- range .Lines }}
       <div class="field">
         <dt>Chuyển cho {{ if .RecipientName }}{{ .RecipientName }}{{ else }}người nhận{{ end }}</dt>
-        <dd><span class="field__value"><s>{{ .OldVND }}đ</s> → <strong>{{ .NewVND }}đ</strong>{{ if eq .NewVND "0" }} — không còn phải chuyển{{ end }}</span></dd>
+        <dd><span class="field__value amount-change"><s>{{ .OldVND }}đ</s> → <strong>{{ .NewVND }}đ</strong>{{ if eq .NewVND "0" }} — không còn phải chuyển{{ end }}</span></dd>
       </div>
     {{- end }}
     </dl>
@@ -45,5 +45,6 @@
   {{- end }}
 {{- end }}
 </main>
+<script src="/static/guest.js" defer></script>
 </body>
 </html>

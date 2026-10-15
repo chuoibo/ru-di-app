@@ -10,6 +10,8 @@ export { THEME_CHAT, bangMauChat, laThemeChat, nhanTheme, type BangMauChat, type
 
 export type RudiTone = "accent" | "ai" | "split";
 export type RudiPalette = typeof tokens.color.light;
+/** Categorical game paper; indices/full names, never hue alone, identify choices. */
+export const mauLuotChon = tokens.choiceGame;
 
 /**
  * The person's own light/dark choice, when they made one (L5, ADR-0023 §2.5).
@@ -178,6 +180,8 @@ export function bongGiay(cao: CaoGiayTheme, dark: boolean, goc = 0): ViewStyle {
 
 /** The light palette as static values, for artwork that never switches scheme. */
 export const mauSang = tokens.color.light;
+/** Decorative pigments from the accepted asset pack; never text/control ink. */
+export const mauVatLieuAsset = { ochre: "#b98b53", ochreDark: "#cda878" };
 /** Brand tier (glow / coral / rose / violet); large areas only, never under small text. */
 export const mauThuongHieu = tokens.brand;
 /** Ink on photos, gradients and tone fills. */

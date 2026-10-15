@@ -9,6 +9,7 @@ import type { LoaiPhanUng, PhanUngTomTat, Tin } from "../tin-song";
 import { PHAN_UNG } from "../tin-song";
 import type { Cho } from "./so-phong";
 import type { TinV2 } from "./so-tin";
+import { randomLivePreview } from "./random-live";
 
 const GLYPH: Record<string, LoaiPhanUng> = Object.fromEntries(PHAN_UNG.map((p) => [p.glyph, p.kind]));
 export const KIND_GLYPH: Record<LoaiPhanUng, string> = Object.fromEntries(PHAN_UNG.map((p) => [p.kind, p.glyph])) as Record<LoaiPhanUng, string>;
@@ -61,6 +62,7 @@ function sangTinThuong(t: TinV2, contextId: string, personId: string, anhDaMo: R
   // A sticker travels as its id in `body`, exactly as the legacy wire carries
   // one (tin-song.ts guiSticker): the screen draws the picture from that id.
   let body = t.body;
+  if (t.randomLive && !t.deleted) body = randomLivePreview(t.randomLive);
   if (t.sticker !== null) body = t.sticker.stickerId;
   return {
     id: t.id,
@@ -68,7 +70,11 @@ function sangTinThuong(t: TinV2, contextId: string, personId: string, anhDaMo: R
     author_id: t.authorId,
     kind: t.deleted ? "deleted" : t.sticker !== null ? "sticker" : t.media?.type === "image" ? "image" : "text",
     body,
+    ...(t.poll && !t.deleted ? { poll_v2: t.poll } : {}),
+    ...(t.random && !t.deleted ? { random_v2: t.random } : {}),
+    ...(t.randomLive && !t.deleted ? { random_live_v2: t.randomLive } : {}),
     image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
+    ...(t.media?.type === "image" && !t.deleted ? { image_width: t.media.width, image_height: t.media.height } : {}),
     card: null,
     created_at: t.at ?? new Date(0).toISOString(),
     cursor: String(t.sequence),
@@ -87,11 +93,11 @@ export function sangCho(c: Cho, tinTheoId: Record<string, TinV2>): TinChoGui {
     kind: op.type === "sticker" ? "sticker" : op.type === "image" ? "image" : "text",
     than: op.type === "sticker" ? op.sticker_id : op.type === "text" || op.type === "reply" ? op.body : "",
     phuDe: op.type === "image" ? op.caption : null,
-    traLoi: op.type === "reply" ? { id: op.reply_to, kind: "text", author_id: goc?.authorId ?? null, preview: goc?.body ?? "" } : null,
+    traLoi: op.type === "reply" ? { id: op.reply_to, kind: "text", author_id: goc?.authorId ?? null,
+      preview: goc?.randomLive ? randomLivePreview(goc.randomLive) : goc?.body ?? "" } : null,
     trangThai: c.hong ? "that-bai" : "dang-gui",
     loi: c.loi,
     thuLaiDuoc: c.thuLai,
     luc: new Date(c.luc).toISOString(),
   };
 }
-

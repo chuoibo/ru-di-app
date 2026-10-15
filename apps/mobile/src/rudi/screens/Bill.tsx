@@ -9,9 +9,11 @@ import { caHaiDongY } from "../to-giay/so-doi-map";
  * with the state as a word beside each.
  */
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text } from "../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
 
 import { ApiError, BASE_URL, attemptFor, type Attempt } from "../../api";
 import { docQuyetToanLive, dongChiTieuChung, dongHeroQuyetToan, tenCua, type QuyetToanLive } from "../doc-live";
@@ -29,8 +31,7 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { SoDoChuyen } from "../ui/SoDoChuyen";
-import { TrangSo } from "../ui/TrangSo";
-import {  } from "../../ui/a11y";
+import { HoaDonGiay } from "../ui/HoaDonGiay";
 
 /** Transfers by the person paid, in the order they first appear. */
 function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string, T[]][] {
@@ -40,6 +41,11 @@ function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string
 }
 
 export function SettlementScreen() {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><SettlementPage /></NativeFontMetricsProvider>;
+}
+
+function SettlementPage() {
   const session = useRudiSession();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -47,6 +53,7 @@ export function SettlementScreen() {
   // split in a pair (never the current group) showed the current group's
   // ledger under «Xem quyết toán». Only a context the person is active in.
   const mo = session.phien === null ? null : nguCanhMo(session.phien, params.id);
+  if (mo?.kieu === "tu-choi") return <Redirect href="/plan" />;
   if (session.phien !== null && mo?.kieu === "khac") {
     return <QuyetToanLive actorId={session.phien.person_id} contextId={mo.contextId} key={mo.contextId} />;
   }
@@ -56,7 +63,7 @@ export function SettlementScreen() {
   if (session.phien === null) return <CuaDangNhap />;
   // Signed in with no group: there is no ledger to settle.
   return (
-    <RudiScreen tone="split" testID="settlement-screen">
+    <RudiScreen cot="form" material="quiet" tone="split" testID="settlement-screen">
       <TopBar title="Quyết toán" />
       <EmptyState
         action={{ label: "Tới Tin nhắn", onPress: () => router.replace("/messages" as never) }}
@@ -93,6 +100,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     return () => { current = false; };
   }, [actorId, contextId, phien?.contexts]));
   const [moChuyen, setMoChuyen] = useState(false);
+  const [moSoDo, setMoSoDo] = useState(false);
   const [du, setDu] = useState<QuyetToanLive | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   // The group's collection rounds, read beside the balances. `"hong"` keeps
@@ -179,7 +187,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
 
   if (loi !== null) {
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen cot="form" material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán" />
         <ErrorState body={loi} onRetry={() => void docSo()} title="Chưa đọc được sổ" />
       </RudiScreen>
@@ -187,7 +195,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   }
   if (du === null) {
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen cot="form" material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="45%" lineHeight={24} lines={2} />
@@ -201,7 +209,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   if (laDoi && !moChuyen) {
     const chung = dongChiTieuChung(du.nguoi, du.soDu);
     return (
-      <RudiScreen tone="split" testID="settlement-screen">
+      <RudiScreen cot="form" material="quiet" tone="split" testID="settlement-screen">
         <TopBar title="Chi tiêu chung" />
         <Text style={[typography.body, { color: colors.inkSoft }]}>
           {chung.ngangNhau
@@ -211,11 +219,11 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         <View testID="chi-tieu-chung">
           {chung.dong.map((d) => (
             <View key={d.personId} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
-              <View style={styles.flex}>
+              <View>
                 <Text style={[typography.label, { color: colors.ink }]}>{d.ten}</Text>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{d.cau}</Text>
               </View>
-              {d.vnd !== null ? <Money tone="split" vnd={d.vnd} /> : null}
+              {d.vnd !== null ? <Money numberOfLines={0} size="label" style={styles.soDayDu} tone="split" vnd={d.vnd} /> : null}
             </View>
           ))}
         </View>
@@ -226,37 +234,24 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     );
   }
   return (
-    <RudiScreen tone="split" testID="settlement-screen">
+    <RudiScreen cot="form" material="quiet" tone="split" testID="settlement-screen">
       <TopBar onBack={laDoi ? () => setMoChuyen(false) : undefined} title={laDoi ? "Cân lại chi tiêu" : "Quyết toán"} />
-      {/* The ledger's first line, not a hero: the sum the server holds, its
-          name beside it, written at the head of the group's ledger page. */}
-      <TrangSo ke={false} testID="trang-so-quyet-toan">
-        {/* A sum sits beside its name; a state («Chưa có chuyến») is not a sum
-            and goes under the sentence: holding the right column, it pressed
-            the sentence into nine lines at 320 (QA UI-061). In the money face
-            it read as a value sitting where a number goes (QA 23/09). */}
-        <View style={hero.laSo ? styles.hangDauSo : styles.cotDauSo}>
-          <View style={hero.laSo ? styles.flex : undefined}>
+      {/* Context is one ledger row, leaving the transfers as the task.
+          All three strings remain the unmodified server-ledger adapter. */}
+      <HoaDonGiay rangTren testID="trang-so-quyet-toan">
+        <View style={styles.tomTatQuyetToan}>
+          <View style={styles.dongTomTat}>
             <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
+            <Text style={[hero.laSo ? typography.title : typography.body, styles.giaTriTomTat, { color: hero.laSo ? colors.split : colors.inkSoft }]}>{hero.so}</Text>
           </View>
-          <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
         </View>
-      </TrangSo>
-      {/* Who pays whom, drawn: ink arrows between the people, no number on
-          them -- the amounts are the rows under it. */}
-      {du.chuyenTien.length > 0 ? (
-        <SoDoChuyen
-          chuyen={du.chuyenTien.map((row) => ({ tu: row.fromId, toi: row.toId }))}
-          nguoi={du.nguoi.map((n) => ({ id: n.personId, ten: n.ten }))}
-          testID="so-do-chuyen"
-        />
-      ) : null}
+      </HoaDonGiay>
       <SectionHeader title="Các khoản chuyển" />
       {/* What these rows are is said once, over them: printed under every row
           it read nineteen times on a twenty-person trip (Luật Nói Một Lần). */}
       {du.chuyenTien.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Cách chuyển gọn nhất, tính từ sổ. Chưa ai phải trả gì: mỗi người chỉ nhận phần của mình khi một đợt thu được phát.</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Cách cân lại sổ. Nghĩa vụ và trạng thái từng lượt chuyển nằm trong các đợt thu bên dưới.</Text>
       ) : null}
       {du.chuyenTien.length === 0 ? (
         <Text style={[typography.body, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>
@@ -268,14 +263,18 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         <View key={nguoiNhan}>
           <View accessibilityRole="header" style={[styles.dauNhomChuyen, { borderBottomColor: colors.lineStrong }]}>
             <Avatar name={tenCua(du.nguoi, nguoiNhan)} personId={nguoiNhan} size={28} />
-            <Text style={[typography.title, styles.flex, { color: mucNguoi(nguoiNhan, dark) }]}>{`Chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} khoản`}</Text>
+            <View style={styles.flex}>
+              <Text style={[typography.title, { color: mucNguoi(nguoiNhan, dark) }]}>{`Chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`}</Text>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} khoản`}</Text>
+            </View>
           </View>
           {ds.map((row) => (
             <View accessibilityLabel={`${tenCua(du.nguoi, row.fromId)} chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`} key={`${row.fromId}-${row.toId}`} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
-              <Avatar name={tenCua(du.nguoi, row.fromId)} personId={row.fromId} size={32} />
-              <Text style={[typography.label, styles.flex, { color: mucNguoi(row.fromId, dark) }]}>{tenCua(du.nguoi, row.fromId)}</Text>
-              <Money size="label" tone="split" vnd={row.amountVnd} />
+              <View style={styles.dinhDanh}>
+                <Avatar name={tenCua(du.nguoi, row.fromId)} personId={row.fromId} size={32} />
+                <Text style={[typography.label, styles.flex, { color: mucNguoi(row.fromId, dark) }]}>{tenCua(du.nguoi, row.fromId)}</Text>
+              </View>
+              <Money numberOfLines={0} size="label" style={styles.soDayDu} tone="split" vnd={row.amountVnd} />
             </View>
           ))}
         </View>
@@ -288,6 +287,25 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
             : "Danh sách này chưa được chứng minh là ngắn nhất."}
         </Text>
       </View>
+      {du.chuyenTien.length > 0 ? (
+        <>
+          <RudiButton
+            expanded={moSoDo}
+            icon={moSoDo ? "chevron-up" : "git-network-outline"}
+            label={moSoDo ? "Gấp sơ đồ chuyển" : "Xem sơ đồ chuyển"}
+            onPress={() => setMoSoDo((mo) => !mo)}
+            tone="split"
+            variant="ghost"
+          />
+          {moSoDo ? (
+            <SoDoChuyen
+              chuyen={du.chuyenTien.map((row) => ({ tu: row.fromId, toi: row.toId }))}
+              nguoi={du.nguoi.map((n) => ({ id: n.personId, ten: n.ten }))}
+              testID="so-do-chuyen"
+            />
+          ) : null}
+        </>
+      ) : null}
       <SectionHeader title="Đợt thu" />
       {dotThu === null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc các đợt thu…</Text> : null}
       {dotThu === "hong" ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa đọc được các đợt thu của nhóm.</Text> : null}
@@ -314,10 +332,10 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         <Text style={[typography.caption, { color: colors.inkFaint }]}>Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.</Text>
       ) : du.chuyenTien.length > 0 ? (
         <>
-          <RudiButton disabled={dangMo} icon="add" label="Tạo đợt thu từ sổ" loading={dangMo} onPress={() => void moDot()} tone="split" variant="soft" />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
             {chuaVaoDot !== null ? `Gom ${chuaVaoDot} khoản đã ghi mà chưa vào đợt nào thành một đợt thu.` : "Gom mọi khoản đã ghi mà chưa vào đợt nào thành một đợt thu."} Chưa phát thì chưa ai bị nhắn gì.
           </Text>
+          <RudiButton disabled={dangMo} icon="add" label="Tạo đợt thu từ sổ" loading={dangMo} onPress={() => void moDot()} tone="split" variant="soft" />
         </>
       ) : (
         <Text style={[typography.caption, { color: colors.inkFaint }]}>Sổ không còn khoản nào ngoài đợt: không có gì để gom thêm.</Text>
@@ -327,8 +345,13 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   khung: { gap: 14 },
+  dinhDanh: { flexDirection: "row", alignItems: "flex-start", gap: 12, minWidth: 0 },
+  soDayDu: { width: "100%", minWidth: 0 },
+  tomTatQuyetToan: { gap: 6 },
+  dongTomTat: { alignItems: "stretch", gap: 4, minWidth: 0 },
+  giaTriTomTat: { width: "100%", minWidth: 0, fontVariant: ["tabular-nums"] },
   wood: { minHeight: 420, overflow: "hidden", borderRadius: 20, backgroundColor: giayHoaDon.khung, padding: 24, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: lopPhu.trang(0.22) },
   receipt: { width: "88%", maxWidth: 390, minHeight: 380, borderRadius: 3, paddingHorizontal: 22, paddingVertical: 22, shadowColor: bongDen, shadowOpacity: 0.48, shadowRadius: 20, shadowOffset: { width: 0, height: 13 }, elevation: 14, transform: [{ rotate: "-1.2deg" }] },
   receiptCompact: { minHeight: 0, paddingVertical: 18 },
@@ -355,11 +378,13 @@ const styles = StyleSheet.create({
   tomTat: { paddingVertical: 2 },
   nguoiThu: { gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   nguoiThuDau: { flexDirection: "row", alignItems: "center", gap: 12 },
-  hangChuyen: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
-  dauNhomChuyen: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingBottom: 8, borderBottomWidth: 1 },
+  hangChuyen: { alignItems: "stretch", gap: 6, minWidth: 0, minHeight: 52, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  dauNhomChuyen: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingTop: 10, paddingBottom: 8, borderBottomWidth: 1 },
   hangDauSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
   cotNguoiThu: { gap: 4, alignItems: "flex-start" },
-  cotDauSo: { gap: 6 },
+  cotDauSo: { gap: 8, alignItems: "center", paddingVertical: 12 },
+  nhanDauSo: { textAlign: "center" },
+  tongDauSo: { maxWidth: "100%", fontSize: 36, lineHeight: 44, fontVariant: ["tabular-nums"] },
   transferRight: { alignItems: "flex-end", gap: 6 },
   ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
 });

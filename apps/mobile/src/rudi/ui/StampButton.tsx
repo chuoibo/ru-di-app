@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "./NativeFontMetrics";
+import { MeasuredSealColumn, type SealLabelTelemetry } from "./MeasuredSealColumn";
 import Svg, { Path } from "react-native-svg";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +16,10 @@ export interface StampButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  /** Constrained consent actions may wrap without shrinking system text. */
+  wrapLabel?: boolean;
+  /** Measure this standalone label in its available column; wrapping actions keep their path. */
+  measureLabel?: boolean;
   /** Rotation of a seal pressed by hand: -3 on the cover, -1 on a form, 0 in a table. */
   tilt?: -3 | -2 | -1.5 | -1 | 0 | 1 | 1.5 | 2 | 3;
   /** `lon` is the cover's ask; `vua` is the same seal on a form. */
@@ -49,7 +55,7 @@ const CO = {
  * (`mauSang.ink`, 5.41:1 on coral in either scheme). The same seal, one size
  * down, is the primary action on Login, so the ask has one language.
  */
-export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", tone = "accent", style, testID, lyDo }: StampButtonProps) {
+export function StampButton({ label, onPress, disabled, loading, wrapLabel = false, measureLabel = false, tilt = 0, size = "lon", tone = "accent", style, testID, lyDo }: StampButtonProps) {
   const { brand, colors } = useRudiTheme();
   const busy = !!loading;
   // ADR-0038 §2.2: a seal that cannot be pressed yet is an outline of one --
@@ -64,7 +70,9 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
   const vien = tat ? colors.lineStrong : phuMau(muc, 0.88);
   const co = CO[size];
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const dau = (
+  const [indicatorWidth, setIndicatorWidth] = useState(0);
+  const labelTypography = [styles.label, wrapLabel && styles.wrapLabel, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }];
+  const dau = (labelWidth?: number, telemetry?: SealLabelTelemetry) => (
     <PressScale
       accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={label}
@@ -86,6 +94,7 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
         style={[
           styles.body,
           { minHeight: co.minHeight, paddingHorizontal: co.paddingHorizontal, borderRadius: co.radius },
+          wrapLabel && styles.wrapBody,
           // Until the first layout the rim has no size; plain coral for that one frame, never a hole.
           box.w === 0 && { backgroundColor: mauDau },
         ]}
@@ -102,22 +111,31 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
           </View>
         )}
         <View style={styles.row}>
-          {busy ? <ActivityIndicator color={muc} /> : null}
-          <Text style={[styles.label, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
+          {busy ? <ActivityIndicator color={muc} onLayout={measureLabel ? (event) => {
+            const next = event.nativeEvent.layout.width;
+            if (Number.isFinite(next) && next >= 0) setIndicatorWidth((old) => old === next ? old : next);
+          } : undefined} /> : null}
+          <Text {...telemetry} invalidateOnMetricsChange style={[labelTypography, labelWidth !== undefined && { width: labelWidth }]}>{label}</Text>
         </View>
       </View>
     </PressScale>
   );
-  if (!tat || !lyDo) return dau;
-  return (
-    <View style={styles.coLyDo}>
-      {dau}
-      <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
-        <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />
-        <Text style={[typography.caption, styles.lyDoChu, { color: colors.inkSoft }]}>{lyDo}</Text>
+  const seal = (labelWidth?: number, telemetry?: SealLabelTelemetry) => {
+    if (!tat || !lyDo) return dau(labelWidth, telemetry);
+    return (
+      <View style={[styles.coLyDo, { alignSelf: StyleSheet.flatten(style)?.alignSelf ?? "center", width: StyleSheet.flatten(style)?.width }]}>
+        {dau(labelWidth, telemetry)}
+        <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
+          <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />
+          <Text style={[typography.caption, styles.lyDoChu, { color: colors.inkSoft }]}>{lyDo}</Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+  return measureLabel && !wrapLabel ? (
+    <MeasuredSealColumn label={label} textStyle={labelTypography}
+      horizontalInset={2 * co.paddingHorizontal + (busy ? indicatorWidth + 10 : 0)}>{seal}</MeasuredSealColumn>
+  ) : seal();
 }
 
 const styles = StyleSheet.create({
@@ -126,6 +144,8 @@ const styles = StyleSheet.create({
   muc: { position: "absolute", left: 3, right: 3, top: 3, bottom: 3, overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
   label: { fontFamily: displayFace.bold, letterSpacing: 0.4 },
+  wrapBody: { paddingVertical: 12 },
+  wrapLabel: { flexShrink: 1, textAlign: "center" },
   coLyDo: { alignSelf: "center", alignItems: "center", gap: 8 },
   lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 8 },
   lyDoChu: { flexShrink: 1, textAlign: "center" },

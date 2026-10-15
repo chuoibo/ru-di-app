@@ -13,6 +13,7 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -20,7 +21,6 @@ import {
   StyleSheet,
   ScrollView,
   type ViewToken,
-  Text,
   TextInput,
   type TextStyle,
   View,
@@ -28,7 +28,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApiError, newAttempt, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
+import { xemBinhChonV2 } from "../../chat/e2ee/binh-chon-v2";
+import { newNativeRandomRound, RandomSourceUnavailable } from "../../chat/e2ee/random-native";
+import { decodeRandomRound, isRandomPlaceId, randomPlacePath } from "../../chat/e2ee/random-v2";
+import { createRandomLiveRound, decodeRandomLiveRound, randomServerNow, type RandomPlayableRound } from "../../chat/e2ee/random-live";
+import { useRandomLiveTimeline } from "../../chat/e2ee/useRandomLive";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -50,8 +55,10 @@ import { docDaChan } from "../../cai-dat/quyen-rieng-tu";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
+import { khungAnhChat, nguonAnhNiemDaMo } from "../../chat/e2ee/anh-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
 import { useBanNhap } from "../../chat/useBanNhap";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { hopLanV2, khoaLan, useLanChat, useTinNhanV2 } from "../../chat/e2ee/useTinNhanV2";
 import { useChatChanges } from "../../chat/useChatChanges";
@@ -67,8 +74,10 @@ import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { loaiSoCua } from "../../so/ban-tinh";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
-import { bangMauChat, mucNguoi, typography, useRudiTheme } from "../../theme";
+import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 import { useMotion } from "../../ui/useMotion";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { Sticker } from "../../ui/stickers/Sticker";
@@ -83,13 +92,14 @@ import { TraLoiAi } from "./TraLoiAi";
 import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
 import { ChipBoiCanh, TamXemBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, DaiKeoSapToi, ToHen, type KhayChat } from "./SoHen";
+import { RandomPicker, EMPTY_RANDOM_DRAFT, type RandomDraft } from "./RandomPicker";
+import { ChatRandomCard } from "./ChatRandomCard";
 import { docKeoCuaNhom } from "../../keo/keo";
 import { chiaKeo, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
 import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
-import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
@@ -109,6 +119,8 @@ import { duongDangNhap } from "../../duong-vao";
 export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
   const { colors, space } = useRudiTheme();
   const hong = tin.trangThai === "that-bai";
+  const pendingRound = tin.kind === "text" ? decodeRandomRound(tin.than) ?? decodeRandomLiveRound(tin.than) : null;
+  const pendingRandom = pendingRound?.id === tin.attempt.key ? pendingRound : null;
   return (
     <View style={styles.choGui}>
       <View style={[styles.hang, styles.hangToi]}>
@@ -119,8 +131,8 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
               <Sticker id={tin.than} size={120} />
             </View>
           ) : (
-            <View style={[styles.bong, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
-              <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
+            <View style={[styles.bong, tin.kind === "text" && !pendingRandom && styles.bongChu, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{pendingRandom ? `Lượt ${pendingRandom.mode === "wheel" ? "vòng quay" : "đua vịt"} · ${pendingRandom.options.length} lựa chọn` : tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
             </View>
           )}
           {hong ? (
@@ -163,8 +175,22 @@ function HangLoiNho({ title, cau, dangCho = false, testID, children }: { title: 
 }
 
 export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <GroupChatContent contextId={contextId} /> : <ObserveChatMetrics contextId={contextId} />;
+}
+
+function ObserveChatMetrics({ contextId }: { contextId: string }) {
+  const snapshot = useNativeFontScale();
+  // One stable owner covers the thread, composer, trays and sheets.
+  return <NativeFontMetricsProvider snapshot={snapshot}><GroupChatContent contextId={contextId} /></NativeFontMetricsProvider>;
+}
+
+function GroupChatContent({ contextId }: { contextId: string }) {
   const router = useRouter();
   const { colors, dark, radius, space } = useRudiTheme();
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // The reading slot follows native line height plus two 5dp insets and borders.
+  const avatarLineHeight = bodyMetrics?.lineHeight === undefined ? 48 : Math.max(48, bodyMetrics.lineHeight + 12);
   const insets = useSafeAreaInsets();
   const { reduced } = useMotion();
   const { phien, datPhien } = useRudiSession();
@@ -174,7 +200,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const lan = useLanChat(contextId, personId);
   // Neither lane acts until the room's lane is established (fail closed).
   const v2 = useTinNhanV2(contextId, personId, lan.lan !== "v2");
-  const cu = useTinNhan(contextId, personId, lan.lan !== "legacy");
+  const cu = useTinNhan(contextId, personId, lan.lan !== "legacy", true);
+  const ghiChatDuoc = lan.lan === "v2" && v2.sanSang;
   const chat = useMemo(
     () => (lan.lan === "v2" ? hopLanV2(cu, v2) : lan.lan === "legacy" ? cu : khoaLan(cu, lan.lan === "dang-xet")),
     [lan, cu, v2],
@@ -227,6 +254,70 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // The chip's «Xem» sheet, mounted at this screen's root like the others.
   const [xemBoiCanh, setXemBoiCanh] = useState(false);
   const [khay, setKhay] = useState<KhayChat>(null);
+  const [randomDraft, setRandomDraft] = useState<RandomDraft>(() => ({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] }));
+  const [randomRound, setRandomRound] = useState<RandomPlayableRound | null>(null);
+  const [randomReplay, setRandomReplay] = useState(false);
+  const [randomReceiptAt, setRandomReceiptAt] = useState<string | null>(null);
+  const [randomPublished, setRandomPublished] = useState(false);
+  const [randomPublishing, setRandomPublishing] = useState(false);
+  const [randomSearching, setRandomSearching] = useState(false);
+  const [randomError, setRandomError] = useState<string | null>(null);
+  const [randomSearchMessage, setRandomSearchMessage] = useState<string | null>(null);
+  const [randomSearchTrigger, setRandomSearchTrigger] = useState<string | null>(null);
+  const randomSearchConsumed = useRef<string | null>(null);
+  const randomSearchOwner = useRef(0);
+  const [randomSources, setRandomSources] = useState<Record<string, string>>({});
+  const randomPublishingRef = useRef(false);
+  const randomPublishOwner = useRef(0);
+  const randomContext = useRef(contextId);
+  useEffect(() => {
+    if (randomContext.current === contextId) return;
+    randomContext.current = contextId;
+    randomPublishOwner.current += 1; randomPublishingRef.current = false; setRandomPublishing(false);
+    randomSearchOwner.current += 1;
+    setRandomDraft({ ...EMPTY_RANDOM_DRAFT, options: [{ label: "" }, { label: "" }] });
+    setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomSearching(false);
+    setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomError(null); setRandomSources({}); setRandomSearchMessage(null);
+    setKhay(null);
+  }, [contextId]);
+  useEffect(() => {
+    const accepted = randomRound ? chat.tin.find((tin) => tin.id === randomRound.id &&
+      (tin.random_v2?.id === randomRound.id || tin.random_live_v2?.id === randomRound.id) && Number(tin.cursor) > 0) : undefined;
+    if (accepted && randomRound &&
+      !chat.hangCho.some((tin) => tin.attempt.key === randomRound.id)) {
+      setRandomPublished(true); setRandomReceiptAt(accepted.created_at); setRandomError(null);
+    }
+  }, [randomRound, chat.tin, chat.hangCho]);
+  const randomLive = useRandomLiveTimeline(randomRound?.v === 2 && randomPublished ? randomRound : null, randomReceiptAt, v2.randomClock);
+  useEffect(() => {
+    if (!randomSearchTrigger || randomSearchConsumed.current === randomSearchTrigger || randomRound !== null || lan.lan !== "v2") return;
+    const answer = chat.tin.find((tin) => {
+      const card = docTheAi(tin.card);
+      return tin.kind === "ai_card" && tin.reply_to?.id === randomSearchTrigger && card.loai === "tra_loi" && card.lenh === "random";
+    });
+    if (answer) {
+      const card = docTheAi(answer.card);
+      if (card.loai !== "tra_loi") return;
+      randomSearchConsumed.current = randomSearchTrigger;
+      const places = card.phan.flatMap((part) => part.loai === "places" ? part.the.diaDiem : []).filter((place) => place.ten.length <= 80 && isRandomPlaceId(place.id));
+      const unique = places.filter((place, index) => places.findIndex((other) => other.ten.normalize("NFC").toLowerCase() === place.ten.normalize("NFC").toLowerCase()) === index).slice(0, 5);
+      if (unique.length) {
+        setRandomDraft((draft) => ({ ...draft, options: unique.map((place) => ({ label: place.ten, placeId: place.id })) }));
+        setRandomSources(Object.fromEntries(unique.map((place) => [place.id, place.nguon ? `Nguồn: ${place.nguon}` : "Từ danh mục địa điểm"])));
+      }
+      setRandomSearchMessage(card.phan.filter((part) => part.loai === "text").map((part) => part.text).join("\n") ||
+        (unique.length ? "Gợi ý từ danh mục địa điểm. Bạn có thể sửa hoặc thêm món của mình." : "Chưa có lựa chọn có nguồn. Bạn có thể đổi lời nhờ hoặc tự thêm."));
+      setRandomSearching(false);
+      setRandomError(null);
+      return;
+    }
+    const failed = ai.requests.find((request) => request.trigger_message_id === randomSearchTrigger && (request.status === "failed" || request.status === "cancelled"));
+    const held = ai.cho.find((request) => request.trigger === randomSearchTrigger && request.loi !== null);
+    if (randomSearching && (failed || held)) {
+      setRandomSearching(false);
+      setRandomError(held?.loi ?? (failed ? chuHangLoiGoi(failed).cau : "Chưa tìm được quán. Hãy thử lại hoặc tự thêm."));
+    }
+  }, [randomSearchTrigger, randomSearching, randomRound, chat.tin, ai.requests, ai.cho, lan.lan]);
   const toHenChung = useToHenChung(contextId, personId);
   const [xacNhanBoToHen, setXacNhanBoToHen] = useState(false);
   // Which decided polls already feed an open sheet, so the card can say "mở"
@@ -384,8 +475,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * the source carries this reader's headers rather than a bare url.
    */
   const anhTin = useCallback(
-    (tin: Tin) => nguonAnh(tin.image_url, personId, contextId),
-    [personId, contextId],
+    (tin: Tin) => lan.lan === "v2" ? nguonAnhNiemDaMo(tin.image_url) : nguonAnh(tin.image_url, personId, contextId),
+    [personId, contextId, lan.lan],
   );
 
   const tenNguoi = useCallback(
@@ -470,14 +561,32 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const coChu = nhap.trim().length > 0;
   const rongTrang = !chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0;
   const thapCuaSo = caoCuaSo < 600;
-  // While the tray is open in a short window the pinned rows fold away.
-  const gonDau = khay !== null && thapCuaSo;
+  // The poll owns the editing column even before the keyboard opens.
+  const lichSuAn = (khay === "poll" || khay === "random") && !khongNhanTin && ghiChatDuoc && !toHenChung.sheet;
+  const lichSuAnRef = useRef(lichSuAn);
+  lichSuAnRef.current = lichSuAn;
+  const lichSuSanSang = useRef(true);
+  const caoKhungLichSu = useRef(0);
+  if (lichSuAn) {
+    lichSuSanSang.current = false;
+    caoKhungLichSu.current = 0;
+  }
+  const caoLichSu = useRef(0);
+  const [lanHienLichSu, setLanHienLichSu] = useState(0);
+  const veCuoiCho = useRef(false);
+  const gonDau = lichSuAn || (khay !== null && thapCuaSo);
   // The composer grows with what is typed up to 120dp -- four lines, the
   // ceiling QA's acceptance pins (UI-062) and the most a phone can give the
   // box before the thread above it stops being the conversation -- and never
   // past 30% of a short window; then it scrolls inside itself.
   const caoOToiDa = Math.min(4 * DONG_O + 2 * DEM_O, Math.max(CAO_O + DONG_O, Math.round(caoCuaSo * 0.3)));
   const oNhapRef = useRef<TextInput>(null);
+  useEffect(() => {
+    if (khay !== null) {
+      oNhapRef.current?.blur();
+      Keyboard.dismiss();
+    }
+  }, [khay]);
   // Web only: a textarea neither grows with its text nor starts at one row
   // (react-native-web leaves `rows` unset, and the browser draws two). Measure
   // the text at no height, then give the box exactly that, between one line
@@ -510,7 +619,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const danhDauHienThi = useRef(chat.danhDauHienThi);
   danhDauHienThi.current = chat.danhDauHienThi;
   const baoTinHienThi = useCallback(({ viewableItems }: { viewableItems: ViewToken<HangHienThi>[] }) => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
     danhDauHienThi.current(viewableItems.flatMap(({ item, isViewable }) => isViewable && item.loai === "tin" ? [item.tin.id] : []));
+  }, []);
+  const napCuHonHienTai = useRef(chat.napCuHon);
+  napCuHonHienTai.current = chat.napCuHon;
+  const napLichSuCu = useCallback(() => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
+    void napCuHonHienTai.current();
   }, []);
 
   // The list only auto-scrolls to new rows when the reader is already at the
@@ -526,6 +642,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // reader's place only while they are up in the history.
   const [oCuoi, setOCuoi] = useState(true);
   const ghiViTri = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) return;
     const gan = e.nativeEvent.contentOffset.y <= 120;
     ganCuoi.current = gan;
     setOCuoi(gan);
@@ -533,13 +650,42 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // Back to the end before a row of ours lands, and say so: with the anchor
   // off, the new row and the notice under it sit at offset 0 by construction.
   const veCuoi = useCallback(() => {
+    if (lichSuAnRef.current || !lichSuSanSang.current) {
+      // Preserve an explicit send-to-newest without moving a hidden reader.
+      veCuoiCho.current = true;
+      return;
+    }
     ganCuoi.current = true;
     setOCuoi(true);
     danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
+  const hienLaiLichSu = useCallback(() => {
+    if (lichSuAnRef.current || lichSuSanSang.current || caoKhungLichSu.current <= 0 || caoLichSu.current <= 0 || Math.abs(caoLichSu.current - caoKhungLichSu.current) > 1) return;
+    lichSuSanSang.current = true;
+    // Hidden viewability updates may already be cached inside FlatList.
+    setLanHienLichSu((lan) => lan + 1);
+    if (veCuoiCho.current) {
+      veCuoiCho.current = false;
+      veCuoi();
+    }
+  }, [veCuoi]);
+  const baoCaoLichSu = useCallback((e: LayoutChangeEvent) => {
+    const cao = e.nativeEvent.layout.height;
+    // A hidden child keeps its last real viewport; never learn height 0.
+    if (lichSuAnRef.current || !Number.isFinite(cao) || cao <= 0) return;
+    caoLichSu.current = cao;
+    hienLaiLichSu();
+  }, [hienLaiLichSu]);
+  const baoKhungLichSu = useCallback((e: LayoutChangeEvent) => {
+    const cao = e.nativeEvent.layout.height;
+    if (lichSuAnRef.current || !Number.isFinite(cao) || cao <= 0) return;
+    caoKhungLichSu.current = cao;
+    // On resize, wait for the child's real viewport to match this wrapper.
+    hienLaiLichSu();
+  }, [hienLaiLichSu]);
   const soHang = useRef(chat.tin.length);
   useEffect(() => {
-    if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
+    if (!lichSuAnRef.current && lichSuSanSang.current && chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
     soHang.current = chat.tin.length;
   }, [chat.tin.length, reduced]);
   // The composer's notice is a list header, not a row: `maintainVisibleContentPosition`
@@ -548,6 +694,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // person just made down there (QA UI-069 measured it 1,500px off screen).
   useEffect(() => {
     if (loiCuoi !== null) {
+      if (lichSuAnRef.current || !lichSuSanSang.current) {
+        veCuoiCho.current = true;
+        return;
+      }
       ganCuoi.current = true;
       setOCuoi(true);
       danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
@@ -555,7 +705,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   }, [loiCuoi, reduced]);
   useEffect(() => {
     const sub = Keyboard.addListener("keyboardDidShow", () => {
-      if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+      if (!lichSuAnRef.current && lichSuSanSang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
     });
     return () => sub.remove();
   }, []);
@@ -568,19 +718,30 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     void ai.goiCap({ khoa, trigger, ...cap });
   };
 
-  const gui = async (command?: string): Promise<boolean> => {
+  const gui = async (command?: string, randomRequestOnly = false): Promise<boolean> => {
+    if (!ghiChatDuoc) return false;
     const body = (command ?? nhap).trim();
     if (!body || guiRef.current) return false;
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
+    if (/^\/random$/i.test(body)) { setKhay("random"); Keyboard.dismiss(); doiNhap(""); return false; }
     // An `@Rủ Đi`, `/plan` or `/chia-bill` message is an ordinary message
     // (ADR-0046): it is sent exactly like any other, and only once the server
     // has stored it is the AI asked, naming it. The key is the send's own, so
     // retrying either half can never double the other; the bundle is frozen
     // here, at the press, before the question joins the list it reads.
-    const nhac = command === undefined ? timNhacAi(body) : null;
+    const nhac = command === undefined || randomRequestOnly ? timNhacAi(body) : null;
+    const asksRandom = nhac?.lenh === "random";
+    const searchOwner = asksRandom ? ++randomSearchOwner.current : randomSearchOwner.current;
+    const searchRoom = contextId;
+    if (asksRandom) {
+      setRandomDraft((draft) => ({ ...draft, request: nhac.loiNho }));
+      setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomError(null); setRandomSearchMessage(null);
+      setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(lenhSanSang(ai.capabilities, "random"));
+      setKhay("random"); Keyboard.dismiss();
+    }
     const attempt = newAttempt();
     if (nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh)) {
-      capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
+      capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: randomRequestOnly ? undefined : goiSeGui(goiChip, kemTin) });
     }
     guiRef.current = true;
     setLoiCuoi(null);
@@ -593,14 +754,17 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     veCuoi();
     try {
       const daGui = await chat.gui(body, traLoiCu, attempt);
+      if (asksRandom && (randomContext.current !== searchRoom || randomSearchOwner.current !== searchOwner)) return false;
       // Landed for a conversation that has left the screen: nothing to show here.
-      if (daGui === null) return false;
+      if (daGui === null) { if (asksRandom) { setRandomSearching(false); setRandomError("Lời nhờ chưa gửi được. Thử lại tin đang chờ trong chat."); } return false; }
+      if (asksRandom) setRandomSearchTrigger(daGui.id);
       hoiAiVeTin(attempt.key, daGui.id);
       veCuoi();
       const cau = cauYDinh(daGui);
       if (cau !== null) setLoiCuoi({ cau });
       return !daGui.intent_error;
     } catch {
+      if (asksRandom && randomContext.current === searchRoom && randomSearchOwner.current === searchOwner) { setRandomSearching(false); setRandomError("Lời nhờ chưa gửi được. Bạn có thể tự thêm lựa chọn hoặc thử lại trong chat."); }
       // The failed row owns the exact text, quote and retry key. Leave any
       // newer words in the composer untouched.
       return false;
@@ -609,6 +773,56 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       setDangGui(false);
       setDangGuiThan(null);
     }
+  };
+
+  const publishRandom = async (round: RandomPlayableRound, retry = false) => {
+    if (!ghiChatDuoc || randomPublishingRef.current) return;
+    const room = contextId;
+    const owner = ++randomPublishOwner.current;
+    randomPublishingRef.current = true; setRandomPublishing(true); setRandomError(null);
+    Keyboard.dismiss();
+    try {
+      const pending = chat.hangCho.some((tin) => tin.attempt.key === round.id);
+      const sent = retry && pending ? await v2.thuLai(round.id) : round.v === 2 ? await v2.guiRandomLive(round) : await v2.guiRandom(round);
+      if (randomContext.current !== room || owner !== randomPublishOwner.current) return;
+      if (sent) { setRandomPublished(true); setRandomReceiptAt(sent.created_at); }
+      else setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
+    } catch {
+      if (randomContext.current === room && owner === randomPublishOwner.current) setRandomError("Chưa gửi được lượt này. Thử lại sẽ giữ nguyên kết quả.");
+    } finally {
+      if (owner === randomPublishOwner.current && randomContext.current === room) {
+        randomPublishingRef.current = false; setRandomPublishing(false);
+      }
+    }
+  };
+  const playRandom = () => {
+    if (!ghiChatDuoc || randomPublishingRef.current || randomRound) return;
+    const monotonic = globalThis.performance?.now?.();
+    if (v2.randomClock.status !== "ready" || monotonic === undefined || randomServerNow(v2.randomClock.anchor, monotonic) === null) {
+      setRandomError("Chưa đồng bộ được giờ của nhóm. Đợi có mạng rồi thử lại."); return;
+    }
+    try {
+      const options = randomDraft.options.map((option) => ({ ...option, label: option.label.trim() }));
+      const round = createRandomLiveRound(newNativeRandomRound(randomDraft.request, randomDraft.mode, options));
+      setRandomRound(round); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); void publishRandom(round);
+    } catch (cause) {
+      setRandomError(cause instanceof RandomSourceUnavailable ? cause.message : "Cần 2–8 lựa chọn khác nhau, mỗi tên tối đa 80 ký tự. Hãy sửa các lựa chọn rồi thử lại.");
+    }
+  };
+  const openRandom = (round?: RandomPlayableRound, fresh = false, replay = false) => {
+    Keyboard.dismiss(); setRandomError(null); setKhay("random");
+    if (round) {
+      randomSearchOwner.current += 1;
+      setRandomSearchTrigger(null); randomSearchConsumed.current = null; setRandomSearching(false); setRandomSearchMessage(null);
+      setRandomDraft({ request: round.request, mode: round.mode, options: round.options.map((option) => ({ ...option })) });
+      const accepted = chat.tin.find((tin) => tin.id === round.id && Number(tin.cursor) > 0);
+      setRandomRound(fresh ? null : round); setRandomReplay(!fresh && replay); setRandomReceiptAt(fresh ? null : accepted?.created_at ?? null); setRandomPublished(!fresh); setRandomSources({});
+    }
+  };
+  const createOutingFromRandom = (round: RandomPlayableRound) => {
+    setKhay(null);
+    const winner = round.options[round.winner];
+    router.push({ pathname: "/outings/new", params: { contextId, initialTitle: winner.label, ...(winner.placeId ? { place: winner.placeId } : {}) } } as never);
   };
 
   const moToHen = (tin?: Tin) => {
@@ -623,6 +837,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 
   /** A decided poll becomes a sheet the whole group can write on. */
   const moToHenTuBinhChon = async (voteId: string, goiY: string) => {
+    if (!ghiChatDuoc) return;
     setKhay(null);
     const existing = chat.tin.find((row) => {
       const nhap = docKhoiNhap(row.card);
@@ -646,6 +861,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * is in the composer rides along as the caption -- one message, not two.
    */
   const guiAnh = async () => {
+    if (!ghiChatDuoc) return;
     if (guiAnhRef.current || guiRef.current) return;
     guiAnhRef.current = true;
     let daChon = null;
@@ -675,17 +891,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     try {
       await nenVaDung(daChon, async (anh) => {
         if (!songRef.current) return;
-        if (lan.lan === "v2") {
-          // E2EE (ADR-0057 §5.2): sealed on this phone, the ciphertext
-          // uploaded, the key sent inside MLS. Never the legacy upload.
-          daToiTin = true;
-          daGui = await v2.guiAnhTuTep(anh.uri, caption === "" ? null : caption);
-          return;
-        }
-        const daTai = await taiAnhNhom(contextId, anh, personId);
-        if (!songRef.current) return;
+        // E2EE (ADR-0057 §5.2): only the v2 hook may upload chat photos.
+        // A missing or revoked crypto device must never select plaintext.
         daToiTin = true;
-        daGui = await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
+        daGui = await v2.guiAnhTuTep(anh.uri, caption === "" ? null : caption);
       });
       if (daGui === null) return;
       xoaNhapCu(draft.revision);
@@ -712,6 +921,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
    * vanishing behind a notice that does not say which picture was lost (F32).
    */
   const guiStickerChon = async (id: string) => {
+    if (!ghiChatDuoc) return;
     setKhaySticker(false);
     const tra = traLoi;
     // The queued row carries the quoted message from here on, so the composer
@@ -783,8 +993,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
-    const laAi = tin.kind === "ai_card";
-    const theCuaTin = docTheAi(tin.card);
+    const pollV2 = lan.lan === "v2" ? tin.poll_v2 : undefined;
+    const randomV2 = lan.lan === "v2" ? tin.random_live_v2 ?? tin.random_v2 : undefined;
+    const phieuV2 = pollV2 ? xemBinhChonV2({ id: tin.id, authorId: tin.author_id!, poll: pollV2, deleted: false }, personId) : null;
+    const laAi = tin.kind === "ai_card" || pollV2 !== undefined;
+    const theCuaTin = pollV2 ? { loai: "poll" as const, vote_id: tin.id, question: pollV2.question, options: pollV2.options } : docTheAi(tin.card);
     // A poll is a member's message: it hangs from its sender like any other,
     // name above and avatar beside, and is not a run's bubble.
     const laPoll = laAi && theCuaTin.loai === "poll" && tacGiaTin(tin).loai !== "ai";
@@ -792,33 +1005,38 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const benKia = cuaNguoi && !cuaToi;
     const benToi = cuaNguoi && cuaToi;
     const laSticker = tin.kind === "sticker";
+    const laAnh = tin.kind === "image";
     const daXoa = tin.kind === "deleted";
+    const laTinChu = tin.kind === "text" && !pollV2 && !randomV2;
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
     // The theme colours the sender's bubble; a taken-back row is paper again.
-    const nenBong = daXoa ? colors.card : cuaToi ? mauChat.bubble : colors.card;
-    const vienBong = daXoa ? colors.line : cuaToi ? mauChat.bubble : colors.line;
-    const mucBong = cuaToi && !daXoa ? mauChat.bubbleInk : colors.ink;
+    const nenBong = daXoa || laAnh ? colors.card : cuaToi ? mauChat.bubble : colors.card;
+    const vienBong = daXoa || laAnh ? colors.line : cuaToi ? mauChat.bubble : colors.line;
+    const mucBong = cuaToi && !daXoa && !laAnh ? mauChat.bubbleInk : colors.ink;
     const viTri = viTriTrongCum(hang, index);
     const dauChuoi = viTri === "mot" || viTri === "dau";
     const cuoiChuoi = viTri === "mot" || viTri === "cuoi";
     const loiCuaTin = loiTin !== null && loiTin.id === tin.id ? loiTin : null;
     return (
       // The name, the quote and the reactions sit around the line, not in it:
-      // the line holds only the avatar and the bubble, so the avatar's foot is
-      // the last bubble's foot (QA UI-064 measured it 22px low, beside the
-      // time). Runs sit 2dp apart, separate voices 12dp.
+      // the line holds only the avatar and the bubble. The text avatar pairs
+      // with the last reading line; cards and media keep their existing frame.
+      // Runs sit 2dp apart, separate voices 12dp.
       <View style={[styles.tinKhoi, { paddingTop: dauChuoi ? 12 : 2 }]}>
-        {benKia && dauChuoi ? (
-          // The sender in their own ink (ADR-0037 D6): the same colour as their avatar ring.
-          <Text style={[typography.caption, styles.thut, { color: tin.author_id ? mucNguoi(tin.author_id, dark) : colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
+        {benKia && dauChuoi && !nhanRieng ? (
+          <Text style={[typography.note, styles.tenTacGia, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
         ) : null}
         <View testID={`chat-message-${tin.id}`} style={[styles.hang, benToi && styles.hangToi, laAi && !laPoll && styles.hangGiua]}>
           {benKia ? (
-            cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
+            cuoiChuoi ? laTinChu ? (
+              <View style={[styles.chuDauTinChu, { height: avatarLineHeight }]}>
+                <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} />
+              </View>
+            ) : <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
           ) : null}
-          <View style={[styles.khoi, benToi && styles.khoiToi, laPoll ? styles.khoiPoll : laAi && styles.khoiAi]}>
+          <View style={[styles.khoi, benToi && styles.khoiToi, laPoll || randomV2 ? styles.khoiPoll : laAi && styles.khoiAi]}>
             {/* The quote sits ABOVE the bubble, in the bubble's column: the
-                avatar beside the column still meets the bubble's foot, and the
+                avatar beside the column still pairs with the body, and the
                 quote stays part of the message it introduces. Never in a
                 flex-wrapped row under it: a lone Text at the end of a wrapping
                 row keeps one word's width (bài học RN 2026-09-04). A deleted
@@ -834,8 +1052,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 </Text>
               </View>
             ) : null}
-            {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+            {randomV2 ? <ChatRandomCard round={randomV2} acceptedAt={tin.created_at} clock={v2.randomClock} readOnly={!ghiChatDuoc} onMenu={() => setMenuTin(tin)}
+              onNew={() => openRandom(randomV2, true)} onView={(replay) => openRandom(randomV2, false, replay)} onCreateOuting={() => createOutingFromRandom(randomV2)} onOpenPlace={(id) => router.push(randomPlacePath(id) as never)} /> : laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
               <TraLoiAi
+                readOnly={!ghiChatDuoc}
                 contextId={contextId}
                 onMenu={() => setMenuTin(tin)}
                 onOpenPlan={() => moToHen(tin)}
@@ -846,14 +1066,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               />
             ) : laAi ? (
               <TheAiView
+                readOnly={!ghiChatDuoc}
                 the={theCuaTin}
                 contextId={contextId}
                 personId={personId}
                 tenNguoi={tenNguoi}
                 tacGia={tenNguoi(tin.author_id)}
-                vote={theCuaTin.loai === "poll" ? changes.votes[theCuaTin.vote_id] : undefined}
+                vote={phieuV2 ?? (theCuaTin.loai === "poll" ? changes.votes[theCuaTin.vote_id] : undefined)}
+                sealedPoll={pollV2 ? {
+                  cast: (optionId) => v2.boPhieu(tin.id, optionId),
+                  close: () => v2.dongBinhChon(tin.id),
+                  refresh: v2.taiLai,
+                } : undefined}
                 onOpenPlan={() => moToHen(tin)}
-                onMoToHen={(voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
+                onMoToHen={pollV2 ? undefined : (voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
                 banToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ban ?? null) : null}
                 daCoToHen={theCuaTin.loai === "poll" && coToHenChoBinhChon(theCuaTin.vote_id) !== null}
                 tenToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ten || null) : null}
@@ -879,22 +1105,22 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 onAccessibilityAction={() => { if (!daXoa) setMenuTin(tin); }}
                 onLongPress={() => setMenuTin(tin)}
                 onPress={() => { if (!daXoa) setMenuTin(tin); }}
-                style={[styles.bong, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
+                style={[styles.bong, laTinChu && styles.bongChu, laAnh && styles.bongAnh, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
               >
                 {daXoa ? (
                   <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
                 ) : tin.kind === "image" ? (
                   <View style={styles.anhKhoi}>
                     {anhTin(tin) === null ? (
-                      <Text style={[typography.caption, { color: cuaToi ? mauChat.bubbleInk : colors.inkFaint }]}>
+                      <Text style={[typography.caption, { color: colors.inkFaint }]}>
                         Ảnh này máy không mở được.
                       </Text>
                     ) : (
                       <Image
                         accessibilityLabel={tin.body ? `Ảnh: ${tin.body}` : "Ảnh trong nhóm"}
-                        contentFit="cover"
+                        contentFit="contain"
                         source={anhTin(tin)}
-                        style={[styles.anh, { borderRadius: radius.small }]}
+                        style={[styles.anh, khungAnhChat(tin.image_width, tin.image_height, Math.floor((Math.min(rongCuaSo, 640) - 32 - (benKia ? 38 : 0)) * 0.82) - 14), { borderRadius: radius.small }]}
                       />
                     )}
                     {tin.body ? <Text style={[typography.body, BE_CHU, { color: mucBong }]}>{tin.body}</Text> : null}
@@ -911,6 +1137,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             {chips.map((r) => (
               <Pressable
                 accessibilityLabel={`${r.count} ${glyphPhanUng(r.kind)}`}
+                disabled={!ghiChatDuoc}
+                accessibilityState={{ disabled: !ghiChatDuoc }}
                 hitSlop={8}
                 key={r.kind}
                 onPress={() => void phanUng(tin, r.kind)}
@@ -942,6 +1170,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   if (phien === null) return <CuaDangNhap />;
 
   return (
+    <View style={[styles.backdrop, { backgroundColor: colors.ground }]}>
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       // Off only under the QA negative control; see `qa-ban-phim.ts`.
@@ -954,9 +1183,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           <Pressable accessibilityRole="button" accessibilityLabel={nhanRieng ? "Xem hồ sơ" : "Thành viên nhóm"}
             onPress={() => router.push((nhanRieng && nguoiKiaId ? `/people/${nguoiKiaId}` : `/groups/${contextId}/members`) as never)} style={styles.headerIdentity}>
             <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenNhom}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {nhanRieng ? "Cuộc trò chuyện của hai mình" : hepCuaSo ? `${soDangO || nhom?.member_count || 1} thành viên` : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
-            </Text>
+            {!nhanRieng ? <Text style={[typography.caption, { color: colors.inkSoft }]}>
+              {hepCuaSo ? `${soDangO || nhom?.member_count || 1} thành viên` : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
+            </Text> : null}
           </Pressable>
           <IconButton accessibilityLabel={nhanRieng ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
@@ -968,7 +1197,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         <View style={styles.baoMat}>
           <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
           {lan.lan === "v2" ? <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text> : null}
-          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text> : null}
+          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối</Text> : null}
           {lan.lan === "dang-xet" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm tra mã hoá</Text> : null}
           {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
           {lan.lan === "khong-ro" ? (
@@ -1008,19 +1237,37 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           ) : null}
           {toHen ? (
             <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
+              if (lichSuAnRef.current || !lichSuSanSang.current) return;
               const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
               if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
             }} />
           ) : null}
         </View>
       ) : null}
+      {/* One mounted history boundary also hides inverted native descendants. */}
+      <View
+        accessibilityElementsHidden={lichSuAn}
+        importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+        pointerEvents={lichSuAn ? "none" : "auto"}
+        collapsable={false}
+        style={[styles.lichSu, lichSuAn && styles.lichSuAn]}
+      >
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. It is
           the flexible part of the column now, and scrolls inside itself: as a
           fixed block it pushed the composer under the bottom edge of a short
           window (QA UI-124, 390×460 and 375×667 with the tray open). */}
       {rongTrang ? (
-        <ScrollView contentContainerStyle={[styles.rongNoi, { paddingHorizontal: space.md }]} keyboardShouldPersistTaps="handled" style={styles.rong} testID="chat-rong">
+        <ScrollView
+          accessibilityElementsHidden={lichSuAn}
+          importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+          pointerEvents={lichSuAn ? "none" : "auto"}
+          scrollEnabled={!lichSuAn}
+          contentContainerStyle={[styles.rongNoi, { paddingHorizontal: space.md }]}
+          keyboardShouldPersistTaps="handled"
+          style={[styles.rong, lichSuAn && styles.lichSuAn]}
+          testID="chat-rong"
+        >
           {chat.loi ? (
             // The first page did not load and nothing came by the feed either.
             <CauTaiCho
@@ -1036,14 +1283,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <View style={styles.moLoi}>
               {/* The sketch is the first thing to give way: a short window or
                   an open tray keeps the words and the one action. */}
-              {thapCuaSo || khay !== null ? null : <Nep pose="moi" size={96} />}
+              {thapCuaSo || khay !== null ? null : <PaperObject name="envelope" width={180} />}
               {/* A group of one (just opened, QA UI-071) asks for friends first:
                   a plan for nobody is not the next step. */}
-              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : chiMinhToi ? "Hội mới, mới có mình bạn." : "Có hội rồi. Mở lời thôi."}</Text>
-              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : chiMinhToi ? "Mời vài người bạn vào, rồi cùng rủ nhau một buổi." : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
+              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{lan.lan === "legacy" ? "Kho chat cũ chưa có tin." : nhanRieng ? "Một lời mở đầu." : chiMinhToi ? "Hội mới, mới có mình bạn." : "Có hội rồi. Mở lời thôi."}</Text>
+              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{lan.lan === "legacy" ? "Bạn vẫn có thể tạo kèo cho một buổi cùng đi." : nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : chiMinhToi ? "Mời vài người bạn vào, rồi cùng rủ nhau một buổi." : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
               {chiMinhToi ? <RudiButton icon="person-add-outline" label="Mời bạn vào nhóm" full={false} onPress={() => router.push(`/groups/${contextId}/invite` as never)} /> : null}
               {/* Every room, a friends' pair included, can start a plan from here. */}
-              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant={chiMinhToi ? "ghost" : "outline"} full={false} onPress={() => setKhay("plan")} />
+              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant={chiMinhToi ? "ghost" : "outline"} full={false} onPress={() => ghiChatDuoc ? setKhay("plan") : moToHen()} />
             </View>
           )}
         </ScrollView>
@@ -1051,12 +1298,23 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       {/* The list and the jump pill share one box: the pill floats over the
           newest end instead of taking 60dp from the list, which made the
           thread jump every time it came and went. */}
-      <View style={rongTrang ? styles.dsRong : styles.ds}>
+      <View
+        accessibilityElementsHidden={lichSuAn}
+        importantForAccessibility={lichSuAn ? "no-hide-descendants" : "auto"}
+        pointerEvents={lichSuAn ? "none" : "auto"}
+        collapsable={false}
+        onLayout={baoKhungLichSu}
+        style={[rongTrang ? styles.dsRong : styles.ds, lichSuAn && styles.lichSuAn]}
+      >
         <FlatList
           ref={danhSachRef}
+          onLayout={baoCaoLichSu}
+          extraData={lanHienLichSu}
+          scrollEnabled={!lichSuAn}
           // Empty, the list keeps only its header's height and the empty page
           // above takes the room.
-          style={rongTrang ? styles.dsRongTrong : styles.ds}
+          // Clip the parent, not the native reader viewport or its anchor.
+          style={[rongTrang ? styles.dsRongTrong : styles.ds, lichSuAn && styles.dsAn, lichSuAn && { height: caoLichSu.current }]}
           contentContainerStyle={[styles.danhSach, { paddingHorizontal: space.md }]}
           data={hang}
           inverted
@@ -1075,7 +1333,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                   same key with the same frozen bundle. */}
               {ai.cho.filter((cap) => cap.loi !== null).map((cap) => (
                 <HangLoiNho cau={cap.loi ?? ""} key={cap.khoa} testID="chat-loi-nho-hong" title="Rủ Đi AI chưa nhận lời nhờ">
-                  <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} />
+                  {ghiChatDuoc ? <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} /> : null}
                   <RudiButton label="Bỏ" compact full={false} variant="ghost" onPress={() => ai.boCap(cap.khoa)} />
                 </HangLoiNho>
               ))}
@@ -1113,7 +1371,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               ))}
               {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (
                 <HangLoiNho cau={chuHangLoiGoi(request).cau} dangCho={request.status !== "failed"} key={request.id} title={chuHangLoiGoi(request).tieuDe}>
-                  {request.status === "failed" && thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} lyDo={lenhSanSang(ai.capabilities, request.command ?? "plan") ? undefined : "Rủ Đi AI chưa sẵn sàng trong cuộc trò chuyện này."} onPress={() => void ai.retry(request.id)} /> : null}
+                  {ghiChatDuoc && request.status === "failed" && thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} lyDo={lenhSanSang(ai.capabilities, request.command ?? "plan") ? undefined : "Rủ Đi AI chưa sẵn sàng trong cuộc trò chuyện này."} onPress={() => void ai.retry(request.id)} /> : null}
                   {request.status === "failed" && (request.command ?? "plan") === "plan" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
                 </HangLoiNho>
               ))}
@@ -1152,7 +1410,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
             ) : chat.loiCu ? (
               // Where the older messages would have appeared: the top of the thread.
-              <CauTaiCho cau={chat.loiCu} hanhDong={{ label: "Thử lại", onPress: () => void chat.napCuHon() }} style={styles.loiCuoi} testID="chat-loi-cu" />
+              <CauTaiCho cau={chat.loiCu} hanhDong={{ label: "Thử lại", onPress: napLichSuCu }} style={styles.loiCuoi} testID="chat-loi-cu" />
             ) : null
           }
           // Hold the reader's place while they are up in the history and rows
@@ -1169,11 +1427,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           // Content grows at the newest end (a row, the pending bubble, the
           // notice header): within a bubble of the end, stay at the end.
           onContentSizeChange={() => {
-            if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+            if (!lichSuAnRef.current && lichSuSanSang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
           }}
-          onEndReached={() => void chat.napCuHon()}
+          // A hidden callback must not consume RN's content-length edge latch.
+          onEndReached={lichSuAn || !lichSuSanSang.current ? undefined : napLichSuCu}
           onEndReachedThreshold={0.6}
           onScrollToIndexFailed={({ index, averageItemLength }) => {
+            if (lichSuAnRef.current || !lichSuSanSang.current) return;
             danhSachRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
           }}
           onMomentumScrollEnd={ghiViTri}
@@ -1198,10 +1458,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           </Pressable>
         ) : null}
       </View>
+      </View>
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           {lenhPhuHop.map((l) => (
-            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { if (l.nhan === "/vote") { setKhay("poll"); doiNhap(""); } else doiNhap(l.goiY); }} style={styles.lenhHang}>
+            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { if (l.nhan === "/vote") { setKhay("poll"); doiNhap(""); } else if (l.nhan === "/random") { openRandom(); doiNhap(""); } else doiNhap(l.goiY); }} style={styles.lenhHang}>
               <Text style={[typography.label, { color: colors.accent }]}>{l.nhan}</Text>
               <Text style={[typography.caption, { color: colors.inkSoft }]}>{l.moTa}</Text>
             </Pressable>
@@ -1258,17 +1519,28 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && ghiChatDuoc && !toHenChung.sheet ? <View style={{ flex: khay === "random" || lichSuAn && banPhimMo ? 1 : undefined, flexShrink: 1, minHeight: 0, backgroundColor: colors.card, paddingBottom: khay === "tools" || khay === "poll" || khay === "random" ? banPhimMo ? 6 : Math.max(insets.bottom, 8) : 0 }}>{khay === "random" ? <RandomPicker
+        draft={randomDraft} onChange={(draft) => { setRandomDraft(draft); setRandomError(null); }} onClose={() => setKhay(null)}
+        onOpenPlace={(id) => router.push(randomPlacePath(id) as never)}
+        onSearch={() => { if (lenhSanSang(ai.capabilities, "random")) void gui(["/random", randomDraft.request].join(" "), true); }}
+        onPlay={playRandom} round={randomRound} published={randomPublished} publishing={randomPublishing} searching={randomSearching}
+        live={randomReplay ? null : randomLive}
+        error={randomError} searchMessage={randomSearchMessage} searchReady={lenhSanSang(ai.capabilities, "random")} keyboardOpen={banPhimMo} sources={randomSources}
+        onRetry={() => { if (randomRound) void publishRandom(randomRound, true); }}
+        onNew={() => { setRandomRound(null); setRandomReplay(false); setRandomReceiptAt(null); setRandomPublished(false); setRandomError(null); }}
+        onCreateOuting={() => { if (randomRound && randomPublished && (randomRound.v === 1 || randomReplay || randomLive?.reveal)) createOutingFromRandom(randomRound); }}
+      /> : <CongCuChat personId={personId} contextId={contextId} panel={khay} keyboardOpen={banPhimMo} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
+        onRandom={() => openRandom()}
         // The tray no longer asks the AI itself: it starts the message.
         onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((MO_DAU_HOI_AI + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
-        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
-      {!khongNhanTin && nhacDangGo !== null ? (
+        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} />}</View> : null}
+      {!khongNhanTin && ghiChatDuoc && !khay && !toHenChung.sheet && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
           <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
@@ -1285,13 +1557,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           ) : null}
           {toiDaChan ? <RudiButton compact full={false} label="Xem danh sách đã chặn" onPress={() => router.push("/settings/da-chan" as never)} variant="ghost" /> : null}
         </View>
-      ) : (
+      ) : !ghiChatDuoc ? (
+        <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md, marginBottom: Math.max(insets.bottom, 10) }]} testID="chat-chi-doc">
+          <Text style={[typography.body, { color: colors.ink }]}>
+            {lan.lan === "legacy" ? "Kho chat cũ chỉ đọc." : "Chưa sẵn sàng nhắn tin mã hoá."}
+          </Text>
+          <Text style={[typography.note, { color: colors.inkSoft }]}>
+            {lan.lan === "legacy" ? "Tin mới cần phòng mã hoá đầu cuối trên bản ứng dụng hỗ trợ. Tin cũ vẫn đọc được ở trên." : "Chỉ gửi được khi máy này thiết lập mã hoá đầu cuối cho phòng."}
+          </Text>
+        </View>
+      ) : khay === "poll" || khay === "tools" || khay === "random" || toHenChung.sheet ? null : (
         <View
           style={[
             styles.soan,
             {
-              backgroundColor: colors.card,
-              borderColor: colors.line,
               marginHorizontal: space.md,
               // With the keyboard up the IME covers the navigation bar, so the
               // bottom inset would only float the composer above the keys.
@@ -1300,11 +1579,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           ]}
         >
           <IconButton
-            accessibilityLabel={khay ? "Đóng công cụ chat" : "Thêm vào cuộc trò chuyện"}
+            accessibilityLabel="Thêm vào cuộc trò chuyện"
             disabled={dangGuiAnh || dangGui}
-            icon={khay ? "close" : "add"}
+            icon="add"
             loading={dangGuiAnh}
-            onPress={() => setKhay(khay ? null : "tools")}
+            onPress={() => { Keyboard.dismiss(); setKhay("tools"); }}
             quiet
           />
           <TextInput
@@ -1321,10 +1600,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             } : undefined}
             ref={oNhapRef}
             {...(Platform.OS === "web" ? { rows: 1 } : null)}
-            placeholder={nhanRieng ? `Nhắn cho ${tenNhom}` : "Nhắn cho hội…"}
+            placeholder="Tin nhắn…"
             placeholderTextColor={colors.inkSoft}
             selectionColor={colors.accentSoft}
-            style={[typography.body, styles.oNhap, { color: colors.ink, maxHeight: caoOToiDa }, KHONG_VIEN_WEB]}
+            style={[typography.body, styles.oNhap, { color: colors.ink, backgroundColor: colors.card, borderColor: colors.line, maxHeight: caoOToiDa }, KHONG_VIEN_WEB]}
             value={nhap}
           />
           <IconButton
@@ -1338,9 +1617,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           />
         </View>
       )}
-      <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker && ghiChatDuoc} />
       <TamXemBoiCanh goi={goiChip} haiNguoi={nhanRieng} onClose={() => setXemBoiCanh(false)} open={xemBoiCanh && !khongNhanTin && nhacDangGo !== null} />
       <MenuTin
+        readOnly={!ghiChatDuoc}
         cuaToi={menuTin !== null && menuTin.author_id === personId}
         onClose={() => setMenuTin(null)}
         onPhanUng={(tin, kind) => void phanUng(tin, kind)}
@@ -1378,6 +1658,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         personId={personId}
       />
     </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -1402,7 +1683,8 @@ const styles = StyleSheet.create({
   invocation: { borderWidth: 1, borderRadius: 12, padding: 14, gap: 8, marginBottom: 10 },
   requestActions: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   dungNhan: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, gap: 4 },
-  man: { flex: 1, width: "100%", maxWidth: 820, alignSelf: "center" },
+  backdrop: { flex: 1 },
+  man: { flex: 1, width: "100%", maxWidth: 640, alignSelf: "center" },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
   pills: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 2, marginTop: -8 },
@@ -1431,7 +1713,10 @@ const styles = StyleSheet.create({
   khoiAi: { maxWidth: 640, flex: 1 },
   khoiPoll: { maxWidth: 560, flex: 1 },
   choChuDau: { width: 30, height: 30 },
+  chuDauTinChu: { width: 30, minHeight: 48, alignItems: "center", justifyContent: "center" },
   bong: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minWidth: 0 },
+  bongChu: { minWidth: 48, minHeight: 48, paddingVertical: 5, justifyContent: "center" },
+  bongAnh: { paddingHorizontal: 6, paddingVertical: 6 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   baoMat: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" },
@@ -1441,9 +1726,13 @@ const styles = StyleSheet.create({
   ds: { flex: 1 },
   dsRong: { flexGrow: 0, flexShrink: 1 },
   dsRongTrong: { flexGrow: 0 },
+  lichSu: { flex: 1, minHeight: 0, overflow: "hidden" },
+  lichSuAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: 0, height: 0, minHeight: 0, maxHeight: 0, overflow: "hidden", opacity: 0 },
+  dsAn: { flex: 0, flexGrow: 0, flexShrink: 0, flexBasis: "auto" },
   tinKhoi: { gap: 3 },
   // The name, quote and reactions start where the bubble does, past the avatar.
   thut: { marginLeft: 38 },
+  tenTacGia: { marginLeft: 52, marginRight: 14 },
   duoiToi: { justifyContent: "flex-end" },
   loiTin: { marginTop: 2 },
   // Under your own message the sentence hangs from the right, like the bubble.
@@ -1463,12 +1752,12 @@ const styles = StyleSheet.create({
   veCuoi: { position: "absolute", bottom: 8, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, borderWidth: 1, borderRadius: 24, paddingHorizontal: 16 },
   lenh: { maxHeight: 200, flexGrow: 0, borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { minHeight: 48, paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
-  soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
+  soan: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   // Centred on purpose, unlike the kit's multiline `Field`: the composer grows
   // with its text, so one line sits in the middle of the pill and a longer
   // message fills it from the top anyway. Said out loud because Android's
   // default is what made every other box start mid-way (QA 23/09).
   // One line is exactly the 48dp of «+» and the send button beside it, so the
   // three share a centre line; more lines grow upward from the same foot.
-  oNhap: { flex: 1, minHeight: CAO_O, paddingHorizontal: 10, paddingVertical: DEM_O, textAlignVertical: "center" },
+  oNhap: { flex: 1, minWidth: 0, minHeight: CAO_O, borderWidth: 1, borderRadius: 24, paddingHorizontal: 12, paddingVertical: DEM_O - 1, textAlignVertical: "center" },
 });

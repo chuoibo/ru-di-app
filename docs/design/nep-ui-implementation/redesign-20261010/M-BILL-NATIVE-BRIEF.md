@@ -1,0 +1,186 @@
+# M — chia bill, lượt thiết kế native 11/10/2026
+
+**Candidate chưa nghiệm thu.** Giữ UI3/seed `c8e88116`; code-led trong thế giới
+hiện hành. Không có comp M mới được duyệt. Mockup/crop lịch sử chỉ để phản biện.
+Chỉ chạy app trong Android emulator thuộc phiên; không mở bản web.
+
+## Hợp đồng trước code
+
+THESIS: Receipt và dòng sổ dẫn việc; minh hoạ ở vùng phụ.
+
+OWN-WORLD: Giữ UI3/seed `c8e88116`, giấy/mực/coral, Bricolage đúng vai, Nếp canonical, teal tiền; Operate.
+
+STORY: Nhập/resume → soát món → chọn người → đọc phần → ghi tường minh. Giữ draft nhóm/kèo, line-id, Back/keep, payer, occasion và server allocations.
+
+FIRST VIEWPORT: Cửa nhập rõ; review quét món hợp lệ; tasklist trước bàn; kết quả/đã ghi dùng toàn cột.
+
+FORM: Target48dp; font100/200/wide đổi cấu trúc, không thu chữ/cắt tiền. Opt-in IME, thấy ô focus và phản hồi.
+
+FINISH: Capture → fresh finish-reviewer → disposition → documenter.
+
+Contract 96 từ đã đóng băng private lúc 21:20:30 UTC ngày 10/10, trước lần
+viết UI candidate riêng đầu tiên 21:24:53 UTC. Tài liệu này lưu lại contract
+đó trước khi áp dụng candidate vào feature. Không nhận bằng chứng HTML/DOM
+cho màn React Native.
+
+## Baseline đã quan sát tại 061d8d7a
+
+M đã chạy native sáng100 với dữ liệu tổng hợp: nhập hai món, Back/resume/giữ,
+gán người, kết quả, payer/occasion với IME, ghi một khoản chi. Receipt khi resume
+bị ép cạnh Nếp; review lặp toàn bộ editor; tên người bị cắt trong standee;
+kết quả và trang đã ghi chưa đủ gọn. Một bill200.000đ tạo một expense v1,
+hai allocation125.000/75.000đ, rồi một batch/obligation/receipt75.000đ.
+SQL đọc-only và GET hai actor đối chiếu riêng; không dùng PNG làm bằng chứng
+sổ cái, không gọi xác nhận người thu là bằng chứng ngân hàng hay completed.
+
+Baseline N đã lưu cũng phát hiện tem “ĐÃ VỀ” và CTA “Xem quyết toán” mất đuôi
+khi đọc lại ở sáng100. Chưa xác định cause. Candidate M phải kiểm nhãn/tem
+ở initial/reentry; không suy rằng đổi bề ngang đã tự sửa shared primitive.
+
+## Phạm vi triển khai và kiểm tra
+
+- Receipt resume dùng trọn cột; hai cửa ảnh/nhập tay rõ trước Nếp hỗ trợ.
+- Review thu dòng hợp lệ, mở dòng mới/trống/lỗi/cần kiểm. Không gấp editor
+  trong lúc gõ; expansion review và assignment độc lập.
+- Assignment ưu tiên danh sách món/người với tên đầy đủ, trạng thái checkbox
+  và vùng chạm48dp; bàn/ghế/drag có cửa mở phụ và thao tác chạm tương đương.
+- Result gom phần chia vào một receipt, phân vai phần bạn/tên/tiền/trạng thái;
+  chữ lớn đổi cấu trúc. Payer/occasion và lỗi phải đọc được khi IME mở.
+- Trang đã ghi dùng dòng tự cao, giữ tên/tiền/xác nhận; Nếp có vùng phụ riêng.
+
+Không đổi allocator, integer đồng, draft scope, line-id, attempt/idempotency,
+API/ledger payload hoặc quyền ghi. Shared default ngoài scope. Bản private
+đầu chỉ đổi `ChiaBillLive.tsx`; so byte10 block nghiệp vụ là kiểm nguồn,
+chưa chứng minh tương tác hoặc số request.
+
+Cổng dự kiến: typecheck/checks tại SHA sạch; actual-TSX interaction harness
+với identity/canary/hai mutant không tương đương; detector một lượt đúng
+changed target; ảnh native light/dark, chữ100/130/200 và cửa sổ rộng, trạng
+thái nhập/resume/review/lỗi/assignment/result/recorded. Ma trận này là kế hoạch,
+chưa là coverage. Không ghi thêm expense chỉ để chụp lại theme. Kiểm và ghi
+rõ cell chưa đạt; mở ảnh thật rồi fresh-context finish review. Mục tiêu ≥8/10
+cho nhóm M được chụp, không critical/major còn mở trong cell đã kiểm; không
+quy đổi thành điểm toàn app hay thay TalkBack/motion/hardware/iOS.
+
+GPL/J có verdict riêng; M/N và toàn bộ app vẫn còn cổng. Không merge/push
+main hoặc coi cổng kỹ thuật xanh là nghiệm thu vẻ đẹp.
+
+## Lượt sửa sau ma trận native a21309eb
+
+Đã mở đủ 22 ảnh gốc của màn đã ghi qua bảy profile và lần khôi phục sáng100,
+cùng PID app31543. Chữ200 vẫn ép tên thành cột hẹp cạnh tiền; wide giãn cả
+receipt và nút720dp; khôi phục100 còn giữ khoảng trống của cỡ lớn. Review và
+result cũng có chữ/tem bị cắt. XML có đủ câu không được tính là paint đạt.
+Hai probe Dimensions đều dừng mà không có metric; chưa kết luận nguyên nhân.
+
+Đường native a213 đã bấm đúng một lần Next, một lần xem kết quả và một lần
+ghi: một khoản chi mới200.000đ, hai phần125.000/75.000đ. Sau ma trận đã ghi,
+24 GET giữ nguyên body, SQL giữ nguyên mọi projection ngoài snapshot_at;
+đợt thu cũ không đổi. Đây không phải đếm HTTP request hoặc bằng chứng ngân hàng.
+Evidence private: `m-a213-native-path-complete-correction-checkpoint.json`,
+`m-recorded-hot-root-original-inspection.json` và
+`m-recorded-hot-no-ledger-write-proof.json` trong `native-audit-a21309eb`.
+
+Batch sửa dùng cột form cho trang đọc và chữ lớn; chỉ assignment/result ở
+wide chữ thường giữ hai cột. Đầu receipt opt-in chiều rộng đầy đủ; tem ghi
+opt-in wrap trong vùng có giới hạn; tên khoản chi được ngắt dòng tự nhiên.
+Hai primitive shared giữ default hiện hành.
+
+Local Expo module Android đọc resources fontScale hiện tại, phát notification
+để hook M đọc lại; subscribe trước fresh read, dedup và chặn callback muộn.
+M truyền cùng snapshot vào geometry ô nhập. Module chưa có hoặc lỗi dùng
+RN fallback hiện hành; fallback không được nhận credit hot support. Không
+đổi route key, draft, line-id, parser, allocator, Attempt hoặc API payload.
+
+Trước commit: typecheck và guide freshness đạt;10 file kiểm bill/receipt/field/
+adaptive đạt77/77, guard observer mới đạt27/27, không fail/skip. Đây là kiểm
+trong feature tree, chưa thay clean exact-SHA check. APK mới, observer available,
+hot/Settings return, giữ input/assignment/payer/occasion, IME/focus, paint và
+fresh finish review vẫn pending. Chưa nghiệm thu M hoặc toàn bộ frontend.
+
+
+## Vòng native 2528 — yêu cầu sửa sau ảnh thật
+
+Review độc lập ở `2528a901` yêu cầu **fix**: chữ 130% cắt tiến độ, câu nguồn
+và nhãn thêm món; 200% cắt cả tiêu đề, tên món, số tiền và CTA. Tám ảnh gốc
+của vòng 100→130→200→100 đã được mở; quay về 100% phục hồi bố cục. Đổi cỡ
+chữ tối đa bằng thanh Font size trong Android Settings rồi quay lại cùng PID
+cũng tái hiện lỗi. Vòng này dừng trước Next, không tạo bill hay ghi sổ mới.
+Đối chiếu mới: 24 GET và projection SQL chỉ đọc giữ nguyên lịch sử trước đó.
+Các ô tối, rộng, focus/IME và downstream của nguồn này chưa nhận credit.
+
+Chẩn đoán hữu hạn: giữ chữ 200%, đổi chiều rộng 320→321 làm chữ nhìn thấy được
+vẽ đầy đủ và xuống dòng tự nhiên trong cùng PID, không mở lại route. Kết quả
+này hỗ trợ thử đồng bộ lại layout, chưa xác định nguyên nhân cache/callback.
+
+Bản sửa kế tiếp yêu cầu Android đo lại content root hiện có sau thay đổi font
+hợp lệ: gộp công việc trên main Handler, lấy Activity hiện hành khi chạy, bỏ
+Activity đã hủy và hủy Runnable khi module đóng. Chỉ yêu cầu layout trên
+content, con và cháu trực tiếp để phủ root trực tiếp và một lớp bọc Expo hiện
+hành; không thay cache, không reflection, không remount hoặc đổi mặc định chữ.
+Getter vẫn chỉ đọc. Phạm vi nguồn là Fabric/Expo hiện tại, chưa xác nhận legacy
+hoặc lớp bọc sâu hơn. Nhãn thêm món được căn giữa và có padding cân đối.
+
+Đây còn là ứng viên: phải compile APK, kiểm 100→130→200→100 và Settings return
+mà không đổi chiều rộng cứu layout, mở đủ ảnh gốc, kiểm tổng sau scroll cùng
+raw input/focus/IME, rồi hoàn tất các ô còn thiếu và review lại. Detector nguồn
+không chứng minh painted text; chưa đạt ≥8/10 và chưa có ship toàn M/toàn app.
+
+
+## Vòng native 64df — tiếp tục sửa số đo chữ
+
+Cả sáu ảnh gốc của vòng 100→130→200→100 đã được mở, cùng PID18488,
+320×640 và có scroll tới tổng cuối receipt. 130% vẫn cắt tiến độ/câu nguồn/
+nhãn thêm món; 200% cắt cả tên, tiền và CTA. Review độc lập tiếp tục yêu cầu
+fix. Vòng này dừng trước Next; chưa kiểm Settings return, tối, rộng hoặc
+downstream của nguồn này. Getter public đã trả available và khớp hệ thống;
+không được coi đó là bằng chứng paint. Harness Kotlin đạt9/9, canary và hai
+mutant đỏ đúng dự đoán; clean JS đạt1637/1637. Chúng chưa chứng minh native đẹp.
+
+Thử nghiệm kế tiếp gọi public ReactHost.onConfigurationChanged ngay trước
+requestLayout trong cùng lượt main Handler. Activity đã forward configuration
+theo đường thông thường; đây chỉ là thử lại thứ tự refresh metrics/layout,
+chưa xác định nguyên nhân cache và chưa bảo đảm sửa được paint. Không sửa
+cache/internal flags, không remount, không đổi mặc định chữ. Khi application
+không có ReactHost, giữ yêu cầu layout cũ. Phải build APK mới, xem ảnh thật
+100→130→200→100 và Settings return trước khi nhận credit hoặc đi tiếp ghi sổ.
+
+## Vòng native fe414 — metric SP tường minh cho M
+
+APK fe414 đã compile và thay thế trên emulator5558. Sáu ảnh gốc của vòng
+100→130→200→100 cùng PID20143,320×640 được mở, gồm tổng cuối receipt sau
+scroll. 130% và200% vẫn cắt chữ/tiền; review độc lập yêu cầu fix. Dừng trước
+Next, không tạo bill/ghi sổ mới. Draft hai món được tạo mới sau install,
+không phải bằng chứng draft sống qua install. Settings return/tối/rộng/focus
+và downstream của nguồn này chưa được kiểm. Public-host retry bị loại bỏ.
+
+Ứng viên tiếp theo lấy21 giá trị SP thực từ public Android TypedValue với
+DisplayMetrics được copy, truyền bảng optional qua getter/observer hiện có.
+M dùng số DP tường minh đồng thời tắt scaling lần hai trên đúng Text/Input;
+fontScale vẫn điều khiển bố cục. Provider luôn bao cả body/footer; giữ host,
+ref, controlled value, selection và handler. Ngoài M hoặc bảng optional lỗi,
+giữ đường RN. Không thay global defaults, cache, key/route hay logic tiền.
+
+Nested Text giữ số SP gốc và fallback cả paragraph khi gặp con opaque hoặc
+giá trị không có trong bảng. Input có cap hữu hạn/natural/unknown lineHeight
+giữ fallback cũ; current M không dùng các trường hợp này. ONhapMuc active
+lấy final caller style cho cả input, placeholder và pitch đường kẻ. Sampler
+không khóa OS resources nên không tuyên bố atomic hoặc pixel equivalence
+mọi density. TextInput đã gõ có thể giữ span lineHeight cũ; bắt buộc kiểm
+multiline đang focus/IME bằng thao tác thật, không nhận credit từ source.
+
+Trước commit, typecheck và47 kiểm observer/optional metrics/conversion đạt.
+Đây chưa là clean exact-SHA gate, Kotlin/APK hay native/visual evidence.
+M vẫn chưa đạt ≥8/10; chưa ship M/N/toàn app.
+
+## SP 445 đã có native; G1 tại b700 đã đóng có giới hạn
+
+Ở JS `445865b5`, [loop](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-445865b5/m-sp-loop-fresh-verdict-r1.md) và [Android Settings-return ở 200](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-445865b5/m-sp-settings-fresh-verdict-r1.md) cho thấy nội dung/tiền/progress/helper/Thêm món/header/CTA paint đủ trong các cell đã xem. [Supplement445](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-445865b5/m-sp-supplement-fresh-verdict-r1.md) bổ sung tối/rộng, quantity/occasion IME, result/recorded ở 100/200 nhưng trả fix cho G1: cột tiền khi về 100 vượt mép nội dung x288 tới 304. Không gọi nguồn `445` đạt toàn M.
+
+Bản `b7005b2f` chỉ đổi wrapper/style cột tiền ngang sang grow/shrink/basis tường minh; cột chữ lớn và nghiệp vụ giữ nguyên. [Finish review](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b7005b2f/m-geometry-fresh-verdict-r1.md) mở 18 ảnh gốc cùng JSON/XML/hash và before 445: **G1 resolved** ở editor/quantity/amount/name font-return; label/input/helper giữ x154–288. [Before445](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-445865b5/root-native-screens/editor-after-focus-return.png) và [afterb700](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b7005b2f/root-native-screens/editor-after-focus-return.png) khóa thay đổi đã nhìn. Raw `1.`/`150000`/`Bun bo QC`, focus và IME giữ ở snapshot đúng chuỗi; không suy selection/host identity hoặc focused multiline/tên dài từ fixture này.
+
+Khoản chi thật thuộc nguồn `445`: một expense v1 200.000đ, hai phần 125.000/75.000đ. SQL read-only/rolled-back quét toàn context H `ff62fae5-d8a6-4408-b861-0c916c9fccb5`, exact occasion; không lọc theo outing; hàng mới thuộc outing `056be81f-651b-461f-8006-cd9499b51325`. Batch/obligation/receipt cũ không đổi; không đếm request hoặc claim bank/completed. Supplement giữ witness; **b700 không có ledger write proof**.
+
+APK compile vẫn `0b15db02`, hash `d69eb7addcc0fcc1f1927b30a29c9dbe676a50f61110cff30a68abcd19076bf7`; fingerprint JS 445/b700 riêng, b700 không reinstall. PID b700 là 25472, process reattach mới. Commit b700 ghi 55/55 observer/metric/wrapper trước commit; [clean b700](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b7005b2f/clean-checks.json) ghi 7 bước exit 0; 217 files/1665 pass/0 fail/skip/cancel/todo; 5 browser files loại rõ. Không cộng 55+1665 hoặc gọi 55 là exact SHA. Detector 16 TSX static regex `[]` không đo pixel/geometry/contrast.
+
+F5 partial, disposition recapture cho phạm vi còn thiếu; không chấm ≥8/10 hoặc ship M/N/app. B700 chưa có Settings return/tối/rộng/downstream, multiline/tên dài và toàn motion/TalkBack/lifecycle. Tiếp N settlement→batch→finance với role/disclosure/error/share thật, rồi P/Q composer→pending duyệt→detail/comments/menu/search/notifications/moderation. Giữ toàn A–S/gates cuối/main còn mở, không tạo comp/art mới để che bố cục.

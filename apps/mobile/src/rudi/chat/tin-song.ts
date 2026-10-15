@@ -12,6 +12,7 @@
  * yesterday under today.
  */
 import { type Attempt, newAttempt, translatedAsActor } from "../../api";
+import { randomLivePreview } from "./e2ee/random-live";
 import {
   khoangGia,
   theTuCard,
@@ -49,6 +50,10 @@ export type TrichDan = {
 };
 
 export type Tin = {
+  /** Native-only projection of authenticated MLS operations; never a legacy server card. */
+  poll_v2?: import("./e2ee/binh-chon-v2").BinhChonV2;
+  random_v2?: import("./e2ee/random-v2").RandomRound;
+  random_live_v2?: import("./e2ee/random-live").RandomLiveRound;
   revision?: number;
   id: string;
   context_id: string;
@@ -56,6 +61,9 @@ export type Tin = {
   kind: LoaiTin;
   body: string | null;
   image_url: string | null;
+  /** Dimensions authenticated inside the native MLS image operation. */
+  image_width?: number;
+  image_height?: number;
   card: unknown | null;
   created_at: string;
   cursor: string;
@@ -314,6 +322,7 @@ export function trichTu(tin: Tin, tenNguoi: (id: string | null) => string): Tric
   if (tin.kind === "image") preview = tin.body ? `Ảnh: ${tin.body}` : "Ảnh";
   else if (tin.kind === "sticker") preview = "Sticker";
   else if (tin.kind === "deleted") preview = "Tin nhắn đã bị xoá";
+  else if (tin.random_live_v2) preview = randomLivePreview(tin.random_live_v2);
   else if (tin.kind === "ai_card") {
     // The group AI's answer is the one AI card the server takes as a reply
     // target, and the quote it stores is its own line: draw that line here,

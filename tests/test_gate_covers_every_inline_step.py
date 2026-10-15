@@ -545,10 +545,10 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="7598449b7e31dafc",
         why="",
     ),
-    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings": Covered(
+    "test.yml::crypto::cargo clippy --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="de3cabd55ad98e02",
+        body_sha="02273e97112cd8f4",
         why="",
     ),
     "test.yml::crypto::ffi": Covered(
@@ -563,34 +563,40 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="14890b5d4120d614",
         why="",
     ),
-    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings": Covered(
+    "test.yml::crypto::cargo clippy --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="01c9bd354cac9ab0",
+        body_sha="26f55b748e5d955b",
         why="",
     ),
-    "test.yml::crypto::cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release": Covered(
+    "test.yml::crypto::Drive the C ABI through its extern functions": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="ab4c03cd34b7d32b",
+        body_sha="9ee6fe51c19ccbcb",
+        why="",
+    ),
+    "test.yml::crypto::cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --release": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="632d0c386fb832cb",
         why="",
     ),
     'test.yml::crypto::ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"': Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="3ba0e459ca00d91e",
+        body_sha="2b1b86864a65c67c",
         why="",
     ),
-    "test.yml::crypto::so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
+    "test.yml::crypto::Every Android library exports the ABI and carries a SONAME": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="f05c6c09ea3c028e",
+        body_sha="450b2a9eeb62e0b8",
         why="",
     ),
     "test.yml::crypto::set -o pipefail": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="101ff0a4ff076804",
+        body_sha="bea7d25ad94e2101",
         why="",
     ),
     "test.yml::chat-e2e::present": Covered(

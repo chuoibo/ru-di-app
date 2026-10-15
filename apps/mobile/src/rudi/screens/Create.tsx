@@ -1,23 +1,20 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { KHUNG_VAT, hinhVat } from "../art/vat-ban";
-import { bongGiay, typography, useRudiTheme } from "../theme";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
+import { typography, useRudiTheme } from "../theme";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { luiVeVe } from "../lui-ve";
 import { tabTu, thuTuViec, type ViecTao } from "../tao-moi";
-import { Heading } from "../ui";
-import { VeLop } from "../ui/art/VeLop";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../ui/NativeFontMetrics";
 import { NepDien } from "../ui/NepDien";
 import { PressScale } from "../ui/PressScale";
+import { RudiIcon, type IconName } from "../ui/RudiIcon";
 import { Sheet } from "../ui/Sheet";
 
-/** One line per action; a second line only where two of them could be
- *  confused (a memory goes to the group's wall, a story to friends for a day).
- *  Each is the paper object it makes (ADR-0037 D1, plan S3). This is the
- *  desk's stable order; `tao-moi.ts` moves the one card that fits the tab. */
+/** Stable actions; the current tab moves only its own action to the front. */
 export const ACTIONS: ViecTao[] = [
   { vat: "lich", title: "Tạo cuộc hẹn", href: "/outings/new" },
   { vat: "hoa-don", title: "Chia hóa đơn", href: "/smart-split/moi/review" },
@@ -29,21 +26,39 @@ export const ACTIONS: ViecTao[] = [
   { vat: "bai-viet", title: "Viết bài", detail: "Kể một điều hay với cộng đồng", href: "/community/new" },
 ];
 
-/** Objects lie on the desk a little askew, the same way every time. */
-const NGHIENG = [-3, 2, -2, 3, -1];
+const BIEU_TUONG: Record<ViecTao["vat"], IconName> = {
+  lich: "calendar-outline",
+  "hoa-don": "receipt-outline",
+  "anh-in": "image-outline",
+  polaroid: "camera-outline",
+  "thu-gap": "mail-outline",
+  "bai-viet": "create-outline",
+  sticker: "happy-outline",
+  "phieu-bau": "bar-chart-outline",
+};
+
+/** One owner includes native fallback, so inherited surfaces never subscribe twice. */
+export function CreateSheet() {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <CreateSheetContent /> : <ObserveCreateMetrics />;
+}
+
+function ObserveCreateMetrics() {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><CreateSheetContent /></NativeFontMetricsProvider>;
+}
 
 /**
- * Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route.
- *
- * Hosted in a transparent route that only fades: the kit `Sheet` does the
- * panel's own motion (spring in, drag or Back or scrim to close, then the
- * route goes back once the panel has left). One sheet in the app, one
- * behaviour; the hand-rolled copy this file used to be had a handle that
- * did nothing.
+ * The transparent route keeps the kit Sheet's drag, Back, scrim and close
+ * animation. Font changes update the open surface without replacing it.
  */
-export function CreateSheet() {
+function CreateSheetContent() {
   const router = useRouter();
-  const { colors, dark } = useRudiTheme();
+  const { colors } = useRudiTheme();
+  const labelMetrics = useNativeStandaloneTextMetrics(typography.label);
+  // A decorative cue yields its width when labels grow or metrics are unavailable.
+  const spacious = labelMetrics === null ||
+    (labelMetrics.fontSize ?? typography.label.fontSize) >= typography.label.fontSize * 1.25;
   const { phien } = useRudiSession();
   const [open, setOpen] = useState(true);
   const currentGroup = phien?.contexts?.find((group) => group.id === phien.context_id);
@@ -59,17 +74,17 @@ export function CreateSheet() {
 
   return (
     <View style={styles.man}>
-      <Sheet accessibilityLabel="Tạo mới" onClose={() => setOpen(false)} onClosed={() => luiVeVe(router as never, "/explore")} open={open} testID="create-sheet">
+      <Sheet accessibilityLabel="Tạo mới" onClose={() => setOpen(false)} onClosed={() => luiVeVe(router as never, "/explore")} open={open} showsVerticalScrollIndicator testID="create-sheet">
         <View style={styles.noiDung}>
-          <View style={styles.headingRow}>
-            <View style={styles.headingText}>
-              <Heading size="h2" subtitle={subtitle} title="Mình làm gì tiếp?" />
+          <View style={styles.heading}>
+            <View style={styles.headingRow}>
+              <Text accessibilityRole="header" style={[typography.h2, styles.headingText, { color: colors.ink }]}>Tạo mới</Text>
+              {/* The existing once-per-session moment keeps a small, 48dp skip target. */}
+              <NepDien khoanhKhac="M1" suKien="khay-tao" co={48} />
             </View>
-            {/* M1: Nếp walks onto the desk, once a session. */}
-            <NepDien khoanhKhac="M1" suKien="khay-tao" />
+            <Text style={[typography.note, { color: colors.inkSoft }]}>{subtitle}</Text>
           </View>
-          {/* The desk: the first thing to do lies across it, the rest two by two. */}
-          <View style={styles.ban}>
+          <View style={[styles.ban, { backgroundColor: colors.card, borderColor: colors.line }]}>
             {cacViec.map((action, i) => (
               <PressScale
                 accessibilityHint={action.detail}
@@ -78,13 +93,16 @@ export function CreateSheet() {
                 key={action.title}
                 onPress={() => router.replace(action.href as never)}
                 pressedScale={0.985}
-                style={[styles.vat, i === 0 ? styles.vatDan : styles.vatNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}
+                style={[styles.vat, i > 0 && styles.vatTiep, { borderColor: colors.line }]}
               >
-                <VeLop height={i === 0 ? 72 : 64} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(action.vat)} style={{ transform: [{ rotate: `${NGHIENG[i % NGHIENG.length]}deg` }] }} width={i === 0 ? 72 : 64} />
-                <View style={i === 0 ? styles.chuDan : styles.chuNho}>
-                  <Text style={[typography.title, i === 0 ? null : styles.giua, { color: colors.ink }]}>{action.title}</Text>
-                  {action.detail ? <Text style={[typography.note, i === 0 ? null : styles.giua, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
+                <View style={[styles.icon, { backgroundColor: i === 0 ? colors.accentSoft : colors.ground }]}>
+                  <RudiIcon color={i === 0 ? colors.accent : colors.inkSoft} name={BIEU_TUONG[action.vat]} size={22} />
                 </View>
+                <View style={styles.chu}>
+                  <Text style={[typography.label, { color: colors.ink }]}>{action.title}</Text>
+                  {action.detail ? <Text style={[typography.note, { color: colors.inkSoft }]}>{action.detail}</Text> : null}
+                </View>
+                {!spacious ? <RudiIcon color={colors.inkSoft} name="chevron-forward" size={16} /> : null}
               </PressScale>
             ))}
           </View>
@@ -96,15 +114,13 @@ export function CreateSheet() {
 
 const styles = StyleSheet.create({
   man: { flex: 1 },
-  noiDung: { width: "100%", maxWidth: 560, alignSelf: "center", gap: 18, paddingTop: 2 },
-  headingRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
-  headingText: { flex: 1, gap: 10 },
-  ban: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  vat: { borderWidth: 1, borderRadius: 8, padding: 12 },
-  vatDan: { flexBasis: "100%", flexDirection: "row", alignItems: "center", gap: 14, minHeight: 96 },
-  // Two a row: each takes half the desk less half the gap.
-  vatNho: { flexGrow: 1, flexBasis: "45%", alignItems: "center", gap: 8, minHeight: 132 },
-  chuDan: { flex: 1, gap: 2 },
-  chuNho: { gap: 2, alignSelf: "stretch" },
-  giua: { textAlign: "center" },
+  noiDung: { width: "100%", maxWidth: 560, alignSelf: "center", gap: 12, paddingTop: 2 },
+  heading: { gap: 2 },
+  headingRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headingText: { flex: 1, minWidth: 0 },
+  ban: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
+  vat: { width: "100%", minHeight: 56, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  vatTiep: { borderTopWidth: StyleSheet.hairlineWidth },
+  icon: { width: 36, height: 36, flexShrink: 0, alignItems: "center", justifyContent: "center", borderRadius: 8 },
+  chu: { flex: 1, minWidth: 0, gap: 2 },
 });

@@ -12,13 +12,11 @@
  * does not scroll away under a form.
  */
 import { Ionicons } from "@expo/vector-icons";
-import { Canh } from "../../ui/art/Canh";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { KhungAnh } from "../../ui/KhungAnh";
-import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -43,7 +41,10 @@ import {
 } from "../../ky-niem/ky-niem";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { Washi } from "../../ui/Washi";
-import { Chip, Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
+import { Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
+import { MemoryPhoto } from "../../ui/MemoryPhoto";
+import { PhotoViewer, type ViewerPhoto } from "../../ui/PhotoViewer";
+import { Canh } from "../../ui/art/Canh";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -87,12 +88,18 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const [moBinhLuan, setMoBinhLuan] = useState<string | null>(null);
   const [binhLuan, setBinhLuan] = useState<Record<string, BinhLuan[]>>({});
   const [nhap, setNhap] = useState("");
+  const nhapTheoBai = useRef<Record<string, string>>({});
+  const [loiDocBinhLuan, setLoiDocBinhLuan] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<ViewerPhoto | null>(null);
   const [moCheckIn, setMoCheckIn] = useState(false);
   const [danhMuc, setDanhMuc] = useState<Cho[] | null>(null);
+  const [dangDocDanhMuc, setDangDocDanhMuc] = useState(false);
+  const [loiDanhMuc, setLoiDanhMuc] = useState<string | null>(null);
   const [timCho, setTimCho] = useState("");
   const [choChon, setChoChon] = useState<Cho | null>(null);
   const [cauCheckIn, setCauCheckIn] = useState("");
   const attempts = useRef<Record<string, Attempt>>({});
+  const busy = useRef(false);
   const nhom = phien.contexts?.find((n) => n.id === contextId);
   // A pair's wall is the two of them keeping their evenings, not a group's
   // board: it is named for them and says who sees it.
@@ -129,6 +136,8 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   }, [contextId, me]);
 
   const chay = async (viec: () => Promise<void>, tai?: { id: string; thu: () => void }) => {
+    if (busy.current) return;
+    busy.current = true;
     setBan(true);
     setThongBao(null);
     setLoiKyNiem(null);
@@ -139,6 +148,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       else setThongBao(loiRaChu(error));
     } finally {
       setBan(false);
+      busy.current = false;
     }
   };
 
@@ -154,26 +164,34 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
         return;
       }
       setMoBinhLuan(k.id);
-      setNhap("");
+      setNhap(nhapTheoBai.current[k.id] ?? "");
+      setLoiDocBinhLuan(null);
       if (binhLuan[k.id] === undefined) {
-        const ds = await docBinhLuanCua(contextId, k.id, me);
-        setBinhLuan((b) => ({ ...b, [k.id]: ds }));
+        try {
+          const ds = await docBinhLuanCua(contextId, k.id, me);
+          setBinhLuan((b) => ({ ...b, [k.id]: ds }));
+        } catch (error) { setLoiDocBinhLuan(loiRaChu(error)); }
       }
     }, { id: k.id, thu: () => void docLaiBinhLuan(k) });
 
   const docLaiBinhLuan = (k: KyNiem): Promise<void> =>
     chay(async () => {
-      const ds = await docBinhLuanCua(contextId, k.id, me);
-      setBinhLuan((b) => ({ ...b, [k.id]: ds }));
+      setLoiDocBinhLuan(null);
+      try {
+        const ds = await docBinhLuanCua(contextId, k.id, me);
+        setBinhLuan((b) => ({ ...b, [k.id]: ds }));
+      } catch (error) { setLoiDocBinhLuan(loiRaChu(error)); }
     }, { id: k.id, thu: () => void docLaiBinhLuan(k) });
 
   const guiBinhLuan = (k: KyNiem): Promise<void> =>
     chay(async () => {
       if (nhap.trim() === "") return;
+      Keyboard.dismiss();
       const bl = await guiBinhLuanCho(contextId, k.id, nhap, me, attempts.current);
       setBinhLuan((b) => ({ ...b, [k.id]: [...(b[k.id] === undefined ? [] : b[k.id]), bl] }));
       thayKyNiem({ ...k, commentCount: k.commentCount + 1 });
       setNhap("");
+      delete nhapTheoBai.current[k.id];
     }, { id: k.id, thu: () => void guiBinhLuan(k) });
 
   const taiThem = () =>
@@ -183,20 +201,27 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       setTrang({ pha: "xong", kyNiem: [...trang.kyNiem, ...t.kyNiem], conTro: t.conTro, conNua: t.conNua });
     });
 
-  const moCheckInForm = () =>
-    chay(async () => {
-      setMoCheckIn(true);
-      if (danhMuc === null) {
+  const docDanhMuc = async () => {
+    setDangDocDanhMuc(true);
+    setLoiDanhMuc(null);
+    try {
         // The destination picked on Khám phá; the default is a curated town
         // where nobody in the group is checking in.
         const dm = await docDanhMucCoLui(await docDiemDenDaChon());
         setDanhMuc(dm.places.map((p) => ({ id: p.id, name: p.name })));
-      }
-    });
+    } catch (error) { setLoiDanhMuc(loiRaChu(error)); }
+    finally { setDangDocDanhMuc(false); }
+  };
+  const moCheckInForm = () => {
+    setThongBao(null);
+    setMoCheckIn(true);
+    if (danhMuc === null && !dangDocDanhMuc) void docDanhMuc();
+  };
 
   const dangCheckIn = () =>
     chay(async () => {
       if (choChon === null) return;
+      Keyboard.dismiss();
       const k = await checkInKyNiem(contextId, choChon.id, cauCheckIn, me, attemptFor(attempts.current, `check-in:${choChon.id}:${cauCheckIn.trim()}`));
       setTrang((t) => (t.pha === "xong" ? { ...t, kyNiem: [k, ...t.kyNiem] } : t));
       setMoCheckIn(false);
@@ -217,49 +242,85 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
     .slice(0, 12);
 
   const khayCheckIn = (
-    <Sheet accessibilityLabel="Check-in ở đâu?" onClose={() => setMoCheckIn(false)} open={moCheckIn}>
+    <Sheet accessibilityLabel="Check-in ở đâu?" avoidKeyboard prioritizeFooter showsVerticalScrollIndicator onClose={() => { Keyboard.dismiss(); setMoCheckIn(false); }} open={moCheckIn} footer={
+      choChon !== null ? <View style={[styles.editor, { borderTopColor: colors.line }]}>
+        <Field accessibilityLabel="Ô câu check-in" onChangeText={setCauCheckIn} placeholder="Một câu về nơi này (tuỳ bạn)" value={cauCheckIn} />
+        {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{thongBao}</Text> : null}
+        <RudiButton disabled={ban} icon="checkmark" label={thongBao !== null ? "Thử đăng lại" : "Đăng check-in"} loading={ban} onPress={() => void dangCheckIn()} />
+      </View> : undefined
+    }>
       <View style={styles.form}>
         <Text style={[typography.h2, { color: colors.ink }]}>Check-in ở đâu?</Text>
-        {danhMuc === null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc danh mục…</Text> : null}
+        {dangDocDanhMuc ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc danh mục…</Text> : null}
+        {loiDanhMuc !== null ? <CauTaiCho cau={loiDanhMuc} co="nho" hanhDong={{ label: "Tải lại danh mục", onPress: () => void docDanhMuc() }} /> : null}
         {/* A destination holds a hundred places since the catalogue became
             real (M9), so this stopped being a chip row and became a search:
             a hundred chips is a haystack, not a choice. The box narrows;
             what stays is the first dozen matches. */}
-        {danhMuc === null ? null : (
+        {choChon !== null ? <View style={styles.form}>
+          <Text style={[typography.label, { color: colors.ink }]}>{choChon.name}</Text>
+          <RudiButton compact full={false} label="Chọn chỗ khác" onPress={() => setChoChon(null)} variant="ghost" />
+        </View> : danhMuc === null ? null : (
+          <>
           <SearchField
             accessibilityLabel="Ô tìm chỗ check-in"
             onChangeText={setTimCho}
             placeholder="Tìm chỗ bạn đang ở"
             value={timCho}
           />
-        )}
-        <Inline gap={6} wrap>
+        <View style={styles.form}>
           {choHienRa.map((cho) => (
-            <Chip accessibilityLabel={`Chọn ${cho.name}`} key={cho.id} label={cho.name} onPress={() => setChoChon(cho)} selected={choChon !== null && choChon.id === cho.id} />
+            <Pressable accessibilityLabel={`Chọn ${cho.name}`} accessibilityRole="button" key={cho.id} onPress={() => { Keyboard.dismiss(); setChoChon(cho); }} style={({ pressed }) => [styles.cho, { borderBottomColor: colors.line }, pressed && styles.pressed]}>
+              <Ionicons color={colors.inkSoft} name="location-outline" size={20} />
+              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cho.name}</Text>
+              <Ionicons color={colors.inkSoft} name="chevron-forward" size={18} />
+            </Pressable>
           ))}
-        </Inline>
+        </View>
         {danhMuc !== null && choHienRa.length === 0 ? (
           <Text style={[typography.caption, { color: colors.inkFaint }]}>
             Không có chỗ nào khớp «{timCho}». Thử tên ngắn hơn nhé.
           </Text>
         ) : null}
-        <Field accessibilityLabel="Ô câu check-in" label="Một câu (không bắt buộc)" onChangeText={setCauCheckIn} placeholder="Ví dụ: Ốc ở đây ngon" value={cauCheckIn} />
-        {thongBao !== null && moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-        <RudiButton disabled={ban || choChon === null} icon="checkmark" label="Đăng check-in" lyDo={!ban && choChon === null ? "Chọn một chỗ trước." : undefined} loading={ban} onPress={() => void dangCheckIn()} />
-        <RudiButton label="Thôi" onPress={() => setMoCheckIn(false)} variant="ghost" />
+        </>)}
       </View>
     </Sheet>
   );
 
+  const baiBinhLuan = trang.pha === "xong" ? trang.kyNiem.find((k) => k.id === moBinhLuan) : undefined;
+  const khayBinhLuan = baiBinhLuan ? <Sheet accessibilityLabel="Bình luận khoảnh khắc" avoidKeyboard prioritizeFooter showsVerticalScrollIndicator open={moBinhLuan !== null} onClose={() => { Keyboard.dismiss(); setMoBinhLuan(null); }} footer={
+    <View style={[styles.editor, { borderTopColor: colors.line }]}>
+      <Field accessibilityLabel="Ô viết bình luận" onChangeText={(text) => { setNhap(text); nhapTheoBai.current[baiBinhLuan.id] = text; }} placeholder="Viết bình luận…" value={nhap} />
+      {loiKyNiem?.id === baiBinhLuan.id ? <CauTaiCho cau={loiKyNiem.cau} co="nho" hanhDong={{ label: "Thử lại", onPress: loiKyNiem.thu }} /> : null}
+      {/* ADR-0038: reveal send only when there are words or a pending request. */}
+      {nhap.trim() !== "" || ban ? (
+        <RudiButton disabled={ban} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(baiBinhLuan)} />
+      ) : null}
+    </View>
+  }>
+    <View style={styles.form}>
+      <Text style={[typography.h2, { color: colors.ink }]}>Bình luận</Text>
+      <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>{cauKyNiem(baiBinhLuan)}</Text>
+      {loiDocBinhLuan !== null ? <CauTaiCho cau={loiDocBinhLuan} co="nho" hanhDong={{ label: "Đọc lại bình luận", onPress: () => void docLaiBinhLuan(baiBinhLuan) }} /> : binhLuan[baiBinhLuan.id] === undefined ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc bình luận…</Text> : null}
+      {binhLuan[baiBinhLuan.id]?.length === 0 ? <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có bình luận. Viết câu đầu tiên.</Text> : null}
+      {(binhLuan[baiBinhLuan.id] ?? []).map((bl) => <View key={bl.id} style={styles.form}>
+        <Text style={[typography.label, { color: colors.ink }]}>{bl.tenTacGia}</Text>
+        <Text style={[typography.body, { color: colors.ink }]}>{bl.noiDung}</Text>
+      </View>)}
+    </View>
+  </Sheet> : null;
+
   return (
-    <RudiScreen cot="doc" overlay={khayCheckIn} testID="group-wall-screen">
-      <TopBar subtitle={laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"} title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
+    <RudiScreen material="quiet" cot="doc" overlay={<>{khayCheckIn}{khayBinhLuan}</>} testID="group-wall-screen">
+      {viewer ? <PhotoViewer photos={[viewer]} initialIndex={0} onClose={() => setViewer(null)} /> : null}
+      <TopBar title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
       <Text style={[typography.h1, { color: colors.ink }]}>{tenNhom}</Text>
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>{laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"}</Text>
       {thongBao !== null && !moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-      <Inline gap={8} wrap>
+      {trang.pha !== "xong" || trang.kyNiem.length > 0 ? <Inline gap={8} wrap>
         <RudiButton compact full={false} icon="camera-outline" label="Thả khoảnh khắc" onPress={() => router.push(`/moments/new?ctx=${contextId}` as never)} />
         <RudiButton compact disabled={ban} full={false} icon="location-outline" label="Check-in" onPress={() => void moCheckInForm()} variant="outline" />
-      </Inline>
+      </Inline> : null}
 
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
@@ -269,13 +330,12 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void chay(docTrangDau)} title="Chưa đọc được tường" /> : null}
       {trang.pha === "xong" && trang.kyNiem.length === 0 ? (
-        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm: một tấm ảnh, hay một check-in ở chỗ cả hội đang ngồi. «Tôi đã tới» ở kèo chỉ báo cho hội, không tự lên tường." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ky-niem" width={168} />} title="Chưa có kỷ niệm nào" />
+        <EmptyState body="Một tấm ảnh hay một chỗ cả hội đang ngồi: giữ khoảnh khắc đầu tiên ở đây." kind="first-use" layout="inline" illustration={<Canh id="chua-co-anh" width={112} />} title="Chưa có kỷ niệm nào" action={{ label: "Thả khoảnh khắc", onPress: () => router.push(`/moments/new?ctx=${contextId}` as never) }} secondary={{ label: "Check-in", onPress: moCheckInForm }} />
       ) : null}
       {trang.pha === "xong" ? (
         <View>
           {trang.kyNiem.map((k) => {
             const anh = nguonAnh(k.imageUrl, me, contextId);
-            const dsBl = binhLuan[k.id];
             const tacGia = tenCua(roster, k.authorId);
             const dangMoBl = moBinhLuan === k.id;
             return (
@@ -291,10 +351,10 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                   // A print pinned to the wall: a slight lean of its own and a
                   // strip of washi over the top edge (ADR-0037 D1, plan S6).
                   <View style={styles.khungDan}>
-                  <KhungAnh tilt={nghiengAnh(k.id)} xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
-                    <Image
-                      accessibilityLabel={cauKyNiem(k)}
-                      contentFit="cover"
+                  <KhungAnh tilt={nghiengAnh(k.id)}>
+                    <Pressable accessibilityRole="button" accessibilityLabel={`Mở ảnh: ${cauKyNiem(k)}`} onPress={() => setViewer({ id: k.id, source: anh, caption: k.caption ?? "Khoảnh khắc của nhóm" })}>
+                    <MemoryPhoto
+                      label={cauKyNiem(k)}
                       // The frame takes the photo's shape once it is known: a
                       // portrait memory was cut to a 4:3 strip (QA 23/09).
                       onLoad={(e) => {
@@ -302,8 +362,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                         setTiLe((cu) => (cu[k.id] === r ? cu : { ...cu, [k.id]: r }));
                       }}
                       source={anh}
-                      style={[styles.anh, { aspectRatio: tiLe[k.id] ?? 4 / 3, backgroundColor: colors.line }]}
+                      ratio={tiLe[k.id] ?? 4 / 3}
                     />
+                    </Pressable>
                   </KhungAnh>
                   <Washi style={styles.bangDinh} tilt={nghiengAnh(k.id) > 0 ? -2 : 2} />
                   </View>
@@ -342,26 +403,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                     <Ionicons color={dangMoBl ? colors.accent : colors.inkSoft} name={dangMoBl ? "chatbubble" : "chatbubble-outline"} size={21} />
                     <Text style={[typography.label, { color: dangMoBl ? colors.accent : colors.inkSoft }]}>{dangMoBl ? "Ẩn bình luận" : "Bình luận"}</Text>
                   </Pressable>
-                  <Text style={[typography.caption, styles.flex, { color: colors.inkFaint, textAlign: "right" }]}>{cauTuongTac(k)}</Text>
                 </View>
-                {loiKyNiem?.id === k.id ? <CauTaiCho cau={loiKyNiem.cau} co="nho" hanhDong={{ label: "Thử lại", onPress: loiKyNiem.thu }} /> : null}
-                {dangMoBl ? (
-                  <View style={[styles.khungBl, { borderLeftColor: colors.line }]}>
-                    {dsBl === undefined && loiKyNiem?.id !== k.id ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bình luận…</Text> : null}
-                    {dsBl !== undefined && dsBl.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa có bình luận. Viết câu đầu tiên.</Text> : null}
-                    {(dsBl === undefined ? [] : dsBl).map((bl) => (
-                      <Text key={bl.id} style={[typography.body, { color: colors.ink }]}>
-                        <Text style={typography.label}>{bl.tenTacGia}: </Text>
-                        {bl.noiDung}
-                      </Text>
-                    ))}
-                    <Field accessibilityLabel="Ô viết bình luận" onChangeText={setNhap} placeholder="Viết bình luận…" value={nhap} />
-                    {/* ADR-0038 §2.2: the send appears with something to send. */}
-                    {nhap.trim() !== "" || ban ? (
-                      <RudiButton compact disabled={ban} full={false} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(k)} variant="soft" />
-                    ) : null}
-                  </View>
-                ) : null}
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauTuongTac(k)}</Text>
+                {loiKyNiem?.id === k.id && !dangMoBl ? <CauTaiCho cau={loiKyNiem.cau} co="nho" hanhDong={{ label: "Thử lại", onPress: loiKyNiem.thu }} /> : null}
               </View>
             );
           })}
@@ -380,10 +424,10 @@ const styles = StyleSheet.create({
   form: { gap: 10, paddingBottom: 4 },
   bai: { gap: 10, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   dong: { flexDirection: "row", alignItems: "center", gap: 10 },
-  anh: { width: "100%" },
   checkin: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  hanhDong: { flexDirection: "row", alignItems: "center", gap: 4 },
-  nutHanhDong: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 12 },
+  hanhDong: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
+  nutHanhDong: { minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingRight: 10 },
+  cho: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
+  editor: { gap: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   pressed: { opacity: 0.7 },
-  khungBl: { gap: 8, paddingLeft: 12, borderLeftWidth: 2 },
 });

@@ -22,6 +22,8 @@ export type ChatCapabilities = {
      * under the `@Rủ Đi` message. Absent on an older server: unavailable.
      */
     hoi?: { available: boolean; reason: string | null };
+    /** Catalogue choices for a random game; absent on an older server: unavailable. */
+    random?: { available: boolean; reason: string | null };
     share_scope: "invocation_only" | "caller_attached";
     /**
      * The server takes `trigger_message_id` and answers inside the thread, as a
@@ -59,9 +61,9 @@ export function laCapDoi(capabilities: ChatCapabilities | null): boolean {
 /**
  * What a person can ask the room's AI for, on one queue (ADR-0036 §2.9).
  * Every room -- a group, a friends' two-person chat, a couple -- has all
- * three; the server's capabilities say which can run now.
+ * commands; the server's capabilities say which can run now.
  */
-export type LenhAi = "plan" | "chia_bill" | "hoi";
+export type LenhAi = "plan" | "chia_bill" | "hoi" | "random";
 
 /**
  * Whether the server says this command can run now. Fails closed. `hoi`
@@ -70,6 +72,7 @@ export type LenhAi = "plan" | "chia_bill" | "hoi";
  */
 export function lenhSanSang(capabilities: ChatCapabilities | null, lenh: LenhAi): boolean {
   if (lenh === "hoi") return capabilities?.ai.hoi?.available === true && capabilities.ai.mention === true;
+  if (lenh === "random") return capabilities?.ai.random?.available === true && capabilities.ai.mention === true;
   return (lenh === "plan" ? capabilities?.ai.plan : capabilities?.ai.chia_bill)?.available === true;
 }
 
@@ -132,6 +135,7 @@ export const LOI_GOI_AI: Record<string, string> = {
   invocation_rate_limited: "Bạn hỏi hơi nhanh. Chờ một chút rồi nhờ tiếp nhé.",
   invocation_not_retryable: "Lời nhờ này hết hạn chia sẻ rồi. Bạn viết lại một lời nhờ mới nhé.",
   provider_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
+  random_source_unavailable: "Nguồn tìm địa điểm chưa sẵn sàng. Bạn có thể tự thêm lựa chọn để chơi.",
   chat_ai_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
   group_plan_only: "Chỗ này chưa nhờ AI phác kèo được.",
   invalid_invocation: "Lời nhờ đang trống hoặc dài quá. Bạn viết gọn lại rồi gửi nhé.",
@@ -197,6 +201,14 @@ export const CAU_CHO_TRA_LOI: Record<NguoiXem, string> = {
 /** The words on a pending or failed invocation row, per command. */
 export function chuHangLoiGoi(request: AiInvocation, nguoiXem: NguoiXem = "nguoi_hoi"): { tieuDe: string; cau: string } {
   const chia = request.command === "chia_bill";
+  if (request.command === "random") {
+    return {
+      tieuDe: request.status === "failed" ? "Chưa tìm được lựa chọn" : request.status === "queued" ? "Lời nhờ đang chờ" : "Đang tìm lựa chọn…",
+      cau: request.status === "failed"
+        ? (request.code ? LOI_KET_QUA_AI[request.code] : undefined) ?? "Lời nhờ vẫn được giữ. Bạn có thể thử lại hoặc tự thêm lựa chọn để chơi."
+        : "Các lựa chọn sẽ hiện dưới lời nhờ của bạn để bạn xem trước khi chơi.",
+    };
+  }
   // An answer in the thread says what it is reading, with the count the
   // server confirmed (design 03 §5: «Rủ Đi AI đang đọc {n} tin…»).
   if (request.trigger_message_id && (request.status === "queued" || request.status === "running")) {

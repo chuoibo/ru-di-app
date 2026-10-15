@@ -22,7 +22,9 @@
  * every line of text, the last one being the control's own rule.
  */
 import { useState, type ReactNode, type Ref } from "react";
-import { Platform, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, StyleSheet, View, useWindowDimensions, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
+
+import { Text, TextInput, useNativeTextInputMetrics } from "./NativeFontMetrics";
 
 import { typography, useRudiTheme } from "../theme";
 import { KHONG_VIEN_WEB } from "./khong-vien-web";
@@ -41,6 +43,8 @@ export type ONhapMucProps = TextInputProps & {
   co?: "vua" | "lon";
   style?: StyleProp<TextStyle>;
   khungStyle?: StyleProp<ViewStyle>;
+  /** A caller with a current native snapshot can keep field geometry in sync. */
+  fontScaleOverride?: number;
 };
 
 /**
@@ -72,17 +76,28 @@ export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }:
   };
 }
 
-export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
+export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, fontScaleOverride, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();
+  const { fontScale: windowFontScale } = useWindowDimensions();
+  const fontScale = fontScaleOverride !== undefined && Number.isFinite(fontScaleOverride) && fontScaleOverride > 0 ? fontScaleOverride : windowFontScale;
   const [goDuoc, setGoDuoc] = useState("");
   const [dangNhap, setDangNhap] = useState(false);
   const rong = (inputProps.value ?? goDuoc) === "";
   const coLoi = typeof error === "string" && error !== "";
   const chu = co === "lon" ? typography.h2 : typography.body;
-  const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao: chu.lineHeight });
+  // Native text scales its line height; the paper rules and writing area must
+  // use the same geometry, including an explicit per-field scaling limit.
+  const scale = inputProps.allowFontScaling === false ? 1 : Math.min(fontScale, (inputProps.maxFontSizeMultiplier ?? 0) >= 1 ? inputProps.maxFontSizeMultiplier! : Infinity);
+  // Resolve the final caller style from the same snapshot as the input. Native
+  // spans round physical pixels upward; the ruled area reserves that pitch.
+  const nativeMetrics = useNativeTextInputMetrics([chu, { color: colors.ink }, KHONG_VIEN_WEB, style], inputProps);
+  const dongCao = nativeMetrics === null ? chu.lineHeight * scale : nativeMetrics.linePitch;
+  const kieu = kieuGach({ day: dangNhap || coLoi ? 2 : 1, multiline, numberOfLines, dongCao });
   const mauGach = coLoi ? colors.warn : dangNhap ? colors.accent : colors.lineStrong;
   const placeholderNha = !multiline && placeholder !== undefined;
-  const soDongKe = multiline ? Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3))) - 1 : 0;
+  // Android's multiline baseline does not follow the scaled paper-rule pitch.
+  // Large text keeps only the control rule so decoration cannot cross glyphs.
+  const soDongKe = multiline && scale < 1.25 ? Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3))) - 1 : 0;
   return (
     <View style={[styles.khoi, khungStyle]}>
       {label ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{label}</Text> : null}
@@ -94,7 +109,7 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
             // height but the last, which is the control's own rule.
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={StyleSheet.absoluteFill}>
               {Array.from({ length: soDongKe }, (_, i) => (
-                <View key={i} style={[styles.dongKe, { top: (i + 1) * chu.lineHeight - 1, backgroundColor: colors.line }]} />
+                <View key={i} style={[styles.dongKe, { top: (i + 1) * dongCao - 1, backgroundColor: colors.line }]} />
               ))}
             </View>
           ) : null}
@@ -123,7 +138,9 @@ export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "
           />
           {placeholderNha && rong ? (
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.goiY}>
-              <Text numberOfLines={1} style={[chu, { color: colors.inkFaint }]}>
+              <Text numberOfLines={1}
+                {...(nativeMetrics === null ? {} : { allowFontScaling: false })}
+                style={[nativeMetrics === null ? chu : nativeMetrics.placeholderStyle, { color: colors.inkFaint }]}>
                 {placeholder}
               </Text>
             </View>

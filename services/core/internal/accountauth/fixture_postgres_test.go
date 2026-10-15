@@ -86,8 +86,17 @@ func TestProvisionSyntheticAccountWorld(t *testing.T) {
 		if err != nil || laps < 1 || laps > 9 {
 			laps = 1
 		}
+		// Repeated device checks use untouched accounts without overwriting a
+		// previous world's credentials or consuming its first-login evidence.
+		firstLap := 1
+		if raw := os.Getenv("RUDI_TEST_ACCOUNT_FIRST_LAP"); raw != "" {
+			firstLap, err = strconv.Atoi(raw)
+			if err != nil || firstLap < 1 || firstLap+laps-1 > 9 {
+				t.Fatal("native fixture lap range must fit 1..9")
+			}
+		}
 		slugs = nil
-		for lap := 1; lap <= laps; lap++ {
+		for lap := firstLap; lap < firstLap+laps; lap++ {
 			for _, who := range "abcdefg" {
 				slugs = append(slugs, "n"+strconv.Itoa(lap)+string(who))
 			}

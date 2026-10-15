@@ -18,7 +18,7 @@
  *
  *   1. Every pattern either gate passes to `node --test` resolves to at least
  *      one real test file -- which is exactly what `tests/` failed.
- *   2. The union of *both* gates covers every `*.test.mjs` under `tests/`.
+ *   2. The union of *both* gates covers every MJS/CJS test under `tests/`.
  *      Adding a test file that no gate reaches is the silent version of the
  *      same failure: the suite stays green while a file nobody runs rots.
  *
@@ -48,13 +48,15 @@ import { fileURLToPath } from "node:url";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const manifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 
-/** Every `*.test.mjs` under `tests/`, as paths relative to the package root. */
+const TEST_FILE = /\.test\.(?:mjs|cjs)$/;
+
+/** Every supported test under `tests/`, relative to the package root. */
 function everyTestFile(dir = join(ROOT, "tests")) {
   const found = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) found.push(...everyTestFile(full));
-    else if (entry.name.endsWith(".test.mjs")) found.push(relative(ROOT, full));
+    else if (TEST_FILE.test(entry.name)) found.push(relative(ROOT, full));
   }
   return found.sort();
 }
@@ -129,7 +131,7 @@ test("mỗi đối số hai lệnh test đưa cho node --test đều là file te
         );
       }
       assert.ok(stat.isFile(), `"${gate}" dua thu muc ${hit} cho node --test, khong phai file`);
-      assert.ok(hit.endsWith(".test.mjs"), `${hit} khong phai file test`);
+      assert.ok(TEST_FILE.test(hit), `${hit} khong phai file test`);
     }
   }
 });

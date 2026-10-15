@@ -58,11 +58,13 @@ export function RouteLine({
   const routeMask = `route-${useId().replace(/:/g, "")}`;
   const n = Math.min(5, Math.max(2, stops));
   const w = width, h = height;
-  // Path grammar lives in `duong-svg.ts`, where node can parse it the way the Java side does.
-  const { d, diem: point } = duongCongS(w, h, direction);
   const withGlyphs = !!glyphs && glyphs.length >= n;
-  const r = withGlyphs ? 16 : Math.max(5, Math.min(8, w / 44));
-  const rActive = r + (withGlyphs ? 5 : 2);
+  const nominalRadius = withGlyphs ? 16 : Math.max(5, Math.min(8, w / 44));
+  const rActive = Math.min(nominalRadius + (withGlyphs ? 5 : 2), Math.max(1, (Math.min(w, h) - 6) / 2));
+  const r = Math.min(nominalRadius, Math.max(1, rActive - 2));
+  const padding = rActive + 2;
+  // Keep the rings and their stroke inside even a compact ticket slot.
+  const { d, diem: point } = duongCongS(Math.max(1, w - 2 * padding), Math.max(1, h - 2 * padding), direction);
   const active = activeStop === undefined ? n - 1 : Math.min(n - 1, Math.max(0, activeStop));
   const fillActive = activeColor ?? color;
   const inkActive = activeInk ?? color;
@@ -72,10 +74,10 @@ export function RouteLine({
       accessibilityRole={accessibilityLabel ? "image" : undefined}
       style={{ width: w, height: h, opacity }}
     >
-      <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={StyleSheet.absoluteFill}>
+      <Svg width={w} height={h} viewBox={`${-padding} ${-padding} ${w} ${h}`} style={StyleSheet.absoluteFill}>
         <Defs>
-          <Mask id={routeMask} x={0} y={0} width={w} height={h} maskUnits="userSpaceOnUse">
-            <Rect width={w} height={h} fill="white" />
+          <Mask id={routeMask} x={-padding} y={-padding} width={w} height={h} maskUnits="userSpaceOnUse">
+            <Rect x={-padding} y={-padding} width={w} height={h} fill="white" />
             {Array.from({ length: n }, (_, i) => {
               const q = point(i / (n - 1));
               return <Circle key={i} cx={q.x} cy={q.y} r={i === active ? rActive : r} fill="black" />;
@@ -103,9 +105,9 @@ export function RouteLine({
         ? Array.from({ length: n }, (_, i) => {
             const q = point(i / (n - 1));
             const here = i === active;
-            const size = here ? 20 : 15;
+            const size = Math.min(here ? 20 : 15, (here ? rActive : r) * 1.2);
             return (
-              <View key={i} pointerEvents="none" style={[styles.glyph, { left: q.x - size, top: q.y - size, width: size * 2, height: size * 2 }]}>
+              <View key={i} pointerEvents="none" style={[styles.glyph, { left: q.x + padding - size, top: q.y + padding - size, width: size * 2, height: size * 2 }]}>
                 <Ionicons color={here ? inkActive : color} name={glyphs[i]} size={size} />
               </View>
             );

@@ -11,7 +11,8 @@
  * a keyboard use). The dial is a control: it never animates by itself.
  */
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 import Svg, { Circle, Line } from "react-native-svg";
@@ -43,6 +44,12 @@ export function BanXoay({
 }) {
   const { colors } = useRudiTheme();
   const motion = useMotion();
+  const { fontScale } = useWindowDimensions();
+  // The small dial's centre is only 50dp across; HH:mm needs its own line.
+  const timeBelow = co < 180 || fontScale >= 1.3;
+  // In the compact side-by-side sheet the keyboard can hide the dial's foot.
+  // A column at large text keeps its value next to the field below instead.
+  const timeAbove = co < 180 && fontScale < 1.8;
   const [nac, setNac] = useState(() => nacGio(phut ?? 18 * 60));
   const [go, setGo] = useState(false);
   const [chuGo, setChuGo] = useState("");
@@ -80,6 +87,7 @@ export function BanXoay({
   return (
     <View style={styles.khoi} testID={testID}>
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhan}</Text>
+      {timeAbove ? <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text> : null}
       <GestureDetector gesture={keo}>
         <View
           accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
@@ -111,10 +119,13 @@ export function BanXoay({
             }}
             style={[styles.giua, { left: r - r * 0.36, top: r - r * 0.36, width: r * 0.72, height: r * 0.72, borderRadius: r * 0.36 }]}
           >
-            <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text>
+            {timeBelow ? <Ionicons name="pencil-outline" size={24} color={colors.ink} /> : <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text>}
           </Pressable>
         </View>
       </GestureDetector>
+      {/* Large numerals have their own line instead of being clipped by the
+          fixed centre of the dial. The selected time keeps the user's scale. */}
+      {timeBelow && !timeAbove ? <Text style={[styles.gio, { color: coGio ? colors.ink : colors.inkFaint }]}>{coGio ? gioTuNac(nac) : "--:--"}</Text> : null}
       {go ? (
         <ONhapMuc
           accessibilityLabel={oLabel ?? nhan}

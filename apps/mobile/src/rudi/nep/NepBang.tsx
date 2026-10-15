@@ -162,6 +162,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           disabled={!nhap.trim() || buc.dangCho || !duocHoi}
           full={false}
           label="Vẽ"
+          lyDo={buc.dangCho ? "Nếp đang vẽ. Chờ lượt này xong trước." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
           loading={buc.dangCho}
           onPress={() => {
             const moTa = nhap.trim();
@@ -177,7 +178,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           disabled={!nhap.trim() || phien.dangHoi || !duocHoi}
           full={false}
           label="Gửi"
-          lyDo={!phien.dangHoi && duocHoi && !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
+          lyDo={phien.dangHoi ? "Nếp đang trả lời. Chờ một chút nhé." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
           loading={phien.dangHoi}
           onPress={() => void guiCau()}
           tone="ai"

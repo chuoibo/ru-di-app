@@ -61,7 +61,9 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   const [comments, setComments] = useState<CommentState>({ phase: "loading" });
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
-  const [busy, setBusy] = useState(false);
+  const working = useRef(false);
+  const [busy, setBusyState] = useState(false);
+  const setBusy = (value: boolean) => { working.current = value; setBusyState(value); };
   // Said where the press was (QA UI-159): the post's own actions under the
   // post, a comment's under the composer, never one line at the page's foot.
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +159,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   if (!phienDaDoc) return null;
 
   const likePost = async () => {
-    if (post.phase !== "ready" || busy) return;
+    if (post.phase !== "ready" || working.current) return;
     setBusy(true); setLoiBai(null); setBaoBai(null);
     try {
       const result = await thichBaiTuong(postId, actor, !post.post.liked);
@@ -167,7 +169,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   };
 
   const likeComment = async (item: BinhLuanTuong) => {
-    if (busy) return;
+    if (working.current) return;
     setBusy(true); setError(null);
     try { await thichBinhLuan(item.id, actor, !item.liked); await loadComments(true); }
     catch (cause) { setError(loiRaChu(cause)); }
@@ -175,7 +177,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   };
 
   const sendComment = async () => {
-    if (post.phase !== "ready" || !post.post.can_comment || !draft.trim() || busy) return;
+    if (post.phase !== "ready" || !post.post.can_comment || !draft.trim() || working.current) return;
     setBusy(true); setError(null);
     try {
       const sent = await guiTraLoi(postId, replyTo?.id ?? null, draft, actor, attemptFor(attempts.current, `comment:${postId}:${draft.trim()}:${replyTo?.id ?? "root"}`));
@@ -187,7 +189,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   };
 
   const loadMore = async () => {
-    if (comments.phase !== "ready" || !comments.more || !comments.next || busy) return;
+    if (comments.phase !== "ready" || !comments.more || !comments.next || working.current) return;
     const read = commentRead.current;
     setBusy(true);
     try {
@@ -205,7 +207,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   };
 
   const repost = async (audience: PostAudience) => {
-    if (busy) return;
+    if (working.current) return;
     setBusy(true); setLoiBai(null); setBaoBai(null);
     try {
       await dangLaiBai(postId, audience, actor, attemptFor(attempts.current, `repost:${postId}:${audience}`));
@@ -216,7 +218,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   };
 
   const xoaBl = async (item: BinhLuanTuong) => {
-    if (busy) return;
+    if (working.current) return;
     setBusy(true); setLoiXoaBl(null);
     try {
       await xoaBinhLuanBai(postId, item.id, actor, attemptFor(attempts.current, `xoa-bl:${item.id}`));
@@ -272,7 +274,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
         </Pressable>
       ) : null}
       <View style={styles.composeRow}>
-        <View style={{ flex: 1 }}><ONhapMuc accessibilityLabel="Viết bình luận" onChangeText={setDraft} placeholder={replyTo ? "Viết lời đáp…" : "Viết điều bạn muốn nói…"} value={draft} /></View>
+        <View style={{ flex: 1 }}><ONhapMuc accessibilityLabel="Viết bình luận" editable={!busy} onChangeText={setDraft} placeholder={replyTo ? "Viết lời đáp…" : "Viết điều bạn muốn nói…"} value={draft} /></View>
         <IconButton accessibilityLabel="Gửi bình luận" disabled={busy || !draft.trim()} icon="arrow-up" onPress={() => void sendComment()} solid />
       </View>
     </View>
@@ -303,7 +305,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   );
 
   return (
-    <RudiScreen cot="doc" scroll={false} testID="bai-chi-tiet-screen">
+    <RudiScreen material="quiet" cot="doc" scroll={false} testID="bai-chi-tiet-screen">
       <TopBar title="Trang viết" />
       <FlatList
         contentContainerStyle={{ gap: space.lg, paddingBottom: space.xl }}

@@ -22,13 +22,14 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 
 import { ACTIONS } from "../screens/Create";
 import { tabTu, thuTuViec } from "../tao-moi";
 import { typography, useRudiTheme } from "../theme";
 import { PressScale } from "./PressScale";
+import { Text } from "./NativeFontMetrics";
 import { useMotion } from "./useMotion";
 
 const DAU = 56;
@@ -102,10 +103,11 @@ const styles = StyleSheet.create({
   // Laid out like a tab column (centred, 8 dp top padding) with the stamp
   // counting as a 24 dp icon, so «Tạo» sits on the same line as the other
   // labels; the rest of the stamp stands above the strip (`noiLen`).
-  cot: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
+  // Explicitly clear the prior 96dp rail height when the same button returns to the strip.
+  cot: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%", minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   // No `flex` on the rail (react-native-web turns `flex: 0` into a zero basis
   // that outranks `height`; see RudiTabBar).
-  cotRail: { height: 96, alignItems: "center", justifyContent: "center", gap: 2 },
+  cotRail: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", height: 96, alignItems: "center", justifyContent: "center", gap: 2 },
   oDau: { width: DAU, height: DAU, alignItems: "center", justifyContent: "center" },
   // Out of the strip's top edge by all but an icon's height: the stamp stands
   // on the page above, its foot where the other columns draw their icon.

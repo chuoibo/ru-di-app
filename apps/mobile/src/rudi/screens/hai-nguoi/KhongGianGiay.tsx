@@ -1,8 +1,12 @@
 import { useRouter } from "expo-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Easing, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { cancelAnimation, useSharedValue, withTiming } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ApiError } from "../../../api";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
@@ -20,6 +24,7 @@ import { ErrorState } from "../../ui/ErrorState";
 import { NepDien } from "../../ui/NepDien";
 import { NepTrongTrang } from "../../ui/NepRoi";
 import { Sheet } from "../../ui/Sheet";
+import { PressScale } from "../../ui/PressScale";
 import { SoBia } from "../../ui/SoBia";
 import { StampButton } from "../../ui/StampButton";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -56,6 +61,9 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { contextId: string; ruNgay?: boolean; choGoiY?: string }) {
   const router = useRouter();
   const { colors, space } = useRudiTheme();
+  const { width, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const rong = width >= 600;
   const motion = useMotion();
   const { phien } = useRudiSession();
   const so = useSoDoi();
@@ -142,7 +150,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // khi làm — luật của chính bản dựng này, và `DongSo` đã có khuôn ấy.
   const [viec, setViec] = useState<null | "bo" | "rut" | "nghi_tuan" | "huy">(null);
 
-  const dong = () => setMo(null);
+  const sheetParents = useRef<(typeof mo)[]>([]);
+  const openChild = (child: typeof mo) => { sheetParents.current.push(mo); setMo(child); };
+  const dong = () => setMo(sheetParents.current.pop() ?? null);
 
   // The notebook opening while this screen is up (both agreed just now): the
   // one time the M6 moment plays. A notebook that was already open when the
@@ -160,7 +170,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     if (lapSoTruoc.current === false && so.lapSo) {
       setVuaMoSo(true);
       setMo((m) => (m === "lap-so" ? null : m));
-      moBia.value = withDelay(120, withTiming(1, { duration: motion.ms("shared") * 2, easing: Easing.bezier(0.3, 0, 0.2, 1), reduceMotion: motion.reanimated }));
+      moBia.value = withTiming(1, motion.timing("shared"));
     }
     lapSoTruoc.current = so.lapSo;
   }, [so.daNap, so.lapSo, moBia, motion]);
@@ -173,11 +183,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // cover swings open, Nếp pulls the tab and jumps, the seal lands. Once, at
   // the step that opens the notebook, in whichever body comes next (QA UI-127:
   // a pair not yet «Một đôi» never reached the body that drew it).
+  useEffect(() => () => cancelAnimation(moBia), [moBia]);
   const tenToiBia = phien?.profile?.display_name?.trim() || "Bạn";
   const khoanhKhacM6 = vuaMoSo ? (
-    <View style={styles.hangCanh} testID="giay-m6">
-      <SoBia mo={moBia} rong={140} ten={[tenToiBia, so.tenNguoiKia || "Người ấy"]} trang={<DauLon co="nho" dong nhan="Sổ đã mở" tone="accent" tre={380} />} />
-      <NepDien khoanhKhac="M6" suKien={`so-mo:${so.capId}`} />
+    <View style={styles.canhMo} testID="giay-m6">
+      <SoBia mo={moBia} rong={140} ten={[tenToiBia, so.tenNguoiKia || "Người ấy"]} trang={<DauLon co="nho" dong nhan={"Sổ đã\nmở"} tone="accent" tre={motion.ms("standard")} />} />
+      <NepDien co={rong ? 112 : 80} khoanhKhac="M6" suKien={`so-mo:${so.capId}`} />
     </View>
   ) : null;
   const tenToi = phien?.profile?.display_name?.trim() || "Bạn";
@@ -187,19 +198,23 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // close must carry. `null` until it lands, and the sheet says «đang đếm»
   // rather than showing zeros somebody could agree to.
   const [xemTruoc, setXemTruoc] = useState<Awaited<ReturnType<typeof so.xemTruocDongSo>> | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewRetry, setPreviewRetry] = useState(0);
   useEffect(() => {
+    setPreviewError(null);
     if (mo !== "dong-so") {
       setXemTruoc(null);
       return;
     }
     let conDung = true;
+    setXemTruoc(null);
     void so.xemTruocDongSo().then((ket) => {
       if (conDung) setXemTruoc(ket);
-    });
+    }).catch((error) => { if (conDung) setPreviewError(error instanceof ApiError ? error.message : "Chưa đọc được những gì sẽ đóng. Sổ vẫn được giữ nguyên."); });
     return () => {
       conDung = false;
     };
-  }, [mo, so]);
+  }, [mo, so.capId, previewRetry]);
 
   // Sheets that can only be read now: the day, the stops, and the way to the
   // outing they became. Shared by «một hội» and by a stopped pair.
@@ -217,6 +232,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     });
 
   let than: React.ReactNode;
+  let moSoAction: React.ReactNode = null;
   // The «hội» body carries «Rủ hội mình đi chơi»; a place brought here rides
   // that one button into the form instead of a second button above it (B11).
   let coNutRuHoi = false;
@@ -228,6 +244,8 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     // drew «Chưa có sổ hai người» and offered «Đề nghị lập sổ» over a notebook
     // both had already opened.
     than = <ErrorState body={so.loiDoc} onRetry={so.lamMoi} title="Chưa đọc được sổ của hai bạn" />;
+  } else if (!so.daNap) {
+    than = <SkeletonGroup><SkeletonRow /><SkeletonRow /><SkeletonRow /></SkeletonGroup>;
   } else if (so.daDung) {
     // QA UI-120: blocked, or the other account ended. The server refuses every
     // outward write from now on, so nothing here offers one; one sentence for
@@ -236,7 +254,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <View style={{ gap: space.lg }} testID="giay-so-da-dung">
         <EmptyState
           body={so.toGiay.length > 0 ? "Hai bạn không gửi tờ cho nhau được nữa. Những tờ cũ vẫn đọc được ở dưới." : "Hai bạn không gửi tờ cho nhau được nữa."}
-          illustration={<Nep gap="manh" pose="gap-lai" />}
+          illustration={<PaperObject name="document" width={160} />}
           kind="permission"
           layout="inline"
           title="Sổ này đã dừng"
@@ -255,7 +273,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
               ? "Buổi đã chốt vẫn đọc được ở dưới."
               : "Các tờ đã khép vẫn đọc được ở dưới."
         }
-        illustration={<Nep gap="manh" pose="gap-lai" />}
+        illustration={<PaperObject name="notebook" width={160} />}
         kind="first-use"
         layout="inline"
         testID="giay-so-da-dong"
@@ -263,25 +281,36 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       />
     );
   } else if (!so.lapSo) {
-    // The notebook before both have agreed: a book with their two names on
-    // it, shut, and Nếp folding a sheet small beside it (ADR-0037 D1).
+    // The notebook stays shut before both agree (ADR-0037 D1). The two real
+    // names have a full reading line instead of squeezing into its tiny label.
+    moSoAction = <StampButton wrapLabel style={styles.dauTrongCot} label={deNghiLapSo ? (deNghiLapSo.cuaToi ? "Xem lời đề nghị của bạn" : "Xem lời đề nghị") : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />;
     than = (
       <View style={styles.canh} testID="giay-chua-lap-so">
-        <View style={styles.hangCanh}>
-          <SoBia rong={128} ten={[tenToi, so.tenNguoiKia || "Người ấy"]} />
-          <NepTrongTrang pose="gap-lai" size={112} />
+        <View style={[styles.cungMoSo, rong && fontScale < 1.3 && styles.cungMoSoRong]}>
+          <View style={[styles.loiMoSo, rong && fontScale < 1.3 && styles.loiMoSoRong]}>
+            <View style={styles.tenHaiBan}>
+              <Text style={[typography.h2, { color: colors.ink }]}>{tenToi}</Text>
+              <Text style={[typography.body, { color: colors.inkSoft }]}>và</Text>
+              <Text style={[typography.h2, { color: colors.ink }]}>{so.tenNguoiKia || "Người ấy"}</Text>
+            </View>
+            <Text style={[typography.body, { color: colors.inkSoft }]}>Cùng hẹn nhau, giữ lại những cuộc đi. Chỉ mở khi cả hai đồng ý.</Text>
+          </View>
+          <View style={styles.canhBiaCho}>
+            <SoBia
+              rong={fontScale >= 1.3 ? 140 : 112}
+              ten={[]}
+              nhan={<View style={[styles.nhanSo, { backgroundColor: colors.card }]}><Text style={[typography.label, styles.tenBan, { color: colors.ink }]}>{"Hai\nmình"}</Text></View>}
+            />
+            <NepTrongTrang pose="gap-lai" size={80} />
+          </View>
         </View>
-        {/* Any pair keeps a notebook, «Hội bạn» or «Một đôi» (ADR-0053): the
-            line does not assume a couple, and says the kind is chosen later. */}
-        <Heading subtitle="Một cuốn sổ chỉ hai bạn đọc, để hẹn nhau từng tuần. Cả hai đồng ý thì sổ mở; là «Hội bạn» hay «Một đôi», hai bạn chọn sau." title="Một chỗ cho chuyện hai mình" />
-        {/* Whose proposal is waiting, said on the page (QA UI-086): closing
-            the sheet left the proposer reading the receiver's words. */}
+        {/* The page names whose turn it is; the entry to the pact stays visible. */}
         {deNghiLapSo ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID={deNghiLapSo.cuaToi ? "giay-cho-dong-y" : "giay-duoc-de-nghi"}>
             {deNghiLapSo.cuaToi ? `Đã đề nghị lập sổ. Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.` : `${so.tenNguoiKia || "Người ấy"} đề nghị lập sổ cho hai bạn.`}
           </Text>
         ) : null}
-        <StampButton label={deNghiLapSo ? (deNghiLapSo.cuaToi ? "Xem lời đề nghị của bạn" : "Xem lời đề nghị") : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
+        {rong ? moSoAction : null}
       </View>
     );
   } else if (!so.batDoi && !dangCoToMo) {
@@ -296,22 +325,23 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       {deNghiBatDoi && !deNghiBatDoi.cuaToi ? (
         <View style={{ gap: space.sm }} testID="giay-duoc-de-nghi-doi">
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>{`${so.tenNguoiKia || "Người ấy"} đề nghị hai bạn là «Một đôi».`}</Text>
-          <StampButton label="Xem lời đề nghị" onPress={() => setMo("loai-so")} size="vua" tilt={-1} />
+          <StampButton label="Xem lời đề nghị" onPress={() => openChild("loai-so")} size="vua" tilt={-1} />
         </View>
       ) : deNghiBatDoi ? (
         <Text style={[typography.body, { color: colors.inkSoft }]} testID="giay-cho-dong-y-doi">{`Đã đề nghị «Một đôi». Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.`}</Text>
       ) : null}
-      <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(ruHoi as never)} />
-      {/* The screen's own door to «Loại sổ» stays in every state, with the same
-          name: the stamp above is a shortcut for a proposal waiting, not a
-          replacement (hiding the door broke the way people and Maestro 47
-          already knew). Both open the same sheet. */}
-      <RudiButton label="Mở sổ cặp đôi" variant="outline" onPress={() => setMo("loai-so")} />
+      <View style={{ gap: space.xs }}>
+        <StampButton wrapLabel style={[styles.dauTrongCot, styles.dauHoiBan]} label="Rủ hội mình đi chơi" onPress={() => router.push(ruHoi as never)} size="vua" tilt={-1} />
+        <PressScale accessibilityRole="button" onPress={() => openChild("loai-so")} pressedScale={0.98} style={styles.chonLoaiSo}>
+          <Text style={[typography.label, styles.chonLoaiSoLabel, { color: colors.inkSoft }]}>Chọn loại sổ</Text>
+        </PressScale>
+      </View>
       {toChiDoc()}
     </View>;
   } else if (toMo) {
     than = (
       <ToLoiRu
+        dangLam={so.dangLam !== null}
         dan={dangCoToMo}
         onBoNhap={() => setViec("bo")}
         onDaDi={() => so.daDi(toMo.id)}
@@ -340,7 +370,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     // «Rủ đi chơi» that would fail the same way (QC 24/09).
     than = (
       <View style={styles.canh} testID="giay-cho-nguoi-kia">
-        <NepTrongTrang pose="up-xuong" size={120} style={styles.giuaNgang} />
+        <View style={styles.giuaNgang}><PaperObject name="note" width={180} /></View>
         <Heading
           subtitle="Tuần này đã có một tờ đang mở ở phía người ấy. Khi tờ được gửi, nó tới đây."
           title={`Tờ tuần này ở phía ${so.tenNguoiKia || "người ấy"}`}
@@ -387,6 +417,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     <RudiScreen
       // A sheet of paper is read, not scanned: one 640 dp column on a tablet,
       // its two buttons with it (QA UI-093: 720 and 912 px wide at C6, C7).
+      material="journal"
       cot="doc"
       footer={
         // No second lead while a plan stands: with «Đã đi rồi» and «Huỷ buổi
@@ -396,26 +427,31 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         // word: with no sheet at all, «Rủ đi chơi» rendered twice in coral,
         // 1300px apart, and the second one reads as a different action somebody
         // then hunts for the difference between (finish review 14/09).
+        !rong && moSoAction ? <View style={styles.moSoFooter}>{moSoAction}</View> :
         so.batDoi && !so.daDong && !so.daDung && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
           <View style={styles.footer}>
             <RudiButton label="Rủ đi chơi" onPress={() => void so.ruDiChoi()} />
           </View>
         ) : undefined
       }
-      footerInset={12}
+      footerInset={Math.max(insets.bottom, 12)}
       // Sheets ride the screen's overlay so the scrim covers the footer too
       // (a sheet drawn among the children left «Rủ đi chơi» lit beneath it).
       overlay={
         <>
       <Sheet accessibilityLabel="Cài đặt sổ" onClose={dong} open={mo === "cai-dat"} testID="cai-dat-so">
-        <View style={{ gap: space.sm, paddingBottom: 8 }}>
+        <View style={{ gap: space.lg, paddingBottom: 8 }}>
           <Heading size="h2" title="Chuyện của hai mình" />
-          {!so.daDung ? <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title="Loại sổ" /> : null}
-          {!so.daDung ? <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Những điều cần tránh" /> : null}
-          {so.gu ? <ListRow icon="heart-outline" onPress={() => setMo("gu")} subtitle={cauGuSo?.chung ?? (so.gu.mine_shared ? "Bạn đang chia gu" : "Mỗi người tự bật")} title="Gu của hai bạn" /> : null}
-          <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
-          <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
-          {!so.daDong ? <ListRow icon="close-circle-outline" onPress={() => setMo("dong-so")} subtitle="Xem trước rồi mới đóng" title="Đóng sổ" /> : null}
+          {!so.daDung || so.gu ? <View style={{ gap: space.xs }}>
+            {!so.daDung ? <ListRow icon="people-outline" onPress={() => openChild("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title="Loại sổ" /> : null}
+            {!so.daDung ? <ListRow icon="hand-left-outline" onPress={() => openChild("rang-buoc")} subtitle="Không ăn được · Đừng" title="Những điều cần tránh" /> : null}
+            {so.gu ? <ListRow icon="heart-outline" onPress={() => openChild("gu")} subtitle={cauGuSo?.chung ?? (so.gu.mine_shared ? "Bạn đang chia gu" : "Mỗi người tự bật")} title="Gu của hai bạn" /> : null}
+          </View> : null}
+          <View style={[styles.nhomMucLuc, { gap: space.xs, borderTopColor: colors.line }]}>
+            <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
+            <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
+          </View>
+          {!so.daDong && !so.daDung ? <View style={[styles.nhomMucLuc, { borderTopColor: colors.line }]}><ListRow icon="close-circle-outline" onPress={() => openChild("dong-so")} subtitle="Xem trước rồi mới đóng" title="Đóng sổ" /></View> : null}
         </View>
       </Sheet>
       {toMo ? (
@@ -425,11 +461,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
             setGoiYCho(undefined);
             dong();
           }}
-          onGui={(content, lyDo) => {
-            if (toMo.state === "nhap") so.suaNhap(toMo.id, content, lyDo);
-            else so.deNghiSua(toMo.id, content, lyDo);
-            setGoiYCho(undefined);
-            dong();
+          dangLam={so.dangLam !== null}
+          loi={so.loiLenh}
+          onGui={async (content, lyDo) => {
+            const ok = await (toMo.state === "nhap" ? so.suaNhap(toMo.id, content, lyDo) : so.deNghiSua(toMo.id, content, lyDo));
+            if (ok) { setGoiYCho(undefined); dong(); }
+            return ok;
           }}
           open={mo === "de-nghi-sua"}
           to={toMo}
@@ -438,20 +475,23 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       {toMo ? (
         <GiuMotDieu
           onClose={dong}
-          onGiu={(line) => {
-            so.giu(toMo.id, line);
-            dong();
+          dangLam={so.dangLam !== null}
+          loi={so.loiLenh}
+          onGiu={async (line) => {
+            const ok = await so.giu(toMo.id, line);
+            if (ok) dong();
+            return ok;
           }}
           open={mo === "giu"}
         />
       ) : null}
       {/* A sheet closes on the notebook's answer, not on the press: a refused
           or dropped write used to close it exactly like a saved one (QA 23/09). */}
-      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) void so.dongYDeNghi(deNghiLapSo.id).then((ok) => ok && dong()); }} open={mo === "lap-so"} tenNguoiKia={so.tenNguoiKia} />
-      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()); }} open={mo === "bat-doi"} tenNguoiKia={so.tenNguoiKia} />
+      <LapSo dangLam={so.dangLam !== null} loi={so.loiLenh} dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) void so.dongYDeNghi(deNghiLapSo.id).then((ok) => ok && dong()); }} open={mo === "lap-so"} tenNguoiKia={so.tenNguoiKia} />
+      <BatMotDoi dangLam={so.dangLam !== null} loi={so.loiLenh} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()); }} open={mo === "bat-doi"} tenNguoiKia={so.tenNguoiKia} />
       {/* Choosing «Một đôi» opens the rung's own sheet (what it allows, what it
           does not pull along) instead of filing the proposal on one tap. */}
-      <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onChonBan={so.thuHoiBatDoi} onChonDoi={() => { if (!so.batDoi && deNghiBatDoi === undefined) setMo("bat-doi"); }} onClose={dong} onDongY={deNghiBatDoi && !deNghiBatDoi.cuaToi ? () => void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()) : undefined} open={mo === "loai-so"} tenNguoiKia={so.tenNguoiKia} />
+      <LoaiSo batDoi={so.batDoi} dangLam={so.dangLam !== null} loi={mo === "loai-so" ? so.loiLenh : null} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onChonBan={so.thuHoiBatDoi} onChonDoi={() => { if (!so.batDoi && deNghiBatDoi === undefined) openChild("bat-doi"); }} onClose={dong} onDongY={deNghiBatDoi && !deNghiBatDoi.cuaToi ? () => void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()) : undefined} open={mo === "loai-so"} tenNguoiKia={so.tenNguoiKia} />
       <RangBuoc dangLuu={so.dangLam?.includes("rang-buoc") ?? false} loi={mo === "rang-buoc" ? so.loiLenh : null} nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => void so.datRangBuoc(rb).then((ok) => ok && dong())} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
       {/* Chỉ tồn tại khi có cả việc lẫn tờ. Bản trước mount vô điều kiện và
           rơi về chuỗi rỗng khi thiếu một trong hai — không tới được hôm nay,
@@ -463,12 +503,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           nhanLam={NHAN_LAM[viec]}
           nguyHiem={viec === "bo" || viec === "huy"}
           onClose={() => setViec(null)}
+          dangLam={so.dangLam !== null}
+          loi={so.loiLenh}
           onXacNhan={() => {
-            if (viec === "bo") so.boNhap(toMo.id);
-            else if (viec === "rut") so.rut(toMo.id);
-            else if (viec === "nghi_tuan") so.nghiTuan(toMo.id);
-            else so.huy(toMo.id);
-            setViec(null);
+            const command = viec === "bo" ? so.boNhap(toMo.id) : viec === "rut" ? so.rut(toMo.id) : viec === "nghi_tuan" ? so.nghiTuan(toMo.id) : so.huy(toMo.id);
+            void command.then((ok) => { if (ok) setViec(null); });
           }}
           open
           testID="xac-nhan-viec"
@@ -477,7 +516,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       ) : null}
       <AiLoTuanNay dangLam={so.dangLam?.startsWith("vai:") ?? false} onChon={(lo) => so.chonLo(lo)} onClose={dong} open={mo === "vai"} tenNguoiKia={so.tenNguoiKia} toiId={so.toiId} vai={so.vai} />
       <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} guChat={guChat} onBatLai={so.batLaiChiaGu} loi={so.loiGu} />
-      <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
+      <DongSo dangLam={so.dangLam !== null} loi={so.loiLenh} loiPreview={previewError} onRetryPreview={() => setPreviewRetry((v) => v + 1)} onClose={dong} onDong={() => { if (xemTruoc) void so.dongSo(xemTruoc.revision).then((ok) => { if (ok) { sheetParents.current = []; setMo(null); } }); }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
         </>
       }
       header={
@@ -485,11 +524,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           back
           right={
             <View style={styles.dauPhai}>
-              <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />
+              <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => { sheetParents.current = []; setMo("cai-dat"); }} quiet />
             </View>
           }
-          subtitle={so.loiDoc !== null ? so.tenNguoiKia : so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
-          title="Tờ giấy của hai mình"
+          subtitle={so.loiDoc !== null ? so.tenNguoiKia : !so.lapSo ? undefined : so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
+          title="Sổ hai người"
         />
       }
       testID="khong-gian-giay"
@@ -497,7 +536,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <View style={[styles.than, { gap: space.lg }]}>
         {/* The waiting state below already says what `paper_wrong_state` meant;
             the server's sentence above it said the same thing worse (QC 24/09). */}
-        {so.loiLenh && so.loiGu === null && !so.xinToBiChan && !so.daDung ? (
+        {so.loiLenh && so.loiGu === null && mo !== "loai-so" && mo !== "rang-buoc" && !so.xinToBiChan && !so.daDung ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
           </Text>
@@ -531,7 +570,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         ) : null}
         {than}
         {cauGuSo?.chung ? (
-          <Pressable accessibilityRole="button" onPress={() => setMo("gu")} testID="giay-gu-chung">
+          <Pressable accessibilityRole="button" accessibilityHint="Xem và đổi gu đang chia" onPress={() => setMo("gu")} style={styles.guChung} testID="giay-gu-chung">
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGuSo.chung}</Text>
           </Pressable>
         ) : null}
@@ -602,13 +641,29 @@ const styles = StyleSheet.create({
   dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   than: { paddingTop: 8 },
   canh: { gap: 16 },
+  cungMoSo: { gap: 24 },
+  cungMoSoRong: { flexDirection: "row", alignItems: "center" },
+  loiMoSo: { gap: 16 },
+  loiMoSoRong: { flex: 1 },
+  canhBiaCho: { flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 12 },
+  canhMo: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-start", gap: 12 },
+  moSoFooter: { paddingTop: 12, alignItems: "flex-start" },
+  chonLoaiSo: { minHeight: 48, paddingVertical: 12, paddingRight: 16, justifyContent: "center", alignSelf: "stretch" },
+  chonLoaiSoLabel: { alignSelf: "stretch", textAlign: "left" },
+  dauTrongCot: { maxWidth: "100%" },
+  nhanSo: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", borderRadius: 2 },
+  tenHaiBan: { gap: 4, alignItems: "flex-start" },
+  tenBan: { maxWidth: "100%", textAlign: "center" },
   hangCanh: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 12 },
   giuaNgang: { alignSelf: "center" },
   toTrong: { flex: 1, maxWidth: 240, transform: [{ rotate: "-2deg" }] },
   lineStamp: { lineHeight: 18, marginBottom: 6 },
   // A pencil line waiting for Nếp's draft: a rule in lineStrong, dashed.
   dongChi: { height: 14, borderBottomWidth: 1, borderStyle: "dashed" },
-  vai: { gap: 2, paddingVertical: 4 },
+  vai: { gap: 2, minHeight: 48, justifyContent: "center", paddingVertical: 8 },
+  guChung: { minHeight: 48, justifyContent: "center", paddingVertical: 8 },
+  nhomMucLuc: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16 },
+  dauHoiBan: { alignSelf: "flex-start" },
   footer: { paddingHorizontal: 16 },
   dev: { borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", borderRadius: 10, padding: 8, gap: 0 },
 });

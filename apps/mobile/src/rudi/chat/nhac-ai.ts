@@ -14,7 +14,7 @@
  * accents), with or without the accents («@ru di», «@rudi»), and never inside
  * an email address (an address that happens to end in the app's name is
  * somebody's mailbox, not a question). The
- * two slash commands count only at the start, as they always have.
+ * slash commands count only at the start.
  */
 import { LOI_NHO_CHIA_BILL, type LenhAi } from "./ai-invocations";
 
@@ -29,7 +29,7 @@ export type NhacAi = {
 
 // `i` with `u` folds case the Unicode way, so «Đ» meets «đ» and «Ủ» meets «ủ».
 const MAU_NHAC = /@(rủ\s+đi|ru\s+di|rudi)/giu;
-const MAU_LENH = /^\s*\/(plan|chia-?bill)(?=$|\s)/iu;
+const MAU_LENH = /^\s*\/(plan|chia-?bill|random)(?=$|\s)/iu;
 
 /** A letter or a digit in any script (a letter is anything with case). */
 function laChuHoacSo(ch: string | undefined): boolean {
@@ -65,6 +65,7 @@ function viTriNhac(s: string): Array<[number, number]> {
  * mention taken out, the spacing and the punctuation they leave behind tidied.
  * An empty request gets the command's plain default, because the server
  * refuses an empty prompt and a bare `@Rủ Đi` still means «help us».
+ * `/random` keeps an empty request: the caller must supply choices or words.
  */
 export function tachLoiNho(body: string): string {
   let s = body.normalize("NFC");
@@ -75,6 +76,7 @@ export function tachLoiNho(body: string): string {
   for (let i = cat.length - 1; i >= 0; i--) s = s.slice(0, cat[i][0]) + " " + s.slice(cat[i][1]);
   const gon = s.replace(/\s+/g, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/^[\s,:;.!?-]+/, "").trim();
   if (gon !== "") return gon;
+  if (lenh?.[1].toLowerCase() === "random") return "";
   return chiaBill ? LOI_NHO_CHIA_BILL : LOI_NHO_PLAN;
 }
 
@@ -82,8 +84,8 @@ export function tachLoiNho(body: string): string {
  * Whether a message also asks the AI, and for what. Null for an ordinary
  * message, which is sent and nothing else.
  *
- * `/chia-bill` is the only command that asks for something other than a
- * plan; a mention and `/plan` are both `plan`. The same in every room: a
+ * `/random` asks only for catalogue choices; `/chia-bill` for a split;
+ * a mention and `/plan` are both `plan`. The same in every room: a
  * two-person conversation is a friends' chat with exactly a group's AI
  * (owner decision 2026-09-28, replacing the pair's `hoi`-only rule), so this
  * reads the text alone, never who is in the room.
@@ -91,7 +93,7 @@ export function tachLoiNho(body: string): string {
 export function timNhacAi(text: string): NhacAi | null {
   const s = text.normalize("NFC");
   const lenh = MAU_LENH.exec(s);
-  if (lenh) return { lenh: /^chia/i.test(lenh[1]) ? "chia_bill" : "plan", loiNho: tachLoiNho(s) };
+  if (lenh) return { lenh: /^chia/i.test(lenh[1]) ? "chia_bill" : lenh[1].toLowerCase() === "random" ? "random" : "plan", loiNho: tachLoiNho(s) };
   if (viTriNhac(s).length > 0) return { lenh: "plan", loiNho: tachLoiNho(s) };
   return null;
 }

@@ -602,13 +602,17 @@ func (h *Handler) servePage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/g/"+token, http.StatusSeeOther)
 		return
 	}
+	writeReviewPage(w, v)
+}
+
+func writeReviewPage(w http.ResponseWriter, v GuestReview) {
 	var page bytes.Buffer
 	if err := reviewPage.Execute(&page, v); err != nil {
 		http.Error(w, "Trang tạm thời không mở được", 503)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	_, _ = w.Write(page.Bytes())
 }

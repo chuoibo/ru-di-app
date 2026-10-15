@@ -7,7 +7,7 @@
  * tôi» sẽ biến mỗi lần chặn thành một cuộc đối đầu.
  */
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -19,6 +19,8 @@ import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ngayVN } from "../../ngay-viet";
 
 type Trang =
@@ -31,6 +33,9 @@ export function DaChanScreen() {
   const { phien, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangGo, setDangGo] = useState<string | null>(null);
+  const working = useRef(false);
+  const [hoiGo, setHoiGo] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ id: string; cau: string } | null>(null);
   const [attempts] = useState<Record<string, Attempt>>({});
   const personId = phien?.person_id ?? "";
 
@@ -54,25 +59,23 @@ export function DaChanScreen() {
   );
 
   const go = async (nguoi: NguoiBiChan) => {
-    if (dangGo !== null) return;
+    if (working.current) return;
+    working.current = true; setActionError(null);
     setDangGo(nguoi.person_id);
     try {
       await boChan(nguoi.person_id, personId, attemptFor(attempts, `go:${nguoi.person_id}`));
-      await nap();
+      setHoiGo(null); await nap();
     } catch (error) {
-      setTrang({
-        pha: "hong",
-        loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-      });
+      setActionError({ id: nguoi.person_id, cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
     } finally {
-      setDangGo(null);
+      working.current = false; setDangGo(null);
     }
   };
 
   if (!phienDaDoc) return null;
 
   return (
-    <RudiScreen testID="da-chan-screen">
+    <RudiScreen material="quiet" cot="form" testID="da-chan-screen">
       <TopBar title="Người đã chặn" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>
         Người bạn chặn không đọc được bài và story của bạn, và bạn cũng không đọc được của họ. Nhóm chung vẫn giữ nguyên.
@@ -96,7 +99,7 @@ export function DaChanScreen() {
         <NhomHang>
           {trang.nguoi.map((nguoi) => (
             <View key={nguoi.person_id} style={styles.hang}>
-              <Avatar name={nguoi.display_name} size={40} />
+              <Avatar personId={nguoi.person_id} name={nguoi.display_name} size={40} />
               <View style={styles.hangChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{nguoi.display_name}</Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -110,9 +113,11 @@ export function DaChanScreen() {
                 full={false}
                 label="Bỏ chặn"
                 loading={dangGo === nguoi.person_id}
-                onPress={() => void go(nguoi)}
+                onPress={() => { setHoiGo(nguoi.person_id); setActionError(null); }}
                 variant="outline"
               />
+              {hoiGo === nguoi.person_id ? <View style={{ width: "100%" }}><HoiTaiHang cau={`Bỏ chặn ${nguoi.display_name}? Hai người không tự trở lại thành bạn bè.`} dangLam={dangGo === nguoi.person_id} nhan="Bỏ chặn" onDongY={() => void go(nguoi)} onThoi={() => setHoiGo(null)}/></View> : null}
+              <CauTaiCho cau={actionError?.id === nguoi.person_id ? actionError.cau : null}/>
             </View>
           ))}
         </NhomHang>
@@ -123,6 +128,6 @@ export function DaChanScreen() {
 
 const styles = StyleSheet.create({
   khoi: { gap: 12 },
-  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
-  hangChu: { flex: 1, gap: 2 },
+  hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 56 },
+  hangChu: { flex: 1, minWidth: 150, gap: 2 },
 });

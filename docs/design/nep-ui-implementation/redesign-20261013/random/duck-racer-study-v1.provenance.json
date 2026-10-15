@@ -1,0 +1,24 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-13",
+  "use_case": "illustration-story",
+  "purpose": "critique reference, not native evidence",
+  "prompt_file": "duck-racer-study-v1.prompt.txt",
+  "prompt_sha256": "8f41957b8207f9cde65b8ce956b4bdcf0f7a97d115dd71a29922c0eeb678d92a",
+  "references": [
+    "random-reference-v1"
+  ],
+  "original_sha256": "c658a154b41a8977710c8d9de5cc37eec44442ceb7ef97def259370ae8535651",
+  "png_sha256": "6b05b8b62f0fd92f28b88990d7192c4d13b5d58e6ada186c67a1f639f003d84a",
+  "decoded_rgba_sha256": "dc031ce40ce9852fe33812f041c3ccddaf0db1eabaf761c6dc1bcb2fd6e7e1ff",
+  "width": 1254,
+  "height": 1254,
+  "mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "pixel_identity_after_metadata_embed": true,
+  "synthetic": true,
+  "native_qc": "OPEN"
+}

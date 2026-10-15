@@ -5,6 +5,9 @@
 # («Ban QA»). Harness kiểm máy chủ sau flow: GET /contexts/{ctx}/balances có
 # một khoản chuyển C → D đúng số.
 appId: com.lakiet.rudi
+env:
+  RECORDED_TOTAL: "200.000đ"
+  PAYER_LABEL: "Ban QA"
 ---
 - stopApp
 - launchApp
@@ -43,6 +46,11 @@ appId: com.lakiet.rudi
 - tapOn: "Ô tiền món 1"
 - inputText: "150000"
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Thêm món"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Thêm món"
 - extendedWaitUntil:
     visible: "Ô tên món 2"
@@ -91,6 +99,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Ai dùng món nào?"
     timeout: 60000
+# The second dish stays below the table and first dish on a 320dp phone.
+- scrollUntilVisible:
+    element:
+      text: "An QA · Nuoc"
+    direction: DOWN
+    timeout: 30000
 - assertVisible: "An QA · Nuoc"
 - tapOn: "An QA · Nuoc"
 - takeScreenshot: 28-gan-mon
@@ -101,10 +115,25 @@ appId: com.lakiet.rudi
     timeout: 60000
 - assertVisible: "75.000đ"
 - assertVisible: "125.000đ"
+- scrollUntilVisible:
+    element:
+      text: "Người trả Ban QA"
+    direction: DOWN
+    timeout: 30000
 - assertVisible: "Người trả Ban QA"
 # Người trả (D, mặc định là người đang dùng máy) có huy hiệu ngay trên hàng của mình.
+- scrollUntilVisible:
+    element:
+      text: "Đã trả bill"
+    direction: UP
+    timeout: 30000
 - assertVisible: "Đã trả bill"
 - takeScreenshot: 28-ket-qua
+- scrollUntilVisible:
+    element:
+      text: "Ô tên khoản chi"
+    direction: DOWN
+    timeout: 30000
 - tapOn: "Ô tên khoản chi"
 - inputText: "Toi Xom Lao"
 - hideKeyboard
@@ -112,7 +141,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đã ghi: Toi Xom Lao"
     timeout: 60000
-- assertVisible: "200.000đ, Ban QA đã trả.*"
+- assertVisible: "^${RECORDED_TOTAL}\\. ${PAYER_LABEL} đã xác nhận ứng tiền\\..*"
 - takeScreenshot: 28-da-ghi
 - tapOn: "Xem quyết toán"
 # Quyết toán sống đọc /contexts/{ctx}/balances: C chuyển cho D 75.000đ.

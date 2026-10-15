@@ -6,7 +6,7 @@
  * silhouette in grey while the server answers.
  */
 import { type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -23,6 +23,7 @@ export function HangNguoi({
   duoi,
   onPress,
   personId,
+  inlineAction = false,
 }: {
   ten: string;
   phu: string;
@@ -30,14 +31,18 @@ export function HangNguoi({
   onPress?: () => void;
   /** A friend's id draws their photograph; absent (a stranger's request) stays initials. */
   personId?: string;
+  /** A single icon action keeps its own 48dp beside the person at any width. */
+  inlineAction?: boolean;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const compactWidth = !inlineAction && (width < 380 || fontScale > 1.3);
   const { colors, dark } = useRudiTheme();
   const nguoi = (
     <>
       <AvatarNguoi name={ten} personId={personId} size={40} />
       <View style={styles.hangChu}>
         {/* A known person's name is written in their own ink (ADR-0037 D6). */}
-        <Text numberOfLines={1} style={[typography.body, { color: personId ? mucNguoi(personId, dark) : colors.ink }]}>
+        <Text numberOfLines={2} style={[typography.body, { color: personId ? mucNguoi(personId, dark) : colors.ink }]}>
           {ten}
         </Text>
         <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>
@@ -51,7 +56,7 @@ export function HangNguoi({
   // web and two targets fused for a screen reader. The way to the profile is
   // the person; the actions stand beside it.
   return (
-    <View style={styles.hang}>
+    <View style={[styles.hang, compactWidth && { flexDirection: "column", alignItems: "stretch" }]}>
       {onPress === undefined ? (
         <View style={styles.nguoi}>{nguoi}</View>
       ) : (
@@ -59,7 +64,7 @@ export function HangNguoi({
           {nguoi}
         </Pressable>
       )}
-      {duoi ? <View style={styles.duoi}>{duoi}</View> : null}
+      {duoi ? <View style={[styles.duoi, compactWidth && { paddingLeft: 52, flexWrap: "wrap" }]}>{duoi}</View> : null}
     </View>
   );
 }

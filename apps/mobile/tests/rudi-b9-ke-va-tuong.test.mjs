@@ -28,7 +28,7 @@ test("kệ trống: lối vào là kèo đã qua gần nhất, không có thì d
 
   const wall = nguon("diary/Wall.tsx");
   assert.match(wall, /<KeTrong \/>/, "kệ của chính chủ dùng trạng thái rỗng có hành động");
-  assert.match(wall, /illustration=\{<Canh id="chua-co-ky-niem"/);
+  assert.match(wall, /illustration=\{<AssetIllustration name="spot-memory" width=\{220\} height=\{188\}/);
   assert.match(wall, /router\.push\(`\/outings\/\$\{loi\.id\}`/);
   assert.doesNotMatch(wall, /Mở cuộc đi đã qua để giữ khoảnh khắc đầu tiên\./, "câu cũ không có lối đi");
 });
@@ -95,7 +95,7 @@ test("trình xem story: hai vùng chạm là nút, câu hỏi xoá nhận focus 
 
 test("hàng menu mang tên màn nó mở (UI-162)", () => {
   const p = nguon("screens/Profile.tsx");
-  assert.match(p, /subtitle="Sổ huy hiệu và các ngã rẽ của bạn"\n\s+title="Hành trình"/);
+  assert.match(p, /icon="ribbon-outline"\s+onPress=\{\(\) => router\.push\("\/achievements"\)\}\s+title="Hành trình"/);
   assert.doesNotMatch(p, /Cấp và huy hiệu/);
 });
 

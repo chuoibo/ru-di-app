@@ -31,7 +31,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"
     timeout: 30000
-- tapOn: "Ô tên nhóm"
+- tapOn: "Tên nhóm mới"
 - inputText: "Hoi QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
@@ -46,7 +46,8 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Dữ liệu demo"
 - takeScreenshot: 24-danh-sach-nhom
 - tapOn: "Hoi QA"
-# M3: bấm hàng mở CHAT; roster nằm sau icon «Thành viên nhóm» ở header.
+# The active chat lane keeps membership controls in its header.
+# This flow checks invitation/profile behavior; flow 49 proves E2EE transport.
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 60000
@@ -62,16 +63,26 @@ appId: com.lakiet.rudi
 # membership `invited`. Không bịa id, không đặt tên thay ai.
 - tapOn: "Mời bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Mời bằng username"
+    visible: "Bạn muốn rủ ai?"
     timeout: 30000
-- tapOn: "Tên tài khoản"
+- tapOn: "Tên tài khoản của người nhận"
 - inputText: "${TK_D}"
 - hideKeyboard
-- tapOn: "Gửi lời mời"
+- tapOn: "Tìm người nhận"
 - extendedWaitUntil:
-    visible: "Đã gửi lời mời tới Ban QA."
+    visible: "Gửi lời mời tới .*"
+    timeout: 30000
+- assertVisible: "Ban QA"
+- tapOn: "Gửi lời mời tới .*"
+- extendedWaitUntil:
+    visible: "Đã gửi lời mời tới .*"
     timeout: 60000
 - takeScreenshot: 24-da-moi
+- scrollUntilVisible:
+    element:
+      text: "Về nhóm"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Về nhóm"
 - extendedWaitUntil:
     visible: "1 đang ở trong nhóm, 1 đang được mời."
@@ -98,8 +109,18 @@ appId: com.lakiet.rudi
 - assertNotVisible: ".*Team Đà Lạt.*"
 - assertNotVisible: "12 huy hiệu đã mở khóa"
 # Hồ sơ sống (đợt chuyển mình 06/09) in một dòng sự thật «0 bạn bè · 1 nhóm · …» thay ô stat.
+- scrollUntilVisible:
+    element:
+      text: ".*1 nhóm.*"
+    direction: DOWN
+    timeout: 20000
 - assertVisible: ".*1 nhóm.*"
 - takeScreenshot: 24-ho-so-that
+- scrollUntilVisible:
+    element:
+      text: "Chỉnh hồ sơ"
+    direction: DOWN
+    timeout: 20000
 - tapOn: "Chỉnh hồ sơ"
 - extendedWaitUntil:
     visible: "Lưu hồ sơ"

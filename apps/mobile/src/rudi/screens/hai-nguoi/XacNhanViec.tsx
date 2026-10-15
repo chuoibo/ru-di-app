@@ -25,6 +25,8 @@ export function XacNhanViec({
   hauQua,
   nhanLam,
   nguyHiem = false,
+  dangLam = false,
+  loi = null,
   testID,
 }: {
   open: boolean;
@@ -36,6 +38,8 @@ export function XacNhanViec({
   nhanLam: string;
   /** The action destroys something somebody made or is counting on: warn tone. */
   nguyHiem?: boolean;
+  dangLam?: boolean;
+  loi?: string | null;
   testID?: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -46,7 +50,8 @@ export function XacNhanViec({
         <Text style={[typography.body, { color: colors.ink }]} testID={`${testID ?? "xac-nhan-viec"}-hau-qua`}>
           {hauQua}
         </Text>
-        <RudiButton label={nhanLam} onPress={onXacNhan} tone={nguyHiem ? "warn" : undefined} variant="outline" />
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+        <RudiButton loading={dangLam} disabled={dangLam} label={nhanLam} onPress={onXacNhan} tone={nguyHiem ? "warn" : undefined} variant="outline" />
         <RudiButton label="Để đấy" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>

@@ -1,13 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { memo, useEffect, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { memo, useEffect, useRef, useState } from "react";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../ui/NativeFontMetrics";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import { typography, useRudiTheme } from "../theme";
-import { Avatar } from "../ui/Avatar";
+import { AvatarNguoi } from "../ui/AvatarNguoi";
 import { PressScale } from "../ui/PressScale";
 import { useMotion } from "../ui/useMotion";
 import { imageSource, relativeTime, type Media, type Post } from "./api";
@@ -51,11 +52,11 @@ export function CommunityVideo({ media, person, active, khung }: { media: Media;
   useEffect(() => { if (!active) player.pause(); const subscription = AppState.addEventListener("change", (state) => { if (state !== "active") player.pause(); }); return () => subscription.remove(); }, [active, player]);
   return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={khung ?? styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
 }
-export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean }) {
+export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false, compact = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean; compact?: boolean }) {
   const { colors } = useRudiTheme();
-  return <PressScale accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} {...giuState(Boolean(selected))} aria-disabled={disabled} disabled={disabled} onPress={onPress} style={[styles.action, disabled && { opacity: 0.45 }]}>
+  return <PressScale accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} {...giuState(Boolean(selected))} aria-disabled={disabled} disabled={disabled} onPress={onPress} style={[styles.action, compact && styles.actionCompact, disabled && { opacity: 0.45 }]}>
     <Ionicons name={icon} size={21} color={selected ? colors.accent : colors.inkSoft} />
-    <Text style={[typography.caption, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
+    {label ? <Text style={[typography.caption, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text> : null}
   </PressScale>;
 }
 export const PostCard = memo(function PostCard({ post, person, active = false, onLike, onComment, onMore, onTopic, onFollow, onSave, busy = false, detail = false }: {
@@ -64,10 +65,19 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   onSave?: () => void; busy?: boolean; detail?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const ownedMetrics = useNativeFontMetricsOwner();
+  const authorMetrics = useNativeStandaloneTextMetrics(typography.title);
+  // Use the surface's effective metrics; Android's window value can lag a hot change.
+  // An owned but unusable table keeps the author readable without a child observer.
+  const spaciousAuthor = authorMetrics !== null
+    ? (authorMetrics.fontSize ?? typography.title.fontSize) >= typography.title.fontSize * 1.25
+    : ownedMetrics || fontScale >= 1.25;
   // The album pages one picture the width of the post's column at a time,
   // 4:3 like the owner's mockup. Its 4:3 room is held from the first render
   // (`khungAlbum`): drawn only once measured, a card the list remounts above
   // the viewport came back ~270 dp short for a frame and the feed jumped.
+  const album = useRef<ScrollView>(null);
   const [rongAlbum, setRongAlbum] = useState(0);
   const [trangDangXem, setTrangDangXem] = useState(0);
   const kichAnh = kichTrangAlbum(rongAlbum);
@@ -85,48 +95,68 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
     return () => clearTimeout(hen);
   }, [daChiaSe]);
   return <View testID={`community-post-${post.id}`} style={[styles.post, { borderBottomColor: colors.line }]}>
-    <View style={styles.identity}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><Avatar name={post.author} size={42} /></Pressable>
+    <View style={[styles.identity, spaciousAuthor && styles.identityStack]}>
+      <View style={[styles.authorMain, spaciousAuthor && styles.authorMainStack]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><AvatarNguoi personId={post.author_id} name={post.author} size={42} /></Pressable>
       <View style={styles.identityText}><Text style={[typography.title, { color: colors.ink }]}>{post.author}</Text><Text style={[typography.caption, { color: colors.inkFaint }]}>{relativeTime(post.created_at)} · {post.audience === "public" ? "Cộng đồng" : post.audience === "friends" ? "Bạn bè" : post.audience === "group" ? "Trong nhóm" : "Chỉ mình tôi"}</Text></View>
-      {post.author_id !== person ? <Pressable accessibilityRole="button" accessibilityLabel={post.following ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"} onPress={onFollow} style={styles.follow}><Ionicons name={post.following ? "checkmark" : "add"} size={20} color={colors.accent} /></Pressable> : null}
+      </View>
+      <View style={[styles.identityActions, spaciousAuthor && styles.identityActionsStack]}>
+      {post.author_id !== person ? <Pressable accessibilityRole="button" accessibilityLabel={post.following ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"} onPress={onFollow} disabled={busy} aria-disabled={busy} style={styles.follow}><Ionicons name={post.following ? "checkmark" : "add"} size={20} color={colors.accent} /></Pressable> : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Thêm lựa chọn cho bài" onPress={onMore} style={styles.follow}><Ionicons name="ellipsis-horizontal" size={20} color={colors.inkSoft} /></Pressable>
+      </View>
     </View>
-    {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
-    <Pressable accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded && biCat) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
+    {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, styles.statusText, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
+    <Pressable style={styles.readTarget} accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded && biCat) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
       <Text numberOfLines={expanded ? undefined : 6} style={[typography.body, styles.body, { color: colors.ink }]}>{post.body}</Text>
       {!expanded && biCat ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
     {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(e.nativeEvent.layout.width)} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
-      <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
+      <ScrollView ref={album} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
         {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo khung={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>
-      {/* Which picture of how many; each picture already names itself to a screen reader. */}
-      {soTrang ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.soTrang, { backgroundColor: colors.card, borderRadius: radius.pill }]}><Text style={[typography.caption, { color: colors.ink }]}>{soTrang}</Text></View> : null}
+
+      {soTrang ? <View style={[styles.albumNavigation, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.pill }]}>
+        <PressScale accessibilityRole="button" accessibilityLabel="Ảnh trước" accessibilityHint={trangDangXem === 0 ? "Đang ở ảnh đầu tiên." : undefined} accessibilityState={{ disabled: trangDangXem === 0 }} disabled={trangDangXem === 0} onPress={() => album.current?.scrollTo({ x: Math.max(0, trangDangXem - 1) * rongAlbum, animated: motion.ms("standard") > 0 })} style={[styles.albumArrow, trangDangXem === 0 && styles.albumArrowDisabled]}><Ionicons name="chevron-back" size={19} color={colors.ink} /></PressScale>
+        <Text accessibilityLabel={`Ảnh ${trangDangXem + 1} trên ${post.media.length}`} accessibilityLiveRegion="polite" style={[typography.caption, styles.albumPosition, { color: colors.ink }]}>{soTrang}</Text>
+        <PressScale accessibilityRole="button" accessibilityLabel="Ảnh sau" accessibilityHint={trangDangXem >= post.media.length - 1 ? "Đây là ảnh cuối cùng." : undefined} accessibilityState={{ disabled: trangDangXem >= post.media.length - 1 }} disabled={trangDangXem >= post.media.length - 1} onPress={() => album.current?.scrollTo({ x: Math.min(post.media.length - 1, trangDangXem + 1) * rongAlbum, animated: motion.ms("standard") > 0 })} style={[styles.albumArrow, trangDangXem >= post.media.length - 1 && styles.albumArrowDisabled]}><Ionicons name="chevron-forward" size={19} color={colors.ink} /></PressScale>
+      </View> : null}
     </View> : null}</View> : null}
     {photo ? <PhotoViewer title="Ảnh khoảnh khắc" photos={post.media.filter((m) => m.type.startsWith("image/")).map((m) => ({ id: m.id, source: imageSource(person, m.url), caption: post.body }))} initialIndex={post.media.filter((m) => m.type.startsWith("image/")).findIndex((m) => m.id === photo.id)} onClose={() => setPhoto(null)} /> : null}
     {post.topics.length ? <View style={styles.topics}>{post.topics.map((t) => <Pressable key={t} accessibilityRole="button" onPress={() => onTopic ? onTopic(t) : router.push({ pathname: "/community/topic", params: { topic: t } } as never)} style={[styles.topic, { backgroundColor: colors.accentSoft }]}><Text style={[typography.caption, { color: colors.accent }]}>{t}</Text></Pressable>)}</View> : null}
-    <View style={styles.actions}>
-      <Action icon={post.liked ? "heart" : "heart-outline"} label={`${post.likes || "Thích"}`} accessibilityLabel={`${post.liked ? "Bỏ thích bài" : "Thích bài"}, ${post.likes} lượt thích`} selected={post.liked} disabled={busy} onPress={onLike} />
-      <Action icon="chatbubble-outline" label={`${post.comments || "Bình luận"}`} accessibilityLabel={`Mở bình luận, ${post.comments} bình luận`} onPress={onComment} />
-      <Action icon="paper-plane-outline" label={daChiaSe ?? "Chia sẻ"} accessibilityLabel={daChiaSe ?? "Chia sẻ bài"} onPress={() => { void chiaSe({ title: "Bài trên Rủ Đi", url: linkBai(post.id) }).then((kq) => setDaChiaSe(cauChiaSe(kq))); }} />
+    {post.likes > 0 || post.comments > 0 ? <Text style={[typography.note, { color: colors.inkSoft }]}>{[post.likes > 0 ? `${post.likes} lượt thích` : null, post.comments > 0 ? `${post.comments} bình luận` : null].filter(Boolean).join(" · ")}</Text> : null}
+    <View style={[styles.actions, { borderTopColor: colors.line }]}>
+      <Action compact icon={post.liked ? "heart" : "heart-outline"} label="" accessibilityLabel={`${post.liked ? "Bỏ thích bài" : "Thích bài"}, ${post.likes} lượt thích`} selected={post.liked} disabled={busy} onPress={onLike} />
+      <Action compact icon="chatbubble-outline" label="" accessibilityLabel={`Mở bình luận, ${post.comments} bình luận`} onPress={onComment} />
+      <Action compact icon="paper-plane-outline" label="" accessibilityLabel={daChiaSe ?? "Chia sẻ bài"} onPress={() => { void chiaSe({ title: "Bài trên Rủ Đi", url: linkBai(post.id) }).then((kq) => setDaChiaSe(cauChiaSe(kq))); }} />
       {onSave ? <PressScale accessibilityRole="button" accessibilityLabel={post.saved ? "Bỏ lưu bài" : "Lưu để đọc lại"} {...giuState(post.saved)} aria-disabled={busy} disabled={busy} onPress={onSave} style={[styles.luu, busy && { opacity: 0.45 }]}>
         <Ionicons name={post.saved ? "bookmark" : "bookmark-outline"} size={21} color={post.saved ? colors.accent : colors.inkSoft} />
       </PressScale> : null}
     </View>
+    {daChiaSe ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>{daChiaSe}</Text> : null}
   </View>;
 });
 const styles = StyleSheet.create({
   // The screen gutter (`space.md`), the same as Khám phá's header and Địa điểm,
   // so switching sections does not shift the column.
   post: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, gap: 14 },
-  avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
-  identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
-  body: { lineHeight: 26 }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
+  avatarTarget: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center" },
+  identity: { flexDirection: "row", alignItems: "flex-start", gap: 8, width: "100%", minWidth: 0 },
+  identityStack: { flexDirection: "column", gap: 0 },
+  authorMain: { flexDirection: "row", alignItems: "flex-start", gap: 10, flexGrow: 1, flexShrink: 1, flexBasis: "auto", width: "auto", minWidth: 0 },
+  authorMainStack: { flexGrow: 0, flexShrink: 0, width: "100%" },
+  identityText: { flex: 1, minWidth: 0, gap: 2 },
+  identityActions: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", flexGrow: 0, flexShrink: 0, flexBasis: "auto" },
+  identityActionsStack: { alignSelf: "flex-end" },
+  follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
+  body: { lineHeight: typography.body.lineHeight }, readTarget: { minHeight: 48, justifyContent: "center" }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 }, statusText: { flex: 1, minWidth: 0 },
   khungAlbum: { width: "100%", aspectRatio: TI_LE_ALBUM }, album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
-  soTrang: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  albumNavigation: { position: "absolute", right: 8, bottom: 8, flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, maxWidth: "100%" },
+  albumArrow: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
+  albumArrowDisabled: { opacity: 0.35 },
+  albumPosition: { flexShrink: 1, textAlign: "center", paddingHorizontal: 2 },
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
-  actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, luu: { width: 48, height: 48, alignItems: "center", justifyContent: "center", marginLeft: "auto" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },
+  actions: { flexDirection: "row", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 4 }, luu: { flex: 1, minWidth: 48, height: 48, alignItems: "center", justifyContent: "center" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 }, actionCompact: { flex: 1, minWidth: 48, justifyContent: "center" },
 });
 
 /**

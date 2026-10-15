@@ -55,12 +55,14 @@ test("cài đặt nhóm: bong bóng xem trước vẽ bằng đúng bảng màu 
   assert.match(bong, /color: mauChon\.bubbleInk/, "chữ trong bong bóng không dùng mực của theme");
   // «Rời nhóm» sits under its own rule, after every other row.
   const ke = nguon.indexOf("styles.ke");
-  assert.ok(ke > nguon.indexOf('title="Thành viên"') && ke < nguon.indexOf('label="Rời nhóm"'), "«Rời nhóm» không còn tách dưới nét kẻ");
+  const moXacNhan = nguon.indexOf('<RudiButton icon="exit-outline" label="Rời nhóm"');
+  assert.ok(ke > nguon.indexOf('title="Thành viên"') && ke < moXacNhan, "nút mở xác nhận «Rời nhóm» không còn tách dưới nét kẻ");
 });
 
 test("đọc mù S9: ô màu đang chọn có vòng mực và dấu tick; câu mức người đọc không bị cắt", () => {
   const caiDat = doc("screens/chat/CaiDatNhom.tsx");
-  assert.match(caiDat, /borderColor: chon \? colors\.ink : colors\.lineStrong/, "ô đang chọn viền bằng màu của chính theme: nhìn không ra ô nào đang chọn");
+  // The selected ink ring is an overlay, so selection cannot resize a swatch.
+  assert.match(caiDat, /\{chon \? <View pointerEvents="none" style=\{\[StyleSheet\.absoluteFill, \{ borderWidth: 3, borderColor: colors\.ink, borderRadius: radius\.control \}\]\} \/>/, "ô đang chọn phải có vòng mực riêng, không đổi kích thước target");
   assert.match(caiDat, /\{chon \? <Ionicons [^>]*name="checkmark"/, "ô đang chọn thiếu dấu tick");
   const dangBai = doc("screens/nguoi/DangBaiScreen.tsx");
   const dong = dangBai.split("\n").find((l) => l.includes("MUC_NGUOI_DOC[a].giaiThich"));

@@ -2,7 +2,7 @@
 {
   "man": "create",
   "tieu_de": "Tạo mới",
-  "nhanUI": ["Tạo mới", "Mình làm gì tiếp?", "Viết bài", "Tạo cuộc hẹn", "Chia hóa đơn", "Đăng kỷ niệm", "Đăng story", "Hẹn người thương"],
+  "nhanUI": ["Tạo mới", "Viết bài", "Tạo cuộc hẹn", "Chia hóa đơn", "Đăng kỷ niệm", "Đăng story", "Hẹn người thương"],
   "di_toi": [
     {"nhan": "Viết bài", "man": "community/new"},
     {"nhan": "Tạo cuộc hẹn", "man": "outings/new"},
@@ -14,7 +14,7 @@
   "tien": false
 }
 ---
-Nút tròn «Tạo mới» giữa thanh tab mở khay «Mình làm gì tiếp?». Đây là lối tắt tới mọi việc tạo mới trong app.
+Nút tròn «Tạo mới» giữa thanh tab mở khay cùng tên. Mỗi hàng là một việc; tên nhóm đang chọn nằm dưới tiêu đề. Việc phù hợp với tab vừa mở được đưa lên đầu.
 
 ## Chọn việc muốn tạo
 

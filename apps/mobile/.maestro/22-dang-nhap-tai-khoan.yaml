@@ -63,14 +63,24 @@ appId: com.lakiet.rudi
 # The empty live account has the same tabs as every signed-in account.
 - assertVisible: "Khám phá"
 - assertNotVisible: "Tôi có lời mời"
+- scrollUntilVisible:
+    element:
+      text: "Thêm bạn bằng tên tài khoản"
+    direction: DOWN
+    timeout: 20000
 - assertVisible: "Thêm bạn bằng tên tài khoản"
 - takeScreenshot: 22-chua-co-nhom
 # Và dùng được thật: mở một nhóm, vào tới tab.
+- scrollUntilVisible:
+    element:
+      text: "Tạo nhóm"
+    direction: UP
+    timeout: 20000
 - tapOn: "Tạo nhóm"
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"
     timeout: 30000
-- tapOn: "Ô tên nhóm"
+- tapOn: "Tên nhóm mới"
 - inputText: "Nhom Moi QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"

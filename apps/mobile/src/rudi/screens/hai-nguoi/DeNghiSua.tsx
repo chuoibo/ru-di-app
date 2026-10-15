@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { docChiTiet, docDanhMuc } from "../../kham-pha/dia-diem";
 import { homNay } from "../../keo/nhip-keo";
@@ -48,7 +48,9 @@ function gioCua(phut: number): string {
  * middle to type it); every line is written on a ruled line; a chosen place
  * is its small sketch card; «Vì sao đổi» is a note in the margin.
  */
-export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: ToGiay; open: boolean; onClose: () => void; onGui: (content: NoiDungTo, lyDo: string | null) => void; /** A catalogue place to start the main stop at («Rủ … tới đây»). */ choGoiY?: string; testID?: string }) {
+export function DeNghiSua({ to, open, onClose, onGui, choGoiY, dangLam = false, loi = null, testID }: { to: ToGiay; open: boolean; onClose: () => void; onGui: (content: NoiDungTo, lyDo: string | null) => Promise<boolean>; dangLam?: boolean; loi?: string | null; /** A catalogue place to start the main stop at («Rủ … tới đây»). */ choGoiY?: string; testID?: string }) {
+  const { width, fontScale } = useWindowDimensions();
+  const submitLock = useRef(false);
   const { colors, space } = useRudiTheme();
   const { phien } = useRudiSession();
   const nhap = to.state === "nhap";
@@ -72,6 +74,8 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
   const [cho2, setCho2] = useState<string | null>(tiep?.place_id ?? null);
   const [lyDo, setLyDo] = useState("");
   const [chonCho, setChonCho] = useState<0 | 1 | null>(null);
+  const [catalogState, setCatalogState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [catalogRetry, setCatalogRetry] = useState(0);
   const [danhMuc, setDanhMuc] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -87,7 +91,7 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
     setCho2(tiep?.place_id ?? null);
     setLyDo("");
     setChonCho(null);
-  }, [open, pb?.version]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, to.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A place handed in from its own page names the stop after its kind.
   useEffect(() => {
@@ -105,17 +109,16 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
 
   // The catalogue, read the first time a place is being chosen.
   useEffect(() => {
-    if (chonCho === null || danhMuc.length > 0) return;
+    if (chonCho === null || catalogState === "ready") return;
     let song = true;
+    setCatalogState("loading");
     void docDanhMuc({ personId: phien?.person_id ?? null })
       .then((dm) => {
-        if (song) setDanhMuc(dm.places.map((p) => ({ id: p.id, name: p.name })));
+        if (song) { setDanhMuc(dm.places.map((p) => ({ id: p.id, name: p.name }))); setCatalogState("ready"); }
       })
-      .catch(() => undefined);
-    return () => {
-      song = false;
-    };
-  }, [chonCho, danhMuc.length, phien?.person_id]);
+      .catch(() => { if (song) setCatalogState("error"); });
+    return () => { song = false; };
+  }, [chonCho, catalogRetry, phien?.person_id]);
 
   const tenCho = useTenCho([cho1, cho2, chinh?.place_id, tiep?.place_id]);
   const tenCua = (id: string) => tenCho[id] ?? danhMuc.find((p) => p.id === id)?.name;
@@ -199,7 +202,7 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{ngayDocDuoc(ngay)}</Text>
         </View>
         {/* The main stop: its hour on the dial, its line written beside it. */}
-        <View style={styles.hangChinh}>
+        <View style={[styles.hangChinh, (width < 380 || fontScale > 1.3) && { flexDirection: "column", alignItems: "stretch" }]}>
           <BanXoay co={148} nhan="Giờ chỗ chính" oLabel="Giờ chỗ chính" onChange={(p) => setGio1(gioCua(p))} phut={phutCua(gio1)} testID="de-nghi-sua-gio" />
           <View style={styles.viec}>
             <ONhapMuc error={loiViec1 ?? (gio1.trim() ? loi1 : null)} label="Chỗ chính" onChangeText={setViec1} placeholder="Ăn tối, một quán chưa đi" testID="de-nghi-sua-viec" value={viec1} />
@@ -230,8 +233,10 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
               {chonCho === 0 ? "Chỗ cho chặng chính" : "Chỗ cho chặng đi tiếp"} · từ Khám phá
             </Text>
-            {danhMuc.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc danh mục…</Text> : null}
-            {danhMuc.slice(0, 12).map((p) => (
+            {catalogState === "loading" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc danh mục…</Text> : null}
+            {catalogState === "error" ? <><Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>Chưa đọc được danh mục. Bạn vẫn có thể viết chỗ hẹn bằng lời.</Text><RudiButton label="Đọc lại danh mục" variant="outline" onPress={() => setCatalogRetry((n) => n + 1)} /></> : null}
+            {catalogState === "ready" && danhMuc.length === 0 ? <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có chỗ nào trong danh mục. Viết chỗ hẹn ở dòng phía trên.</Text> : null}
+            {danhMuc.map((p) => (
               <ListRow
                 icon="location-outline"
                 key={p.id}
@@ -258,13 +263,14 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
         ) : (
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Chưa đổi gì." : "Chưa đổi gì. Sửa một dòng ở trên thì gửi được."}</Text>
         )}
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
         <RudiButton
-          disabled={!guiDuoc}
+          disabled={dangLam || !guiDuoc} loading={dangLam}
           label={nhap ? "Lưu bản phác" : `Gửi phiên bản ${to.version + 1}`}
           // With nothing changed the line above already says so; otherwise
           // what is left to fix is named here (ADR-0038 §2.2).
           lyDo={guiDuoc || doi.length === 0 ? undefined : "Mỗi chặng cần một việc, và chỗ đang báo ở trên cần sửa."}
-          onPress={() => onGui(noiDung, lyDo.trim() || null)}
+          onPress={() => { if (submitLock.current || dangLam) return; submitLock.current = true; void onGui(noiDung, lyDo.trim() || null).finally(() => { submitLock.current = false; }); }}
         />
         <RudiButton label="Thôi" onPress={onClose} variant="ghost" />
       </View>

@@ -22,6 +22,8 @@ const DONG_TU = /^(Xoá|Xóa|Rời nhóm|Chặn|Bỏ bản|Bỏ nháp|Bỏ tờ|
 const KHONG_PHA = {
   // «Bỏ trang này» moves a page out of a notebook still being put together; the page can be added back.
   "src/rudi/diary/EndingScreen.tsx": ["Bỏ trang này"],
+  // Clearing a local search query leaves every conversation and message intact.
+  "src/rudi/screens/groups/Conversations.tsx": ["Xoá tìm kiếm"],
 };
 
 function tsx(thuMuc, ra = []) {

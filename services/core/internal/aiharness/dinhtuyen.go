@@ -357,7 +357,7 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 		y.K = truyhoi.UngVienXepLai
 	}
 	rec.Duong = obs.DuongTruyHoi
-	r, err := traloi.Chay(ctx, traloi.Vao{Cau: cauHoi, YeuCau: y}, traloi.BoPhan{
+	r, err := traloi.Chay(ctx, traloi.Vao{Cau: cauHoi, YeuCau: y, Random: rec.Lenh == obs.LenhRandom}, traloi.BoPhan{
 		BoPhan:   crag.BoPhan{Tim: tim, XepLai: xl, Cham: e.cham, NganSach: &crag.NganSachXepLai{}},
 		Verifier: e.kiem,
 	}, bc.SoCai, dem)
@@ -383,6 +383,12 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 	if r.KetThuc == traloi.BiChan {
 		rec.OutGuard = obs.OutChan
 		return Result{}, true, &Loi{Ma: cau.TraLoiBiChan}
+	}
+	if rec.Lenh == obs.LenhRandom && r.KetThuc == traloi.DuPhong {
+		// Generic retrieval may show raw catalogue cards on an unverified
+		// fallback. They are not verified matching choices for a game.
+		r.Chu = "Mình chưa kiểm chứng được lựa chọn phù hợp từ nguồn tìm. Bạn thử lại hoặc tự thêm lựa chọn để chơi nhé."
+		r.Phan = nil
 	}
 	res, err := e.kiemDauRaK(k, r.Chu, rec)
 	if err == nil {

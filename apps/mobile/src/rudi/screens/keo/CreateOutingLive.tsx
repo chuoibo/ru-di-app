@@ -2,7 +2,7 @@
  * Tạo kèo on a real session (M4): title, dates, headcount, budget a person,
  * validated by App B's `kiemTraTaoBuoiDi` and written with one Attempt.
  * Dates default to today; headcount defaults to the group's size (a real
- * number, not an invented one); the budget is the person's to type.
+ * number, not an invented one); budget is chosen on a stepped bar or typed exactly.
  *
  * ## An invitation, not a form to file (UI v2, đợt 4)
  *
@@ -17,9 +17,12 @@
 import { Redirect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, type TextInput } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View, type TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { RudiIcon } from "../../ui/RudiIcon";
+import { usePaperPalette } from "../../asset-pack/react-native/usePaperPalette";
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { kiemTraTaoBuoiDi, nhanKhoangNgay, type OTaoBuoiDi } from "../../../screens/len-plan/buoi-di";
@@ -31,7 +34,8 @@ import { ChonNgayLich } from "../../ui/ChonNgayLich";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
-import { PressScale } from "../../ui/PressScale";
+import { ThanhNganSach } from "../../ui/ThanhNganSach";
+import { docNganSach } from "../../keo/ngan-sach-keo";
 import { StampButton } from "../../ui/StampButton";
 import { TheVe } from "../../ui/TheVe";
 import { Washi } from "../../ui/Washi";
@@ -42,21 +46,12 @@ import type { ChangGui } from "../../../screens/len-plan/buoi-di";
 import { docKeoTuChat, taoKeoTuChat } from "../../chat/ai-invocations";
 import { HangChang } from "./HangChang";
 import { ngayKieuViet, ngayVeISO } from "../../chat/to-hen-chung";
-import { toggleState } from "../../../ui/a11y";
 import { laPair } from "../../nhan-rieng/nhan-rieng";
-
-const MUC_NGAN_SACH = [
-  { nhan: "200 nghìn", dong: 200000 },
-  { nhan: "300 nghìn", dong: 300000 },
-  { nhan: "500 nghìn", dong: 500000 },
-  { nhan: "1 triệu", dong: 1000000 },
-] as const;
 
 /** What the digits typed mean in đồng, or nothing while they are not a whole number. */
 function tienDaGo(chu: string): string | null {
-  const t = chu.trim();
-  if (!/^[0-9]+$/.test(t)) return null;
-  return dinhDangTienVnd(Number(t));
+  const amount = docNganSach(chu);
+  return amount === null ? null : dinhDangTienVnd(amount);
 }
 
 function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: boolean } {
@@ -67,12 +62,14 @@ function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: bo
   return { ten: nhom.display_name, soNguoi: String(nhom.member_count), haiNguoi: laPair(nhom) };
 }
 
-export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { phien: Phien; sourceMessageId?: string; placeId?: string }) {
+export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId, initialTitle }: { phien: Phien; sourceMessageId?: string; placeId?: string; initialTitle?: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, radius } = useRudiTheme();
+  const palette = usePaperPalette();
+  const { fontScale } = useWindowDimensions();
   const nhom = nhomHienTai(phien);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(() => initialTitle ?? "");
   // The boxes hold the spelling a person types and reads; ISO lives on the wire.
   const [startsOn, setStartsOn] = useState(ngayKieuViet(homNayIso()));
   const [endsOn, setEndsOn] = useState(ngayKieuViet(homNayIso()));
@@ -190,7 +187,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
         }
       }
       // `vua=tao`: the outing opens on the moment it was made (M5).
-      router.replace(`/outings/${id}?vua=tao` as never);
+      router.replace(`/outings/${id}?ctx=${encodeURIComponent(contextId)}&vua=tao` as never);
     } catch (error) {
       setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
       if (sourceMessageId && error instanceof ApiError && error.code === "plan_already_promoted") {
@@ -219,13 +216,19 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
     // bar however tall the form grows: at font 1.3 the button sat below the
     // fold behind the IME and the live board could not reach it (2026-09-07).
     <RudiScreen
+      material="quiet"
+      avoidKeyboard
+      focusBottomInset={16 + (loiO ? typography.caption.lineHeight * fontScale + 4 : 0)}
+      header={<TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />}
       bottomInset={Math.max(insets.bottom, 16) + 40}
       contentStyle={styles.screen}
       footer={
         // What the server or the source refused is said right above the
         // button that was pressed, inside the footer that never scrolls away.
         <View style={styles.chan}>
-          <CauTaiCho cau={loi} />
+          {/* Name and budget errors stay with their focused fields; their
+              measured clearance includes the helper above the IME. */}
+          <CauTaiCho cau={loi ?? (loiO?.o === "so-nguoi" || loiO?.o === "ngay" ? loiO.loi : null) ?? loiNgay?.batDau ?? loiNgay?.ketThuc ?? null} />
           {sourceMessageId ? (
             <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" lyDo={dangTao || sourceLoading ? undefined : existingId !== null ? "Tờ hẹn này đã thành kèo rồi." : sourceFailed ? "Chưa đọc được tờ hẹn này." : undefined} loading={dangTao || sourceLoading} onPress={() => void tao()} />
           ) : (
@@ -237,8 +240,10 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
       footerInset={Math.max(insets.bottom, 12) + 4}
       testID="create-outing-screen"
     >
-      <TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />
-      <Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} />
+      <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><View>
+        <PaperObject name="ticket" width={72} palette={{ ...palette, shade: colors.lineStrong }} />
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", paddingLeft: 16 }]}><RudiIcon color={colors.inkSoft} name="calendar-outline" size={20} /></View>
+      </View></View>
       {/* The invitation said out loud, with its blanks: what, when, how many,
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>
@@ -263,10 +268,14 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           value={title}
         />
         <View style={styles.hangLich}>
+          <View style={styles.ngayLich}>
           <Text style={[typography.h2, { color: colors.ink }]}>từ</Text>
           <ChonNgayLich giaTri={startsOn} nhan="Ngày đi" onChange={(v) => { setStartsOn(v); boLoi("ngay"); if (loiNgay) setLoiNgay(null); }} testID="ngay-di" />
+          </View>
+          <View style={styles.ngayLich}>
           <Text style={[typography.h2, { color: colors.ink }]}>tới</Text>
           <ChonNgayLich giaTri={endsOn} nhan="Ngày về" onChange={(v) => { setEndsOn(v); boLoi("ngay"); if (loiNgay) setLoiNgay(null); }} testID="ngay-ve" />
+          </View>
         </View>
         {loiNgay?.batDau || loiNgay?.ketThuc || loiCua("ngay") ? (
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiNgay?.batDau ?? loiNgay?.ketThuc ?? loiCua("ngay")}</Text>
@@ -286,30 +295,11 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiCua("so-nguoi")}</Text>
         ) : null}
         {nhom.soNguoi && !nhom.haiNguoi ? <ChuThichLe icon="people-outline">{nhom.ten} hiện có {nhom.soNguoi} người; bớt đi nếu chỉ một phần đi.</ChuThichLe> : null}
-        <Text style={[typography.h2, { color: colors.ink }]}>mỗi người khoảng</Text>
-        {/* Four envelopes, thin to thick, or the amount typed. */}
-        <View style={styles.hangPhongBi}>
-          {MUC_NGAN_SACH.map((m, i) => {
-            const chon = nganSach === String(m.dong);
-            return (
-              <PressScale
-                accessibilityLabel={m.nhan}
-                {...toggleState("radio", chon, () => { setNganSach(String(m.dong)); boLoi("ngan-sach"); })}
-                haptic="select"
-                key={m.dong}
-                onPress={() => { setNganSach(String(m.dong)); boLoi("ngan-sach"); }}
-                style={[styles.phongBi, { backgroundColor: chon ? colors.accentSoft : colors.paper, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }]}
-              >
-                <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
-                <View style={[styles.dayPhongBi, { height: 2 + i * 2, backgroundColor: colors.lineStrong }]} />
-                <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{m.nhan}</Text>
-              </PressScale>
-            );
-          })}
-        </View>
+        <Text style={[typography.title, { color: colors.ink }]}>Ngân sách mỗi người</Text>
+        <ThanhNganSach value={nganSach} disabled={dangTao} onChange={(v) => { setNganSach(v); boLoi("ngan-sach"); }} />
         {/* «ví dụ …», not a bare «250000»: a bare number on the line read as
             a budget already written in (QA UI-034). */}
-        <ONhapMuc accessibilityLabel="Ô ngân sách một người" error={loiCua("ngan-sach")} keyboardType="number-pad" label="hoặc gõ số đồng" oRef={oNganSach} onChangeText={(t) => { setNganSach(t); boLoi("ngan-sach"); }} placeholder="ví dụ 250.000" value={nganSach} />
+        <ONhapMuc accessibilityLabel="Ô ngân sách một người" error={loiCua("ngan-sach")} keyboardType="number-pad" label="Hoặc nhập số chính xác" oRef={oNganSach} onChangeText={(t) => { setNganSach(t); boLoi("ngan-sach"); }} placeholder="ví dụ 250.000" value={nganSach} />
         {tien !== null ? <ChuThichLe icon="wallet-outline">{`= ${tien} một người, số tham chiếu chứ không phải mức trần.`}</ChuThichLe> : null}
       </View>
       {xemTruoc ? (
@@ -347,10 +337,10 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
           <RudiButton compact full={false} label="Bỏ chỗ này" onPress={() => setChoDau(null)} variant="ghost" />
         </View>
       ) : null}
-      {daTaoThieuCho ? <RudiButton label="Mở kèo vừa tạo" variant="outline" onPress={() => router.replace(`/outings/${daTaoThieuCho}?vua=tao` as never)} /> : null}
+      {daTaoThieuCho ? <RudiButton label="Mở kèo vừa tạo" variant="outline" onPress={() => router.replace(`/outings/${daTaoThieuCho}?ctx=${encodeURIComponent(contextId)}&vua=tao` as never)} /> : null}
       {existingId ? <View style={styles.khoi}>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ hẹn này đã thành kèo. Mọi người tiếp tục sửa trên cùng một lịch trình.</Text>
-        <RudiButton label="Mở kèo đã tạo" variant="outline" onPress={() => router.replace(`/outings/${existingId}` as never)} />
+        <RudiButton label="Mở kèo đã tạo" variant="outline" onPress={() => router.replace(`/outings/${existingId}?ctx=${encodeURIComponent(contextId)}` as never)} />
       </View> : null}
       {sourceFailed ? <RudiButton label="Viết kèo mới" variant="outline" onPress={() => router.replace({ pathname: "/outings/new", params: { contextId } } as never)} /> : null}
     </RudiScreen>
@@ -358,13 +348,18 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
 }
 
 const styles = StyleSheet.create({
-  screen: { maxWidth: 640 },
+  screen: { maxWidth: 560 },
+  flex: { flex: 1 },
+  dauForm: { flexDirection: "row", alignItems: "center", gap: 12 },
+  motCot: { flexBasis: "100%", maxWidth: "100%" },
+  dauChon: { position: "absolute", right: 6, top: 6 },
   khoi: { gap: 8 },
   chan: { gap: 8 },
   // The invitation card: a sheet of the coral paper's card, taped at the top.
   thiep: { borderWidth: 1, padding: 16, paddingTop: 22, gap: 12 },
   washi: { position: "absolute", top: -10, alignSelf: "center", width: 96 },
   hangLich: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10 },
+  ngayLich: { flexDirection: "row", alignItems: "center", gap: 10 },
   hangSo: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
   // 48: DESIGN's touch floor (critique, B3: the stepper sat at 44).
   nutSo: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: "center", justifyContent: "center" },
@@ -372,7 +367,7 @@ const styles = StyleSheet.create({
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // An envelope per budget: thicker as the amount grows.
-  phongBi: { flexGrow: 1, flexBasis: 60, minHeight: 64, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  phongBi: { flexGrow: 1, flexBasis: "46%", maxWidth: "50%", minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 8, paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
 });

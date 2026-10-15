@@ -1,0 +1,144 @@
+{
+  "id": "r3",
+  "purpose": "Private profile code-led critique concept only, not approved comp, AFTER capture, behavioural evidence or shipping approval.",
+  "created_utc": "2026-10-13T04:14:31.493023+00:00",
+  "generation": {
+    "tool": "built-in tools.image_gen__imagegen",
+    "calls": 1,
+    "cli_used": false,
+    "transparent_background": false,
+    "original_output": "/home/lakiet/.codex/generated_images/01a13369-f061-7b13-b714-362fcff77cb4/exec-55d7b652-8db1-4c8a-9cc2-45d7505afc39.png",
+    "image": {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/profile-redesign-imagegen-6c737f8d-20261013-r1/concept-r3.png",
+      "sha256": "6f62c59696c71aa5c63ade0471d96e9c6a50b50af28a74b5c49dd5e10d9ca5f4",
+      "bytes": 1497201,
+      "pixel_size": [
+        1293,
+        1216
+      ]
+    },
+    "exact_prompt": {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/profile-redesign-imagegen-6c737f8d-20261013-r1/prompt-r3.txt",
+      "sha256": "73f4112c3ed2249538b45926e8763736501bdf2423e5e04fa811d65ec4838181",
+      "bytes": 6403
+    }
+  },
+  "reference": {
+    "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6c737f8d/root-native-screens/profile-source-start.png",
+    "sha256": "fab5a0f78aa5705ed9f1f1446fbceeb353b013b14b7a403939ea6742cea416e3",
+    "bytes": 56775,
+    "pixel_size": [
+      320,
+      640
+    ]
+  },
+  "reference_role": "Synthetic fixture visual reference only; source image is not proof of current runtime identity, approved implementation, or AFTER status.",
+  "review_read_before_prompt": {
+    "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/profile-mockup-fresh-review-20261013-r1/review.md",
+    "sha256": "b2f1b4beaab4bcc11649abd401735c562b2c6af74fa713515ad56b59351b573e",
+    "bytes": 15532
+  },
+  "source_files_read": [
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/diary/api.ts",
+      "sha256": "ca747e148cb092a2a3ad394c60a3205566e4e047841bac686105f43c57de2246",
+      "bytes": 8030
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/diary/Wall.tsx",
+      "sha256": "be0b16de3b1cf4b8e5e08e7bcf881599d8cb97d6325633a2b39f24daf9a9de81",
+      "bytes": 5032
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/diary/BookView.tsx",
+      "sha256": "04a1960430e535bb34649bbc10b058b044f7d68671cdcb9f6765483081a2d239",
+      "bytes": 4056
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/screens/Profile.tsx",
+      "sha256": "a957d4e08e87ba96bf67ff5c78c4d26cbeda7cd165cdd350705e1daf23bfcb40",
+      "bytes": 17962
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/screens/profile/HoSoSong.tsx",
+      "sha256": "720e1fa34f2c58c78c7cabd9f8fee4681866dc12cdb8936c9cfc0b3eb031b1fa",
+      "bytes": 9247
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/src/rudi/theme.ts",
+      "sha256": "5f3d0dd0210dc564d01431186b3b3fd1f1cccb655f12d431aa6104c907f8a6fe",
+      "bytes": 8702
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/packages/shared/tokens.json",
+      "sha256": "93ec25e6e55d2f7d1046e9949fa211f18209a631349b01fa3f1c0f88679bd4d7",
+      "bytes": 11340
+    },
+    {
+      "path": "/home/lakiet/project/mobile/ru-di-app/apps/mobile/app/(tabs)/_layout.tsx",
+      "sha256": "58aad629cf636acae2ad36c3d3580c670e9bcb81b2bb68263915be7995cfc3e2",
+      "bytes": 1618
+    }
+  ],
+  "data_origin": {
+    "identity": "Existing synthetic fixture reference: Minh QA, Đà Lạt, join2026, bio, tastes/budget, five counts. No real participant data.",
+    "diary": "New synthetic illustrative QA fiction supplied/authorized by root for concept only, not fetched or asserted as actual user data.",
+    "diary_fields": {
+      "kind": "moment",
+      "audience": "private",
+      "document.title": "Một ngày muốn giữ · Tổng hợp",
+      "document.subtitle": "Một cuộc hẹn nhỏ cùng bạn bè.",
+      "document.cover_id": "",
+      "document.pages[0].text": "Giữ lại vài dòng để lần sau mở ra vẫn nhớ."
+    },
+    "content_contract": "Existing Diary type and listDiaries(person,owner) provide diary document, kind, audience, created_at. Concept specifies first item in server-created_at DESC order; newest created diary is distinct from newest outing. No API was called."
+  },
+  "design_spec": {
+    "primary": "One open text-first diary preview beneath profile tabs.",
+    "secondary": "Bio/interests support identity; all five profile facts appear once as subordinate asymmetric context. Only Friends receives a reviewed destination affordance.",
+    "visible_utility": "Công cụ của tôi / Tường của tôi begins the scroll continuation.",
+    "required_below_fold_doors": [
+      "Tài chính của tôi",
+      "Hành trình",
+      "Đã lưu",
+      "Cài đặt",
+      "Tài khoản",
+      "Đăng xuất inside existing account panel"
+    ],
+    "settings": "One Settings door in utility section, no top gear.",
+    "bottom_nav": [
+      "Khám phá",
+      "Lên plan",
+      "Tạo",
+      "Tin nhắn",
+      "Cá nhân"
+    ],
+    "tokens": "Existing warm paper light and navy dark shared tokens; generator shading is not authority."
+  },
+  "inspection": {
+    "performed": true,
+    "method": "Opened actual generated PNG via tools.view_image(detail=original), after imagegen output.",
+    "strengths": [
+      "Clear shift from feature directory to content-led personal journal.",
+      "All five facts, identity bio and join2026 preserved and readable.",
+      "Same layout/state/content across light and navy dark.",
+      "Only one existing tool visible at fold; remaining doors specified below fold, not crammed into screenshot.",
+      "No decorative photo, cover illustration or new raster implementation asset."
+    ],
+    "limits": [
+      "Output geometry remains a generated approximation. The file does not prove exact390x844 native bounds or48dp targets. Do not resize PNG and call that native evidence.",
+      "Displayed type/icon/solid-fill details must use existing native fonts, vectors and tokens in code; subtle generator shading is not to be implemented.",
+      "Diary copy is synthetic illustrative QA fiction, not actual API data. Production implementation must select actual newest-created available document and truthfully implement loading/empty/error states.",
+      "Below-fold doors are specified in prompt and metadata, not visible proof of implementation or reachability.",
+      "No interaction, accessibility, contrast measurement, reflow, scroll, native metrics, edit/IME, compiler, emulator, test or runtime action was performed.",
+      "No independent beauty approval or ship verdict is claimed."
+    ]
+  },
+  "implementation_assets": {
+    "new_raster_required": false,
+    "companion_assets": [],
+    "reason": "Use native text-first diary preview when cover_id is empty; no mockup raster should be embedded or cropped into the UI."
+  },
+  "production_files_edited": false,
+  "runtime_tests_compiler_emulator_api_actions": false
+}

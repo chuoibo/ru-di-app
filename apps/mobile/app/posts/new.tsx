@@ -1,11 +1,12 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
 import { ApiError, translatedAsActor } from "../../src/api";
+import { SkeletonLines } from "../../src/rudi/ui/Skeleton";
+import { ErrorState } from "../../src/rudi/ui/ErrorState";
 import { COMMUNITY_ERRORS } from "../../src/rudi/community/api";
 import { DangBaiScreen } from "../../src/rudi/screens/nguoi/DangBaiScreen";
 import { useRudiSession } from "../../src/rudi/session";
-import { RudiButton, RudiScreen } from "../../src/rudi/ui";
+import { RudiScreen, TopBar } from "../../src/rudi/ui";
 
 /** Keep the established composer available while the community rollout is off. */
 export default function NewWallPost() {
@@ -15,7 +16,7 @@ export default function NewWallPost() {
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     let current = true;
-    setError(null);
+    setError(null); setEnabled(null);
     if (!phien) { setEnabled(false); return; }
     void translatedAsActor(COMMUNITY_ERRORS, "/v2/community/preferences", { actorId: phien.person_id, method: "GET" })
       .then(() => { if (current) setEnabled(true); })
@@ -26,8 +27,8 @@ export default function NewWallPost() {
       });
     return () => { current = false; };
   }, [phien, retry]);
-  if (error) return <RudiScreen><Text accessibilityRole="alert">{error}</Text><RudiButton label="Thử lại" onPress={() => setRetry((value) => value + 1)} /></RudiScreen>;
-  return enabled === null ? <ActivityIndicator accessibilityLabel="Đang mở trang viết" /> : enabled
+  if (error) return <RudiScreen material="quiet" cot="form"><TopBar title="Kể một khoảnh khắc"/><ErrorState title="Chưa mở được trang viết" body={error} onRetry={() => setRetry((n) => n + 1)}/></RudiScreen>;
+  return enabled === null ? <RudiScreen material="quiet" cot="form"><TopBar title="Kể một khoảnh khắc"/><SkeletonLines lines={5}/></RudiScreen> : enabled
     ? <Redirect href={{ pathname: "/community/new", params: { wall: "1" } } as never} />
     : <DangBaiScreen />;
 }

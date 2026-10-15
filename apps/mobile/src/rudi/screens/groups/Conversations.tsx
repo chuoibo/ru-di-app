@@ -18,23 +18,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Pressable, StyleSheet, View } from "react-native";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { useNativeFontScale } from "../../chia-bill/useBillFontScale";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
 import { apiV2 } from "../../chat/e2ee/api-v2";
 import { gopTomTatV2 } from "../../chat/e2ee/tom-tat";
 import { xemTruocV2 } from "../../chat/e2ee/useTinNhanV2";
-import { tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
+import { gioPhut, tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { cauLoiMoi, docLoiMoiNhom, loiMoiTruoc, tuChoiLoiMoiNhom, type LoiMoiNhom } from "../../nhom/loi-moi-nhom";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
 import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
-import { Heading, RudiButton, RudiScreen } from "../../ui";
+import { Field, IconButton, RudiButton, RudiScreen } from "../../ui";
+import { khopTenCuocTroChuyen } from "../../nhom/tim-cuoc-tro-chuyen";
 import { EmptyState } from "../../ui/EmptyState";
-import { Canh } from "../../ui/art/Canh";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ErrorState } from "../../ui/ErrorState";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -59,6 +62,16 @@ function tenTacGia(tin: { author_id: string | null; author_display_name: string 
 }
 
 export function ConversationsScreen({ phien }: { phien: Phien }) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <ConversationsContent phien={phien} /> : <ObserveConversationMetrics phien={phien} />;
+}
+
+function ObserveConversationMetrics({ phien }: { phien: Phien }) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}><ConversationsContent phien={phien} /></NativeFontMetricsProvider>;
+}
+
+function ConversationsContent({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const { datPhien } = useRudiSession();
@@ -70,6 +83,9 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     return () => { conMo.current = false; };
   }, []);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  const [query, setQuery] = useState("");
+  const actionLock = useRef(false);
+  const [readError, setReadError] = useState<string | null>(null);
   const [dangBam, setDangBam] = useState<string | null>(null);
   // QA UI-080: who invited, read for each open invitation; and an answer that
   // failed is said under its own row, the list stays (QA UI-077 pattern).
@@ -90,6 +106,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       ]);
       const xemTruoc = await xemTruocV2(lucBatDau.person_id, rooms.map((r) => r.conversation_id)).catch(() => ({}));
       if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
+      setReadError(null);
       setTrang({ pha: "xong", nhom: gopTomTatV2(nhom, rooms, xemTruoc) });
       // An invitation that cannot be read still shows, without a name.
       for (const n of nhom.filter((x) => x.my_state === "invited" && !laPair(x))) {
@@ -104,7 +121,9 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       const moi = await ganDanhSachNhom(phienMoiNhat.current, nhom);
       if (conMo.current && phienMoiNhat.current.token === lucBatDau.token) datPhien(moi);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
+      setReadError(loiRaChu(error));
+      setTrang((held) => held.pha === "xong" ? held : { pha: "hong", loi: loiRaChu(error) });
     }
     // `phien` changes identity on every `datPhien`; refetching on that would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,6 +145,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   }, [nap]);
 
   const moNhom = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     try {
       // A pair is never the current group (ADR-0021 §2.5): the money screens
@@ -138,11 +159,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
   const dongY = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     setLoiHang(null);
     try {
@@ -157,11 +181,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
   const tuChoi = async (nhom: NhomTomTat) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setDangBam(nhom.id);
     setLoiHang(null);
     try {
@@ -171,23 +198,28 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     } catch (error) {
       setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
+      actionLock.current = false;
       setDangBam(null);
     }
   };
 
+  const matching = trang.pha === "xong" ? loiMoiTruoc(trang.nhom).filter((nhom) => khopTenCuocTroChuyen(tenCuocTroChuyen(nhom), query)) : [];
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
+  // An unusable inherited owner keeps the readable reflow without a child observer.
+  const largeText = bodyMetrics === null || (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25;
+
   return (
-    <RudiScreen bottomInset="tab" onRefresh={nap} testID="conversations-screen">
+    <RudiScreen material="quiet" cot="doc" bottomInset="tab" onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" subtitle="Nhóm của bạn" />
+          <Text accessibilityRole="header" style={[typography.h1, { color: colors.ink }]}>Tin nhắn</Text>
         </View>
-        {/* Not in the top-right corner: on the development build the
-            dev-launcher's floating gear covers it. A compact button beside the
-            title is reachable on the build we test on. */}
-        <RudiButton compact full={false} icon="add" label="Tạo nhóm" onPress={() => router.push("/groups/new")} variant="outline" />
+        <IconButton accessibilityLabel="Tạo nhóm" icon="add" onPress={() => router.push("/groups/new")} quiet />
       </View>
+      <Field nativeMetrics icon="search-outline" returnKeyType="search" accessibilityLabel="Tìm cuộc trò chuyện" placeholder="Tìm người hoặc nhóm" value={query} onChangeText={setQuery} autoCorrect={false} trailing={query ? <IconButton accessibilityLabel="Xoá tìm kiếm" icon="close" onPress={() => setQuery("")} quiet /> : undefined} />
       {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
-      <StoryRail personId={phien.person_id} />
+      <StoryRail nativeMetrics personId={phien.person_id} />
+      {readError && trang.pha === "xong" ? <CauTaiCho cau={`Chưa cập nhật được danh sách. ${readError}`} hanhDong={{ label: "Đọc lại", onPress: () => void nap() }} /> : null}
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow leading={44} />
@@ -198,20 +230,26 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách nhóm" /> : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
+          nativeMetrics
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
           body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
-          illustration={<Canh id="chua-co-hoi" width={168} />}
+          illustration={<AssetIllustration name="spot-keeps" width={220} height={170} />}
           kind="first-use"
           layout="inline"
           title="Chưa có nhóm nào"
         />
       ) : null}
+      {trang.pha === "xong" && trang.nhom.length > 0 && matching.length === 0 ? <View style={styles.khongTimThay}>
+        <Text style={[typography.title, { color: colors.ink }]}>Chưa tìm thấy cuộc trò chuyện</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Thử tên khác hoặc xoá tìm kiếm để xem tất cả.</Text>
+        <RudiButton compact full={false} label="Xoá tìm kiếm" variant="ghost" onPress={() => setQuery("")} />
+      </View> : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <RudiButton icon="person-add-outline" label="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} variant="ghost" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>
-          {loiMoiTruoc(trang.nhom).map((nhom) => {
+          {matching.map((nhom) => {
             const duocMoi = nhom.my_state === "invited";
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
@@ -238,29 +276,34 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                       <GaySo ten={tenCuocTroChuyen(nhom)} theme={nhom.theme} />
                     )
                   )}
-                  <View style={styles.hangChu}>
-                    <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
-                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-                      {duocMoi && !laPair(nhom)
-                        ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
-                        : nhom.unavailable === true
-                          ? "Không còn nhận tin"
-                          : laPair(nhom)
-                            ? "Nhắn riêng"
-                            : `${nhom.member_count} thành viên`}
-                      {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
-                    </Text>
-                    <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
-                      {nhom.last_message
-                        ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
-                        : "Chưa có tin nhắn nào."}
-                    </Text>
-                  </View>
-                  {nhom.unread_count > 0 ? (
-                    <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
-                      <Text style={[typography.caption, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+                  <View style={[styles.hangNoi, largeText && styles.hangNoiDoc]}>
+                    <View style={[styles.hangChu, largeText && styles.hangChuDoc]}>
+                      <Text numberOfLines={largeText ? undefined : 2} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
+                      <Text numberOfLines={largeText ? undefined : 1} style={[typography.note, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "400" }]}>
+                        {nhom.last_message
+                          ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
+                          : "Chưa có tin nhắn nào."}
+                      </Text>
+                      <Text numberOfLines={largeText ? undefined : 1} style={[typography.note, { color: colors.inkFaint }]}>
+                        {duocMoi && !laPair(nhom)
+                          ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
+                          : nhom.unavailable === true
+                            ? "Không còn nhận tin"
+                            : laPair(nhom)
+                              ? "Nhắn riêng"
+                              : `${nhom.member_count} thành viên`}
+                        {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
+                      </Text>
                     </View>
-                  ) : null}
+                    <View style={[styles.meta, largeText && styles.metaDoc]}>
+                      {nhom.last_message && Number.isFinite(Date.parse(nhom.last_message.created_at)) ? <Text style={[typography.note, styles.gio, { color: colors.inkSoft }]}>{gioPhut(nhom.last_message.created_at)}</Text> : null}
+                      {nhom.unread_count > 0 ? (
+                        <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
+                          <Text style={[typography.caption, styles.soChuaDoc, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
                 </Pressable>
                 {duocMoi && hoiTuChoi !== nhom.id ? (
                   // Two answers side by side (QA UI-080): yes, or no.
@@ -289,6 +332,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   // Asked in the row, like every answer that removes something.
                   <View style={styles.hoi}>
                     <HoiTaiHang
+                      nativeMetrics
                       cau={`Từ chối lời mời vào ${tenCuocTroChuyen(nhom)}? Nếu đổi ý, bạn cần được mời lại.`}
                       dangLam={dangBam === nhom.id}
                       nhan="Từ chối"
@@ -317,7 +361,7 @@ function GaySo({ ten, theme }: { ten: string; theme?: string }) {
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.gayKhung}>
       <View style={[styles.gay, { backgroundColor: mau.bubble, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
         <View style={[styles.gayBanLe, { backgroundColor: phuMau(colors.ink, dark ? 0.3 : 0.22) }]} />
-        <Text style={[typography.title, { color: mau.bubbleInk }]}>{chu}</Text>
+        <Text allowFontScaling={false} style={[typography.title, { color: mau.bubbleInk }]}>{chu}</Text>
         <View style={[styles.gayNhan, { backgroundColor: colors.card }]} />
       </View>
     </View>
@@ -329,16 +373,24 @@ const styles = StyleSheet.create({
   gay: { width: 34, height: 48, borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", overflow: "hidden", paddingLeft: 4 },
   gayBanLe: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
   gayNhan: { position: "absolute", bottom: 7, left: 10, right: 5, height: 4, borderRadius: 1 },
-  flex: { flex: 1 },
-  dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  flex: { flex: 1, minWidth: 0 },
+  dau: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  khongTimThay: { gap: 8, paddingVertical: 24 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
+  hangChinh: { flexDirection: "row", alignItems: "flex-start", gap: 12, minHeight: 56 },
   // Answers start under the text column (avatar 44 + gap 12).
   traLoi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, paddingLeft: 56 },
   hoi: { gap: 4, paddingLeft: 56 },
   khongThut: { paddingLeft: 0 },
   hinh: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  hangChu: { flex: 1, gap: 2 },
-  chuaDoc: { minWidth: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
+  hangNoi: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  hangNoiDoc: { flexDirection: "column" },
+  hangChu: { flex: 1, minWidth: 0, gap: 4 },
+  hangChuDoc: { flex: 0, alignSelf: "stretch" },
+  meta: { alignItems: "flex-end", flexShrink: 0, gap: 6 },
+  metaDoc: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  gio: { fontVariant: ["tabular-nums"] },
+  chuaDoc: { minWidth: 26, minHeight: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4 },
+  soChuaDoc: { textAlign: "center", fontVariant: ["tabular-nums"] },
   bam: { opacity: 0.7 },
 });

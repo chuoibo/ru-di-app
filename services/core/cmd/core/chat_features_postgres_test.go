@@ -46,10 +46,11 @@ func (l *lockedBuffer) String() string {
 	return l.b.String()
 }
 
-// chatSchemaURL returns a database URL whose search_path starts at a fresh
+// chatSchemaURL returns a database URL whose search_path is only a fresh
 // schema holding copies of the tables the chat migrations touch. The capture
 // triggers then land on the copies, never on the public tables other packages
-// of the tier are writing to at the same time.
+// of the tier are writing to at the same time. Migration version lookups
+// cannot resolve a public table before the local one is created.
 func chatSchemaURL(t *testing.T) string {
 	t.Helper()
 	base := testdb.Pool(t)
@@ -70,13 +71,16 @@ func chatSchemaURL(t *testing.T) string {
 		}
 	})
 	config := base.Config().Copy()
-	config.ConnConfig.RuntimeParams["search_path"] = schema + ",public"
+	config.ConnConfig.RuntimeParams["search_path"] = schema
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	for _, table := range []string{"people", "contexts", "memberships", "friend_requests", "account_sessions", "messages", "message_reactions", "votes", "vote_options", "vote_ballots", "places", "destinations", "outings", "outing_stops"} {
+	// Base dependencies of all eight migrate-chat families: feed, jobs,
+	// assistant, metrics, avatars, memory, chat v2 and push. Each family
+	// creates its own tables and functions inside this schema.
+	for _, table := range []string{"people", "contexts", "memberships", "friend_requests", "account_sessions", "messages", "message_reactions", "votes", "vote_options", "vote_ballots", "places", "destinations", "outings", "outing_stops", "uploaded_images"} {
 		if _, err := pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}
@@ -85,7 +89,7 @@ func chatSchemaURL(t *testing.T) string {
 	if strings.Contains(raw, "?") {
 		separator = "&"
 	}
-	return raw + separator + "search_path=" + url.QueryEscape(schema+",public")
+	return raw + separator + "search_path=" + url.QueryEscape(schema)
 }
 
 // freeAddresses returns two distinct loopback addresses for core's public and

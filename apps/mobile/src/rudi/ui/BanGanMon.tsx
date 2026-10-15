@@ -13,7 +13,8 @@
  * first opens. Nothing here computes a share -- the server splits.
  */
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { Text } from "./NativeFontMetrics";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import Svg, { Ellipse, Rect } from "react-native-svg";

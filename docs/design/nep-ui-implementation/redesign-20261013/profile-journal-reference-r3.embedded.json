@@ -1,0 +1,8 @@
+{
+  "original_png_sha256": "6f62c59696c71aa5c63ade0471d96e9c6a50b50af28a74b5c49dd5e10d9ca5f4",
+  "embedded_png_sha256": "c3b26b0f160411708afd078030bfb8215935bd2fa146dacf7aa230a6adf7b9f5",
+  "method": "impeccable wrapper embed-prompt PNG tEXt; generation original unchanged in private packet",
+  "prompt_file": "profile-journal-reference-r3.prompt.txt",
+  "imagegen_tool": "built-in",
+  "scope": "synthetic critique reference only; no product raster"
+}

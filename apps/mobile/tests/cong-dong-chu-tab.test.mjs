@@ -43,7 +43,8 @@ test("«Đã lưu» và «Bài của tôi» rỗng thì nói ở đó sẽ có g
 
 test("lời xin cá nhân hoá chỉ ở «Dành cho bạn», nơi nó đổi được điều gì", () => {
   // And only over a feed with posts in it (finish review 03/10, cong-dong-trang-rong.test.mjs).
-  assert.match(man, /prefs && !prefs\.asked && !topic && mode === "for_you" && posts\.length > 0 \? <View style=\{\[styles\.consent/);
+  // JSX parentheses and line breaks do not change the guard or its consent wrapper.
+  assert.match(man, /\{prefs && !prefs\.asked && !topic && mode === "for_you" && posts\.length > 0 \?\s*\(?\s*<View style=\{\[styles\.consent/);
 });
 
 // Deferred minor of 02/10: the save button had no pending state, so two quick

@@ -732,17 +732,17 @@
     }
   },
   "kit": {
-    "StampButton": "rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng",
-    "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu (Welcome «Tìm hiểu thêm»)",
+    "StampButton": "mặc định rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; riêng Welcome 34d57ca9 tilt0 và rộng hết cột; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng; I1 tại7d: wrapLabel opt-in, caller maxWidth100%, nhãn flexShrink1 căn giữa, paddingVertical12 để tự cao theo chữ hệ thống; không thu font hoặc đổi mặc định caller khác. Không lấy mô tả disabled0.55 lịch sử ở trên làm luật mới thay ADR-0038.",
+    "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, mặc định rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu. Welcome 34d57ca9 dùng link full: width 100%, nhãn flex 1 căn giữa lấy phần còn lại bên chevron18, giữ đủ «Tìm hiểu thêm» / «Xem lại từ đầu»; không thêm viền và không đổi link intrinsic ở màn khác",
     "CoverBand": "nền cover + Grain vaiBia 0.3, bo dưới 28, paddingTop md (+insets.top khi underStatusBar), paddingBottom lg, bleed = lề màn; compact rút vải khi bàn phím mở; back tròn 48 coverInk 0.08, PressScale 0.92 scale-only",
     "Washi": "SVG mép xé, cao 30 (40 dưới wordmark), paddingHorizontal 18, minWidth 120, tilt ±1/±2, vạch sáng card 0.35 1.5px",
-    "Wordmark": "SVG, height mặc định 28; Welcome 118 compact / 150 medium+ / 72 short; coverInk trên bìa",
+    "Wordmark": "SVG, height mặc định 28; Welcome 34d57ca9 dùng Logo compact, wordmark cao18; coverInk trên bìa",
     "RouteLine": "stroke 3, stops 2..5, glyph r16 (active r21), activeColor brand.coral + activeInk mauSang.ink, opacity 0.82 trên bìa, maxWidth 560",
     "Stamp": "viền 2 màu tông, bo 6, đệm 8/4, minHeight 26, typography.stamp; outline mặc định, ink hiếm; accessibilityLabel = nhãn, không role; nen = miếng giấy card dưới con dấu viền khi đặt trên ảnh (HỢP GU, GỢI Ý); dong = cú đóng dấu: lao 130ms Easing.in(quad) scale 1.35→1 mực 25% (roi), chạm 60ms mực 25→100% + haptic.success (muc), lún 1→0.97→1 spring.press (lun, shared value riêng); Reduce Motion gập thành tĩnh; chỉ truyền cho hàng vừa bấm (Bill «Đã trả», Outing «Đã tới», DotThuLive sau máy chủ xác nhận); ship 12 màn",
     "Money": "typography.money 21/27 EB tabular; sizes display/money/body/label/caption; countUp chỉ khi domainStateValid (moneyCountUpMs)",
     "RudiTabBar": "card + hairline line, cao tabBarHeight(fontScale) + max(insets.bottom,10): 64 tới fontScale 1.15, + round((fs−1.15)×44) tới 2.0, tab minHeight 48, icon 24, caption override 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral glyph brand.coralInk tĩnh vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78 chỉ ở thanh đáy, chỉ đọc từ mã",
     "PressScale": "scale-only trên UI thread; 0.97 mặc định (con dấu CTA), 0.98 RudiButton, 0.985 ListRow/khay tạo, 0.96 Chip, 0.94 IconButton/FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact; đợt 8 thay mọi nhánh pressed mờ trong kit (RudiButton, IconButton, Chip, ListRow), màn feature còn nhánh mờ riêng",
-    "Sheet": "v2 (01/10): card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), hàng lỗ giấy paperShade 5x5 mép trên; trần 82% cửa sổ cho CẢ tấm (tay cầm + dauTrang + nội dung + footer + đệm), maxHeight thay trần, avoidKeyboard co theo khung trên bàn phím; rộng tối đa 640 căn giữa (RONG_TOI_DA); trượt theo chiều cao đo được của tấm + 24, khép mờ (opacity theo progress 0→0.12→1); spring settle vào / standard ra; scrim lopPhu.toi(0.42); 250ms đầu (CHAN_CHAM_MS) scrim và tấm không nhận chạm; Back cứng Android, Esc web, Back trình duyệt (lui-web.ts) đóng; onBack tiêu Back cho bước nội tuyến; màn blur thì đóng; web role=dialog aria-modal, anh em inert+aria-hidden, focus control đầu, Tab quay vòng, trả lại thuộc tính chỉ khi còn là của nó; zIndex 10; Nếp không đè; tay cầm: hàng minHeight 36 giữa hai ô 48, vạch 40x4 lineStrong, Gesture.Pan activeOffsetY 6, > 90dp hoặc > 900dp/s đóng, scrim × (1 − kéo/cao tấm), ẨN khỏi trợ năng; lối ra trợ năng «Đóng bảng» 48x48 close 22 ink; onClosed sau khi tấm rời; thân khép đọc useGiuKhiDong; đặt qua RudiScreen overlay, LenLop hoặc route trong suốt",
+    "Sheet": "v2 (01/10): card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), hàng lỗ giấy paperShade 5x5 mép trên; trần 82% cửa sổ cho CẢ tấm (tay cầm + dauTrang + nội dung + footer + đệm), maxHeight thay trần, avoidKeyboard co theo khung trên bàn phím; rộng tối đa 640 căn giữa (RONG_TOI_DA); trượt theo chiều cao đo được của tấm + 24, khép mờ (opacity theo progress 0→0.12→1); spring settle vào / standard ra; scrim lopPhu.toi(0.42); 250ms đầu (CHAN_CHAM_MS) scrim và tấm không nhận chạm; Back cứng Android, Esc web, Back trình duyệt (lui-web.ts) đóng; onBack tiêu Back cho bước nội tuyến; màn blur thì đóng; web role=dialog aria-modal, anh em inert+aria-hidden, focus control đầu, Tab quay vòng, trả lại thuộc tính chỉ khi còn là của nó; zIndex 10; Nếp không đè; tay cầm: hàng minHeight 36 giữa hai ô 48, vạch 40x4 lineStrong, Gesture.Pan activeOffsetY 6, > 90dp hoặc > 900dp/s đóng, scrim × (1 − kéo/cao tấm), ẨN khỏi trợ năng; lối ra trợ năng «Đóng bảng» 48x48 close 22 ink; onClosed sau khi tấm rời; thân khép đọc useGiuKhiDong; đặt qua RudiScreen overlay, LenLop hoặc route trong suốt; H tại d91: quyết định ngắn lấy chiều cao nội dung dưới trần (cuộn flexGrow 0 / flexShrink 1), footer ngoài vùng cuộn; prioritizeFooter vẫn opt-in cho editor, không bật chỉ để giữ hai lựa chọn thấy được",
     "Skeleton": "xương line bo 10, băng card 0.55 1400ms, tắt dưới Reduce Motion",
     "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline; illustration = <Canh width 168> (chua-co-keo, chua-co-anh, tim-khong-ra); mọi EmptyState mang <Canh id> trừ ô có tên trong tests/trang-rong-co-hinh.test.mjs: KHONG_HINH (im lặng có lý do) và CHUA_VE (nợ chưa vẽ); ErrorState toàn màn chỉ khi chưa có gì để giữ",
     "useAdaptiveLayout": "helper compact <600 (columns 1, gutter 16, tab đáy, maxContent width) / medium 600..839 (columns 2, gutter 24, rail, maxContent 960, twoPane khi cao >=480) / expanded >=840 (columns 3, gutter 36, rail, twoPane, maxContent 1200); short <480. Đây là khả năng helper, không tự áp bố cục cho mọi màn.",
@@ -785,16 +785,19 @@
     "ThuGapBa": "motif thư gấp ba: tờ 5 đỉnh góc cắt, vạt giay viền mực, hai vết bong ở 1/3 và 2/3, không coral",
     "CauTaiCho": "ui/CauTaiCho.tsx: câu lỗi tại chỗ ngón tay; nơi gọi đặt ngay dưới control thất bại hoặc trong footer trên nút dính đáy; icon alert-circle-outline 18 + body, warn; hanhDong tuỳ chọn («Thử lại», «Nhập tay») label ink gạch chân cao 48; co=nho: icon 15, note, caption, đích 48 trả chiều cao; role alert + aria-live polite; FadeIn standard, ngay khi Reduce Motion; web scrollIntoView nearest nếu ngoài cửa sổ; cau null không vẽ; lỗi tải lại không thay dữ liệu đã hiện; không toast, không modal",
     "CauLoiTheoMa": "src/cau-loi-theo-ma.ts + thongDiepNguoiDoc (src/api.ts): câu tiếng Việt của máy chủ đi thẳng; status 0 → LOI_KHONG_NOI_DUOC «Kiểm tra mạng»; bảng riêng của màn; cauTheoMa(code): câu riêng rồi theo hình (*_not_found, *_wrong_state/*_already_*, *_conflict, *_expired, *_unavailable «đang tạm ngưng», *_too_large); chỉ sau đó mới đoán theo status; không in mã/status/địa chỉ; laTuChoiVinhVien (not_found, wrong_state, already, expired, membership_required, direct_message_unavailable, 403/404/410) → không «Thử lại»",
-    "ONhapMuc": "ui/ONhapMuc.tsx: không hộp, một gạch dưới: 1dp lineStrong nghỉ, 2dp accent khi viết (chỉ báo focus, vòng trình duyệt tắt), 2dp warn khi sai, dp thêm lấy từ đệm dưới 4; ô một dòng minHeight 48; chữ body (co lon: h2); placeholder inkFaint kit vẽ; helper note inkSoft; error caption warn thay helper, đọc polite; multiline kẻ dòng, cuộn quá 8 dòng",
+    "ONhapMuc": "ui/ONhapMuc.tsx: không hộp, một gạch dưới: 1dp lineStrong nghỉ, 2dp accent khi viết (chỉ báo focus, vòng trình duyệt tắt), 2dp warn khi sai, dp thêm lấy từ đệm dưới 4; ô một dòng minHeight 48; chữ body (co lon: h2); placeholder inkFaint kit vẽ; helper note inkSoft; error caption warn thay helper, đọc polite. Multiline dùng chiều cao dòng × scale hiệu dụng: 1 nếu allowFontScaling=false; nếu không lấy fontScale cửa sổ và giới hạn bởi maxFontSizeMultiplier khi giá trị ≥1. Chiều cao tối thiểu theo số dòng yêu cầu trong 2–8, tối đa 8 dòng rồi cuộn. Nét kẻ bên trong chỉ khi scale<1.25; từ 1.25 bỏ trang trí, giữ gạch control/focus/error dưới vì baseline Android không khớp nhịp giả định. K tại 5cab chỉ nghiệm thu finding 2 và regression caption đã chụp.",
     "ChonNgayLich": "ui/ChonNgayLich.tsx: lá lịch xé (số Bricolage 34/40) hoặc gõ dd/mm/yyyy; tháng mở tại chỗ, bảy cột ô 44 (ngoại lệ sàn 48), thứ Hai trước, hôm nay có vòng, ngày chọn tô; mỗi ngày đọc đủ thứ/ngày/tháng/năm",
     "LuoiNguoi": "ui/LuoiNguoi.tsx: danh sách người có hành động; một cột, kẻ tóc line từ cột chữ (lề 52); hai cột khi chính danh sách chứa được 2×280 (gridFor(rong,280,16,2)), mỗi ô kẻ tóc dưới, hàng nhận luoi=true để đặt hành động dưới tên; đo onLayout, không đọc cửa sổ (QA UI-081)",
     "useLuiLop": "ui/useLuiLop.ts: lớp màn tự vẽ (bảng Cá nhân, bước hai xoá tài khoản, hồ sơ sống) đăng ký Back cứng Android + Back trình duyệt (lui-web.ts, chạy trước router) trong lúc mo; Back đóng lớp, không rời màn (QA UI-108, UI-110)",
     "useGiuKhiDong": "ui/giu-khi-dong.ts: mở thì giá trị đi thẳng, khép thì giữ giá trị lần cuối còn mở, để thân sheet đang khép không vẽ lại theo state vừa đóng nó (QA UI-084)",
     "NgayViet": "src/rudi/ngay-viet.ts, viết tay không Intl: ngayVN «28/09/2026»; gioNgayVN «10:07 · 28/09» (năm khi khác năm nay); khoangNgayChuyen «28 - 29/09», «30/09 - 02/10»; thangNamVN «Tháng 9, 2026»; chuỗi lạ trả rỗng",
-    "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)"
+    "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)",
+    "SoBia": "ui/SoBia.tsx: bìa vải cover, gáy tối/thun coral/nhãn giấy; fitContent chỉ khi không mo: width 100%, nhãn quyết định chiều cao trong luồng, paddingVertical 24, không đo nhãn rồi hồi tiếp. Bìa có mo giữ hình học cố định và choLatBia; không lấy nhánh bìa đóng làm chuẩn motion.",
+    "ChuKy": "I1 tại7d: giao kèo bật wrapName/showStatus; role caption inkSoft trên, tên Bricolage ExtraBold20/26 không skew hoặc câu chờ note inkSoft, nét trang trí rồi Đã ký/Chưa ký bằng chữ. Tên/câu chờ không giới hạn một dòng; props opt-in, không đổi mặc định mọi caller. Nét vẽ không phải chữ ký tay hay bằng chứng cấp quyền."
   },
   "surfaces": {
-    "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
+    "Welcome": "34d57ca9: bìa cover + Grain vaiBia0.30, lề24, maxWidth688, nội dung min(windowWidth−48,640), Logo compact wordmark18; bốn chương, EB34/40−0.7 (30/36 dưới360dp), body17/24 coverInkSoft. Bố cục short khi heightClass short, cao sau safe area<660 hoặc round(fontScale×100)≥130: xếp dọc/cuộn, scene144dp fit cover, Nếp canonical moi96dp trái12/đáy4, paper136dp bo72 + cloth124dp bo104, gradient paperShade/paper/paperShade + grain + bongGiay1. Cảnh street trang1/3, cafe2, coast4. Chấm6/active22 coral, target48×48, «Trang n trên4»; StampButton «Rủ Đi thôi!» tilt0 rộng hết cột; CoverButton link full «Tìm hiểu thêm» / «Xem lại từ đầu». Khoá một lần mở, prefetch rồi push /login trực tiếp; artwork opacity/translateY12 theo shared decelerate, reduced pager không animate. Bằng chứng ship giới hạn ở shippedWelcome20261008",
+    "StoryViewer": "c9a3f541: cover indigo, progress/owner/age ở header, Image key=story.id/contentFit contain giữ bounds khi hỏi xoá, controls chữ dưới ảnh, caption cuộn maxHeight180dp. Modal transparent/animationType none phủ ảnh, giấy card/line/bo16/pad16/gap12/bongGiay2; lớp lề ngang16/đáy24. Title17/23 ink «Xoá story này?» tách body17/24 inkSoft hậu quả; hai action flex1/minHeight48/bo12: Giữ lại card/lineStrong/ink, Xoá warn/warn/accentInk. Header pointerEvents none/a11y hidden, page zones disabled, toolbar nền ẩn/không nhận chạm nhưng giữ bố cục. Back/Keep giữ ảnh trước DELETE; request lock/disabled/onRequestClose guard là source, pending chưa kiểm. Ngoại lệ giới hạn của viewer, không thay luật hỏi tại hàng; ship chỉ hai P2/state chụp theo shippedStory20261008",
     "Login": "RudiScreen surface=cover; CoverBand underStatusBar (compact khi bàn phím mở ở compact) bleed md/lg với Logo compact + hero «Chào bạn»; cột 560 gap 20: Field, StampButton vua «Gửi mã», divider «hoặc», outline lời mời; Google chỉ khi native có client ID hợp lệ",
     "Otp": "CoverBand underStatusBar với hero «Nhập mã 6 số»; OtpBoxes 6x 44x54 viền 1.5 (accent ô đang nhập); caption inkSoft đang kiểm/đếm ngược; lỗi body warn",
     "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112",
@@ -808,7 +811,10 @@
     "Plan": "TopBar wordmark + tiêu đề nhóm + ngày; Photo dẫn 16:10 với DemoBadge; Money display + avatar + Stamp nhịp kèo; chip ngày; h2 ngày + IconButton AI; HangChang anh={…} ở chặng có địa điểm có ảnh (chặng tự in ghi công)",
     "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet",
     "Personalization": "TopBar back + «Bỏ qua»; Heading «Cho Rủ Đi biết gu của bạn» không phụ đề; lưới ô gu (GuGlyph 40 + label + vòng chọn, cao 64, bo 14, viền lineStrong; chọn = accentSoft + viền accent + check) minItemWidth round(150 × max(1, fontScale)) gap 12; câu đếm caption ink khi chưa đủ, note inkSoft khi đủ; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng» + chip pill; RudiButton; câu lưu trữ note inkFaint giữa",
-    "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton"
+    "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton",
+    "Diary": "K tại 5cab: BookView tối đa 560dp, bìa đóng fitContent tối đa 420dp; ảnh bìa 4:3/compact 16:9, trang đơn 4:3/collage hai cột 3:4, nền paperShade và khung tỷ lệ trước khi ảnh tải hoặc báo lỗi. Preview giữ bìa/các trang; DiaryScreen paged có tên h2/lời mở note và một trang, chỉ một pager khi nhiều trang, mũi tên 48dp/counter wrap/hint biên, sửa quiet ở header, Quản lý sổ mặc định thu gọn. EndingScreen chỉ sửa trang đang chọn trên TrangSo gồm pager/tên/chuyện/ảnh/toolbar icon 48dp có tên trợ năng; tên multiline, công cụ bìa wrap và thành cột toàn ngang từ fontScale 1.25; draft trong document khi chuyển trang. Token/world/seed c8e88116 không đổi; phạm vi bằng chứng ở shippedKDiary20261010.",
+    "GroupsFriends": "H tại d91: New/Invite/AddFriend cột form 560dp, gap24, phone action ở footer tránh IME với insets.bottom+12 khi IME đóng và shell8dp khi mở; expanded width>=600/height>=720 đặt action ngay sau vật giấy. New dùng SoBia fitContent, bìa/action maxWidth360 cùng trục, nhãn tự cao và tên–owner24; phần vải bao ngoài nhãn giữ dáng bìa. Members roster/role note inkSoft tự wrap trước wall/album, guard ngắn mở giải thích; invite/add quiet icon48 ở header. Friends message icon cạnh người, cặp accept/decline xuống dưới cột chữ khi hẹp/chữ lớn; success/duplicate recovery đi Friends/Đã gửi. Leave decision nội dung ngắn và hai nút footer ngoài scroll, prompt–action24, warn outline + ghost, Back trở lại settings. Phạm vi bằng chứng ở shippedHGroupsFriends20261010; không token/world/raster mới.",
+    "PairConsentI1": "I1 tại7d: picker cột560, hình nhân46/tên wrap/chevron/kẻ tóc, add quiet48 ở header. Chưa mở: cột640, hai tên h2 ink dẫn trục trái; body inkSoft, bìa nhỏ Hai/mình và Nếp hỗ trợ. Từ width600/font<1.3 hai vùng cạnh nhau, chữ lớn trở lại dọc. Phone entry ở footer inset max(bottom,12), expanded sau cụm mở sổ. BacDongY: quyền rồi giới hạn rồi hai chữ ký; dọc khi width<600 hoặc font>=1.3, cột stretch/basis auto. Body cuộn riêng, feedback/error/action/Để sau ngoài scroll, inset kit max(bottom,16). Sau mở: con dấu Rủ hội mình đi chơi wrap; Chọn loại sổ label inkSoft căn trái, parent/label stretch, minHeight48/padVertical12. Nền journal giữ grain sáng/tối. Bằng chứng và giới hạn ở shippedI1PairConsent20261010; I2 không được phong thánh."
   },
   "implementationCheckpoint": {
     "date": "2026-09-06",
@@ -980,6 +986,11 @@
         "name": "Luật Một Cách Viết Ngày",
         "section": "components",
         "body": "Ngày giờ đi qua ngay-viet.ts, viết tay, không Intl/toLocaleDateString: «28/09/2026», «10:07 · 28/09», «28 - 29/09», «Tháng 9, 2026»."
+      },
+      {
+        "name": "Luật Nét Kẻ Nhường Chữ",
+        "body": "Nét kẻ trang trí của ô multiline phải nhường chữ và dấu tiếng Việt. Từ scale hiệu dụng (1.25), `ONhapMuc` bỏ các nét bên trong, giữ gạch ranh giới/focus dưới vùng nhập; không ép baseline native khớp một nhịp trang trí bằng phép tính line-height.",
+        "section": "components"
       }
     ],
     "notCanonized": [
@@ -1013,7 +1024,35 @@
       "Sổ thay bảng điều khiển: hàng tên trái, số phải, kẻ tóc dưới; số nguyên đồng, tabular, không animate trước domain state",
       "Bốn bậc chuyển động 100/200/300/550 ms, Reduce Motion đưa mọi bậc trừ instant về 0",
       "Mọi cú bấm là lò xo scale trên UI thread; trạng thái thành đúng dưới ngón tay là một cú đóng dấu ba nhịp trong ngân sách celebrate, một lần mỗi sự kiện"
-    ]
+    ],
+    "currentAuthority": {
+      "date": "2026-10-10",
+      "design": "DESIGN.md",
+      "section": "v3 «Sân khấu giấy» — Creative North Star; bổ sung I1 trong Typography/Layout/Components và I2 trong Layout/Components; bổ sung GPL/J có phạm vi trong Layout/Components, 11/10/2026",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md",
+      "source": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "scope": "Hợp đồng I1 kế thừa seed c8e88116; _layout.tsx không còn contract lịch sử. Các directionContract trong snapshot cũ chỉ giữ provenance lịch sử, không chứng minh hợp đồng hiện tại.",
+      "i2": {
+        "brief": "docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md",
+        "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+        "fullReviewSource": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "scope": "Hợp đồng I2 kế thừa cùng UI3/seed c8e88116; F1 resolved/ship và regression hẹp tại814, bảy target còn lại carry a24. Các trường brief/source phía trên giữ mốc I1, không gán lại bằng chứng I1 thành814."
+      },
+      "gpl": {
+        "date": "2026-10-11",
+        "brief": "docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md",
+        "source": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+        "carrySource": "7cf58966f0da6871f5e3a21534bd7d8c636a38af",
+        "scope": "F3 resolved/ship native061; F1/F4 carry native7cf, F2 carry controlled actual TSX9/0 với giới hạn cũ. Không nghiệm thu toàn GPL/G/P/L/app/main."
+      },
+      "j": {
+        "date": "2026-10-11",
+        "brief": "docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md",
+        "nativeSource": "7cf58966f0da6871f5e3a21534bd7d8c636a38af",
+        "byteIdentityThrough": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+        "scope": "P1/P2 resolved/ship native7cf; năm production targets gồm Sheet và test gốc byte-identical đến061. Không rerun/relabel hoặc nghiệm thu toàn J/app."
+      }
+    }
   },
   "shippedV3": {
     "_": "Mốc đợt «chuyển mình»: nhánh claude/p0-w-ui2-bo-cuc-theo-nhiem-vu, bảy commit ab53e789 7ae05b08 20de622c e2c8b1da cc5c6795 e550c058 06a4722f. Finish review trả ship sau tám mục vật chất resolved.",
@@ -1423,6 +1462,1170 @@
       "useGiuKhiDong",
       "LuoiNguoi hai cột ở tablet",
       "RudiTabBar tabBarHeight theo fontScale"
+    ]
+  },
+  "shippedWelcome20261008": {
+    "_": "Bàn giao documenter sau ship batch Welcome: mô tả từ artifact đã ship, giữ hệ/chương lịch sử và nguồn token/asset; không phải APPROVE toàn app.",
+    "date": "2026-10-08",
+    "headCommit": "34d57ca9dbcf032bf9c8b21b41e6b059a6f4e00c",
+    "sources": [
+      "apps/mobile/src/rudi/screens/Welcome.tsx",
+      "apps/mobile/src/rudi/ui/CoverButton.tsx",
+      "apps/mobile/src/rudi/theme.ts",
+      "apps/mobile/src/rudi/ui/Grain.tsx",
+      "apps/mobile/src/rudi/ui/art/Nep.tsx"
+    ],
+    "reference": {
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/reference-mapping/publicreferencecrops/board02-panel1-welcome-cover.png",
+      "authority": "concept reference, chưa phải approved comp; giữ Nếp canonical"
+    },
+    "shortLayout": {
+      "condition": "heightClass short hoặc chiều cao sau safe area dưới660dp hoặc round(fontScale×100)≥130",
+      "flow": "chữ, cảnh, pagination và action xếp dọc trong vùng cuộn; không xoá art ở màn ngắn/font lớn",
+      "scene": "cao144dp, rộng vùng nội dung, fit cover",
+      "nep": "pose moi canonical, size96dp, left12dp, bottom4dp",
+      "fold": "paper width136dp/borderBottomRightRadius72dp; cloth width124dp/borderBottomRightRadius104dp; mép giấy khoảng12dp ở đầu mở về chân Nếp",
+      "material": "paper theo scheme + gradient ngang paperShade → paper → paperShade (0/0.55/1), Grain giayTrang0.45, bongGiay(1,dark); cloth cover + Grain vaiBia0.30",
+      "secondaryLabel": "CoverButton link full, nhãn flex1/căn giữa còn chevron18; đủ «Tìm hiểu thêm» và «Xem lại từ đầu»"
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "chỉ ba finding thị giác Welcome trên Android portrait 320×640 của 34d57ca9",
+      "rubric": "15/16",
+      "resolved": [
+        "nhãn phụ trang4",
+        "artwork thành strip/Nếp nhỏ",
+        "mép giấy/fold còn hình móc trắng"
+      ],
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-verdict-34d57ca9.md"
+    },
+    "evidence": {
+      "reviewerOpenedScreenshots": 17,
+      "viewport": "Android portrait 320×640",
+      "screenshotsByCase": {
+        "normal": 3,
+        "font130": 4,
+        "font200": 4,
+        "reduced": 3,
+        "dark": 3
+      },
+      "capturedPages": "1/2/4; không nhận đã mở trang 3 của 34d57ca9",
+      "functionalCases": "normal22.745s/font13021.493s/font20029.903s/reduced20.941s/dark22.595s, đều exit0; không thay verdict thị giác/full gate",
+      "nativeApk": "b87a16f1",
+      "backend": "54b5dc0e",
+      "recovery": "docs/design/nep-ui-implementation/RECOVERY-20261008.md"
+    },
+    "limits": [
+      "Clip motion chỉ thuộc f26c3dd7; chưa chứng minh motion 34d57ca9, timing chính xác hoặc reduced lifecycle",
+      "Plugin/detector và craft-floor hiện thiếu; không có kết luận detector clean",
+      "Không APPROVE toàn app hoặc toàn bộ trạng thái Welcome",
+      "Chưa phủ iOS, tablet/cửa sổ rộng hoặc TalkBack",
+      "Cơ chế bố cục cao/cửa sổ rộng và animation ghi từ source, không nâng thành bằng chứng native"
+    ]
+  },
+  "shippedStory20261008": {
+    "_": "Bàn giao documenter sau verdict c9: chỉ hai P2 và state native được chụp; giữ brand/token/history, không APPROVE toàn Story/app.",
+    "date": "2026-10-08",
+    "headCommit": "c9a3f541d0a3e0a02aae608ed66f01f447b37005",
+    "sources": [
+      "apps/mobile/src/rudi/screens/story/XemStoryScreen.tsx",
+      "apps/mobile/src/rudi/screens/story/DangStoryScreen.tsx",
+      "apps/mobile/src/rudi/theme.ts"
+    ],
+    "references": [
+      "board10-panel1-story-composer.png",
+      "board10-panel2-story-view-delete.png"
+    ],
+    "viewer": "Image key=story.id, contentFit contain giữ tỷ lệ/bounds; controls/caption nhường diện tích khi chữ lớn, câu hỏi phủ ảnh thay vì thu khung. Header progress/owner/age; caption cuộn tối đa180dp",
+    "confirmation": {
+      "layer": "React Native Modal transparent, animationType none; lề ngang16dp/đáy24dp, giấy card/line/bo16dp/pad16dp/gap12dp/bongGiay(2,dark)",
+      "hierarchy": "title đậm17/23 ink «Xoá story này?»; body17/24 inkSoft «Bạn bè sẽ không thấy story này nữa.»",
+      "actions": "hai action flex1, minHeight48dp, bo12dp; Giữ lại card/lineStrong/ink; Xoá nền và viền warn, chữ accentInk",
+      "isolation": "header pointerEvents none/a11y hidden, page zones disabled, toolbar nền giữ bố cục nhưng ẩn/không nhận chạm",
+      "safePath": "Back đóng câu hỏi trước DELETE; Keep giữ cùng ảnh. Source request lock/disabled/Back guard khi chờ không thay native paused-network evidence",
+      "systemException": "Modal và warn đặc chỉ trong Story viewer, không thay luật hỏi tại hàng hoặc dùng cho mọi destructive action"
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "chỉ hai P2/state native được chụp; header isolation resolved ở question không pending",
+      "resolved": [
+        "hierarchy title/hậu quả/action câu hỏi xoá",
+        "cách ly header nền khi hỏi xoá không pending"
+      ],
+      "scores": "question13→14/16, preview/viewer14/16; chưa APPROVE toàn Story/app",
+      "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9a3f541/story-independent-verdict-c9a3f541.md",
+      "priorReport": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedAfterImages": 17,
+      "viewport": "Android portrait 320×640",
+      "cases": "viewer/question light và dark1.0, light font1.3/2.0, Back/Keep, publish và delete thật; không suy dark ở mọi font",
+      "functionalFlows": "light/publish60.291s, dark57.836s, font1.3 48.276s, font2.0 48.326s, delete41.066s, đều exit0/not_full_gate true",
+      "deleteState": "xoá portrait về rail, mở lại chỉ landscape/caption, portrait caption absent; không nghiệm thu toàn rail Tin nhắn",
+      "composer": "c9 current light1.0/caption/publish, initial portrait ở offset cuộn; replacement/draft sắc thuộc04f20b88 report trước, không nhận toàn chuỗi đã recapture c9",
+      "nativeApk": "b87a16f1",
+      "backend": "54b5dc0e",
+      "javascript": "c9a3f541"
+    },
+    "limits": [
+      "Pending DELETE/error/double tap/Back khi chờ chưa kiểm native",
+      "TalkBack focus/trap/restore; source gọi focus Keep không thay evidence",
+      "Motion normal/reduced/background/replay/timing chưa có clip Story",
+      "Loading/error/empty/expiry/retry-upload/friend audience chưa phủ",
+      "Composer dark/font/bàn phím/crop và replacement/draft recapture c9 chưa đủ",
+      "Tablet/iOS/long caption và dark ở mọi font chưa phủ",
+      "Plugin/detector và craft-floor thiếu; không detector clean hoặc full-native acceptance"
+    ]
+  },
+  "shippedWelcomeTransition20261008": {
+    "_": "Bằng chứng CTA→Login mới tại3b, giữ nguyên lịch sử clipf26/verdict34 và tổng15/16; không thay full motion gate.",
+    "date": "2026-10-08",
+    "headCommit": "3b71838e057c2daef6500f04a91b44edf7d20b4e",
+    "sourceContinuity": "git diff34→3b rỗng cho Welcome.tsx, CoverButton.tsx và app/_layout.tsx; không gán sửa Story cho Welcome",
+    "verdict": "ship riêng CTA→Login normal/warm đã quay; finding thiếu travel ở clip04 resolved, không cộng interaction/motion hoặc nâng tổng15/16",
+    "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-motion-3b71838e.md",
+    "evidence": {
+      "viewport": "Android emulator5560, 320×640, font1.0, normal/warm",
+      "reviewedOriginalFrames": 29,
+      "encodedDurationSeconds": 2.436411,
+      "averageFramesPerSecond": "biến thiên, trung bình khoảng11.9; không phải đo60fps/timing animation",
+      "flow": "warm16.086s/exit0; một ADB tap CTA thật, before/after đã mở",
+      "observed": "Welcome rút trái/Login vào phải với header/lời chào/input/action đã vẽ, không frame trắng/trống; Nếp/fold đi cùng bìa; native slide, không pagecurl/3D"
+    },
+    "limits": [
+      "Reduced lifecycle, Back/cancel, double tap, background/resume và cold transfer chưa phủ",
+      "iOS/timing/FPS chính xác chưa chứng minh",
+      "Không đổi provenance báo cáo34/04 hoặc clipf26, không APPROVE toàn app/full motion",
+      "Plugin/detector vẫn thiếu; không detector clean"
+    ]
+  },
+  "shippedNepEditor20261009": {
+    "_": "Bàn giao documenter từ artifact đã ship: chỉ P2-NEP-EDITOR-01; giữ token, lịch sử và Nếp canonical, không APPROVE toàn editor/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "eba8678a3418271645f8332ce30261938c8a1fbc",
+    "documentedAtCommit": "6f3f5af2d1ae2b32145908f2da9409b254b1535d",
+    "sourceContinuity": "git diff eba8678a..6f3f5af2 rỗng cho Sheet.tsx và PostDetail.tsx; không gán ảnh eba thành capture JS mới.",
+    "sources": [
+      "apps/mobile/src/rudi/community/PostDetail.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx"
+    ],
+    "layout": {
+      "sheet": "avoidKeyboard + prioritizeFooter; prioritizeFooter mặc định false. Khi opt-in và có footer, height = panelMaxHeight, reference scroll flexBasis 0/flexGrow 1 lấy phần cao còn lại.",
+      "editor": "Field/câu lỗi trong ScrollView riêng: flexGrow 0, flexShrink 1, minHeight 128, gap 8, paddingBottom 4; keyboardShouldPersistTaps handled. CTA là sibling ngoài overflow.",
+      "actions": "Đồng ý chia sẻ và gọi Nếp hoặc Lưu ghi chép riêng giữ chỗ trên IME; không footer cố định mới cho mọi sheet.",
+      "draft": "Nhãn Bản nháp do Nếp viết, field Sửa lại theo ý bạn; giữ lời nhờ gốc sửa được trong vùng tham chiếu. Lý do nút tắt/lỗi ở form.",
+      "identity": "Giấy/mực, Bricolage ở tiêu đề, system body, canonical Nếp; không thêm hero/artwork cho form."
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ P2-NEP-EDITOR-01 ở request/draft + IME và trạng thái đọc đã chụp trên Android portrait 320×640: sáng 1.0/2.0, tối 1.0.",
+      "resolved": [
+        "CTA gọi Nếp đầy đủ và bấm được trên IME",
+        "CTA lưu đầy đủ và bấm được trên IME",
+        "Reference nhường chiều cao cho editor/action"
+      ],
+      "staticScore": "9 → 12/14; artwork/crop N/A, motion N/E; không quy đổi thành /16 hoặc full critique/audit.",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-independent-verdict-eba8678a.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-after-review-packet.json"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedPacketPng": 17,
+      "reviewerOpenedAdditionalErrorPng": 1,
+      "fontProvenance": "OS font đặt trước fresh attach ở từng lượt, restore 1.0 trước fresh attach tiếp; chưa telemetry số RN font/window.",
+      "lightFont100": "69.962s, exit 1: gọi/nháp/lưu thật từ IME rồi timeout selector title Ghi chép riêng; title thực Điều mình muốn giữ, ảnh lỗi có ghi chép mới. Không gọi runner này xanh.",
+      "lightFont200": "41.118s, exit 0; assert/tap gọi và lưu từ IME tới community-keeps, ảnh có ghi chép mới.",
+      "darkFont100": "53.484s, exit 0; assert/tap gọi và lưu từ IME tới community-keeps, ảnh có ghi chép mới.",
+      "receiptScope": "Source/harness SHA eba8678a, not_full_gate true; không thay canary/mutant/cổng repo, saved destination không là review toàn Keeps.",
+      "nativeApk": "b87a16f1",
+      "nativeApkSha256": "34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967",
+      "backend": "54b5dc0e",
+      "javascript": "eba8678a"
+    },
+    "openQualityFinding": {
+      "priority": "P3",
+      "state": "Font 2.0, caret autoscroll",
+      "finding": "Nhãn lời nhờ/nguồn nháp có thể rời viewport, nhãn sửa và dòng đầu bị crop ở mép vùng nhập.",
+      "limit": "Chưa ghi riêng cuộn lại lên đầu để kiểm mọi dòng/offset; không nhận không cắt chữ hoặc editor hoàn hảo."
+    },
+    "limits": [
+      "Font 1.3, tối 2.0, input rất dài/error/retry và mọi đường lưu chưa phủ.",
+      "TalkBack/focus trap/restore, measured targets/contrast và numeric RN metrics chưa kiểm.",
+      "Motion/timing/reduced/background lifecycle, native iOS/tablet chưa phủ.",
+      "Không đánh giá AI quality/privacy; không full gate hoặc APPROVE toàn editor/frontend.",
+      "Plugin/detector và craft-floor chính thức thiếu; không detector clean."
+    ]
+  },
+  "shippedGallery20261009": {
+    "_": "Bàn giao documenter từ artifact 6f: chỉ hai finding viewport đầu/Để sau; giữ token, shading, lịch sử và canonical Nếp, không APPROVE toàn route/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "6f3f5af2d1ae2b32145908f2da9409b254b1535d",
+    "sources": [
+      "apps/mobile/src/rudi/community/CommunityScreen.tsx",
+      "apps/mobile/src/rudi/screens/explore/ExploreLive.tsx",
+      "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+      "apps/mobile/src/rudi/adaptive.ts",
+      "apps/mobile/src/rudi/ui/chu.ts"
+    ],
+    "authority": "Mockup là concept reference; giữ quiet material của refinement hiện hành, không rải grain khắp surface hoặc thay hệ.",
+    "community": {
+      "consentPosition": "Sau bài đầu, chỉ khi chưa trả lời, không topic, mode for_you và có bài; feed rỗng không mang câu hỏi.",
+      "consentMaterial": "Margin ngang 16, padding dọc 8, gap 4, hairline line; copy gap 3, body 15/22. Giữ phạm vi không đọc chat hay sổ riêng.",
+      "actions": "RudiButton compact/full false/ghost; row flexWrap wrap, gap 4, action maxWidth 100%/flexShrink 1, không width/font lock.",
+      "laterLabel": "Nhãn nhìn Để + NBSP + sau, accessibilityLabel Để sau với khoảng trắng thường; handler consent(false) và điều kiện unanswered giữ nguyên.",
+      "nativeObserved": "Baseline sáng/tối font 1.0 có tác giả và bốn dòng body trước nav, consent sau bài đầu, không update pill che vùng đọc trong ảnh đã mở."
+    },
+    "explore": {
+      "compactCondition": "Width < 600, height < 700 và !chuLon(fontScale); helper nhận chữ lớn từ 1.28 để bao bước OS 1.3.",
+      "shortLayout": "Từ 3bb47ef84bf294a242fbcc5f8910ceeb02478ca0: gap khối 12, scene cao 120 thay vì 150; đầu lead hình vuông 112×112 trái, tên hai dòng/phụ đề flex 1/minWidth 0/pad 12 phải; hai dòng sự thật và chip lý do/giá xuống dưới dùng toàn chiều rộng thẻ, leadGonDuoi gap 6/pad 14/pad trên 0; tim là control riêng trên hình.",
+      "otherLayouts": "Chữ lớn/cửa sổ khác giữ layout thường từ source; không nâng thành native matrix đã đạt.",
+      "nativeObserved": "Baseline sáng/tối font 1.0 có tên hai dòng và fact đầu/artwork rõ trước nav; dataset/lead đổi sau lưu gu thật, so hierarchy thay vì pixel nội dung giống nhau.",
+      "compactCorrection": {
+        "headCommit": "3bb47ef84bf294a242fbcc5f8910ceeb02478ca0",
+        "source": "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+        "verdict": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict.md",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict-packet.json",
+        "rootInspection": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/root-inspection.json",
+        "documenterOpened": "Tám PNG: top/lead sáng và tối 1.0, lead sáng và tối 1.3, lead-lower sáng 2.0 và lead-tail tối 2.0.",
+        "observed": "Ảnh 1.0 có facts/lý do dài/giá dùng chiều rộng thẻ; ảnh đại diện 1.3/2.0 giữ ảnh ngang toàn chiều rộng, tail tối 2.0 hiện đủ giá kèm đơn vị sau cuộn.",
+        "scope": "Ship chỉ C/D–01, resolved; đối chiếu hình học tại các vùng đã chụp, không nhận toàn surface/app, detector native, tương phản/target đo native, motion hoặc iOS."
+      }
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ P2-01 composition viewport đầu Community/Explore và P2-02 Để sau; cả hai resolved.",
+      "resolved": [
+        "P2-01",
+        "P2-02"
+      ],
+      "staticScore": "14/14 ở Community top, Explore top, consent sau bài đầu và settings scheme snapshots sáng/tối font 1.0; interaction/motion N/E, responsive/accessibility chỉ cấu trúc nhìn thấy.",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-after-review-packet.json"
+    },
+    "evidence": {
+      "rootAndReviewerOpenedPng": 10,
+      "viewport": "Android portrait 320×640; baseline sáng/tối font 1.0, fingerprint đúng JS.",
+      "font200": "Chỉ xác nhận đủ Để sau và hai action xuống hàng riêng/không chồng ở viewport nhãn đã cuộn; font đặt trước fresh attach, không toàn màn font 2.0 pass.",
+      "nativeFlows": "Sáng 35.859s, tối 19.539s, font 2.0 13.933s, đều exit 0; không thay full gate.",
+      "settings": "Ảnh Tối/Sáng đúng selected state; không toàn lifecycle đổi theme.",
+      "nativeApk": "b87a16f1",
+      "nativeApkSha256": "34e48965242785651cc982199e4b3d823d45d0b4b30a79a98a622080efd63967",
+      "backend": "54b5dc0e",
+      "javascript": "6f3f5af2"
+    },
+    "limits": [
+      "14/14 tĩnh không thay ngưỡng /16; font 2.0 chỉ nhãn/control tại viewport đã cuộn.",
+      "Search/filter/save/error/empty/feed actions và mọi route/layer khác chưa nhận đạt.",
+      "PostDetail/Nếp keyboard ngoài phạm vi gallery; dùng record editor riêng theo SHA eba.",
+      "Motion/privacy/action, TalkBack, measured targets/contrast, mọi breakpoint/iOS/tablet chưa phủ.",
+      "Plugin/detector và craft-floor thiếu; không detector clean, full gate hoặc APPROVE toàn Community/Explore/frontend."
+    ]
+  },
+  "shippedGu20261009": {
+    "_": "Bàn giao documenter từ artifact d3: chỉ sửa đo nhãn giữa và state tĩnh đã chụp; giữ toàn bộ token/object/history trước, không APPROVE toàn Gu/onboarding/frontend.",
+    "date": "2026-10-09",
+    "headCommit": "d3c4a3aa3db5ee40ca28229103ae87f874a04dcd",
+    "sources": [
+      "apps/mobile/src/rudi/screens/Onboarding.tsx"
+    ],
+    "authority": "Prompt gốc §3/§13/nhóm B, board02-panel4 là concept reference; kế thừa refinement Operate yên và sticker/phong bì của DESIGN v3.",
+    "layout": {
+      "labelMeasurement": "styles.giua thêm alignSelf stretch, giữ textAlign center; sticker/band/dòng phụ đo và wrap theo bề rộng nội dung giấy. Production diff chỉ style này và comment, không đổi font/ngưỡng tiền/từ vựng/handler.",
+      "order": "Câu hỏi Bricolage → dẫn system → tám sticker GuGlyph → count → bốn band phong bì → StampButton.",
+      "stickers": "GuGlyph 42, giấy note đo theo layout, grain chỉ trong object, dấu chọn riêng; 320dp hai cột, không chỉ màu.",
+      "budget": "Ở packet320×640, font1.0 ngân sách2×2; Math.round(fontScale*100)>=130 chuyển một cột. Nhãn Trên 500K và Rộng tay đầy đủ trong save-action130 sáng/tối sau sửa.",
+      "scroll": "Font lớn cuộn qua top/selection/budget/save; mép phong bì ở budget130 không chứng minh clip text khi save-action cùng case thấy đầy đủ.",
+      "historicalSurfaceRecords": "surfaces.Personalization và shippedV5 giữ nguyên như lịch sử; không dùng kích thước/chip của snapshot đó thay cho artifact d3."
+    },
+    "verdict": {
+      "disposition": "ship",
+      "scope": "Chỉ sửa nhãn giữa và các state tĩnh đã chụp:3-selected/vua-phai/enabled trên Android portrait320×640, sáng/tối font1.0/1.3/2.0.",
+      "resolved": [
+        "Nhãn ngân sách130: before chỉ Trên; after save-action sáng/tối có đủ Trên 500K và Rộng tay."
+      ],
+      "staticScore": "14/14 trên bảy trục quan sát được, interaction/motion N/E; không quy đổi /16 hoặc nghiệm thu đại diện toàn sản phẩm.",
+      "visibleRepairFindings": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-independent-verdict-d3c4a3aa.md",
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-review-packet.json"
+    },
+    "evidence": {
+      "reviewerOpenedPng": 27,
+      "afterPng": 24,
+      "otherPng": [
+        "reference board02-panel4",
+        "actual-tree-fingerprint",
+        "before130"
+      ],
+      "statesPerCase": [
+        "gu-top",
+        "gu-three-selection",
+        "gu-budget",
+        "gu-save-action"
+      ],
+      "viewport": "Android portrait320×640; light/dark × OS font1.0/1.3/2.0.",
+      "javascript": "d3c4a3aa",
+      "receiptScope": "Sáu after receipt exit0, cùng source/harness SHA d3c4a3aa, not_full_gate true; capture không thay kiểm chức năng hoặc nhận xét pixel.",
+      "receipts": [
+        {
+          "file": "gu-after-light100.result.json",
+          "elapsed_s": 17.988,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-light130.result.json",
+          "elapsed_s": 18.84,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark100.result.json",
+          "elapsed_s": 18.038,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark130.result.json",
+          "elapsed_s": 19.04,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-light200-visible.result.json",
+          "elapsed_s": 25.798,
+          "exit": 0
+        },
+        {
+          "file": "gu-after-dark200-visible.result.json",
+          "elapsed_s": 25.648,
+          "exit": 0
+        }
+      ],
+      "initialFont200Red": "gu-after-light200.result.json và gu-after-dark200.result.json đỏ vì assertion count ngoài fold; giữ nguyên. Hai visible receipt là lượt cuộn bổ sung riêng, không đổi lịch sử thành xanh hoặc gán lỗi UI.",
+      "fontProvenance": "OS font đặt trước fresh attach; chưa telemetry số RN font/window.",
+      "privateFileMode": "Reviewer thấy PNG mode0664 khi đọc ban đầu, báo parent; parent siết quyền rồi reviewer kiểm lại27/27 mode0600. Không gán mode0600 hồi tố; packet/report ngoài mọi worktree.",
+      "documenter": "Đọc source/packet/receipt/verdict; không tự chạy lại native, API hoặc chấm lại ảnh."
+    },
+    "toolAvailability": {
+      "runtime": "imp preflight exit127: runtime plugin/cache không tìm thấy, detector không chạy; không có detector clean.",
+      "craftFloor": "Có và đã đọc bản marketplace; reviewer đọc và documenter đọc lại ở context riêng.",
+      "craftFloorPath": "/home/lakiet/.claude/plugins/marketplaces/impeccable/plugin/skills/impeccable/reference/craft-floor.md",
+      "historicalCorrection": "Đính chính mọi ghi chú trước nói craft-floor thiếu: runtime lookup thất bại không chứng minh reference marketplace không tồn tại. Giữ objects/history trước, không tái khẳng định claim tuyệt đối đó."
+    },
+    "limits": [
+      "Save/cancel/restore tại6f3f5af2 là bằng chứng chức năng riêng của parent; diff handler rỗng không kiểm lại flow tại d3.",
+      "Chỉ state3-selected/vua-phai/enabled; chưa new-account/name, disabled/loading/error/offline/retry hoặc toàn Gu/font/state matrix.",
+      "Chưa TalkBack/focus/target/contrast đo native, motion/timing/reduced/background lifecycle, native390/430/tablet/iOS hoặc toàn frontend.",
+      "Thiếu quality-bar card/platform-reference/clip motion độc lập; không full critique/audit hoặc full gate.",
+      "Ship nhãn có giới hạn không cho phép landingmain khi gate repo còn thiếu; không main merge/push trong lượt documenter."
+    ]
+  },
+  "candidateNineNative20261010": {
+    "_": "Hồ sơ candidate từ source797 và ảnh Android đã mở; chưa verdict ship sau sửa. Giữ nguyên các token mirror, cấu trúc tương thích script và phạm vi shipped lịch sử, không thay bằng full-app pass.",
+    "date": "2026-10-10",
+    "headCommit": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+    "status": "candidate; fresh review sau sửa đang chờ; audit A–S/toàn app còn mở",
+    "authority": {
+      "product": "PRODUCT.md",
+      "direction": "docs/design/nep-ui-implementation/redesign-20261010/BRIEF.md",
+      "reference": "docs/design/nep-ui-implementation/redesign-20261010/core-layout-reference-v1.png",
+      "referenceStatus": "Chỉ phản biện cấu trúc, chưa comp duyệt, không bắt buộc raster/seed/căn tính mới.",
+      "identity": "Rủ Đi; Nếp canonical; giấy/mực/coral/Bricolage giữ nguyên; token không đổi.",
+      "userQualityBar": "App trước khoảng5/10; từng trang phải đẹp và hoạt động đúng, native Android là bằng chứng của lượt này."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/ui.tsx",
+      "apps/mobile/src/rudi/screens/Profile.tsx",
+      "apps/mobile/src/rudi/screens/profile/HoSoSong.tsx",
+      "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+      "apps/mobile/src/rudi/screens/keo/PlanLive.tsx",
+      "apps/mobile/src/rudi/screens/keo/CreateOutingLive.tsx",
+      "apps/mobile/src/rudi/ui/ThanhNganSach.tsx",
+      "apps/mobile/src/rudi/screens/groups/Conversations.tsx",
+      "apps/mobile/src/rudi/community/Composer.tsx",
+      "apps/mobile/src/rudi/community/MediaPicker.tsx",
+      "apps/mobile/src/rudi/screens/Create.tsx"
+    ],
+    "layout": {
+      "header": "TopBar minHeight52, marginHorizontal−12, back glyphOffsetX−7 trong target48; title17/23 tối đa2dòng; slot cân bằng chỉ khi title đủ ngang, không thu font.",
+      "profile": "Component form mounted giữ nháp; header Back/Huỷ và footer Lưu ở ngoài scroll; fields200/500/120; Back giữ nháp trong mounted session, Huỷ bỏ nháp. Footer phone24 khi đóng IME/8 khi mở, không cộng lần nữa chiều cao tab đã ở normal flow. Không token mới hoặc bảo đảm process death.",
+      "explore": "Phone một trục lead rồi hàng; lead compact16:9, artwork160 cao; phụ đề wrap, facts rồi chip lý do/giá theo source. Hàng88×88/top-aligned/gap14/pad dọc16; facts→giá toàn ngang→lý do đầy đủ. chuLon>=1.28 đổi ảnh132cao/toàn ngang và chữ dọc; nhãn Minh hoạ dưới trái/tim trên phải.",
+      "plan": "Plus quiet ở cả nhánh có/chưa nhóm. Empty có nhóm CTA Tạo kèo; chưa nhóm Tới Tin nhắn. Chữ lớn dùng CuongPhieu dọc, ngày/tháng cùng hàng, tên/facts wrap. Hai ảnh native visible-final chưa nhóm light100 đã mở thấy empty và khay Tạo sau chạm plus header; ADB riêng, không Maestro pass.",
+      "create": "BillShareIllustration SVG76×72 có receipt răng cưa/dòng món-tổng/nhánh hai phần, theme token; chuLon chuyển một cột. Nếp canonical; không raster mới.",
+      "budget": "Một giá trị nguyên đồng cho thanh0–2triệu/bước25.000 và exact entry chung parser. Target56/thumb28/presetmin48. Vượt thang giữ số, câu Ngoài thang kéo0–2triệu và thumb vạch; source adjustable/actions chưa thay TalkBack/haptic native.",
+      "inbox": "Heading/plus nhỏ/search Tìm người hoặc nhóm/xoá search; lọc tên từ danh sách đang đọc, giữ story/lời mời/E2EE. Ảnh không tự chứng minh search/crypto.",
+      "back": "Dùng TopBar; target48/glyph theo gutter/title nhường ngang; không nhân offset chevron cho mọi icon.",
+      "composer": "Header/author44/người đọc gọn, canvas5000/counter, minHeight112–240 theo cửa sổ/max420/lineHeight26; ảnh-video ghost compact, chủ đề/tag tại chỗ; lời duyệt/lỗi/CTA trong footer trên IME."
+    },
+    "evidence": {
+      "root": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-797a3f52",
+      "readOnlyReview": "Documenter đọc source/kết quả và mở ảnh có sẵn; không chạy UI/browser/server/detector hay matrix.",
+      "matrix": {
+        "file": "after-matrix-results.json",
+        "sourceAndHarness": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "flows": 24,
+        "exit0": 24,
+        "elapsedSeconds": 714.665,
+        "families": [
+          "social",
+          "places",
+          "budget",
+          "budget-exact"
+        ],
+        "schemes": [
+          "light",
+          "dark"
+        ],
+        "fontScales": [
+          1,
+          1.3,
+          2
+        ],
+        "scope": "Chức năng của flows đã chạy, không verdict thị giác/full gate."
+      },
+      "restore": {
+        "file": "after-matrix-restore.json",
+        "fontRestored": true,
+        "viewport": "320×640"
+      },
+      "profileR2": {
+        "files": [
+          "profile-functional-result-r2.json",
+          "supp-profile-draft-save-r2.result.json"
+        ],
+        "exit": 0,
+        "elapsedSeconds": 53.785,
+        "observed": [
+          "Back giữ nháp",
+          "Huỷ bỏ nháp",
+          "Native save quay lại hồ sơ",
+          "Server giữ display_name/bio/city/avatar_url"
+        ],
+        "limits": "Không đưa fixture values vào hệ; không claim process death hoặc mọi lỗi mạng."
+      },
+      "largeSupplement": {
+        "file": "supp-large-rows-tabs-budget.result.json",
+        "exit": 0,
+        "elapsedSeconds": 43.672,
+        "communitySelected": "Chỉ tab đã chọn và skeleton đang tải, chưa feed hoàn tất."
+      },
+      "openedNativeCaptureNames": [
+        "after-light100-profile-edit",
+        "after-light100-profile-keyboard",
+        "after-light100-explore-lead",
+        "after-light100-explore-rows",
+        "after-light100-create-tray",
+        "after-dark100-composer-writing",
+        "after-dark100-inbox",
+        "after-light200-composer-empty",
+        "after-light200-plan-header",
+        "after-dark200-explore-rows",
+        "supp-large-row-price-reason",
+        "supp-large-next-row",
+        "supp-large-community-selected",
+        "supp-large-exact-outside-scale",
+        "no-group-plan-light100-visible-final.png",
+        "no-group-create-from-header-plus-visible-final.png"
+      ],
+      "runtime": {
+        "file": "runtime-provenance.json",
+        "javascript": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "apkBuildCheckpoint": "2f20a30179d0e21a1f4b3244dfbd685b5bade7e9",
+        "apkSha256": "963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514",
+        "apiSource": "9a6d69563a503860774f291f22b4806082b970a6",
+        "apiContinuity": "git diff9a..797 services/core rỗng; thay đổi JS, không rebuild APK/API797."
+      },
+      "technical": {
+        "file": "clean-checks.json",
+        "exactCleanSha": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "checksExit0": [
+          "typecheck",
+          "guide",
+          "build-check",
+          "compile",
+          "fixup",
+          "go-guide",
+          "repo-tree"
+        ],
+        "nodeFiles": 214,
+        "nodePass": 1608,
+        "nodeTotal": 1608,
+        "nodeSkipped": 0,
+        "browserDriversExcluded": [
+          "che-chu-lo-to-cha.test.mjs",
+          "che-chu.test.mjs",
+          "rudi-nep-web.test.mjs",
+          "rudi-opening-web.test.mjs",
+          "rudi-welcome-web.test.mjs"
+        ],
+        "scope": "Không full strict32/full gate; không native pixel geometry/contrast detector.",
+        "tsxRegex": {
+          "file": "final-tsx-detector.json",
+          "log": "final-tsx-detector.log",
+          "source": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+          "exit": 0,
+          "result": [],
+          "elapsedSeconds": 0.04,
+          "targets": 9,
+          "targetBytesEqualCommittedSha": true,
+          "scope": "Chỉ regex TSX; không geometry/contrast native. Documenter đọc kết quả, không chạy detector."
+        }
+      },
+      "openedNativeCaptureCount": 16,
+      "noGroupVisibleFinal": {
+        "source": "797a3f52d77919adcfa86ed639e17b01476a8f2d",
+        "serial": "emulator-5562",
+        "fontScale": 1,
+        "scheme": "light",
+        "files": [
+          "no-group-visible-window-receipt.json",
+          "no-group-native-adb-visible-final.result.json"
+        ],
+        "window": {
+          "visible": true,
+          "emulatorPid": 888644,
+          "sdkLauncher": true,
+          "observedTitle": "Android Emulator - rudi-nep-no-group-20261010:5562"
+        },
+        "session": "Tài khoản tổng hợp không có nhóm kiểm bằng HTTP login; native UI login và session được giữ.",
+        "observed": [
+          "Empty Gom hội mình trước và CTA Tới Tin nhắn",
+          "Plus nhỏ header chạm theo XML bounds thực [256,32][304,80] mở khay Tạo thật"
+        ],
+        "driver": "ADB XML/input/screencap; không browser, không Maestro pass; không cộng matrix24/24.",
+        "excluded": "Maestro transport failures, thiếu reverse mapping và headless captures trước không phải visual acceptance; chỉ hai ảnh visible-final bổ sung này.",
+        "otherDevices": "Primary5558/peer5560 không bị thay đổi bởi lượt bổ sung."
+      }
+    },
+    "priorReview": {
+      "source": "d9c06bf4",
+      "disposition": "fix",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d9c06bf4/fresh-nine-screens-review.md",
+      "finalDisposition": "Đang chờ review sau sửa797; không thừa hưởng ship/điểm của các record cũ."
+    },
+    "notCanonized": [
+      "Composer override disabled nền line/viền solid lệch primitive ADR-0038; chưa đo native, không mẫu disabled mới.",
+      "Metadata/story label inbox rút ngắn ở chữ lớn chờ review; không quy tắc cắt dữ kiện.",
+      "Harness assertion failures cũ không phải app-pass hoặc chính sách layout.",
+      "TSX regex[] không phải geometry/contrast native.",
+      "24/24 không total-app acceptance,14/16,strict32 hoặc landingmain.",
+      "Legacy sidecar mirror/lịch sử giữ để tương thích script; không tái diễn giải thành chứng nhận hệ hiện tại.",
+      "No-group chỉ hai ảnh cửa sổ thật visible-final; headless/transport failures không thành bằng chứng thị giác hoặc Maestro pass."
+    ],
+    "pending": [
+      "Fresh verdict sau sửa797",
+      "Native nhánh chưa nhóm ngoài light100 chưa phủ; ADB bổ sung không thay matrix mọi cấu hình.",
+      "Native detector geometry/contrast",
+      "TalkBack/focus/target",
+      "Motion normal/reduced/lifecycle",
+      "Tablet/iOS",
+      "Loading/error/offline/retry đầy đủ của từng surface",
+      "Audit rộng A–S và nghiệm thu toàn app",
+      "Full strict và điều kiện landingmain"
+    ]
+  },
+  "shippedKDiary20261010": {
+    "_": "Tinh chỉnh K trong hệ v3 hiện hành; chỉ bốn finding của fresh-k-review và regression cụ thể, không nghiệm thu họ màn. Giữ cấu trúc sidecar cũ và token mirror để tương thích script.",
+    "date": "2026-10-10",
+    "headCommit": "5cab4701199a4ab9332fc20e28c0f0e3d67ddf89",
+    "authority": {
+      "product": "PRODUCT.md",
+      "direction": ".impeccable/surfaces/diary.md",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/K-DIARY-BRIEF.md",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage; không token hoặc raster mới."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/diary/BookView.tsx",
+      "apps/mobile/src/rudi/diary/EndingScreen.tsx",
+      "apps/mobile/src/rudi/diary/DiaryScreen.tsx",
+      "apps/mobile/src/rudi/ui/SoBia.tsx",
+      "apps/mobile/src/rudi/ui/ONhapMuc.tsx",
+      "apps/mobile/src/rudi/ui.tsx"
+    ],
+    "verdict": {
+      "b76": {
+        "source": "b76f616d45b263feae63ecd717254d6ae60af145",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b76f616d/fresh-k-verdict.md",
+        "resolved": [
+          "finding 1: chữ/font lớn",
+          "finding 3: một pager và hierarchy reader",
+          "finding 4: nhóm trang editor"
+        ],
+        "finding2": "partial tại b76, chưa khớp baseline native"
+      },
+      "5cab": {
+        "source": "5cab4701199a4ab9332fc20e28c0f0e3d67ddf89",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5cab4701/fresh-k-rule-verdict.md",
+        "disposition": "ship",
+        "scope": "Chỉ finding 2 và regression ONhapMuc hẹp; 16 capture bắt buộc, không mở lại finding 1/3/4.",
+        "resolved": "Bỏ nét kẻ bên trong tại scale hiệu dụng ≥1.25; giữ gạch control/focus dưới, vùng nhập scale và nội dung."
+      }
+    },
+    "documenter": {
+      "method": "Đọc source và hai verdict; mở bốn mẫu native có sẵn, không vận hành emulator/gate/detector.",
+      "openedNativeCaptures": [
+        {
+          "source": "b76f616d",
+          "name": "k-after-light100-editor-page-one"
+        },
+        {
+          "source": "b76f616d",
+          "name": "k-after-light100-reader-page-one"
+        },
+        {
+          "source": "5cab4701",
+          "name": "k-rule-dark200-editor-page-two"
+        },
+        {
+          "source": "5cab4701",
+          "name": "shared-field-dark200-moment-caption"
+        }
+      ],
+      "observed": "Mẫu b76 có tờ sửa cùng nhóm và một pager reader; mẫu 5cab không còn nét kẻ bên trong xuyên chữ/dấu, gạch dưới còn rõ. Viewport cuộn không phải full top."
+    },
+    "limits": [
+      "Android 320×640, light/dark font 1.0/1.3/2.0 chỉ trong bốn finding và regression đã nêu; không full K/story/moment/A–S hoặc toàn app.",
+      "Bằng chứng chức năng/quyền xem/motion ở b76 giữ SHA b76, không đổi nhãn thành 5cab.",
+      "Không tablet/iOS, AA/TalkBack, blanket motion/performance, tổng /16, full gate hoặc landing main.",
+      "Detector report là regex TSX 5 targets ở b76 và 1 target ở 5cab; không native geometry/contrast."
+    ],
+    "notCanonized": [
+      "Baseline Android không theo pitch giả định là lỗi đã xử lý, không luật kẻ xuyên chữ.",
+      "Toolbar icon là công cụ ngữ cảnh trang K, không giấy phép thay mọi nhãn hành động bằng icon.",
+      "Mockup K chưa duyệt không đặt world/raster mới; không thêm tranh để che form.",
+      "Bốn finding resolved không chứng nhận họ màn; drift cũ ngoài scope giữ nguyên."
+    ]
+  },
+  "shippedHGroupsFriends20261010": {
+    "_": "Gia hạn hệ v3 hiện hành từ artifact đã kiểm; giữ cấu trúc sidecar legacy và mirror token. Chỉ sáu finding của H, không nghiệm thu họ màn hoặc A–S.",
+    "date": "2026-10-10",
+    "headCommit": "d91e66d16a06b3beea166963c75890ef2b69da7a",
+    "authority": {
+      "product": "PRODUCT.md",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/H-GROUPS-FRIENDS-BRIEF.md",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage và lối gọi Nếp hoạt động; không thêm token, world hoặc raster.",
+      "reference": "Mockup03 là critique-reference, không comp được duyệt."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/groups/New.tsx",
+      "apps/mobile/src/rudi/screens/groups/Invite.tsx",
+      "apps/mobile/src/rudi/screens/groups/Members.tsx",
+      "apps/mobile/src/rudi/screens/friends/AddFriend.tsx",
+      "apps/mobile/src/rudi/screens/friends/Friends.tsx",
+      "apps/mobile/src/rudi/screens/friends/HangNguoi.tsx",
+      "apps/mobile/src/rudi/screens/chat/CaiDatNhom.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx",
+      "apps/mobile/src/rudi/ui/SoBia.tsx",
+      "apps/mobile/src/rudi/ui/ONhapMuc.tsx",
+      "apps/mobile/src/rudi/theme.ts"
+    ],
+    "verdict": {
+      "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d91e66d1/h-final-verdict-packet.json",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d91e66d1/fresh-h-final-verdict.md",
+      "disposition": "ship",
+      "scope": "Chỉ F1–F6 của lượt review H: reviewer mở đủ 6 required files chứa 16 viewport; cả sáu resolved.",
+      "currentNative": "F3/F5: leave decision và expanded New ở d91.",
+      "carryForward": "F1/F2/F4/F6 giữ provenance c941; năm artifact byte-identical, không đổi nhãn ảnh cũ.",
+      "carryForwardSource": "c941f09ecacdcde712a29ce645a2327dc5ac7a21",
+      "unchangedArtifactSha256": {
+        "apps/mobile/src/rudi/screens/groups/Invite.tsx": "1ad1737110363753b1562ae17f99a443faaba5d713a7627ddb512aa7f5b486c2",
+        "apps/mobile/src/rudi/screens/groups/Members.tsx": "c152315a8b5c1433482b8549cc93a11455de1c9680ab0e874a677bb8e4527667",
+        "apps/mobile/src/rudi/screens/friends/AddFriend.tsx": "782fe4ff30826b5eaa4e37eaf8fe3ae5419ae660c8b98eb4e43b0787f3158244",
+        "apps/mobile/src/rudi/screens/friends/Friends.tsx": "d04e7717eadbbee19307eef282472fddc4717fe639f1092654ce901cd6fe613a",
+        "apps/mobile/src/rudi/screens/friends/HangNguoi.tsx": "99587cb6834f6d060697e9bd1f305935e97b05efb875aaa3e575eb9ae4e6fdb5"
+      }
+    },
+    "documenter": {
+      "method": "Đọc role/reference, PRODUCT/DESIGN/sidecar/brief, 10 TSX H/shared và theme; đọc packet/verdict, đối chiếu hash; không chạy runtime, gate hoặc detector.",
+      "openedNativeCaptures": [
+        {
+          "source": "d91e66d1",
+          "name": "h-final-expanded-light-short"
+        },
+        {
+          "source": "d91e66d1",
+          "name": "h-final-expanded-dark-long"
+        },
+        {
+          "source": "d91e66d1",
+          "name": "contact-final-leave-functional",
+          "viewports": 6
+        }
+      ],
+      "observed": "Nhãn New đứng thành cụm trên vải bìa, action cùng trục ngay dưới; ảnh long hiện đoạn cuối quanh caret. Contact có roster trước shortcut và leave prompt/hai lựa chọn thành cụm ở light100/dark200; cancel về settings."
+    },
+    "technicalEvidence": {
+      "method": "Chỉ đọc số của packet, không chạy lại trong lượt tài liệu.",
+      "exactSource": "d91e66d16a06b3beea166963c75890ef2b69da7a",
+      "scope": "Subset native-relevant 9 bước; 214 Node file, 1608/1608, 0 fail/skip/cancel/todo; repo-tree5107. Không full gate/strict32.",
+      "detector": "Regex TSX 7 targets, []/exit0; không native contrast/geometry hoặc điểm đẹp."
+    },
+    "limits": [
+      "Tên dài vẫn TextInput Android cuộn nội bộ hai dòng; ảnh long không chứng minh cả 95 ký tự cùng thấy.",
+      "Expanded là cùng AVD đổi kích thước, không hardware tablet độc lập; expanded large-text/IME chưa kiểm.",
+      "Whole H/A–S, motion/reduced-motion, TalkBack, iOS, 390/430dp, network/retry/lifecycle và phần chưa chụp vẫn mở."
+    ],
+    "notCanonized": [
+      "Không biến internal scroll của tên dài thành quy tắc cắt tên hoặc full-name proof.",
+      "Chiều cao tối thiểu vùng vải New expanded không thành token chiều cao nhãn giấy.",
+      "Vai thành viên là note inkSoft tự wrap, không khôi phục Stamp từ mô tả v3 cũ.",
+      "Nhánh pressed opacity trong hàng người và drift cũ ngoài scope giữ nguyên, không thành phản hồi bấm thứ hai.",
+      "Sáu fixes resolved không total-H/app acceptance; subset/regex không full gate, contrast hoặc điểm thẩm mỹ."
+    ]
+  },
+  "shippedI1PairConsent20261010": {
+    "_": "Bàn giao hợp nhất vào hệ hiện có sau sửa cuối; chỉ bảy finding I1, không nghiệm thu toàn I/A–S. Giữ nguyên token, lịch sử và bằng chứng H/K.",
+    "date": "2026-10-10",
+    "headCommit": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — v3 «Sân khấu giấy», Creative North Star và các mục I1",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/bìa vải/coral/Bricolage và Nếp canonical; không roll, token hoặc raster mới.",
+      "reference": "Mockup06 là critique-reference, chưa approved comp; _layout.tsx không còn contract lịch sử."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/hai-nguoi/ChonNguoi.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongYBac.tsx",
+      "apps/mobile/src/rudi/ui/ChuKy.tsx",
+      "apps/mobile/src/rudi/ui/StampButton.tsx",
+      "apps/mobile/src/rudi/ui/Sheet.tsx",
+      "apps/mobile/src/rudi/to-giay/SoDoiSong.tsx",
+      "apps/mobile/src/rudi/to-giay/so-doi-map.ts"
+    ],
+    "contract": {
+      "spatial": "Người dẫn mắt trên trục trái; cảnh bìa/Nếp hỗ trợ. Cột form picker560, đọc640; unopened hai vùng khi width>=600 và font<1.3, còn lại một cột. Compact entry ngoài scroll, inset max(bottom,12).",
+      "type": "Hai tên h2 ink, và/lời mở body inkSoft. ChuKy wrapName/showStatus giữ role, tên hoặc câu chờ, nét, Đã ký/Chưa ký; tên20/26 không skew trong giao kèo, không giới hạn một dòng.",
+      "consent": "TrangSo ke=false: Cho phép → Không kéo theo → hai phần ký → Im lặng không phải đồng ý. Dọc khi width<600 hoặc font>=1.3, stretch/basis auto; khoảng nhóm ký24.",
+      "footer": "BacDongY body cuộn riêng; feedback/lỗi, con dấu, Để sau theo thứ tự đọc ở footer. Inset kit max(bottom,16), không bật prioritizeFooter để kéo tấm hết trần.",
+      "actions": "StampButton wrapLabel opt-in giữ font/mặt dấu, tự cao padVertical12. Để sau label inkSoft target48/nhãn stretch căn giữa; Chọn loại sổ inkSoft target48/padVertical12, parent/nhãn stretch căn trái.",
+      "state": "UI theo response/provider: một bên ký chưa mở; recipient có entry/Đồng ý, proposer câu chờ có tên. Back/cancel không grant. Lập sổ không tự bật Một đôi/quyền đọc chat; Một đôi nói AI chỉ nhận phần được chọn và xác nhận gửi.",
+      "materialAndM6": "Journal giữ grain giấy sáng/vải tối. M6 bìa140 và Nếp wrap theo khoảng trống, dấu Sổ đã/mở hai dòng; mở thật chỉ có bằng chứng62, ảnh tĩnh không chứng minh motion."
+    },
+    "verdict": {
+      "carry": {
+        "source": "62c1a73b3fb5bb85c966670d26cea782eac56c43",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-62c1a73b/fresh-i1-verdict.md",
+        "resolved": [
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F6",
+          "F7"
+        ],
+        "history": "F5 partial; 14 required contact/92 viewport và2 original. Không đổi nhãn ảnh62 thành7d."
+      },
+      "final": {
+        "source": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7dcacedf/fresh-i1-f5-verdict.md",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7dcacedf/i1-f5-verdict-packet.json",
+        "disposition": "ship",
+        "scope": "F5 resolved và regression hẹp: 3 contact/24 viewport mới, primary/recipient light/dark100/200; shared couple read/cancel. Sáu finding còn lại carry theo diff/hash, không review lại toàn I."
+      }
+    },
+    "documenter": {
+      "method": "Đọc source/brief/hai verdict/packet; mở đủ3 contact7d và2 contact62. Không chạy runtime, API, web, gate hoặc detector.",
+      "openedImages": [
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-primary-light.png",
+          "viewports": 8
+        },
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-primary-dark.png",
+          "viewports": 8
+        },
+        {
+          "source": "7dcacedf",
+          "name": "contact-i1-f5-recipient.png",
+          "viewports": 8
+        },
+        {
+          "source": "62c1a73b",
+          "name": "contact-i-after-entry-dark20.png",
+          "viewports": 6
+        },
+        {
+          "source": "62c1a73b",
+          "name": "contact-i1-functional-recipient.png",
+          "viewports": 8
+        }
+      ],
+      "observed": "7d giữ đủ Chọn loại sổ một dòng ở100/200, tách khỏi con dấu chính; shared giao kèo có quyền/giới hạn/hai phần ký, Để sau rõ. 62 có hàng người, tên dẫn unopened, recipient entry/feedback/cancel và khung M6 sau grant thật; nhãn phụ co ở62 giữ là lỗi lịch sử."
+    },
+    "technicalEvidence": {
+      "method": "Đọc các báo cáo có sẵn, không chạy lại trong lượt tài liệu.",
+      "exactCleanSource": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "checks": "clean-checks.json: 9 bước exit0, Node214files/1608/1608, 0 fail/skip/cancel/todo; repo-tree5108. Không full npm/strict32.",
+      "mutation": "i1-consent-mutation-evidence/results.json: identity12/12; canary10/12, mutants11/12 và10/12 đỏ đúng dự đoán, cùng harness SHA2560fc8e99f2d833808439d30eb2f2f1b9318730af3c2e49905b92b83459277939c.",
+      "detector": "i1-final-tsx-detector-r1.json: 5 target TSX regex, []/exit0; không native computed contrast/geometry. r0 sai đường dẫn ChuKy []/exit1 giữ là đỏ."
+    },
+    "runtimeEvidence": {
+      "javascript": "7dcacedf164f1a84192be62392c6dbfa4148174e",
+      "apkBuildCheckpoint": "2f20a30179d0e21a1f4b3244dfbd685b5bade7e9",
+      "apkSha256": "963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514",
+      "continuity": "Proposal/cancel/receivergrant/M6 thật thuộc62, chỉ lap_so. Fresh7d đọc active/lap_so và shared couple cancel, không reset/replay cặp active.",
+      "restoredFontScale": 1
+    },
+    "limits": [
+      "Chỉ các finding I1 đã chấm; I2, toàn I/A–S và mockup-quality toàn app vẫn mở.",
+      "Android320×640; matrix62 có100/130/200 và expanded cùng AVD đổi kích thước. Fresh7d chỉ100/200 sáng/tối hai phía và regression đã nêu.",
+      "Không web/iOS, native computed contrast, motion/TalkBack, lifecycle/network, full npm hoặc strict32; APK checkpoint độc lập với JS7d."
+    ],
+    "notCanonized": [
+      "F5 partial62, nhãn Để của4a và scanner r0 exit1 không thành pass; giữ provenance đỏ.",
+      "Nét ký không thay đồng thuận; opt-in wrap không thu font/đổi mọi caller; M6 không replay để tạo chứng cứ.",
+      "Không biến lỗi/bố cục I2 chưa kiểm thành hướng dẫn mới; bảy finding đóng không nghiệm thu họ màn."
+    ]
+  },
+  "shippedI2NotebookSettings20261010": {
+    "_": "Bàn giao layout/harden trong thế giới v3 hiện hành sau F1; giữ cấu trúc sidecar legacy, mirror token và toàn bộ record I1/CD/EF/H/K. Không nghiệm thu toàn I/A–S.",
+    "date": "2026-10-10",
+    "headCommit": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — v3 «Sân khấu giấy», Creative North Star và các mục I2",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md",
+      "mode": "layout/harden, Operate + Read",
+      "world": "Nhật ký chuyến đi sau giờ làm",
+      "seed": "c8e88116",
+      "identity": "Giữ giấy/mực/coral/Bricolage và Nếp canonical; không roll, token, raster hoặc thẻ trang trí mới.",
+      "reference": "Mockup06 là critique-reference, không approved comp mới; hợp đồng I2 không thay global world."
+    },
+    "sources": [
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx",
+      "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx",
+      "apps/mobile/src/rudi/ui.tsx",
+      "apps/mobile/src/rudi/ui/Stamp.tsx"
+    ],
+    "sourceSha256": {
+      "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx": "9c3817090ba8264e644b71e0d3d378e9545416fdcbacccddbacc91fd0975136a",
+      "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx": "81b2bad40c4924b848157780cb60f5dcd17024f4bf795936db02853b22c01a86",
+      "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx": "3748eebac74f97c264f123c252df80ad29a0c803fea0c78877b1ae970a77662d",
+      "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx": "793bd8342181bd7e78aff7fe4278a009780e758b42474b5f80e75e0ea1da7ab7",
+      "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx": "da8c4bad5fc2a8b89b2fd73d1650332fb21cb0e0674e2f51f794f6fff8f8e049",
+      "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx": "6ff1e71cdfb958e326fc7255ce66126bd926f496e6c82ee2107964fc7f6dd79f",
+      "apps/mobile/src/rudi/ui.tsx": "48f1fdcccdf950e2f48f83a4eaf493e1934fe824ca8beb17fe226a65aaef452d",
+      "apps/mobile/src/rudi/ui/Stamp.tsx": "0368080e29e2d1ecb1ba39ba4af7d9883b835ef5dab01683ebe9a9fd0d7367c6"
+    },
+    "contract": {
+      "spatial": "Hội bạn giữ trục trái cho heading/lời dẫn/con dấu/Chọn loại sổ. Mục lục: cấu hình → tin nhắn/kỷ niệm → đóng sổ, dùng proximity và hairline; nội dung dài wrap/cuộn, không thu font.",
+      "typeChoice": "Highlight theo batDoi thật; lỗi không đổi lựa chọn. Busy/disabled/lỗi tại sheet đang nhận lệnh, Xong ở footer. Thời điểm loading native chưa được chấm.",
+      "constraints": "Hai Field multiline tự cao theo content-size trong khoảng3–8 dòng body.lineHeight × fontScale, sau đó cuộn. Phần người kia đọc riêng sau hairline. Lưu chỉ khi đổi/dangLuu, Bỏ thay đổi không gửi.",
+      "keyboardFooter": "RangBuoc opt-in avoidKeyboard/prioritizeFooter; lỗi, Lưu và Bỏ thay đổi ở footer trên IME. Ảnh200 chỉ chứng minh vùng đang đọc/caret cuối, không toàn chuỗi cùng lúc.",
+      "ownGu": "Own state → đầy đủ scope người kia/Nếp/chat → control của mình → sửa gu → tham khảo người kia/gu chung. Private solid, shared outline; chỉ tự bật gu của mình, common chỉ khi cả hai chia.",
+      "guErrorFooter": "F1 giữ nguyên copy/predicate/handler. Chỉ khi loi mới đặt CauTaiCho cùng chính hanhDong vào footer hairline với prioritizeFooter; không lỗi giữ control trong thân. Không thêm lệnh retry hoặc rút permission.",
+      "closePreview": "Hậu quả dương ink/600 nổi hơn zero inkSoft, vẫn đủ tờ chờ/buổi đã chốt/lời đề nghị/ký ức. Chưa có preview không mời đóng; lệnh dùng revision. Bằng chứng chỉ preview/cancel, không thực hiện đóng sổ.",
+      "stamp": "ToLoiRu dùng nhãn in hoa tiếng Việt, minWidth88 và labelStyle stretch/center opt-in; Stamp/caller khác giữ hình học mặc định, không suy glyph vẽ từ accessibilityLabel.",
+      "targetScope": "Các target48dp đọc từ source, không chứng nhận kích thước chạm thực đã đo; không áp footer I2 cho giao kèo I1 hoặc mọi Sheet."
+    },
+    "verdict": {
+      "fullReview": {
+        "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/i2-finish-packet.json",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/fresh-i2-finish-review.md",
+        "disposition": "fix",
+        "scope": "Full finish review trong packet I2: 11 required contact,84 static+12 functional viewport,20 original và mockup06; một P2 F1 Gu error/action. Original kiểm lại frame, không cộng thêm viewport.",
+        "findings": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 1,
+          "P3": 0
+        },
+        "scoring": "Không tổng /16; artwork N/A, interaction/motion N/E. Không nâng kết quả này thành full I/A–S hoặc native platform-reference đã có."
+      },
+      "final": {
+        "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+        "packet": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/i2-f1-verdict-packet.json",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/fresh-i2-f1-verdict.md",
+        "disposition": "ship",
+        "finding": "F1 resolved",
+        "scope": "Chỉ F1 và regression hẹp: reviewer mở2/2 required contact,12 frame Gu mới light100/dark200-r1 và4 original. Không full review mới; original không thành16 viewport.",
+        "observed": "Lỗi nói gu còn riêng và toàn nút hai dòng cùng hiện trên navigation inset ở dark200; cuộn thân vẫn giữ footer, own state/scope nguyên. Shared outline tự cao3 dòng, private solid; không thấy regression mới trong bộ ảnh này."
+      },
+      "carryForward": {
+        "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "scope": "Bảy target byte-identical từ full review; diff a24..814 trong8 target chỉ GuHaiBan. Không gán ảnh hoặc đánh giá a24 thành capture814.",
+        "unchangedArtifactSha256": {
+          "apps/mobile/src/rudi/screens/hai-nguoi/KhongGianGiay.tsx": "9c3817090ba8264e644b71e0d3d378e9545416fdcbacccddbacc91fd0975136a",
+          "apps/mobile/src/rudi/screens/hai-nguoi/LoaiSo.tsx": "81b2bad40c4924b848157780cb60f5dcd17024f4bf795936db02853b22c01a86",
+          "apps/mobile/src/rudi/screens/hai-nguoi/RangBuoc.tsx": "3748eebac74f97c264f123c252df80ad29a0c803fea0c78877b1ae970a77662d",
+          "apps/mobile/src/rudi/screens/hai-nguoi/DongSo.tsx": "da8c4bad5fc2a8b89b2fd73d1650332fb21cb0e0674e2f51f794f6fff8f8e049",
+          "apps/mobile/src/rudi/screens/hai-nguoi/ToLoiRu.tsx": "6ff1e71cdfb958e326fc7255ce66126bd926f496e6c82ee2107964fc7f6dd79f",
+          "apps/mobile/src/rudi/ui.tsx": "48f1fdcccdf950e2f48f83a4eaf493e1934fe824ca8beb17fe226a65aaef452d",
+          "apps/mobile/src/rudi/ui/Stamp.tsx": "0368080e29e2d1ecb1ba39ba4af7d9883b835ef5dab01683ebe9a9fd0d7367c6"
+        },
+        "changedArtifact": {
+          "path": "apps/mobile/src/rudi/screens/hai-nguoi/GuHaiBan.tsx",
+          "beforeSha256": "c878ed56fe3babbc072383fc08fe9f9bf814aaf9ce12ee4616638aa57ee201fc",
+          "afterSha256": "793bd8342181bd7e78aff7fe4278a009780e758b42474b5f80e75e0ea1da7ab7"
+        }
+      }
+    },
+    "captureProvenance": {
+      "staticA24": "84 viewport tĩnh: food106/v2,avoid91/v1; phone settings light100/dark200, couple light/dark100/200 và expanded light100/dark200-r1.",
+      "functionalA24": "12 frame tương tác settled cùng source; tiến trình nháp/lưu thật, retry lên food116/v3 và avoid101/v2. Không reset, không coi ảnh IME đang mở là ảnh sau lưu.",
+      "fresh814": "12 frame Gu light100/dark200-r1; private/error/retry shared/unshare. Các viewport cuộn không là ảnh trọn trang.",
+      "expanded": "768×1024 là cùng AVD đổi kích thước, không hardware tablet độc lập.",
+      "hashVerification": "Documenter đối chiếu8/8 contact tĩnh,12/12 functional original a24 và12/12 Gu original814 với map;8/8 source a24 khớp Git,7/8 giữ byte tại814 và Gu khớp detector814.",
+      "permissionWitnessFromReview": "Trước/sau tháo chặn đều private; sau retry primary mine_shared=true/counterpart theirs_shared=true,common[],outsider404; sau tắt cả hai private. Witness corroborate dữ liệu/quyền, không thay ảnh.",
+      "harnessRed": "r0 dark200 default scroll bắt đầu trên footer mới, fail sau assert lỗi/nút visible; giữ đỏ. r1 chỉ chuyển swipe vào thân cuộn, source không đổi. Không gọi r0 là product mất nút."
+    },
+    "documenter": {
+      "method": "Đọc role/document reference, AGENTS/PRODUCT/DESIGN/sidecar/brief, source I2 và diff; đọc packet/reports có sẵn, mở2 contact814 và8 contact đại diện a24, đối chiếu hash. Không vận hành emulator/browser/API, không chạy test/detector và không đọc credential/env/raw transcript.",
+      "openedNativeCaptures": [
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-settings-light100.png",
+          "viewports": 9,
+          "sha256": "684d197fe7250b3514d41fb111ae29e7cc28f77992aa4e4778b17cf68e56b57a"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-settings-dark200.png",
+          "viewports": 9,
+          "sha256": "15e6fc2d01758bf1425b4e2d54b249159065b8671e6cb60ef7050f93a20fd541"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-light100.png",
+          "viewports": 11,
+          "sha256": "0afb7205d52e97b5e54b392ddb1a7703acadb0a456287a624b450de930ebe7e5"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-dark200.png",
+          "viewports": 11,
+          "sha256": "9f1a1a7c2f068307f3054f54ea9ace5389ebe383c8796953a1655310dc25865a"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-after-couple-light100-expanded-r1.png",
+          "viewports": 11,
+          "sha256": "65ea8492e4d1432f1ffe5f5c851b8ba2d201cc07642f84c8c7b208b4cc38b9a6"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-1.png",
+          "viewports": 4,
+          "sha256": "5073ee9423f64d07dff4ce23f410a42a1dab956abced7f4d5f26503c351ddae2"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-2.png",
+          "viewports": 4,
+          "sha256": "4b94f2f2ff46458db3c3cf18fb044f82d3ee324146c2204b296c3433deb667c8"
+        },
+        {
+          "source": "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-a24cb4bf/contact-i2-final-functional-3.png",
+          "viewports": 4,
+          "sha256": "643c1800cd0e4243aa49cb50c7191907cb022ca9dee8b4511804da70027dd4e5"
+        },
+        {
+          "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/contact-i2-f1-light100.png",
+          "viewports": 6,
+          "sha256": "9042424ecf1b23231186cecb6da1add401f7d5ec4593d87ba8ad3a4154a3535b"
+        },
+        {
+          "source": "814ea5c979629acb8548215c24a5ff5f5c560b73",
+          "path": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814ea5c9/contact-i2-f1-dark200-r1.png",
+          "viewports": 6,
+          "sha256": "bc7eec0d49494fb22d0dfd8858bc57d0443668e725ff2fa44f458177af2f09ac"
+        }
+      ],
+      "openedContactFiles": 10,
+      "openedContactViewports": 75,
+      "scope": "Representative artifact inspection, không đánh giá lại full review hoặc tự chấm beauty score.",
+      "observed": "Mục lục tách nhóm trên trang, constraints dài wrap/cuộn; tail nhập và action còn trên IME, type-error giữ selected truth và Xong. Tem ĐÃ CHỐT đủ glyph ở contact100/200; hậu quả dương nổi hơn zero. Hai contact814 xác nhận footer lỗi/control cùng hiện."
+    },
+    "technicalEvidence": {
+      "method": "Chỉ đọc kết quả có sẵn ở từng exact SHA, không chạy lại trong lượt tài liệu.",
+      "sources": [
+        "a24cb4bf5377f1716a9e9073b292158962e11ed0",
+        "814ea5c979629acb8548215c24a5ff5f5c560b73"
+      ],
+      "cleanChecksEach": 9,
+      "nodeSubsetEach": {
+        "files": 214,
+        "pass": 1608,
+        "fail": 0,
+        "skip": 0,
+        "cancel": 0,
+        "todo": 0
+      },
+      "guMutationsEach": {
+        "identity": "12/12 exit0",
+        "canary": "10/12 exit1",
+        "mutantUnknownChat": "10/12 exit1",
+        "mutantFailedRevoke": "11/12 exit1",
+        "predicted": true,
+        "testSha256": "311694a7a01036bd07c5c71fbbfb7560e57242947e2a5a34592ed5b3b9e54a5f"
+      },
+      "detector": "a24:8 target;814:1 Gu target. TSX regex-only []/exit0; không native computed geometry/contrast hoặc điểm đẹp.",
+      "scope": "Subset không full gate/strict; unit xanh không thay bằng chứng thị giác."
+    },
+    "limits": [
+      "Ship chỉ F1 và regression hẹp; các phần I2 khác carry a24, không full review mới hoặc nghiệm thu toàn I/A–S/toàn app.",
+      "Không motion/reduced-motion, TalkBack/focus order, native computed contrast/geometry, target thực, native loading timing/lifecycle, iOS hoặc hardware proof.",
+      "Không tổng beauty /16; artwork N/A và interaction/motion N/E không đổi thành điểm2.",
+      "Không chứng minh toàn chuỗi constraints200 cùng thấy, mọi vị trí caret hoặc toàn state machine; không thực hiện đóng sổ/cấp quyền mới trong final flows.",
+      "Mockup06 chỉ critique-reference; thiếu native platform-reference trong full-review packet không được biến thành pass."
+    ],
+    "notCanonized": [
+      "Footer lỗi Gu/prioritizeFooter không thành mặc định mọi Sheet; giữ bố cục giao kèo I1 và normal Gu.",
+      "Khoảng3–8 dòng không cho phép cắt nội dung; minWidth88 của ToLoiRu không thành token Stamp chung.",
+      "r0 harness đỏ, ảnh tĩnh và witness API không biến thành full functional/visual acceptance; không sửa drift ngoài scope."
+    ]
+  },
+  "scopedGPLCompact20261011": {
+    "_": "Bàn giao giới hạn sau F3 ship061; không tổng hợp thành verdict ship toàn GPL. Giữ nguyên token mirror, schema legacy và các record lịch sử.",
+    "date": "2026-10-11",
+    "headCommit": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — v3 Sân khấu giấy và các mục GPL/J Layout/Components",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md",
+      "mode": "layout/harden, Operate + Read",
+      "seed": "c8e88116"
+    },
+    "contract": {
+      "chatColumn": "Header, luồng đọc, tools/plan/poll và composer cùng cột640 trên nền toàn màn; phone +/pill/gửi. Tools/poll thay composer, plan giữ ngoại lệ draft/composer.",
+      "wideWriting": "Canvas, counter và toolbar liên tục trong phần cao còn lại; không thêm khoảng trống lớn sau toolbar hoặc filler.",
+      "feedReadiness": "Chỉ retry trang đầu chưa nhận khi focus; empty đã nhận vẫn ready; owner hiện hành hạ loading/fetching; response refresh chỉ scroll0 khi được áp và còn focus. Request cũ giữ cards/open-state/offset.",
+      "profileAction": "PressScale/icon/typography.label hiện hành, nhóm gọn căn trái; padding14×10/gap9/min target source48/maxWidth100%. Giữ đủ nhãn edit/resume, font lớn reflow khi thực sự cần, Back giữ mounted draft/Huỷ bỏ nháp.",
+      "profileMeasurement": "Text cùng style đo trong toàn cột hữu hạn; nhận intrinsic chỉ khi một dòng, ceil theo device pixel và cap available sau icon/padding/border/gap. Key label/fontScale/density/column, bỏ stale event. Final061 measured/capped explicit Text width thay minWidth814 để native đo lại height. Absolute opacity0 Text a11y-hidden/pointer-none là measurement product, không layout hoặc DEV probe. Không đổi RudiButton/shared primitive."
+    },
+    "verdict": {
+      "carry7cf": {
+        "source": "7cf58966f0da6871f5e3a21534bd7d8c636a38af",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/gpl-verdict-review-7cf.md",
+        "disposition": "fix",
+        "coverage": "35/35 contact,105/105 original,6 cặp old/new mở lại.",
+        "findings": {
+          "F1": "resolved — cùng cột chat640",
+          "F2": "resolved chỉ controlled actual TSX9/0; không native causal sequence/navigation/E2E proof",
+          "F3": "partial tại7cf, giữ lịch sử",
+          "F4": "resolved — vùng viết wide liên tục"
+        }
+      },
+      "finalF3": {
+        "source": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-review-061.md",
+        "disposition": "ship",
+        "finding": "F3 resolved",
+        "coverage": "4/4 contact,12/12 original hợp lệ,6 original mở riêng;4 profile sáng100/tối200 × hẹp/rộng,3 trạng thái edit/resume/cancel-restored.",
+        "observed": "100% icon và hai nhãn gọn/căn trái/một dòng/giữa chiều cao;200% giữ đủ nhãn trong cột. Huỷ trả nhãn sửa; resume giữ lời nhắc nháp. Không regression mới trong vùng đã chấm.",
+        "scope": "Chỉ phần sửa F3; F1/F2/F4 giữ verdict và provenance7cf. Không nghiệm thu toàn GPL/G/P/L/app."
+      }
+    },
+    "previousPartials": [
+      {
+        "source": "8ec8071ebefeff96f9da0be3dc17f015935bd271",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-8ec8071e/f3-verdict-review.md",
+        "finding": "F3 partial: hết wrap nhưng control đầy cột/icon xa label."
+      },
+      {
+        "source": "814e086fd750844964251c75f791c72770f6e5f0",
+        "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-814e086f/f3-root-capture-inspection.json",
+        "finding": "F3 partial: nhãn một dòng nhưng height60/86dp; explicit-width là giả thuyết tiếp theo, chưa chứng minh cached-height causation."
+      }
+    ],
+    "mechanical": {
+      "source": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/final-mechanical-verification.md",
+      "cleanSteps": "9/9 exit0, exact clean trước/sau; không full gate.",
+      "nodeSubset": "214files/1610pass/0fail/0skip/0cancel/0todo; giữ5 exclusions browser.",
+      "frozenGPL": "identity9/0, canary_tools8/1, mutant_private_audience8/1, mutant_kept_tab8/1;setup0,đúng prediction. Frozen host không phát onLayout/onTextLayout; không measured geometry proof.",
+      "focusDiagnostic": "D01–D07 + current-refresh positive9/0/setup0, actual TSX/frozen seams; không native causal proof.",
+      "detector": "Đúng1 invocation/1file HoSoSong.tsx;raw[]/exit0,TSX regex-only. Không full13 scan/native allocation/contrast/48dp/beauty."
+    },
+    "runtime": {
+      "jsSource": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+      "provenance": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/runtime-provenance.json",
+      "nativePacket": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-packet.json",
+      "apkCheckpoint": "2f20a30179d0e21a1f4b3244dfbd685b5bade7e9",
+      "apkSha256": "963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514",
+      "apiBuildSource": "c3b04ae8afc1cb005c650e7d35de522d7c5ac231",
+      "apiBinarySha256": "ecf961065bbd1848d5e6267acd8fb54effd796321eca33041a8fe46094988de6",
+      "limit": "API source/hash đọc native_provenance của nativePacket; clean061 chỉ build/hash core, không thay runtime. Metro JS061; APK/API runtime không relabel hoặc rebuild/restart061."
+    },
+    "documenter": "Chỉ đọc contract/PRODUCT/DESIGN/sidecar/briefs và báo cáo có sẵn, không mở ảnh mới hoặc chạy source/tests/device/API/runtime/detector/browser. Mechanical và native verdict là snapshot khác thời điểm; giữ nguyên câu pending lịch sử.",
+    "notCanonized": [
+      "7cf/8ec/814 F3 partial không đổi nhãn thành061; wrap/đầy cột/height thừa không thành luật.",
+      "1e56 chỉ diagnostic;048 compatibility identity7/2 không kill/visual credit;814 detector0.",
+      "Opacity0 measurement không cho phép giấu nội dung người dùng; cached-height chưa thành nguyên nhân được chứng minh."
+    ],
+    "limits": [
+      "Native emulator5558; wide768×1024 là cùng AVD đổi kích thước, không tablet độc lập.",
+      "Không chứng minh target thực48dp, computed geometry/contrast toàn màn, TalkBack, motion/reduced motion, hardware/iOS, strict gate/E2E/load hoặc deployment.",
+      "Giữ UI3/seed c8e88116, giấy/mực/coral/Bricolage/Nếp canonical; generated/historical reference chỉ để critique, không approved comp mới.",
+      "Toàn app/M–N/I/P–Q/L–R/A–B–S/C–D–E–F/G/K và các cổng cuối ngoài scope; không main/app ship."
+    ]
+  },
+  "shippedJComposerScoped20261011": {
+    "_": "Chỉ hai finding composer P1/P2 ship tại7cf; carry byte identity đến061, không ship toàn J hoặc relabel native/matrix.",
+    "date": "2026-10-11",
+    "nativeSource": "7cf58966f0da6871f5e3a21534bd7d8c636a38af",
+    "byteIdentityThrough": "061d8d7afad9d145ee34180d4ed14250c67db5c6",
+    "authority": {
+      "product": "PRODUCT.md",
+      "design": "DESIGN.md — mục GPL/J Layout/Components",
+      "brief": "docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md",
+      "mode": "layout/harden, Operate + Read",
+      "seed": "c8e88116"
+    },
+    "contract": {
+      "column": "Ảnh/caption/privacy/footer audience/action/helper cùng cột đọc640, không body640/footer560.",
+      "safeArea": "Footer khi IME đóng=insets.bottom+12; IME giữ nhánh shell. Helper nằm trên gesture indicator; field/audience/action/helper trên IME200. Không là công thức footer toàn hệ."
+    },
+    "verdict": {
+      "source": "7cf58966f0da6871f5e3a21534bd7d8c636a38af",
+      "report": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-verdict-review-7cf.md",
+      "disposition": "ship",
+      "findings": [
+        "P1 resolved",
+        "P2 resolved"
+      ],
+      "scope": "Chỉ hai finding composer, không wholeJ/app.",
+      "coverage": "21/21contact,58/58required frame,58baseline+58current originals hash/dimensions đúng,5cặp original mở.29phone320×640+29wide768×1024. Root inspection mở lại4original,không cộng viewport.",
+      "rootInspection": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-root-verdict-capture-inspection.json"
+    },
+    "productionIdentity": {
+      "proof": "/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/J-production-identity-proof.json",
+      "proofSha256": "8a84fd4e8d94b6d1348c8c439bac179274951ba3947f4ff5c232bec9513c81e4",
+      "paths": {
+        "apps/mobile/src/rudi/screens/ky-niem/ShareMomentLive.tsx": "798bf4af6594fc5fdf41820ab252e1c037e5829e24995319b340abe0f6853f3c",
+        "apps/mobile/src/rudi/screens/ky-niem/AlbumLive.tsx": "d7564ba89ec81319fcea1af55fc1a9c51cf5b480756772fbb67d0a3df6ab19ec",
+        "apps/mobile/src/rudi/ui/PhotoViewer.tsx": "68b4cd698b9d12c9066e0293e4a762989b6501ff15699dd23be176f3f1d2bd6f",
+        "apps/mobile/src/rudi/ui/Sheet.tsx": "413a44880751f0edd01a63024939805a158506007a5fbd05dc43945c738a736b",
+        "apps/mobile/src/rudi/photo-viewer.ts": "c540804f95d9caba0d5c571f56c0fd430b2dcfaa6f65bd5916f86e626a569444",
+        "apps/mobile/tests/photo-viewer.test.mjs": "b506861f8bce9c702ed5e4591dc2471ecfe0f46721af695df38a81a6572a2a2d"
+      },
+      "scope": "5 production targets gồm shared Sheet và test gốc byte-identical7cf↔061. Không rerun/relabel native/matrix7cf thành061."
+    },
+    "mechanical": "PureJ prior7cf identity5/0,canary+2mutants mỗi variant4/1/setup0 chỉ pure-helper/static. Clean0619/9 và subset1610/1610 là báo cáo kỹ thuật riêng; detector061 chỉ HoSoSong.tsx,không Jscan.",
+    "notCanonized": [
+      "Upload/retry/media/comment/check-in2085 và full reviewc3 giữ nhãn gốc,không thử lại tại7cf/061.",
+      "Không dùng artifact/regex/unit để phong thánh lỗi cũ hoặc thay visual/native proof."
+    ],
+    "limits": [
+      "Native emulator5558; wide768×1024 là cùng AVD đổi kích thước, không tablet độc lập.",
+      "Không chứng minh target thực48dp, computed geometry/contrast toàn màn, TalkBack, motion/reduced motion, hardware/iOS, strict gate/E2E/load hoặc deployment.",
+      "Giữ UI3/seed c8e88116, giấy/mực/coral/Bricolage/Nếp canonical; generated/historical reference chỉ để critique, không approved comp mới.",
+      "Toàn app/M–N/I/P–Q/L–R/A–B–S/C–D–E–F/G/K và các cổng cuối ngoài scope; không main/app ship."
     ]
   }
 }

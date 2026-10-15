@@ -5,7 +5,7 @@ appId: com.lakiet.rudi
 - openLink: "rudi://plan"
 - openLink: "rudi://outings/${OUTING_ID}/ending"
 - extendedWaitUntil:
-    visible: "Mang theo điều gì vào sổ?"
+    visible: "Những điều bạn muốn giữ"
     timeout: 30000
 - scrollUntilVisible:
     element:

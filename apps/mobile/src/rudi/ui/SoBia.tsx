@@ -18,6 +18,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reani
 
 import { BIA_MO, choLatBia } from "../san-khau/dong-hoc";
 import { bongGiay, phuMau, typography, useRudiTheme } from "../theme";
+import { Grain } from "./Grain";
 
 /** The ruled page: first rule under a header band, then one every `DONG` dp. */
 const DONG = 14;
@@ -29,6 +30,7 @@ export function SoBia({
   mo,
   rong = 132,
   cao: caoDat,
+  fitContent = false,
   trang,
   style,
   testID,
@@ -43,6 +45,8 @@ export function SoBia({
   nhan?: ReactNode;
   /** The cover's height; a book's proportion (1.32 of the width) by default. */
   cao?: number;
+  /** A closed cover grows with its label; animated covers keep fixed geometry. */
+  fitContent?: boolean;
   /** 0 shut .. 1 open; a shared value for the opening moment, else shut. */
   mo?: SharedValue<number>;
   rong?: number;
@@ -52,6 +56,7 @@ export function SoBia({
   testID?: string;
 }) {
   const { brand, colors, dark } = useRudiTheme();
+  const natural = fitContent && !mo;
   const cao = caoDat ?? Math.round(rong * 1.32);
   const cho = mo ? choLatBia(rong, cao) : { trai: 0, doc: 0 };
   const soDong = Math.max(0, Math.floor((cao - DAU_TRANG - 8) / DONG));
@@ -70,10 +75,10 @@ export function SoBia({
       accessibilityLabel={nhan ? undefined : `Sổ của ${ten.join(" và ")}`}
       accessibilityRole={nhan ? undefined : "image"}
       accessible={!nhan}
-      style={[{ width: rong + cho.trai, height: cao + 2 * cho.doc, paddingLeft: cho.trai, paddingTop: cho.doc }, style]}
+      style={[natural ? { width: "100%" } : { width: rong + cho.trai, height: cao + 2 * cho.doc, paddingLeft: cho.trai, paddingTop: cho.doc }, style]}
       testID={testID}
     >
-      <View style={{ width: rong, height: cao }}>
+      <View style={natural ? undefined : { width: rong, height: cao }}>
         {/* The first page, under the cover. */}
         <View style={[StyleSheet.absoluteFill, styles.trang, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
           {mo
@@ -95,7 +100,8 @@ export function SoBia({
             />
           </Animated.View>
         ) : null}
-        <Animated.View style={[StyleSheet.absoluteFill, styles.bia, { backgroundColor: colors.cover, transformOrigin: "left center" }, lat]}>
+        <Animated.View style={[natural ? styles.flowCover : StyleSheet.absoluteFill, styles.bia, { backgroundColor: colors.cover, transformOrigin: "left center" }, lat]}>
+          <Grain material="vaiBia" opacity={dark ? 0.3 : 0.4} />
           <View style={[styles.gay, { backgroundColor: phuMau(colors.ink, dark ? 0.35 : 0.45) }]} />
           <View style={styles.nhan}>
             {nhan ?? ten.map((t) => (
@@ -117,6 +123,7 @@ export function SoBia({
 }
 
 const styles = StyleSheet.create({
+  flowCover: { paddingVertical: 24 },
   trang: { borderRadius: 4, borderWidth: StyleSheet.hairlineWidth, padding: 12, justifyContent: "center", alignItems: "center", overflow: "hidden" },
   dongKe: { position: "absolute", left: 0, right: 0, height: StyleSheet.hairlineWidth },
   // The margin rule of a school notebook.

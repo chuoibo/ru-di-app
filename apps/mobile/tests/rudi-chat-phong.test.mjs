@@ -59,17 +59,27 @@ test("số thành viên đọc lại khi người vừa vào nhắn, kể cả k
   assert.match(LIVE, /setDangOIds\(new Set\(ds\.filter\(\(tv\) => tv\.state === "active"\)/);
 });
 
-test("trang rỗng là phần co giãn của cột, ô soạn luôn ở đáy", () => {
-  assert.match(LIVE, /<ScrollView contentContainerStyle=\{\[styles\.rongNoi/);
+test("phòng rỗng co giãn, vật thể nhường chỗ và ô soạn ở đáy", () => {
+  assert.match(LIVE, /<ScrollView\s+accessibilityElementsHidden=\{lichSuAn\}[\s\S]*?contentContainerStyle=\{\[styles\.rongNoi/);
   assert.match(LIVE, /rong: \{ flex: 1 \}/);
-  assert.match(LIVE, /style=\{rongTrang \? styles\.dsRong : styles\.ds\}/);
-  assert.match(LIVE, /thapCuaSo \|\| khay !== null \? null : <Nep/, "hình vẽ nhường chỗ trước");
-  assert.match(LIVE, /const gonDau = khay !== null && thapCuaSo;/);
+  assert.match(LIVE, /style=\{\[rongTrang \? styles\.dsRong : styles\.ds, lichSuAn && styles\.lichSuAn\]\}/);
+  assert.match(LIVE, /thapCuaSo \|\| khay !== null \? null : <PaperObject/, "hình vẽ nhường chỗ trước");
+  assert.match(LIVE, /const gonDau = lichSuAn \|\| \(khay !== null && thapCuaSo\);/);
   assert.match(LIVE, /\(toHen \|\| keoTrenBang\) && !gonDau/, "dải ghim nhường chỗ cho khay ở cửa sổ thấp");
   assert.match(LIVE, /!khongNhanTin && !gonDau \? <HangToGiaySong/, "hàng tờ giấy cũng vậy");
   assert.match(LIVE, /veCuoi: \{ position: "absolute"/, "nút «Tin mới nhất» nổi trên danh sách, không lấy chỗ của nó");
   assert.match(doc("rudi", "screens", "chat", "SoHen.tsx"), /tools: \{[^}]*flexShrink: 1, minHeight: 0/, "khay co lại thay vì đẩy ô soạn ra ngoài");
   assert.match(LIVE, /label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\}/);
+  assert.match(LIVE, /const v2 = useTinNhanV2\(contextId, personId, lan\.lan !== "v2"\)/);
+  assert.match(LIVE, /const cu = useTinNhan\(contextId, personId, lan\.lan !== "legacy", true\)/, "kho cũ vẫn đọc đúng lane, mọi writer legacy đóng");
+  assert.match(LIVE, /lan\.lan === "v2" \? hopLanV2\(cu, v2\) : lan\.lan === "legacy" \? cu : khoaLan\(cu, lan\.lan === "dang-xet"\)/);
+  assert.doesNotMatch(LIVE, /archiveReadOnly/, "mỗi phòng phải giữ làn thực, không ép mọi chat thành kho chỉ đọc");
+  assert.match(LIVE, /const ghiChatDuoc = lan\.lan === "v2" && v2\.sanSang/);
+  assert.match(LIVE, /!ghiChatDuoc \? \(\s*<View[^>]*testID="chat-chi-doc"/);
+  assert.match(LIVE, /Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối/);
+  assert.match(LIVE, /onPress=\{\(\) => ghiChatDuoc \? setKhay\("plan"\) : moToHen\(\)\}/, "nút tạo kèo ở kho cũ mở form thật thay vì khay bị khoá");
+  assert.match(LIVE, /<TraLoiAi\s+readOnly=\{!ghiChatDuoc\}/, "thẻ lồng trong câu trả lời AI cũng chỉ đọc");
+  assert.doesNotMatch(LIVE, /taiAnhNhom/, "ảnh chat không có nhánh upload plaintext");
 });
 
 test("lớp phòng giữ nguyên khi quay lại, và phòng hai người tự đọc lại", () => {

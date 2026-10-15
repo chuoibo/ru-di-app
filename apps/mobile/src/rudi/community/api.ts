@@ -1,8 +1,9 @@
 /** Community transport. Visibility is always decided by the authenticated server. */
-import { BASE_URL, newAttempt, translatedAsActor } from "../../api";
+import { BASE_URL, LOI_KHONG_NOI_DUOC, newAttempt, translatedAsActor } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import type { DiaryDocument, DiaryKind } from "../diary/api";
 import { ngayVN } from "../ngay-viet";
+import { LoiTep } from "./loi-tep";
 export type Audience = "friends" | "public" | "only_me" | "group";
 /** `hidden`: the posts this person marked «Không quan tâm», so they can take one back (QA UI-141). */
 export type FeedMode = "for_you" | "following" | "trending" | "saved" | "mine" | "hidden";
@@ -158,15 +159,21 @@ export async function uploadMedia(person: string, uri: string, mime: string) {
     let body: Blob | undefined;
     try {
         body = blob.slice(0, blob.size, mime);
-        const response = await fetch(
-            BASE_URL + "/v2/community/media", { method: "POST", headers, body });
+        let response: Response;
+        try {
+            response = await fetch(BASE_URL + "/v2/community/media", { method: "POST", headers, body });
+        } catch {
+            throw new LoiTep(LOI_KHONG_NOI_DUOC);
+        }
         if (!response.ok) {
             const e = await response.json().catch(() => ({}));
-            throw new Error(COMMUNITY_ERRORS[e.code] ?? "Chưa tải được tệp. Thử lại nhé.");
+            throw new LoiTep(COMMUNITY_ERRORS[e.code] ?? "Chưa tải được tệp. Thử lại nhé.");
         }
-        return await response.json() as Media & {
-            state: "ready" | "processing" | "failed";
-        };
+        try {
+            return await response.json() as Media & { state: "ready" | "processing" | "failed" };
+        } catch {
+            throw new LoiTep("Chưa đọc được phản hồi tải tệp. Thử lại nhé.");
+        }
     } finally {
         // Native slices retain their own reference to the shared Blob storage.
         try {

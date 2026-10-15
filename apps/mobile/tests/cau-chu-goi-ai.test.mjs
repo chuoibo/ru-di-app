@@ -408,7 +408,7 @@ test("tin @Rủ Đi đi lên như tin thường, rồi mới có lời gọi AI 
   }
   const nguon = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "GroupChatLive.tsx"), "utf8");
   assert.doesNotMatch(nguon, /goiMoHinh/, "đoạn chặn cũ còn trong GroupChatLive.tsx");
-  const gui = nguon.slice(nguon.indexOf("const gui = async (command?: string)"));
+  const gui = nguon.slice(nguon.indexOf("const gui = async (command?: string, randomRequestOnly = false)"));
   const diLen = gui.indexOf("await chat.gui(body, traLoiCu, attempt)");
   const goiAi = gui.indexOf("hoiAiVeTin(attempt.key, daGui.id)");
   assert.ok(diLen > 0 && goiAi > diLen, "gui() phải gửi tin trước, rồi mới gọi AI với id của tin đã lưu");

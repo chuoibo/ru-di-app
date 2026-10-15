@@ -15,10 +15,11 @@
  * The one primary action is «Thêm vào kèo», pinned; saving is its quieter
  * neighbour. There is no rating, price or distance the server did not send.
  */
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -27,7 +28,6 @@ import type { PlaceDetail } from "../../../screens/kham-pha/chi-tiet-dia-diem";
 import { matchLabel } from "../../../screens/kham-pha/places";
 import {
   anhBiaThe,
-  bieuTuongLoai,
   boLuuDiaDiem,
   CAU_ANH_NHOM,
   cauDuongDi,
@@ -53,17 +53,14 @@ import {
 } from "../../kham-pha/dia-diem";
 import { nguonAnh } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
-import { AiNote, Chip, Divider, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { AiNote, Chip, Divider, IconButton, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { MediaSlot } from "../../ui/MediaSlot";
-import { anhDanhMuc } from "../../ui/ghi-cong";
+import { anhDanhMuc, khoaNguon, veKhung, type NguonKhung } from "../../ui/ghi-cong";
 import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
-import { PlaceGlyph } from "./HangDiaDiem";
-import { KyHoa } from "../../ui/art/KyHoa";
-import { SanKhau } from "../../ui/SanKhau";
+import { PlaceArtwork } from "./HangDiaDiem";
 import { StampButton } from "../../ui/StampButton";
-import { sanKhauKyHoa } from "../../art/san-khau";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { luiVeVe } from "../../lui-ve";
 
@@ -88,6 +85,7 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [daLuu, setDaLuu] = useState<string[]>([]);
   const [dangLuu, setDangLuu] = useState(false);
+  const luuLock = useRef(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   // M12: the licensed gallery and the group's own photos, two more requests
   // after the facts. Either failing costs its pictures and nothing else.
@@ -138,6 +136,8 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
   }, [nap]);
 
   const doiLuu = async (id: string) => {
+    if (luuLock.current) return;
+    luuLock.current = true;
     const truoc = daLuu;
     setDangLuu(true);
     setDaLuu(daoLuu(daLuu, id));
@@ -149,6 +149,7 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
       setDaLuu(truoc);
       setThongBao(loiRaChu(error));
     } finally {
+      luuLock.current = false;
       setDangLuu(false);
     }
   };
@@ -255,7 +256,7 @@ function ThanChiTiet({
   onRu: (contextId: string) => void;
 }) {
   const { colors } = useRudiTheme();
-  const [rongSan, setRongSan] = useState(0);
+  const [moAnh, setMoAnh] = useState<number | null>(null);
   const hop = matchLabel(place.match);
   const coMatch = place.match !== null && place.match.source === "ai";
   const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline");
@@ -265,6 +266,7 @@ function ThanChiTiet({
   const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== place.photoUrl);
   const cauAnh = cauNguonAnh(anh);
   const viec = cauHoatDong(place.activities);
+  const anhBiaViewer: ViewerPhoto[] = bia ? [{ id: "cover", alt: place.name, nguon: { loai: "danh-muc", anh: bia } }] : [];
   return (
     <>
       {/* A place without an honest picture gets no 16:10 frame of nothing (review
@@ -277,20 +279,15 @@ function ThanChiTiet({
               tags), then the seal on its own row (review 11/09 A1). */}
           {/* The same sketch, lifted into its three depths as a pop-up stage
               that stands up once (ADR-0037 D1, plan S4). */}
-          <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={styles.sanCho}>
-            {rongSan > 0 ? <SanKhau coMoTa san={sanKhauKyHoa(place.category, [])} width={Math.min(rongSan, 520)} /> : <KyHoa loai={place.category} tags={[]} />}
-          </View>
+          <View style={styles.sanCho}><PlaceArtwork loai={place.category} height={210} /></View>
           {hop !== null && hop.real ? <Stamp label={hop.text} style={styles.dauGonDau} tone="ai" /> : null}
         </View>
       ) : (
-        <MediaSlot
-          alt={place.name}
-          fallback={<PlaceGlyph glyph={bieuTuongLoai(place.category)} loai={place.category} size={56} />}
-          nguon={{ loai: "danh-muc", anh: bia }}
-          overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null}
-          ratio={16 / 10}
-        />
+        <Pressable accessibilityRole="button" accessibilityLabel={`Xem ảnh ${place.name} toàn màn hình`} onPress={() => setMoAnh(0)}>
+          <MediaSlot alt={place.name} fallback={<PlaceArtwork loai={place.category} height={180} />} nguon={{ loai: "danh-muc", anh: bia }} overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null} ratio={16 / 10} />
+        </Pressable>
       )}
+      <PhotoViewer photos={anhBiaViewer} index={moAnh} onIndex={setMoAnh} onClose={() => setMoAnh(null)} />
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
       {/* The sentence the pictures are shown on, said once under them: where
@@ -329,18 +326,6 @@ function ThanChiTiet({
         </Pressable>
         <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} variant="outline" />
       </View>
-      {/* From a place to an invitation in one step: the sheet of the two of
-          them opens with this place as the main stop (QA 23/09: a place page
-          had no way to become an evening for a couple). */}
-      {doi.map((d) => (
-        // One notebook: its invitation is the stamp. Several: three coral
-        // stamps shouted over each other on the live capture, so they are lines.
-        doi.length === 1 ? (
-          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
-        ) : (
-          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
-        )
-      ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
       {/* Each fact said once (Luật Nói Một Lần): the price is in the facts at
           the head and the open/closed state is its badge there, so this block
@@ -364,6 +349,18 @@ function ThanChiTiet({
           ) : null}
         </View>
       ) : null}
+      {/* From a place to an invitation in one step: the sheet of the two of
+          them opens with this place as the main stop (QA 23/09: a place page
+          had no way to become an evening for a couple). */}
+      {doi.map((d) => (
+        // One notebook: its invitation is the stamp. Several: three coral
+        // stamps shouted over each other on the live capture, so they are lines.
+        doi.length === 1 ? (
+          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
+        ) : (
+          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="ghost" />
+        )
+      ))}
       {place.traits.length > 0 ? (
         <Inline gap={8} wrap>
           {place.traits.map((t) => (
@@ -438,40 +435,47 @@ function ThanChiTiet({
  * screen while its author and licence are legible next to it, and a caption
  * under a wide frame stays legible where a caption under a thumbnail does not.
  */
+type ViewerPhoto = { id: string; alt: string; nguon: Exclude<NguonKhung, null> };
+
+/** Full-screen media keeps attribution and a keyboard/screen-reader alternative to swiping. */
+function PhotoViewer({ photos, index, onIndex, onClose }: { photos: ViewerPhoto[]; index: number | null; onIndex: (index: number) => void; onClose: () => void }) {
+  const { colors } = useRudiTheme();
+  const insets = useSafeAreaInsets();
+  const [hong, setHong] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const touchX = useRef<number | null>(null);
+  const photo = index === null ? null : photos[index] ?? null;
+  const key = khoaNguon(photo?.nguon ?? null);
+  useEffect(() => { setHong(false); setLoading(true); setRetry(0); }, [key]);
+  const ve = veKhung(photo?.nguon ?? null, { hong });
+  return <Modal visible={photo !== null} onRequestClose={onClose} presentationStyle="fullScreen" animationType="none">
+    <View accessibilityViewIsModal style={{ flex: 1, paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16), backgroundColor: colors.ground }} testID="place-photo-viewer">
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16 }}><Text style={[typography.title, { color: colors.ink, flex: 1 }]}>{photo?.alt}</Text><IconButton accessibilityLabel="Đóng ảnh toàn màn hình" icon="close" onPress={onClose} /></View>
+      <View style={{ flex: 1, marginVertical: 12 }} onTouchStart={(event) => { touchX.current = event.nativeEvent.pageX; }} onTouchEnd={(event) => { if (index !== null && touchX.current !== null) { const distance = event.nativeEvent.pageX - touchX.current; if (Math.abs(distance) > 48) onIndex(Math.max(0, Math.min(photos.length - 1, index + (distance < 0 ? 1 : -1)))); } touchX.current = null; }}>
+        {ve.source ? <Image key={`${key}:${retry}`} accessibilityLabel={photo?.alt} contentFit="contain" source={ve.source} style={{ width: "100%", height: "100%" }} onLoad={() => setLoading(false)} onError={() => { setHong(true); setLoading(false); }} /> : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 16 }}><Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{ve.canhBao ?? "Không có ảnh để mở."}</Text>{photo ? <RudiButton compact label="Tải lại ảnh" variant="outline" onPress={() => { setHong(false); setLoading(true); setRetry((n) => n + 1); }} /> : null}</View>}
+      </View>
+      {loading && ve.source ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft, paddingHorizontal: 16 }]}>Đang tải ảnh…</Text> : null}
+      {ve.ghiCong ? <Text style={[typography.caption, { color: colors.inkSoft, paddingHorizontal: 16 }]}>{ve.ghiCong}</Text> : null}
+      {photos.length > 1 && index !== null ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16 }}><IconButton accessibilityLabel="Ảnh trước" icon="chevron-back" disabled={index === 0} onPress={() => onIndex(index - 1)} /><Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Ảnh {index + 1} trên {photos.length}</Text><IconButton accessibilityLabel="Ảnh tiếp theo" icon="chevron-forward" disabled={index === photos.length - 1} onPress={() => onIndex(index + 1)} /></View> : null}
+    </View>
+  </Modal>;
+}
+
 function DaiAnh({ anh }: { anh: AnhDiaDiem[] }) {
   const { radius } = useRudiTheme();
-  // Built once per list, not per render: each frame keys its «did not load»
-  // state on the picture, and a value rebuilt every frame resets that state.
-  const co = useMemo(
-    () =>
-      anh.map((a) => ({
-        id: a.id,
-        // «có giấy phép» only when there is one. The feed's frames have none,
-        // and an alt text is still a statement a screen reader makes aloud.
-        alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"),
-        anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }),
-      })),
-    [anh],
-  );
-  return (
-    <ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-photos">
-      {co.map((a) => (
-        <MediaSlot
-          alt={a.alt}
-          key={a.id}
-          nguon={{ loai: "danh-muc", anh: a.anh }}
-          radius={radius.base}
-          style={styles.oAnh}
-          width="100%"
-        />
-      ))}
-    </ScrollView>
-  );
+  const [index, setIndex] = useState<number | null>(null);
+  const co = useMemo<ViewerPhoto[]>(() => anh.map((a) => ({ id: a.id, alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"), nguon: { loai: "danh-muc", anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }) } })), [anh]);
+  return <><ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-photos">
+    {co.map((a, i) => <Pressable accessibilityRole="button" accessibilityLabel={`Xem ${a.alt} toàn màn hình`} key={a.id} onPress={() => setIndex(i)} style={styles.oAnh}><MediaSlot alt={a.alt} nguon={a.nguon} radius={radius.base} width="100%" /></Pressable>)}
+  </ScrollView><PhotoViewer photos={co} index={index} onIndex={setIndex} onClose={() => setIndex(null)} /></>;
 }
 
 /** Photographs a group of the reader's took here (M12 §2.4): private, so no credit line, and only members see them. */
 function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
   const { colors, radius } = useRudiTheme();
+  const [index, setIndex] = useState<number | null>(null);
+  const co = useMemo<ViewerPhoto[]>(() => anh.flatMap((a) => { const source = nguonAnh(a.imageUrl, personId, a.contextId); return source ? [{ id: a.id, alt: a.caption ?? "Ảnh của nhóm bạn ở đây", nguon: { loai: "nhom" as const, source } }] : []; }), [anh, personId]);
   return (
     <View style={styles.khoi}>
       <SectionHeader title="Ảnh của nhóm bạn" />
@@ -480,21 +484,9 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
           strip of photographs sat below the fold (board 2026-09-07). */}
       <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_ANH_NHOM}</Text>
       <ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-group-photos">
-        {anh.map((a) => {
-          const nguon = nguonAnh(a.imageUrl, personId, a.contextId);
-          if (nguon === null) return null;
-          return (
-            <View key={a.id} style={styles.oAnh}>
-              <MediaSlot alt={a.caption ?? "Ảnh của nhóm bạn ở đây"} nguon={{ loai: "nhom", source: nguon }} radius={radius.base} width="100%" />
-              {a.caption === null ? null : (
-                <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
-                  {a.caption}
-                </Text>
-              )}
-            </View>
-          );
-        })}
+        {co.map((a, i) => <Pressable key={a.id} accessibilityRole="button" accessibilityLabel={`Xem ${a.alt} toàn màn hình`} onPress={() => setIndex(i)} style={styles.oAnh}><MediaSlot alt={a.alt} nguon={a.nguon} radius={radius.base} width="100%" /><Text style={[typography.caption, { color: colors.inkSoft }]}>{a.alt}</Text></Pressable>)}
       </ScrollView>
+      <PhotoViewer photos={co} index={index} onIndex={setIndex} onClose={() => setIndex(null)} />
     </View>
   );
 }
@@ -511,7 +503,7 @@ const styles = StyleSheet.create({
   dau: { gap: 8 },
   dauGon: { gap: 12 },
   dauGonDau: { alignSelf: "flex-start" },
-  duongDi: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  duongDi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
   bam: { opacity: 0.7 },
   suKien: { gap: 10 },

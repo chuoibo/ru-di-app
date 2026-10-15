@@ -29,8 +29,7 @@
          "họ đã được báo" would send this reader away relaxed while the debt
          stays outstanding against them. #}
       <p class="note">
-        Ghi nhận này được lưu lại kèm thời điểm, và link đã ngừng hiển thị số
-        tiền cùng số tài khoản.
+        Ghi nhận này được lưu lại kèm thời điểm, và link đã ngừng hiển thị số tiền.
       </p>
       <p class="note">
         Ứng dụng chưa tự báo cho {{ view.recorded_by_display_name }}. Nhắn trực
@@ -57,10 +56,10 @@
       {% endif %}
 
       <p class="note">
-        Sau khi báo: link này ngừng hiển thị số tiền và số tài khoản, và ghi
+        Sau khi báo: link này ngừng hiển thị số tiền, và ghi
         nhận được lưu lại kèm thời điểm. Ứng dụng chưa tự báo cho
         {{ view.recorded_by_display_name }}, nên nhắn trực tiếp vẫn là cách
-        nhanh nhất. Khoản chi vẫn còn nguyên, chỉ là không còn gắn với bạn.
+        nhanh nhất. Khoản chi vẫn giữ trong sổ; người tạo đợt cần kiểm tra lại người nhận link.
       </p>
     {% endif %}
   </section>
@@ -69,5 +68,6 @@
     <a href="/g/{{ token }}" style="color:inherit">Quay lại</a>
   </p>
 </main>
+<script src="/static/guest.js" defer></script>
 </body>
 </html>

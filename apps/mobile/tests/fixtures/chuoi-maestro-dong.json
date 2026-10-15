@@ -1,7 +1,6 @@
 {
   "_": "Chuỗi Maestro dựng lúc chạy (tên người seed ghép tên món, số tiền tính ra...), không có nguyên văn trong mã. Danh sách chỉ được CO LẠI: tests/chuoi-maestro-con-song.test.mjs. Tên ảnh takeScreenshot ghim nguyên bộ.",
   "dong": [
-    ".* QA: Ngon that",
     ".*1 nhóm.*",
     ".*1 phiếu.*",
     ".*1.check-in.*",
@@ -26,7 +25,6 @@
     "12/18 đã mở",
     "125.000đ",
     "2 món · 200.000đ",
-    "200.000đ, Ban QA đã trả.*",
     "75.000đ",
     "An QA · Nuoc",
     "Anh tu QA",
@@ -91,7 +89,6 @@
     "Hai ngày gom nắng",
     "Một chiều có nhau",
     "Phiên này: Mật khẩu",
-    "Đã gửi lời mời tới Ban QA.",
     "Bình đã nhận: ${TIN}"
   ],
   "id": [],

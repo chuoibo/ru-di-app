@@ -36,7 +36,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"
     timeout: 30000
-- tapOn: "Ô tên nhóm"
+- tapOn: "Tên nhóm mới"
 - inputText: "Plan QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"

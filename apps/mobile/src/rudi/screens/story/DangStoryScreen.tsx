@@ -17,13 +17,15 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { attemptFor, type Attempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
 import { boNhapDang, docNhapDang, ghiNhapDang, khoaNhapDang } from "../../ky-niem/nhap-dang";
+import { tiLeKhung } from "../../ky-niem/ti-le";
 import { nguonAnhBai, taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
 import { dangStory } from "../../story/story";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Nep } from "../../ui/art/Nep";
+import { PaperObject } from "../../asset-pack/react-native/PaperObject";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { luiVeVe } from "../../lui-ve";
@@ -41,6 +43,7 @@ const TRAN_CHU_THICH = 200;
 export function DangStoryScreen() {
   const { phien, phienDaDoc } = useRudiSession();
   if (!phienDaDoc) return null;
+  if (!phien) return <CuaDangNhap tiep="/stories/new" />;
   return <DangStory key={phien?.person_id ?? "-"} />;
 }
 
@@ -52,18 +55,22 @@ function DangStory() {
   const khoaNhap = khoaNhapDang("story", phien?.person_id ?? "-", null);
   const [nhapCu] = useState(() => docNhapDang(khoaNhap));
   const [anh, setAnh] = useState<TempPhoto | null>(nhapCu?.anh ?? null);
-  const [anhDaTai, setAnhDaTai] = useState<string | null>(null);
+  const [anhDaTai, setAnhDaTai] = useState<string | null>(nhapCu?.anhDaTai ?? null);
+  const [tiLeAnh, setTiLeAnh] = useState(() => tiLeKhung(nhapCu?.anh, 3 / 4));
   const attempts = useRef<Record<string, Attempt>>({});
   const [chuThich, setChuThich] = useState(nhapCu?.chu ?? "");
   const [conNhapCu, setConNhapCu] = useState(nhapCu !== null);
+  const sendLock = useRef(false);
+  const pickerLock = useRef(false);
   const daDang = useRef(false);
   useEffect(() => {
-    if (!daDang.current) ghiNhapDang(khoaNhap, { anh, chu: chuThich });
-  }, [khoaNhap, anh, chuThich]);
+    if (!daDang.current) ghiNhapDang(khoaNhap, { anh, chu: chuThich, anhDaTai });
+  }, [khoaNhap, anh, chuThich, anhDaTai]);
   const boBanNhap = () => {
     if (anh !== null) void boAnh(anh);
     setAnh(null);
     setAnhDaTai(null);
+    setTiLeAnh(3 / 4);
     setChuThich("");
     setConNhapCu(false);
     boNhapDang(khoaNhap);
@@ -73,17 +80,19 @@ function DangStory() {
   const [loi, setLoi] = useState<string | null>(null);
 
   const chonAnhMoi = async () => {
-    if (dangGui) return;
+    if (sendLock.current || pickerLock.current) return;
+    pickerLock.current = true;
     setLoi(null);
     try {
       const daChon = await chonAnh();
       if (daChon === null) return;
       if (anh !== null) await boAnh(anh);
       setAnhDaTai(null);
+      setTiLeAnh(tiLeKhung(daChon, 3 / 4));
       setAnh(daChon);
     } catch (error) {
       setLoi(loiRaChu(error));
-    }
+    } finally { pickerLock.current = false; }
   };
 
   const boAnhDaChon = async () => {
@@ -91,26 +100,27 @@ function DangStory() {
     if (anh !== null) await boAnh(anh);
     setAnh(null);
     setAnhDaTai(null);
+    setTiLeAnh(3 / 4);
   };
 
   const guiDuoc = phien !== null && (anh !== null || anhDaTai !== null) && chuThich.length <= TRAN_CHU_THICH && !dangGui;
 
   const gui = async () => {
-    if (phien === null || (anh === null && anhDaTai === null)) return;
+    if (sendLock.current || pickerLock.current || phien === null || (anh === null && anhDaTai === null) || chuThich.length > TRAN_CHU_THICH) return;
+    sendLock.current = true;
     setDangGui(true);
     setLoi(null);
     let uploadFinished = false;
     try {
       let imageUrl = anhDaTai;
       if (anh !== null) {
-        try {
-          const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
-          imageUrl = daTai.url;
-          setAnhDaTai(daTai.url);
-          uploadFinished = true;
-        } finally {
-          setAnh(null);
-        }
+        const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+        imageUrl = daTai.url;
+        setAnhDaTai(daTai.url);
+        setTiLeAnh(tiLeKhung(daTai, 3 / 4));
+        ghiNhapDang(khoaNhap, { anh: null, chu: chuThich, anhDaTai: daTai.url });
+        uploadFinished = true;
+        setAnh(null);
       }
       if (imageUrl === null) return;
       await dangStory(imageUrl, chuThich, phien.person_id, attemptFor(attempts.current, JSON.stringify({ imageUrl, chuThich })));
@@ -118,10 +128,11 @@ function DangStory() {
       boNhapDang(khoaNhap);
       luiVeVe(router as never, "/messages");
     } catch (error) {
-      const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
+      const repickHint = anh !== null && !uploadFinished ? " Ảnh và chú thích vẫn còn để bạn thử lại." : "";
       setLoi(loiRaChu(error) + repickHint);
     } finally {
       setGiaiDoan(null);
+      sendLock.current = false;
       setDangGui(false);
     }
   };
@@ -130,13 +141,31 @@ function DangStory() {
   const conLai = TRAN_CHU_THICH - chuThich.length;
 
   return (
-    <RudiScreen testID="dang-story-screen">
-      <TopBar title="Đăng story" />
+    <RudiScreen
+      material="quiet"
+      cot="doc"
+      avoidKeyboard
+      bottomInset={16}
+      footerInset={12}
+      header={<TopBar title="Đăng story" />}
+      footer={(
+        <StampButton
+          disabled={!guiDuoc}
+          label="Đăng story"
+          loading={dangGui}
+          lyDo={anh === null && anhDaTai === null ? "Chọn một tấm ảnh trước đã." : chuThich.length > TRAN_CHU_THICH ? `Chú thích dài quá ${TRAN_CHU_THICH} chữ.` : undefined}
+          onPress={() => void gui()}
+          size="vua"
+          tilt={-1}
+        />
+      )}
+      testID="dang-story-screen"
+    >
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
-      {conNhapCu && (anh !== null || chuThich.trim() !== "") ? (
+      {conNhapCu && (anh !== null || anhDaTai !== null || chuThich.trim() !== "") ? (
         <View style={styles.nhapCu} testID="dang-story-nhap-cu">
           <Text style={[typography.note, styles.flexNhap, { color: colors.inkSoft }]}>Bản nháp lần trước còn đây.</Text>
-          <RudiButton compact full={false} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
+          <RudiButton compact full={false} disabled={dangGui} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
         </View>
       ) : null}
       {/* A polaroid that lasts a day (ADR-0037 D1): the picture, then the
@@ -146,21 +175,24 @@ function DangStory() {
         {/* Kept after a failed story write: the photo already went up, so a
             retry posts it again instead of asking for it twice. */}
         {anh === null && anhDaTai !== null && phien !== null ? (
-          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="cover" source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={styles.anhXem} />
+          <Image key={anhDaTai} accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="contain" onLoad={({ source }) => setTiLeAnh(tiLeKhung(source, 3 / 4))} source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         {anh === null && anhDaTai === null ? (
           <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
-            <Nep gap="trang" pose="giu-khung" size={88} />
+            <PaperObject name="photo-stack" width={140} />
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh nào. Chạm để chọn.</Text>
           </Pressable>
         ) : null}
         {anh !== null ? (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={styles.anhXem} />
+          // A new native view starts at the new frame size. Reusing the
+          // landscape view left a portrait preview blurred until reopening.
+          <Image key={anh.uri} accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anhXem, { aspectRatio: tiLeAnh }]} />
         ) : null}
         <ONhapMuc
           accessibilityLabel="Ô chú thích"
           label="Chú thích, nếu muốn"
           maxLength={TRAN_CHU_THICH}
+          editable={!dangGui}
           multiline
           numberOfLines={2}
           onChangeText={setChuThich}
@@ -179,15 +211,6 @@ function DangStory() {
       </View>
       {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <StampButton
-        disabled={!guiDuoc}
-        label="Đăng story"
-        loading={dangGui}
-        lyDo={anh === null && anhDaTai === null ? "Chọn một tấm ảnh trước đã." : chuThich.length > TRAN_CHU_THICH ? `Chú thích dài quá ${TRAN_CHU_THICH} chữ.` : undefined}
-        onPress={() => void gui()}
-        size="vua"
-        tilt={-1}
-      />
     </RudiScreen>
   );
 }
@@ -198,7 +221,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   // A polaroid: even sides, the deep margin under the picture for the words.
   polaroid: { gap: 12, padding: 12, paddingBottom: 18, borderWidth: 1, borderRadius: 3, alignSelf: "center", width: "100%", maxWidth: 420 },
-  anhXem: { width: "100%", aspectRatio: 3 / 4 },
+  anhXem: { width: "100%" },
   anhTrong: { width: "100%", aspectRatio: 3 / 4, alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed" },
   dongCuoi: { flexDirection: "row", alignItems: "center", gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

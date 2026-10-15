@@ -159,7 +159,8 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     {(["motorbike", "car", "walk"] as const).map((mode) => <Chip key={mode} label={{ motorbike: "Xe máy", car: "Ô tô", walk: "Đi bộ" }[mode]} selected={settings.transport_mode === mode} onPress={() => changeDay({ transport_mode: mode })} />)}
   </ScrollView>;
   const coChang = visible.activities.length > 0;
-  const coMocTrenBanDo = visible.activities.some((a) => a.lat !== null && a.lng !== null);
+  const soMocTrenBanDo = visible.activities.filter((a) => a.lat !== null && a.lng !== null).length;
+  const coMocTrenBanDo = soMocTrenBanDo > 0;
   // A phone browser has no right click; a long press there raises the same
   // `contextmenu` the map listens to (critique, B3: phones were told to right-click).
   const chuotPhai = Platform.OS === "web" && !(typeof window !== "undefined" && window.matchMedia?.("(hover: none) and (pointer: coarse)").matches);
@@ -175,10 +176,10 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     {message ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>{message}</Text> : null}
     <CauTaiCho cau={loi} />
     {conflict ? <View style={styles.stack}>
-      {onReload ? <RudiButton label="Tải bản mới để đối chiếu" variant="outline" disabled={busy} onPress={() => void onReload()} /> : null}
+      {onReload ? <RudiButton label="Tải bản mới để đối chiếu" variant="outline" disabled={busy} lyDo={busy ? "Đang xử lý trang ngày." : undefined} onPress={() => void onReload()} /> : null}
       {outing.timeline_revision !== draft.expected_revision ? <>
         <Text style={[typography.note, { color: colors.inkSoft }]}>Bản của hội: {outing.stops.map((s) => `${s.at} ${s.label}`).join(" → ")}</Text>
-        <RudiButton label="Bỏ nháp, dùng bản mới" accessibilityLabel="Bỏ bản nháp, dùng bản của hội" tone="warn" variant="outline" disabled={busy} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
+        <RudiButton label="Bỏ nháp, dùng bản mới" accessibilityLabel="Bỏ bản nháp, dùng bản của hội" tone="warn" variant="outline" disabled={busy} lyDo={busy ? "Đang xử lý trang ngày." : undefined} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
       </> : null}
     </View> : null}
     {/* An empty day has no route to recompute. With a draft on a mapped day,
@@ -187,11 +188,10 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
         stops keeps the compact row of tools. */}
     {coChang ? <View style={styles.row}>
       <RudiButton compact full={false} label="Sửa trang ngày" variant="outline" onPress={() => { setStopId(che.selectedActivityId); setEditing(true); }} />
-      <RudiButton compact full={false} label="Tính lại đường" variant="ghost" disabled={busy} lyDo={busy ? "Đang tính đường" : undefined} onPress={() => void inspect(false)} />
-      {dirty && coMocTrenBanDo ? <RudiButton compact full={false} label="Xem cách đi gọn hơn" variant="outline" disabled={busy} lyDo={busy ? "Đang tính đường" : undefined} onPress={() => void inspect(true)} /> : null}
+      <RudiButton compact full={false} label="Tính lại đường" variant="ghost" disabled={busy || soMocTrenBanDo < 2} lyDo={busy ? "Đang tính đường" : soMocTrenBanDo < 2 ? "Cần ít nhất hai điểm có toạ độ để tính đường." : undefined} onPress={() => void inspect(false)} />
     </View> : <RudiButton compact label="Sửa trang ngày" variant="outline" onPress={() => { setStopId(che.selectedActivityId); setEditing(true); }} />}
-    {dirty && !coMocTrenBanDo ? <RudiButton label="Lưu cho cả hội" disabled={busy} onPress={() => void save(draft)} /> : null}
-    {undo ? <RudiButton label="Hoàn tác lần lưu vừa rồi" variant="ghost" disabled={busy} onPress={() => void save(undo, true)} /> : null}
+    {dirty && !coMocTrenBanDo ? <RudiButton label="Lưu cho cả hội" disabled={busy} lyDo={busy ? "Đang xử lý trang ngày." : undefined} onPress={() => void save(draft)} /> : null}
+    {undo ? <RudiButton label="Hoàn tác lần lưu vừa rồi" variant="ghost" disabled={busy} lyDo={busy ? "Đang xử lý trang ngày." : undefined} onPress={() => void save(undo, true)} /> : null}
   </View>;
   // Stops on none of the outing's days are on no day's map: named on the
   // page, and put on the day being viewed in one tap, as a draft the group
@@ -231,6 +231,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
           person knows where they are. */}
       <Text style={[typography.h2, { color: colors.ink }]}>Sửa trang ngày</Text>
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{tieuDeTrang}{dirty ? " · bản nháp, cả hội chưa thấy" : ""}</Text>
+      {dirty && soMocTrenBanDo >= 2 ? <RudiButton compact label="Xem cách đi gọn hơn" variant="outline" disabled={busy} lyDo={busy ? "Đang tính đường" : undefined} onPress={() => { setEditing(false); void inspect(true); }} /> : null}
       <ONhapMuc label="Giờ xuất phát" error={chuaKip} value={settings.start_at} onChangeText={(start_at) => changeDay({ start_at })} />
       <View style={styles.row}><Switch {...congTacKeo} accessibilityLabel="Quay về điểm đầu" value={settings.return_to_start} onValueChange={(return_to_start) => changeDay({ return_to_start })} /><Text style={[typography.body, { color: colors.ink }]}>Quay về điểm đầu</Text></View>
       {/* Each stop at most ~70% of the column, its name cut after the hour,

@@ -232,6 +232,57 @@ func TestAccountDeletionRevokesDevicesAndErasesTheirMaterial(t *testing.T) {
 	}
 }
 
+func TestNewDeviceInvalidatesReadyRoomsUntilAdded(t *testing.T) {
+	l := setupLife(t)
+	ctx := context.Background()
+	if _, err := l.store.Bootstrap(ctx, l.actor, l.tokenA, l.deviceA.id, l.room); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, l.deviceB.id, [][]byte{[]byte("kp")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.Commit(ctx, l.actor, l.tokenA, CommitRequest{Envelope: l.envelope(l.deviceA, 1, id()), Added: []string{l.deviceB.id}, Welcome: []byte("w")}); err != nil {
+		t.Fatal(err)
+	}
+	// Enrollment with the same keys must not interrupt a ready room.
+	if _, err := l.store.EnrollDevice(ctx, l.other, l.tokenB, l.deviceB.enrollment(l.other)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.SendSession(ctx, l.actor, l.tokenA, l.envelope(l.deviceA, 2, id())); err != nil {
+		t.Fatalf("idempotent enrollment interrupted the room: %v", err)
+	}
+	added := newDevice()
+	if _, err := l.store.EnrollDevice(ctx, l.other, l.tokenB, added.enrollment(l.other)); err != nil {
+		t.Fatal(err)
+	}
+	v, err := l.store.Roster(ctx, l.actor, l.tokenA, l.deviceA.id, l.room)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.Ready || len(v.Members) != 2 || len(v.Expected) != 3 {
+		t.Fatalf("new device left a stale room ready: %+v", v)
+	}
+	if _, err := l.store.SendSession(ctx, l.actor, l.tokenA, l.envelope(l.deviceA, 2, id())); !errors.Is(err, ErrNotReady) {
+		t.Fatalf("sending before adding the new device: %v", err)
+	}
+	if _, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, added.id, [][]byte{[]byte("kp-new")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{added.id}); err != nil {
+		t.Fatal(err)
+	}
+	res, err := l.store.Commit(ctx, l.actor, l.tokenA, CommitRequest{Envelope: l.envelope(l.deviceA, 2, id()), Added: []string{added.id}, Welcome: []byte("w-new")})
+	if err != nil || !res.Ready {
+		t.Fatalf("adding the new device did not restore readiness: %+v %v", res, err)
+	}
+	if _, err := l.store.SendSession(ctx, l.actor, l.tokenA, l.envelope(l.deviceA, 3, id())); err != nil {
+		t.Fatalf("sending after the new device was added: %v", err)
+	}
+}
+
 // Security review 05/10: claiming reserves, it does not consume. A member who
 // claims again and again gets the same package and never drains the target;
 // only the commit that adds the device spends it.

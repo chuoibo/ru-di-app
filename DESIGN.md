@@ -358,6 +358,52 @@ phẩm đúng».
 
 ## Overview
 
+**Cập nhật có phạm vi 10/10/2026, candidate native `797a3f52`.** Chủ sản phẩm
+đánh giá hình thức app trước lượt này khoảng 5/10 và yêu cầu đẹp ở từng trang,
+không chỉ dùng được. Bản ghi này đọc source
+`797a3f52d77919adcfa86ed639e17b01476a8f2d` và mở ảnh Android sau sửa; chỉ cập
+nhật chín bề mặt được nêu trong
+[BRIEF](docs/design/nep-ui-implementation/redesign-20261010/BRIEF.md).
+Giấy, mực, coral, Bricolage và Nếp canonical giữ nguyên; không đổi bảng token
+hay căn tính Rủ Đi. Ảnh `core-layout-reference-v1.png` là tham chiếu phản biện
+cấu trúc, chưa phải comp được duyệt, không đặt nghĩa vụ raster, seed hoặc
+nhận diện mới. Các verdict Welcome, Story, editor Nếp, Gallery và Gu bên dưới
+giữ nguyên SHA và phạm vi lịch sử của chúng.
+
+Các mô tả source mới trong mục «Chín bề mặt native» thắng mô tả bố cục cũ của
+đúng những thành phần được gọi tên; chúng chưa phải chuẩn thị giác đã nghiệm
+thu cho toàn hệ. Fresh review trước ở `d9c06bf4` trả **fix**; verdict sau sửa
+797 còn chờ. Audit rộng A–S và nghiệm thu toàn app vẫn mở.
+
+**Bàn giao I1 tại `7dcacedf` (10/10).** Bảy finding về chọn người/cùng mở
+sổ đã đóng: F1/F2/F3/F4/F6/F7 giữ verdict và ảnh `62c1a73b`; F5 nhận verdict
+**ship** sau 24 viewport mới tại `7dcacedf`. Hợp đồng hẹp nằm trong Typography,
+Layout và Components bên dưới, kế thừa seed `c8e88116` và FORM của
+[I1 brief](docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md).
+Không mở rộng kết quả này thành nghiệm thu toàn I, I2 hoặc A–S.
+
+**Bàn giao I2 tại `814ea5c9` (10/10).** Mục lục, loại sổ, điều cần tránh,
+Gu, xem trước đóng sổ và tem trạng thái kế thừa cùng thế giới. Full review
+`a24cb4bf` mở 84 viewport tĩnh + 12 viewport tương tác, trả **fix** cho một
+P2 ở cụm lỗi/phục hồi Gu. Verdict cuối `814ea5c9` chấm **F1 resolved / ship**
+trên 12 frame Gu mới sáng100/tối200 và regression hẹp. Bảy target còn lại
+giữ byte và bằng chứng a24; đây không phải full review mới hoặc nghiệm thu
+toàn I/A–S. Hợp đồng của lát này nằm trong Layout/Components và
+[I2 brief](docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md).
+
+**Bàn giao GPL/J có phạm vi 11/10/2026.** Vẫn UI3/seed `c8e88116`, giấy,
+mực, coral, Bricolage và Nếp canonical; không có comp được duyệt mới.
+[GPL brief](docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md)
+và [J brief](docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md)
+ghi hợp đồng native. Chỉ các mô tả Layout/Components gọi đúng GPL/J bên dưới
+thắng bố cục cũ của những caller đó; không thay token hoặc toàn hệ.
+
+Native `061d8d7a` chấm **F3 resolved / ship** ở thao tác sửa hồ sơ; F1/F4
+và F2 có giới hạn diagnostic giữ verdict `7cf58966`. J chấm **P1/P2 resolved /
+ship** tại `7cf58966`, các target J giữ nguyên byte đến061. Hai verdict chỉ
+đóng finding đã chấm, không nghiệm thu toàn GPL, J, app hoặc main. Candidate797
+và các mốc cũ vẫn giữ phạm vi/bằng chứng lịch sử của chúng.
+
 ## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
 Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
@@ -386,7 +432,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
 | Hành trình bản đồ | bản đồ giấy là mặt bàn; trang ngày xé khỏi sổ đặt đè lên, mép xé và lỗ gáy quay về phía bản đồ; ghim là con tem giấy đánh số mang trạng thái; kế hoạch là một nét mực coral, nháp là một nét chì đứt; đầu trang đóng dấu nét ấy là gì (chi tiết: «Hành trình bản đồ» dưới «Luật đã thay luật v2») | `NenGiay` + `hinhTrangXe`, `hinhTem`, `mocChum`, `lopDuong`, `kieuBanDo`, `veDenDau` + `useNetMuc` |
 | Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
-| Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
+| Thành viên | người trước, vai trò là dòng chữ phụ tự xuống hàng (H tại `d91e66d1`) | `AvatarNguoi`, `typography.note`, `LuoiNguoi` |
 
 Sau lượt đọc mù 26/09 (ADR-0038):
 
@@ -487,9 +533,11 @@ màn tiền tông teal chỉ đậu trên **con số**, không tô cả khối. 
 là *con dấu* có chữ; bản nháp là *nét chì đứt*; kế hoạch là *một đường mực
 liên tục*; ảnh là *bản in* dán vào trang, có dòng xuất xứ; tiền là *dòng sổ*;
 thứ máy sinh ra là *tờ giấy ký ở chân* «Rủ Đi AI gợi ý». Khung kẻ in trước,
-màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Hợp đồng hướng đi nằm
-nguyên văn trong `apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6);
-ADR-0020 là thẩm quyền.
+màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Dấu vết thế giới kế thừa ở mục này và FORM của
+`docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md`
+(I2 tiếp tục tại `docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md`,
+cùng seed `c8e88116`, hướng số 6); `apps/mobile/app/_layout.tsx` hiện không còn
+contract lịch sử. ADR-0020 là thẩm quyền.
 
 **Cập nhật 27/09/2026, ADR-0037:** chất liệu giấy, mực, coral và Bricolage
 được giữ nguyên trong lát sổ kỷ niệm. Ẩn dụ «cả hội cùng viết» không có nghĩa
@@ -586,7 +634,8 @@ gradient thương hiệu cũ làm giá trị của `accent` runtime.
 
 ### Named Rules
 **Luật Một Tông Dẫn.** Một màn có đúng một tông dẫn; hai tông dẫn cùng lúc là
-lỗi, không phải lựa chọn. Welcome/Login/OTP dẫn bằng cam (washi + con dấu);
+lỗi, không phải lựa chọn. Welcome/Login/OTP dẫn bằng cam (con dấu; Welcome
+thêm chỉ báo trang coral);
 Quyết toán và Tài chính dẫn bằng teal; Lịch trình AI và thẻ AI dẫn bằng tím;
 con dấu «HỢP GU» tím trên Khám phá là tông ở **thành phần**, không đổi tông
 màn.
@@ -776,8 +825,8 @@ instance.
   «Chào bạn», «Nhập mã 6 số» trong `CoverBand`.
 - **Display** (ExtraBold, 34/39, -1.1): số tiền tổng trên thẻ tông, một màn
   một lần.
-- **H1** (ExtraBold, 28/34, -0.65): tiêu đề màn. Tiêu đề trang pager Welcome
-  dùng cùng face ở 28/33.
+- **H1** (ExtraBold, 28/34, -0.65): tiêu đề màn. Tiêu đề pager Welcome tại
+  `34d57ca9` dùng cùng face ở 34/40, -0.7; cửa sổ dưới 360dp dùng 30/36.
 - **H2** (Bold, 21/27, -0.3): `SectionHeader` («Chi theo nhóm», «Các khoản
   chuyển»), tên địa điểm dẫn (`PlaceLead`), tiêu đề trạng thái rỗng.
 - **Title** (system 700, 17/23, -0.15): tiêu đề `TopBar`, tiêu đề thẻ, chữ số
@@ -829,7 +878,100 @@ Chữ in hoa duy nhất của hệ là mực con dấu (`typography.stamp`), và
 được ký ở **chân** («Rủ Đi AI gợi ý» 13sp tím + sparkles 15), câu hỏi là tiêu
 đề, không có nhãn trên đầu.
 
+**I1 — chữ ký phải đọc được (`ChuKy`).** Giao kèo bật `wrapName` và
+`showStatus`: vai trò `caption inkSoft` đứng trên, tên Bricolage ExtraBold
+(20/26sp) không nghiêng giả, hoặc câu chờ `note inkSoft`, rồi nét ký/nét đứt
+và chữ «Đã ký»/«Chưa ký». Tên và câu chờ không giới hạn một dòng; hai phần
+ký giữ vai trò riêng dù xếp dọc. Nét vẽ chỉ trang trí, trạng thái đồng thuận
+phải có chữ. Hai prop này là lựa chọn của caller giao kèo, không đổi cách
+hiển thị mặc định của mọi `ChuKy`.
+
 ## Layout
+
+**GPL/J — một cột cho cùng một việc (11/10/2026).** Chat giới hạn header,
+luồng đọc, tools/plan/poll và composer trong cùng cột giữa (640dp), nền vẫn
+phủ toàn màn; phone giữ trục +/pill/gửi. Khay tools/poll thay vùng soạn,
+plan giữ ngoại lệ quay lại composer/draft đã chốt. Composer bài viết wide
+nối vùng viết, counter và toolbar thành một vùng liên tục, không chèn thêm
+khoảng trống sau toolbar. Đây là sửa F1/F4 được nhìn thấy ở native7cf,
+không thay `RONG_COT` hoặc mặc định mọi form.
+
+**Composer và hàng tìm địa điểm — cục bộ tại `e338740b` (13/10/2026).**
+Composer bài viết cho content/stage/writing/body nhận phần cao dư ở mọi
+chiều rộng (`flexGrow: 1`, `flexShrink: 0`, basis tự nhiên), thay nhánh chỉ
+grow ở wide. Khoảng trống thuộc canvas; counter theo cuối vùng viết, rail
+công cụ theo sau. Bỏ đệm cuối body, dùng khe đầu footer của shell; không
+ghim MediaPicker/MentionPicker/Field vào footer. Khi phần thêm mở hoặc chữ
+lớn, nó cuộn trong thân; không ép toàn nhóm vào màn đầu. Giải thích duyệt
+bài vẫn cạnh audience, lý do/lỗi đăng vẫn cạnh quyết định đăng. Đây là bố
+cục của caller Composer, không là mặc định mọi `RudiScreen`.
+
+Khám phá › Địa điểm giữ ô tìm là chính và nút hỏi AI bên cạnh: hàng stretch
+với gap8, nút AI rộng48, chiều cao auto/min48 theo hàng. `IconButton` nhận
+style opt-in tại caller; các caller không truyền style vẫn giữ ô48×48.
+Không thêm token, font, world hay raster mới. Đối chiếu built artifact và
+phạm vi ảnh e338 ở [brief Composer](.impeccable/surfaces/apps-mobile-src-rudi-community-composer-tsx.md)
+và [brief hàng tìm](.impeccable/surfaces/src-rudi-screens-explore-explorelive-tsx-5ec3650c.md).
+Verdict độc lập e338 là **FIX**: F1 đạt ở dock thu gọn, F2 đạt ở canvas
+rỗng, S1 đạt ở hàng tìm trong các scale/theme/window đã chụp; F3 còn một
+phần vì chưa có nội dung đã nhập, Mention và phục hồi qua IME. FINISH còn
+mở; đây là đối chiếu lịch sử e338, không phê duyệt đẹp/ship toàn app hoặc
+chứng cứ cho sửa tab Khám phá sau đó. Không nâng kích thước cục bộ hay sai
+lệch có sẵn thành luật hệ thiết kế.
+
+Composer Khoảnh khắc J dùng cùng cột đọc (640dp) cho ảnh/caption, privacy
+và footer audience/action/helper; không giữ body640/footer560. Khi IME đóng,
+footer lấy inset đáy thiết bị cộng khoảng thở (12dp); khi mở giữ nhánh IME
+của shell. Native7cf chấm helper ở trên gesture indicator và field/action
+ở trên IME200. Cột và inset này thuộc caller J, không là công thức mới cho
+mọi footer. Wide (768×1024) là cùng emulator5558 đổi kích thước, chưa phải
+bằng chứng từ tablet độc lập.
+
+**I1 — người trước, cảnh sau (`7dcacedf`).** Picker giữ cột form (560dp),
+người thành hàng ngang có hình nhân, tên tự xuống hàng và chevron; thêm bạn
+là icon quiet (48dp) ở header. Trang chưa mở sổ giữ cột đọc (640dp): hai tên
+`h2` cùng mực `ink`, chữ «và» và lời mở `body inkSoft`, tất cả theo trục trái.
+Cảnh bìa/Nếp hỗ trợ phía sau cụm người, không lặp tên trong nhãn bìa nhỏ.
+Từ rộng 600dp và font dưới 1.3, cụm người và cảnh thành hai vùng cạnh nhau;
+ở chữ lớn trở lại một cột. Phone giữ cửa vào giao kèo ở footer ngoài vùng
+cuộn, `footerInset = max(insets.bottom, 12)`; màn rộng đặt nó sau cụm mở sổ.
+
+`BacDongY` dùng chung cho Lập sổ/Một đôi: thân giao kèo cuộn riêng, footer
+giữ phản hồi/lỗi, con dấu và «Để sau» theo đúng thứ tự đọc. Sheet giữ đệm
+dưới `max(insets.bottom, 16)` của kit, không kéo tấm lên hết trần chỉ để đặt
+hai lựa chọn. Quyền rồi giới hạn xếp dọc khi rộng dưới 600dp hoặc font từ
+1.3; cột dọc stretch hết bề ngang, bỏ flex-basis của cột ngang để không co
+mất phần chữ. Đây là hợp đồng của I1, không áp hình học này cho mọi sheet.
+
+**I2 — mục lục theo nghĩa, phục hồi tại hành động (`814ea5c9`).** Cấu hình
+sổ (loại, điều cần tránh, Gu khi được phép) thành nhóm đầu; tin nhắn/kỷ niệm
+thành nhóm thứ hai; đóng sổ đứng riêng sau kẻ tóc và khoảng cách. Hội bạn
+giữ tiêu đề, lời dẫn, con dấu rủ và «Chọn loại sổ» cùng trục trái. Nội dung
+dài tự wrap; chữ lớn cuộn thân sheet, không thu font để ép vừa một viewport.
+`RangBuoc` opt-in `avoidKeyboard`/`prioritizeFooter`: thân nhập cuộn riêng,
+lỗi, Lưu và Bỏ thay đổi ở footer trên IME. Riêng Gu, khi có lỗi mới đưa câu
+lỗi và chính các nút lệnh vào footer có hairline; own state và đầy đủ phạm
+vi chia sẻ vẫn ở thân cuộn trước hành động. Trạng thái thường giữ nút trong
+cụm của mình, trước phần tham khảo. Hai lựa chọn footer này thuộc I2,
+không áp `prioritizeFooter` cho mọi sheet hay thay bố cục giao kèo I1.
+
+**Header/form ở candidate 797 (10/10).** `TopBar` giữ target icon 48dp,
+`minHeight` 52dp; hàng header mở vào gutter 12dp mỗi bên và chevron dịch
+−7dp trong target, để nét back thẳng lề nội dung. Hai slot hai bên cân bằng
+khi tiêu đề đủ ngang; nếu không, mỗi bên lấy bề rộng tự nhiên tối thiểu 52dp
+để dành chỗ cho chữ. Tiêu đề dùng `title`, tối đa hai dòng, không thu font.
+Ảnh `after-light100-profile-edit` đã mở có «Chỉnh hồ sơ» một dòng. Đây không
+phải tuyên bố đo native toàn bộ target, geometry hoặc contrast.
+
+`RudiScreen avoidKeyboard` ở form hồ sơ/soạn bài giữ header và footer ngoài
+vùng cuộn; source đo viewport form sau resize để đưa ô đang focus vào vùng
+nhìn thấy. Ảnh hồ sơ nhập thành phố đã mở có field và nút Lưu trên IME.
+Footer hồ sơ trên phone dùng đệm 24dp khi đóng bàn phím, 8dp khi mở; thanh tab
+đã chiếm chiều cao trong normal flow. Sửa 797 bỏ phần cộng lại chiều cao tab
+vào footer từng tạo khoảng trống ở 9a. Con số 24dp thuộc bố cục hồ sơ này,
+không phải token mới hay công thức safe-area cho mọi màn. Large text dùng
+`chuLon(fontScale)` từ 1.28 để bao bước Android 1.3; những đổi cột cụ thể nằm
+trong mục chín bề mặt, không thay ba size class lịch sử.
 
 Lưới 4pt, thang khoảng cách sáu bước `xs` 6 · `sm` 10 · `md` 16 · `lg` 24 ·
 `xl` 36 · `xxl` 48; không thêm bước thứ bảy. Nhịp giữa khối trong
@@ -845,9 +987,11 @@ lớp lại:
 | `medium` | 600 đến 839 | 2 | 24 | rail trái 104 | chỉ khi cao ≥ 480 | 960 |
 | `expanded` | ≥ 840 | 3 | 36 | rail trái 104 | có | 1200 |
 
-`heightClass = short` dưới 480dp (máy nằm ngang hoặc IME đè sheet): Welcome hạ
-wordmark xuống 72 và bỏ route; `CoverBand compact` rút vải trên dưới khi bàn
-phím mở ở compact (Login/OTP).
+`heightClass = short` dưới 480dp (máy nằm ngang hoặc IME đè sheet).
+Welcome tại `34d57ca9` còn chọn bố cục ngắn khi chiều cao sau safe area dưới
+660dp hoặc `round(fontScale × 100) ≥ 130`: chữ, cảnh và hành động xếp dọc
+trong vùng cuộn; cảnh vẫn hiện ở cao 144dp. `CoverBand compact` rút vải trên
+dưới khi bàn phím mở ở compact (Login/OTP).
 
 **Lưới đo theo vùng nội dung.** `ResponsiveRow` đo chính vùng nội dung qua
 `onLayout`, sau rail và lề; `gridFor(width, minItemWidth = 250, gap = 12,
@@ -906,8 +1050,10 @@ header, mà vẫn giữ state và callback của component đã vẽ nó (trình
 cạnh bản đồ của `hanh-trinh/SoHanhTrinh.tsx`; trước đó scrim dừng ở mép trên
 thân màn và header vẫn sáng, bấm được: QA UI-041). Không có host (trang lab,
 test) thì con ở yên chỗ cũ.
-**Welcome**: lề 20, wordmark 118 (compact) / 150 (medium+), route `maxWidth`
-560, khối đáy `maxWidth` 640 ở medium+.
+**Welcome** (`34d57ca9`): lề ngang 24, cột bìa `maxWidth` 688, vùng nội dung
+`min(windowWidth - 48, 640)`, khối đáy `maxWidth` 640 ở medium+; đầu bìa là
+`Logo compact` với wordmark cao 18. Bố cục ngắn giữ Nếp canonical 96dp bên
+mép giấy và cảnh 144dp, không xoá artwork để dành chỗ cho chữ lớn.
 
 **Safe area cho thứ ghim đáy**: thanh tab `paddingBottom = max(insets.bottom,
 10)`; sheet `max(insets.bottom, 16)`; Welcome `max(insets.bottom, 16) + 6`;
@@ -1112,16 +1258,25 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
 - **Con dấu CTA (`StampButton`)**, nút chính của bề mặt thuyết phục: tô
   `brand.coral`, vành 2px mực 0.88 theo `duongVienDau`, `Grain mucIn` 0.26,
   nhãn Bricolage Bold màu `mauSang.ink` +0.4; cỡ `lon` cao tối thiểu 60, đệm
-  ngang 30, chữ 21/26, bo 16 (Welcome «Rủ Đi thôi!» nghiêng -3); cỡ `vua` cao
+  ngang 30, chữ 21/26, bo 16 (Welcome `34d57ca9` «Rủ Đi thôi!» `tilt={0}`,
+  rộng hết cột); cỡ `vua` cao
   52, đệm 24, chữ 17/22, bo 14 (Login «Gửi mã»). Không icon, không vành
-  trong, không bóng, rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
+  trong, không bóng, mặc định rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
   `loading` thay bằng spinner mực trong hàng và khoá nút; `disabled` mờ 0.55.
+  **I1 tại `7dcacedf`:** `wrapLabel` là opt-in cho con dấu bị giới hạn bề
+  ngang: caller chặn `maxWidth: "100%"`, nhãn `flexShrink: 1` căn giữa,
+  thân thêm đệm dọc (12dp) để tự cao theo chữ hệ thống. Giữ cỡ chữ và mặt
+  dấu; không biến mọi con dấu thành thanh toàn ngang. «Để sau» và «Chọn loại
+  sổ» dùng `label inkSoft` trên target tối thiểu (48dp), nhãn stretch trong
+  chính target để đủ chữ; không tạo điểm coral thứ hai.
 - **Nút bìa (`CoverButton`)**: `outline` trong suốt, viền 1px
   `coverLineStrong` (5.19:1 sáng / 6.42:1 tối trên `cover`), bo 14, cao 50,
   đệm 18, nhãn `label` `coverInk`, icon 18, haptic `select`. `link`: không
-  viền, rộng bằng chữ, cao tối thiểu 48, đệm 12; là lựa chọn phụ **dưới** con
-  dấu (Welcome «Tìm hiểu thêm ›», ảnh `01-welcome`), vì một thanh outline kéo
-  hết cột đã lấn át con dấu nó phải theo sau.
+  viền, mặc định rộng bằng chữ, cao tối thiểu 48, đệm 12; là lựa chọn phụ
+  **dưới** con dấu. Welcome `34d57ca9` dùng `link full`: hàng rộng hết cột,
+  nhãn `flex: 1` căn giữa lấy phần còn lại bên cạnh chevron 18, giữ đủ
+  «Tìm hiểu thêm» / «Xem lại từ đầu» cả khi tăng chữ. `full` không thêm viền;
+  link ở màn khác giữ chiều rộng theo chữ khi không truyền tuỳ chọn này.
 - **Nút giấy (`RudiButton`)**: cao 52 (48 `compact`), bo 14, nhãn `label` một
   dòng, icon 20; `solid` = nền `<tone>` phẳng và nhãn `<tone>Ink` theo
   scheme (album «Thêm khoảnh khắc» accent, lịch trình «Dùng plan này» ai);
@@ -1196,8 +1351,8 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   loại không phải trạng thái.
 - **Huy hiệu demo (`DemoBadge`)**: viền `line`, chữ 10/700 `inkFaint`, icon
   `flask-outline`, bo pill; mặc định «Dữ liệu demo», trong `TopBar` rút về
-  `compactLabel` («Demo», «Nháp»); **render rỗng ở chế độ live**. Trên Welcome
-  nhãn là «Bản trải nghiệm».
+  `compactLabel` («Demo», «Nháp»); **render rỗng ở chế độ live**. Welcome
+  `34d57ca9` không dùng `DemoBadge`; «Bản trải nghiệm» là nhãn ở mốc cũ.
 
 ### Con dấu trạng thái (`Stamp`)
 Chữ `stamp` (CondensedBold 12 IN HOA +0.8), viền 2px màu tông, bo 6, đệm 8/4,
@@ -1212,6 +1367,13 @@ từ 11/09 chỉ in khi địa điểm **không có dòng lý do**: hàng live k
 từ `starts_on`/`ends_on` máy chủ qua `keo/nhip-keo.ts`, không từ chuỗi
 fixture; nghiêng -2 ở Cá nhân), «ĐÃ TỚI» (teal, nghiêng -2, điểm danh). Ship
 trên 12 màn.
+
+**Opt-in I2 (`ToLoiRu`, nguồn a24 giữ nguyên tại814).** Tem trạng thái dùng
+nhãn in hoa tiếng Việt, `minWidth` (88dp) và `labelStyle` stretch/căn giữa
+để đọc đủ «ĐÃ CHỐT» trong các ảnh100/200 đã chụp. Đây là hình học riêng của
+tem ở hàng này; mặc định `Stamp` và các caller khác không đổi. Nhãn trợ năng
+đúng không thay bằng chứng glyph thực sự được vẽ; ảnh tĩnh không chấm lại
+cú đóng dấu hoặc Reduce Motion.
 
 Hai prop đợt 8:
 - **`nen`**: miếng giấy `card` dưới con dấu viền khi con dấu nằm trên ảnh
@@ -1936,6 +2098,228 @@ lại hành động trên mỗi người dùng `RudiButton compact ghost` («m�
 không phải viên»), người là một `Pressable` mở hồ sơ («Xem hồ sơ <tên>»),
 hành động đứng cạnh, không bao giờ nằm trong nó.
 
+### Chat, bảng tin và hồ sơ — GPL, bàn giao giới hạn 11/10/2026
+
+Hợp đồng compact/layout giữ UI3, không thêm art hoặc đổi shared primitive
+cho F3. Cột chat và vùng viết wide theo Layout; nguồn và lịch sử trong
+[GPL brief](docs/design/nep-ui-implementation/redesign-20261010/GPL-COMPACT-NATIVE-BRIEF.md).
+
+- **Bảng tin giữ điều đã nhận.** Chỉ retry trang đầu chưa nhận khi focus lại;
+  trang rỗng đã nhận vẫn ready. Chỉ request hiện hành hạ loading/fetching.
+  Refresh chỉ cuộn đầu khi response được áp và màn còn focus; request cũ
+  bị vô hiệu giữ cards, phần mở và offset. Diagnostic actual TSX D01–D07
+  cùng current-refresh positive có (9/0), không chứng minh nhân quả của
+  sequence native lỗi cũ hoặc toàn bộ navigation/E2E.
+- **Thao tác sửa hồ sơ ôm đúng nhãn.** «Chỉnh hồ sơ» và «Sửa tiếp hồ sơ» dùng
+  `PressScale`, icon bút chì và `typography.label` hiện hành thành nhóm gọn
+  căn trái; đệm (14×10dp), gap (9dp), target source tối thiểu (48dp) và trần
+  theo cột. Nhãn thường một dòng, căn giữa theo chiều cao; chữ lớn được
+  reflow khi chiều rộng khả dụng thực sự cần, không thu font hoặc cắt chữ.
+  Back giữ nháp trong phiên mounted, Huỷ bỏ nháp và trả lại nhãn sửa.
+- **Đo chữ phục vụ bố cục tại caller.** Text cùng style đo trong toàn cột
+  hữu hạn; chỉ dùng intrinsic width khi đúng một dòng, làm tròn lên pixel
+  thiết bị rồi cap phần còn lại sau icon/đệm/viền/gap. Key gồm nhãn,
+  fontScale, density và cột; event cũ bị loại. Final061 cấp `width` tường
+  minh cho Text để native đo lại chiều cao theo chiều rộng đó, thay
+  `minWidth` của814. Text đo absolute, opacity0, ẩn trợ năng/pointer-none là
+  phần đo chức năng, không chiếm layout; diagnostic DEV logs đã bỏ. Đây là
+  sửa cục bộ, không đổi `RudiButton` hoặc tạo token đo nhãn toàn hệ.
+
+Verdict7cf mở (35/35) contact, kiểm (105/105) original và mở lại sáu cặp
+old/new: F1/F4 resolved, F2 resolved trong diagnostic nêu trên, F3 partial.
+Verdict061 mở (4/4) contact, kiểm (12/12) original, mở riêng sáu original:
+**F3 resolved / ship**, chỉ bốn profile sáng100/tối200 × hẹp/rộng và ba
+trạng thái edit/resume/cancel-restored. Không thấy regression mới trong vùng
+đã chấm. Ảnh8ec và814 vẫn là partial, không đổi nhãn thành061.
+
+Hồ sơ private ngoài repo:
+[GPL7cf](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/gpl-verdict-review-7cf.md),
+[F3 cuối061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-review-061.md),
+[cổng061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/final-mechanical-verification.md).
+Cổng clean exact061 ghi (9/9) bước và Node subset (214 file, 1610/1610,
+0 fail/skip/cancel/todo), không full gate. Frozen GPL identity (9/0), canary
+và hai mutant riêng từng (8/1), setup0; frozen host không phát
+`onLayout/onTextLayout`, nên không chứng minh phép đo width/height native.
+Detector061 đúng một invocation/một file `HoSoSong.tsx`, raw `[]`, regex-only;
+không đo geometry, contrast, target thực hoặc độ đẹp.
+
+### Composer Khoảnh khắc — J, bàn giao giới hạn 11/10/2026
+
+Ảnh/caption, privacy và footer cùng cột; helper ở trên gesture indicator,
+IME giữ field và nhóm gửi theo Layout. Không thêm vật trang trí bù lề.
+[J brief](docs/design/nep-ui-implementation/redesign-20261010/J-MOMENTS-ALBUM-BRIEF.md)
+giữ lịch sử upload/retry/media/comment/check-in của2085 và full review c3.
+
+Verdict7cf mở (21/21) contact chứa (58/58) required frame, kiểm hash/kích
+thước cả58 baseline và58 current, mở năm cặp original composer: **P1/P2
+resolved / ship**, chỉ hai finding. Root inspection mở lại bốn original;
+không cộng original thành viewport mới. Bộ ảnh gồm29 phone (320×640) và29
+wide (768×1024), cùng emulator5558. Năm target production J, gồm shared
+`Sheet`, và test gốc byte-identical7cf↔061; carry verdict/ảnh7cf, không gọi
+là native J chạy lại tại061. PureJ trước đó identity (5/0), canary/hai mutant
+mỗi variant (4/1), setup0 chỉ là pure-helper/static scope.
+
+Bằng chứng private:
+[J verdict7cf](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-verdict-review-7cf.md),
+[root inspection](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-7cf58966/j-root-verdict-capture-inspection.json),
+[byte identity](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/J-production-identity-proof.json).
+Native F3 dùng Metro JS061; APK nền vẫn checkpoint
+`2f20a30179d0e21a1f4b3244dfbd685b5bade7e9`, SHA256
+`963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514`.
+Theo `native_provenance` của
+[packet runtime061](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-061d8d7a/f3-verdict-packet.json),
+API runtime giữ source `c3b04ae8afc1cb005c650e7d35de522d7c5ac231`, binary SHA256
+`ecf961065bbd1848d5e6267acd8fb54effd796321eca33041a8fe46094988de6`.
+Cổng clean061 chỉ build/hash core, không thay runtime; không gọi APK/API là
+rebuild061. Lượt documenter chỉ đọc hồ sơ đã có,
+không mở ảnh mới, chạy source/test/device/API/runtime/detector/browser.
+
+### Nhóm và bạn bè — bàn giao giới hạn 10/10/2026
+
+Đọc sáu màn H và `chat/CaiDatNhom.tsx` tại source
+`d91e66d16a06b3beea166963c75890ef2b69da7a`, cùng `Sheet`, `SoBia` và
+`ONhapMuc`; kế thừa hệ giấy/mực/bìa vải/coral/Bricolage và lối gọi Nếp hoạt động.
+Không thêm token, world hoặc raster. Mockup03 chỉ là tham chiếu phản biện,
+không phải comp được duyệt.
+
+- **Bìa chứa ô nhập thật.** `GroupNewScreen` dùng `SoBia fitContent` và
+  `ONhapMuc co="lon"` hai dòng trên nhãn giấy. Ở bố cục expanded (rộng từ
+  600dp và cao từ 720dp), bìa và action chung trục, rộng tối đa (360dp).
+  Nhãn cao theo nội dung; khoảng tên–người mở (24dp). Chiều cao tối thiểu
+  để giữ dáng bìa nằm ở vùng vải bao ngoài nhãn, không kéo tờ nhãn thành
+  khoảng trắng dài. Đây là cách áp dụng bìa đóng tự cao đã có, không đổi
+  hình học bìa đang lật.
+- **Form theo người nhận.** New/Invite/AddFriend giữ cột form (560dp) và
+  nhịp khối (24dp). Trên phone, header và action ở khe riêng của
+  `RudiScreen avoidKeyboard`, footer khi IME đóng dùng `insets.bottom + 12`,
+  mở IME theo khe (8dp) của shell. Expanded đặt action ngay sau vật giấy
+  trong nội dung, không giữ một nút ở đáy xa ô nhập. Tài khoản → người
+  nhận đã tìm thấy → gửi → chờ đồng ý; chỉ hiện thành công sau response.
+  Thành công kết bạn và recovery lời mời đã tồn tại đều tới Bạn bè/Đã gửi.
+- **Người dẫn danh sách.** Members đặt roster và vai trò trước lối sang
+  tường/album; mời/thêm bạn là `IconButton quiet` (48dp) ở header cố định.
+  Vai trò dùng `note inkSoft` tự xuống hàng, không con dấu cắt chữ.
+  Ghi chú quản trị là câu nhẹ, giải thích dài mở tại chỗ. Nút đổi vai trò
+  đứng riêng khỏi nút hồ sơ; ở cột hẹp/chữ lớn chuyển dưới tên. Friends giữ
+  icon nhắn tin cạnh người; cặp Đồng ý/Từ chối có thể xuống dưới cột chữ.
+- **Quyết định ngắn thành một cụm.** Trong cài đặt nhóm, bước Rời nhóm
+  thay nội dung cài đặt bằng tiêu đề, hậu quả và hai lựa chọn. `Sheet`
+  lấy chiều cao nội dung dưới trần; (82%) là trần, không phải chiều cao
+  bắt buộc. Hai nút ở `footer` ngoài vùng cuộn, cách prompt (24dp),
+  phá huỷ `warn outline` và Ở lại `ghost`. Back của bước này trở về cài
+  đặt; không bật `prioritizeFooter` vốn dành cho editor cần chiếm trần.
+
+Fresh verdict **ship chỉ sáu fixes**: reviewer mở 6 file chứa 16 viewport.
+F3/F5 đọc ảnh d91; F1/F2/F4/F6 giữ provenance ảnh c941 và năm artifact
+byte-identical, không đổi nhãn ảnh cũ. Lượt documenter này mở hai ảnh New
+expanded sáng/tối và contact sheet invite/accept/leave/cancel gồm sáu
+viewport, không vận hành runtime. Exact d91 có subset kỹ thuật 9 bước,
+Node (1608/1608) và repo-tree (5107); regex TSX `[]` không chứng minh full
+gate, geometry, contrast hay chất lượng thị giác. H/A–S, motion, TalkBack,
+iOS, 390/430dp, phần cứng expanded độc lập, expanded chữ lớn/IME,
+network/retry/lifecycle và phần chưa chụp vẫn mở.
+
+### Chọn người và cùng mở sổ — I1, bàn giao giới hạn 10/10/2026
+
+Nguồn là `ChonNguoi`, `KhongGianGiay`, `DongYBac`, `ChuKy`, `StampButton`
+và ánh xạ trạng thái sổ tại `7dcacedf164f1a84192be62392c6dbfa4148174e`.
+Giữ giấy/mực/bìa vải/coral/Bricolage và Nếp canonical; mockup06 là tham chiếu
+phản biện, chưa phải comp được duyệt. Thẩm quyền hướng hiện tại là Creative
+North Star trong file này và [I1 brief](docs/design/nep-ui-implementation/redesign-20261010/I1-PAIR-CONSENT-BRIEF.md),
+không phải contract lịch sử đã rời `_layout.tsx`.
+
+- **Chọn người rồi mới giao kèo.** Hàng picker giữ hình nhân (46dp), tên,
+  chevron và kẻ tóc; không lưới thẻ 2+1 hay caption lặp dưới mọi tên. Trang
+  chưa mở cho hai tên dẫn mắt, bìa đóng nhỏ mang nhãn «Hai/mình». Grain giấy
+  sáng/vải tối vẫn là chất liệu journal hiện có.
+- **Hiểu quyền trước khi ký.** `TrangSo ke={false}` chứa «Cho phép» rồi
+  «Không kéo theo», sau đó hai phần ký cách cụm quyền (24dp), cuối cùng
+  «Im lặng không phải đồng ý». Người đề nghị thấy câu chờ có tên người kia;
+  người nhận có «Xem lời đề nghị» trên trang và «Đồng ý» trong giao kèo.
+  Phản hồi proposal và lỗi ở footer để còn đọc được khi body ở đầu quyền.
+  Vai trò/tên/câu chờ/trạng thái ký đi theo Typography; nét vẽ không giả
+  chữ ký tay và một bên ký chưa mở sổ.
+- **Mặt sổ theo response.** UI đọc trạng thái sổ từ provider/ánh xạ hiện có,
+  không tự mở sau cú bấm. Mở sổ không tự bật Một đôi hoặc quyền đọc chat;
+  giao kèo Một đôi nói AI chỉ nhận phần người dùng chọn và xác nhận gửi.
+  Back/«Để sau» đóng lớp, không cấp quyền. Bằng chứng proposal/cancel/receiver
+  grant và M6 mở thật thuộc `62c1a73b`, chỉ `lap_so`; không reset hay diễn lại
+  cặp active để gắn nhãn bằng chứng mới.
+- **Sau mở, một hành động dẫn.** «Rủ hội mình đi chơi» là con dấu có thể
+  wrap; «Chọn loại sổ» là dòng mực phụ căn trái, cả parent và nhãn stretch
+  trong cột, `minHeight` (48dp), đệm dọc (12dp). Nhãn đọc trọn trên một dòng
+  ở các ảnh 100/200 đã mở; đây không phải luật cấm wrap ở mọi cỡ cửa sổ.
+  Cảnh M6 cho bìa (140dp) và Nếp wrap theo khoảng trống, dấu «Sổ đã/mở» có
+  hai dòng có chủ ý. Ảnh tĩnh không xác nhận chất lượng chuyển động.
+
+Fresh verdict `62c1a73b` chấm bảy finding: sáu resolved, F5 partial do nhãn
+phụ bị co. Verdict `7dcacedf` đóng F5 và regression hẹp trên 3 contact/24
+viewport Android mới, hai phía sáng/tối font100/200; sáu finding còn lại giữ
+nguồn ảnh62. Documenter mở đủ ba contact mới và hai contact62 (entry dark200,
+recipient từ lời đề nghị tới mở sổ), không chạy runtime hoặc detector.
+Exact clean7d có 9 kiểm tra xanh, Node (1608/1608), repo-tree (5108);
+identity (12/12), canary (10/12), hai mutant (11/12, 10/12) đỏ đúng dự đoán.
+Đây là subset kỹ thuật; regex TSX `[]` chỉ quét source, không đo contrast
+native. APK giữ checkpoint độc lập `2f20a301`, fontScale đã trả về 1.
+I2/toàn I/A–S, web/iOS, motion, TalkBack, lifecycle/network, full npm và
+strict32 vẫn mở; bảy finding đóng không thành chứng nhận đẹp toàn app.
+
+### Mục lục và quyết định trên giấy — I2, bàn giao giới hạn 10/10/2026
+
+Nguồn cuối là `814ea5c979629acb8548215c24a5ff5f5c560b73`; lát gồm
+`KhongGianGiay`, `LoaiSo`, `RangBuoc`, `GuHaiBan`, `DongSo`, `ToLoiRu`,
+`ui.tsx` và `Stamp`. Hợp đồng layout/harden, Operate + Read trong
+[I2 brief](docs/design/nep-ui-implementation/redesign-20261010/I2-NOTEBOOK-SETTINGS-BRIEF.md)
+kế thừa UI3/seed `c8e88116`, giấy/mực/coral/Bricolage và Nếp canonical.
+Mockup06 là critique-reference, không approved comp mới; không thêm art,
+token hay thẻ trang trí để bù cấu trúc.
+
+- **Đọc đúng điều đang có.** Mục lục gom ba nhóm bằng proximity/hairline
+  như Layout. «Chọn loại sổ» căn trái, target source (48dp); `LoaiSo`
+  highlight Hội bạn/Cặp đôi theo trạng thái thật, không theo lời đề nghị
+  hay cú bấm vừa lỗi. Busy/disabled và lỗi thuộc sheet đang thao tác;
+  «Xong» ở footer. Native timing của loading chưa được chấm.
+- **Điều cần tránh giữ nội dung.** Hai `Field` multiline tự cao theo
+  content-size từ 3 đến 8 dòng `body.lineHeight × fontScale`; vượt khung
+  thì cuộn, không ellipsis một dòng. Người kia là phần đọc riêng sau
+  hairline. Nháp chỉ hiện Lưu khi khác dữ liệu đang lưu; «Bỏ thay đổi»
+  đóng lớp, không gửi. Lỗi và đúng nút lưu ở footer trên IME; các ảnh200
+  chỉ chứng minh đoạn đang đọc/caret cuối, không toàn chuỗi cùng hiện.
+- **Gu dẫn bằng quyết định của mình.** Own state → phạm vi cho người kia,
+  Nếp và chat → bật/tắt hoặc bật lại nếu đủ điều kiện → sửa gu → tham khảo
+  người kia/gu chung. Private dùng nút solid, shared dùng outline; mỗi
+  người chỉ tự bật gu của mình. F1 gom lỗi và chính control hiện có vào
+  footer cố định, `prioritizeFooter` chỉ khi có lỗi; không thêm lệnh retry,
+  rút câu quyền hoặc đổi handler. Ảnh tối200 mới cho thấy toàn câu lỗi và
+  nút hai dòng cùng hiện, own state vẫn đọc được khi cuộn thân.
+- **Đóng sổ là đọc hậu quả trước.** Số dương dùng `ink`/600 nổi hơn dòng
+  zero `inkSoft`, vẫn giữ đủ tờ chờ, buổi đã chốt, lời đề nghị và ký ức.
+  Chưa có preview thì nói đang đếm/lỗi và không mời đóng; lệnh dùng revision
+  của preview. Bằng chứng I2 chỉ đọc preview/cancel, không thực hiện đóng
+  sổ hay cấp đồng thuận để lấy ảnh. Tem theo opt-in riêng ở mục `Stamp`.
+
+Full review a24 mở 11 contact chứa **84 viewport tĩnh + 12 tương tác**,
+20 original và mockup06; trả **fix** cho một P2 F1 của Gu. 84 ảnh tĩnh thuộc
+nội dung tổng hợp (106/v2, 91/v1); 12 frame tương tác sau đó theo tiến trình
+thật, retry lưu lên (116/v3, 101/v2). Không gọi ảnh lúc IME còn mở là ảnh
+sau lưu. Verdict814 mở 2 contact/**12 frame Gu mới** và 4 original, chấm
+**F1 resolved / ship** cùng regression hẹp. Chỉ `GuHaiBan` đổi trong 8 target;
+bảy target còn lại carry nguyên byte từ a24. Original kiểm lại frame đã
+tính, không cộng thành viewport mới; các ảnh top/bottom là viewport cuộn.
+
+Documenter mở đủ hai contact814 và tám contact đại diện a24 (mục lục hai
+theme, couple100/200, expanded sáng100 và ba contact tương tác); đối chiếu
+hash 8/8 contact tĩnh, 12/12 functional original và 12/12 Gu original.
+Chỉ đọc số kỹ thuật có sẵn ở từng SHA: 9 clean-check xanh, Node subset
+(214 file, 1608/1608, 0 fail/skip/cancel/todo); Gu identity (12/12), canary
+(10/12), hai mutant (10/12, 11/12) đỏ đúng dự đoán/cùng test SHA. Detector
+a24 có 8 target,814 có 1 target Gu, đều regex TSX `[]`/exit0. Những số này
+không là full gate/strict hoặc điểm đẹp. Không có tổng beauty /16; artwork
+N/A và interaction/motion N/E không được đổi thành điểm2. Toàn I/A–S,
+native computed contrast/geometry, target thực, motion/reduced motion,
+TalkBack/focus order, loading timing/lifecycle, iOS và hardware chưa đo;
+expanded (768×1024) là cùng AVD đổi kích thước.
+
 ### Hỏi tại hàng (xác nhận hành động phá huỷ)
 Hành động xoá thứ không lấy lại được **hỏi ngay tại hàng**, không mở hộp
 thoại, không toast. Một primitive: **`ui/HoiTaiHang.tsx`** (B11, 04/10), dùng ở
@@ -2230,18 +2614,29 @@ kia.
 - **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
 
-### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật 02/10/2026)
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật K 10/10/2026)
 
 Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
 `DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
 `c8e88116` trong DESIGN.md, `theme.ts` và kit hiện hành, không có bộ token mới.
 
 - Sổ chuyến đi dùng bìa vải `SoBia`, nhãn nền `card` chứa ảnh trên, lời dưới.
-  Bìa căn giữa, rộng tối đa (420dp), cao theo nhãn đo được cộng (48dp).
-  Tiêu đề `h1` (bản gọn `h2`), lời mở `body`; ảnh bìa tỉ lệ 4:3, bản gọn 16:9.
+  Bìa đóng dùng `fitContent`: rộng hết cột, tối đa (420dp), nội dung nhãn quyết
+  định chiều cao trong luồng với đệm dọc (24dp) mỗi phía; không đo chiều cao
+  nhãn rồi hồi tiếp vào bìa. Đây là nhánh bìa đóng, không đổi hình học bìa có
+  chuyển động mở. Tiêu đề `h1` (bản gọn `h2`), lời mở `body`, được xuống dòng.
+  Ảnh bìa tỉ lệ 4:3, bản gọn 16:9; ảnh trang đơn 4:3, collage hai cột 3:4.
+  Khung tỷ lệ và nền `paperShade` có ngay trước khi ảnh tải; ảnh lỗi giữ khung
+  cùng câu báo tại ảnh, không làm co vùng đọc.
   Trang đọc dùng `TrangSo tone="accent" ke={false}`: giấy có lề, không kẻ ngang,
-  tiêu đề `h2`, số trang `caption`; collage hai cột theo bề rộng đo được.
-  Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+  tiêu đề `h2`. Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+- `DiaryScreen` đọc một trang đang chọn qua `BookView paged`: tên sổ `h2` và
+  lời mở `note` ở trên trang, thay bìa ở chế độ đọc có trang. Khi có nhiều
+  trang, chỉ một pager dưới trang ghi «Trang n / tổng» bằng `caption`, hai
+  mũi tên (48×48dp) giữ bề ngang; counter được wrap. Biên đầu/cuối dùng viền
+  đứt và hint trợ năng, không lặp câu biên hay số trang trên giấy. Sổ một
+  trang không hiện pager. Bản xem trước chưa lưu vẫn dùng bìa và các trang;
+  không áp bố cục paged cho `BookView compact` trên tường.
 - Khoảnh khắc dùng ảnh dán `KhungAnh` nghiêng (-1°), ảnh tỉ lệ 3:2 và
   `Washi` nghiêng (-2°); tiêu đề `h2`, lời phụ `note`. Tường xếp một cột
   ảnh/bìa qua `BookView compact`, ẩn các trang bên trong; khoảnh khắc có
@@ -2258,10 +2653,17 @@ kia.
   «Bắt đầu»/«Ngày về» nếu nhiều ngày; không dùng `RouteLine` trang trí.
   Chỉ khi `can_end` mới hiện bộ chọn loại và hành động khép; trạng thái chờ
   có lời dẫn theo ngày/quyền và lối «Về cuộc hẹn».
-- Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
-  nút «Xem như người đọc» đổi về bản xem trước. Lựa chọn «Chỉ mình tôi»/
-  «Công khai» nằm cuối phần xem trước hoặc sau các trường sửa, trong đoạn
-  có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
+- Header nhỏ có icon đổi «Sửa theo cách mình nhớ»/«Xem như người đọc».
+  Khi sửa, ẩn bản xem trước; tên sổ và lời mở ở vùng chung, rồi chỉ một trang
+  đang sửa nằm trên `TrangSo`: pager (hoặc «Trang 1» khi chỉ có một trang),
+  tên trang, chuyện của trang, ảnh đang chọn và toolbar cùng một tờ. Toolbar
+  cuối trang dùng icon (48×48dp) cho ảnh, đưa trang lên trước và bỏ trang,
+  có tên trợ năng theo việc/trang và đếm ảnh; không nhân thành form của mọi
+  trang. Chuyển trang giữ bản nháp trong `document` của phiên đang mở.
+  Tên sổ/tên trang dùng ô multiline ít nhất hai dòng; công cụ bìa được wrap,
+  chuyển thành cột toàn ngang từ font scale (1.25), để nhãn được đọc đủ.
+  Lựa chọn «Chỉ mình tôi»/«Công khai» nằm cuối phần xem trước hoặc sau các
+  trường sửa, trong đoạn có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
   giữ trong footer cùng lỗi lưu `CauTaiCho`; `footerInset={insets.bottom}`
   và `avoidKeyboard` dành chỗ cho vùng an toàn và bàn phím.
 - Ô nhập dùng `ONhapMuc`; lúc đang lưu, trường sửa không cho nhập và các
@@ -2269,10 +2671,12 @@ kia.
   gửi để bấm nhanh không tạo request trùng. Lưu thất bại giữ bản đang soạn;
   lỗi nằm cạnh hành động lưu, chỉ lỗi có thể thử lại mới có «Thử lại».
 - Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
-  `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
+  `checked`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
   `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
-- Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Nút «Cất về riêng
-  tư», «Sửa theo cách mình nhớ», «Tự xếp trang, không gửi AI» gọi đúng hành động.
+- Trình đọc đặt icon sửa yên ở header cho chủ sổ; «Quản lý sổ» mặc định
+  thu gọn ở dưới vùng đọc, mở tại chỗ mới hiện gửi cộng đồng, cất riêng tư
+  và xoá. Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Các hành
+  động quyền xem và «Tự xếp trang, không gửi AI» giữ nghĩa đang có.
   Nhãn «Có Nếp giúp viết» nói nguồn hỗ trợ, không bảo đảm lời AI đúng.
   Sau dựng/lưu, khối sổ dịch nhẹ và trở về vị trí qua `useMotion`, theo
   thiết lập giảm chuyển động; không suy thành hiệu ứng lật bìa.
@@ -2293,6 +2697,80 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 điện thoại (411dp), màn ảo (320dp, chữ 1.3, tối, giảm chuyển động) và tablet
 ảo (768dp). Đây là tinh chỉnh từ mã trong hệ hiện có, không có comp mới;
 ảnh không chứng minh thiết bị thật, native iOS hay độ mượt khi chạy.
+
+**Phạm vi K 10/10, source `5cab4701199a4ab9332fc20e28c0f0e3d67ddf89`.**
+Các quy tắc K trên đối chiếu `BookView`, `EndingScreen`, `DiaryScreen`,
+`SoBia` và `ONhapMuc`; hướng đi ở
+[K-DIARY-BRIEF](docs/design/nep-ui-implementation/redesign-20261010/K-DIARY-BRIEF.md).
+Không đổi world/seed `c8e88116`, token hay thêm raster trang trí.
+[Verdict b76](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-b76f616d/fresh-k-verdict.md)
+đóng finding 1/3/4 về chữ, hierarchy reader và nhóm trang sửa; finding 2
+chưa đóng ở b76 vì nét kẻ vẫn xuyên glyph ở chữ lớn.
+[Verdict 5cab](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-5cab4701/fresh-k-rule-verdict.md)
+đóng riêng finding 2 sau khi mở (16) capture editor/shared caption bắt buộc,
+không thấy regression mới trong phạm vi đó. Không đổi nhãn bằng chứng b76
+về chức năng, quyền xem hay motion thành 5cab.
+
+Lượt documenter đọc hai report và mở bốn mẫu native có sẵn: b76 editor-page-one
+và reader-page-one light100; 5cab editor-page-two và moment-caption dark200.
+Hai mẫu dark200 giữ chữ/dấu không bị nét kẻ nội thất cắt, gạch dưới còn rõ;
+hai mẫu b76 cho thấy tờ sửa chung nhóm và một pager reader. Mẫu cuộn chỉ
+chứng minh viewport của nó. Không vận hành emulator hoặc chạy lại gate.
+Verdict chỉ gồm bốn finding và regression cụ thể trên Android (320×640),
+light/dark ở font (1.0/1.3/2.0); không phải full K, toàn story/moment,
+toàn app, /16, tablet/iOS, TalkBack, contrast hay blanket motion. Detector
+đã báo trong report là regex TSX, không đo geometry/contrast native.
+
+### Story viewer và xác nhận xoá — bàn giao giới hạn 08/10/2026
+
+Ghi từ `screens/story/XemStoryScreen.tsx` tại
+`c9a3f541d0a3e0a02aae608ed66f01f447b37005`, giữ cover indigo và giấy hiện
+hành. Ảnh là nội dung chính: `Image key={story.id}` dùng `contentFit="contain"`
+trong khung riêng, giữ tỷ lệ và bounds khi câu hỏi mở. Đầu màn chứa progress,
+tên người đăng, tuổi story và nút đóng/xoá; controls chữ ở dưới ảnh, caption
+trong vùng cuộn cao tối đa 180dp. Chữ lớn nhường diện tích cho nhãn/caption
+nên ảnh nhỏ hơn theo tỷ lệ, không phải câu hỏi thu ảnh thành tem.
+
+| Phần xác nhận | Artifact c9 đã ship |
+|---|---|
+| Lớp native | React Native `Modal transparent`, `animationType="none"`; phủ ảnh thay vì lấy chiều cao của khung ảnh |
+| Giấy | Card bo 16dp, đệm 16dp, gap 12dp, viền 1dp `line`, `bongGiay(2, dark)`; lớp đặt cuối màn, lề ngang 16dp/đáy 24dp |
+| Thứ bậc | «Xoá story này?» dùng `title` đậm 17/23 `ink`; câu «Bạn bè sẽ không thấy story này nữa.» là `body` 17/24 `inkSoft` riêng |
+| Hai câu trả lời | Cùng `flex: 1`, cao tối thiểu 48dp, bo 12dp; «Giữ lại» nền `card`/viền `lineStrong`/chữ `ink`, «Xoá» nền và viền `warn`/chữ `accentInk` |
+| Cách ly nền | Header `pointerEvents="none"` và ẩn khỏi accessibility tree, page zones disabled; toolbar nền giữ bố cục nhưng ẩn và không nhận chạm khi hỏi |
+| Đường an toàn | Back đóng câu hỏi trước khi DELETE; «Giữ lại» trả về cùng ảnh. Source khoá request, disable hai nút và chặn đóng khi đang xoá; state DELETE chờ còn thiếu evidence native |
+
+Đây là ngoại lệ của Story viewer đối với luật hỏi tại hàng: lớp native cách
+ly controls trên ảnh, không biến Modal hoặc nền `warn` đặc thành mẫu cho
+mọi hành động phá huỷ. Không thêm Nếp vào quyết định xoá. Câu hậu quả giữ
+đúng phạm vi quyền bạn bè hiện hành; không chép «khỏi nhóm»/«không thể khôi
+phục» từ reference khi domain không bảo đảm. Source gọi focus «Giữ lại»
+khi Modal hiện, chưa thay bằng chứng TalkBack focus/trap/restore.
+
+[Verdict c9](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-c9a3f541/story-independent-verdict-c9a3f541.md)
+trả **`ship` chỉ hai P2: hierarchy câu hỏi và cách ly header nền đều
+resolved ở question không pending**. Question tăng **13→14/16**;
+preview/viewer **14/16** trong state đã chụp. Root/reviewer mở đủ **17 ảnh
+after** Android portrait 320×640: viewer/question light và dark 1.0, light
+font 1.3/2.0, Back/Keep, publish và xoá thật. Bản
+[review 3b](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3b71838e/story-independent-verdict-3b71838e.md)
+vẫn giữ lịch sử `fix` hai P2; chuỗi composer replacement/draft sắc thuộc
+`04f20b88`, không nhận đã chạy lại toàn chuỗi ở c9. Composer c9 có ảnh/caption
+light 1.0 và publish, initial portrait còn ở offset cuộn; không suy toàn ảnh
+vừa một viewport. Reference board10-panel1/2 là đối chiếu cấu trúc, không
+chép artwork reference thành ảnh người dùng.
+
+Năm flow c9 đều exit 0: light/publish **60,291s**, dark **57,836s**, font 1.3
+**48,276s**, font 2.0 **48,326s**, delete thật **41,066s**. Xoá portrait về
+rail, mở lại còn landscape/caption, không còn caption portrait; đây là state
+đã kiểm, không nghiệm thu cả rail Tin nhắn. Runtime: JS c9, APK `b87a16f1`,
+Go `54b5dc0e`; flow có `not_full_gate: true`.
+
+Chưa phủ DELETE chờ/lỗi/bấm đôi/Back khi chờ, loading/error/empty/expiry,
+TalkBack, motion normal/reduced/background/replay, retry-upload, audience
+bạn bè, composer dark/font/bàn phím/crop và tablet/iOS/long caption.
+Dark 1.0 cộng light 1.3/2.0 không thành dark ở mọi font. Plugin/detector và
+craft-floor vẫn thiếu; không detector clean, không APPROVE toàn Story/app.
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
@@ -2326,6 +2804,12 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
     thêm trên trần thành 92% ở 320×640, 96% ở 390×460 (UI-007, UI-040).
     `maxHeight` thay trần khi truyền; `avoidKeyboard` co trần theo khung còn
     lại trên bàn phím.
+  - **Ưu tiên quyết định trong form (`eba8678a`) là opt-in**:
+    `prioritizeFooter` mặc định `false`. Khi bật và có `footer`, tấm lấy
+    `height = panelMaxHeight`; vùng tham chiếu cuộn dùng `flexBasis: 0`,
+    `flexGrow: 1` và nhường phần cao còn lại cho editor/action ở chân.
+    CTA phải nằm ngoài vùng overflow của editor; đây không phải footer cố
+    định mới cho mọi sheet. Bằng chứng native hẹp xem bàn giao editor Nếp dưới đây.
   - **Trượt theo chiều cao của chính tấm** (đo `onLayout`, + 24), không một
     hằng 480 để lại một phần ba tấm cao trên màn (UI-013); **khép thì mờ** ở
     đoạn cuối (opacity theo `progress` 0 → 0.12 → 1), nên khung cuối trước
@@ -2401,7 +2885,167 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   tối thiểu 120, tô `brand.coral`/`brand.teal`/`brand.violet` ở 0.9; con là
   chữ mực tối tĩnh. Chỉ Welcome dùng trong đợt này.
 
+### Editor Nếp ở bài Cộng đồng — bàn giao giới hạn 09/10/2026
+
+Artifact được review là `eba8678a3418271645f8332ce30261938c8a1fbc`, nguồn
+`community/PostDetail.tsx` và `ui/Sheet.tsx`. Diff hai file từ `eba8678a` tới
+HEAD `6f3f5af2` rỗng; giữ provenance JS của lượt editor, không gán ảnh cũ cho
+SHA mới. Giữ hệ giấy/mực, Bricolage ở tiêu đề, body system và Nếp canonical;
+không thêm hero/artwork cho form này.
+
+Editor dùng `Sheet avoidKeyboard prioritizeFooter` với hai vùng cuộn:
+đoạn bài/dẫn là tham chiếu nhường chiều cao; field và câu lỗi nằm trong
+`ScrollView` riêng ở footer (`minHeight` 128, `flexShrink: 1`, gap 8,
+đệm đáy 4). CTA là sibling **ngoài** vùng cuộn đó, nên «Đồng ý chia sẻ và
+gọi Nếp» hoặc «Lưu ghi chép riêng» vẫn dành được chỗ trên IME.
+`keyboardShouldPersistTaps="handled"` cho phép bấm action khi bàn phím mở.
+Nháp có nhãn «Bản nháp do Nếp viết», sửa bằng tay trước khi lưu; lời nhờ gốc
+vẫn sửa được trong vùng tham chiếu khi đã có nháp. Lý do nút tắt giữ ngay tại
+form, không biến lỗi thành một lớp khác.
+
+[Verdict editor eba8678a](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-eba8678a/nep-editor-independent-verdict-eba8678a.md)
+chốt **ship chỉ P2-NEP-EDITOR-01, resolved**. Root và reviewer đã mở toàn bộ
+17 ảnh packet; reviewer mở thêm ảnh lỗi cuối font 1.0, tổng 18 ảnh after.
+Android portrait 320×640: sáng 1.0, sáng 2.0, tối 1.0; request/draft khi IME
+mở đều thấy CTA đầy đủ và có thao tác bấm thật tới nháp/ghi chép đã lưu.
+OS font được đặt trước fresh attach; chưa có telemetry số RN về font/window.
+
+Runner sáng 1.0 **exit 1, 69.962s**: đã lưu thật, sau đó timeout vì selector
+cuối tìm «Ghi chép riêng» trong khi màn có title «Điều mình muốn giữ».
+Ảnh lỗi có ghi chép mới; không gọi runner này xanh. Sáng 2.0 **exit 0,
+41.118s** và tối 1.0 **exit 0, 53.484s** dùng đích `community-keeps`.
+Tất cả là focused native receipt `not_full_gate: true` ở SHA eba8678a,
+không thay canary/mutant hoặc cổng repo.
+
+Điểm tĩnh trong repair **9 → 12/14**; artwork/crop **N/A**, motion **N/E**.
+Không quy đổi thành /16. **P3 còn mở ở font 2.0**: autoscroll tới caret có
+thể đưa nhãn lời nhờ/nguồn nháp ra khỏi viewport và cắt nhãn/dòng đầu ở mép
+vùng nhập. Chưa có lượt cuộn lại lên đầu riêng để kiểm mọi dòng/offset;
+không nhận «không cắt chữ» hoặc toàn editor hoàn hảo.
+
+Chưa kiểm font 1.3, tối 2.0, input rất dài/error/retry/mọi đường lưu;
+TalkBack/focus trap/restore, target/contrast đo native, motion/timing/reduced/
+background lifecycle, iOS/tablet, chất lượng lời AI và privacy. Plugin/detector
+và craft-floor chính thức vẫn thiếu; không detector clean hoặc APPROVE toàn
+editor/frontend.
+
+### Community/Khám phá viewport đầu — bàn giao giới hạn 09/10/2026
+
+Artifact được review là `6f3f5af2d1ae2b32145908f2da9409b254b1535d`, nguồn
+`community/CommunityScreen.tsx`, `screens/explore/ExploreLive.tsx`,
+`screens/explore/HangDiaDiem.tsx`, `adaptive.ts` và `ui/chu.ts`.
+Giữ mockup ở vai trò concept reference và vật liệu yên của refinement hiện
+hành; không thay token, shading, canonical Nếp hoặc rải grain khắp surface.
+
+- **Community:** bài đầu đứng trước consent. Chỉ hỏi ở «Dành cho bạn» khi
+  chưa trả lời, không có topic và có bài; feed rỗng không mang câu hỏi này.
+  Consent giữ đủ phạm vi «Không đọc chat hay sổ riêng», body 15/22,
+  gap copy 3, gap toàn khối 4, đệm dọc 8 và kẻ tóc `line`.
+  Hai action là `RudiButton compact full={false} variant="ghost"` trong
+  hàng `flexWrap`, gap 4. Nhãn nhìn dùng `Để${NBSP}sau`, nhãn trợ năng
+  «Để sau» dùng khoảng trắng thường; handler vẫn `consent(false)`.
+  Không khoá width/font để giữ nhãn.
+- **Explore:** `compactLead` chỉ khi rộng dưới 600, cao dưới 700 và
+  `!chuLon(fontScale)` (helper nhận chữ lớn từ 1.28 để bao cả bước OS 1.3).
+  Nhịp khối rút về gap 12, cảnh còn cao 120 thay vì 150. Từ artifact
+  `3bb47ef84bf294a242fbcc5f8910ceeb02478ca0`, đầu lead gọn đặt hình vuông
+  112×112 bên trái, tên hai dòng/phụ đề bên phải `flex: 1`, `minWidth: 0`,
+  đệm 12. Hai dòng sự thật và chip lý do/giá xuống dưới, dùng toàn chiều
+  rộng thẻ (`leadGonDuoi`: gap 6, đệm 14, đệm trên 0). Tim giữ control riêng
+  trên hình. Nhánh chữ lớn/cửa sổ khác vẫn dùng layout thường.
+
+[Verdict compact 3bb47ef8](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict.md)
+chốt **ship chỉ C/D–01, resolved**, từ `screens/explore/HangDiaDiem.tsx`.
+Documenter mở trực tiếp tám PNG trong
+[packet](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-3bb47ef8/cd-finish-review/verdict-packet.json):
+top/lead sáng và tối 1.0, lead sáng và tối 1.3, lead-lower sáng 2.0 và
+lead-tail tối 2.0. Ảnh 1.0 cho thấy facts, lý do dài và giá dùng chiều rộng
+thẻ; ảnh đại diện 1.3/2.0 vẫn có ảnh ngang toàn chiều rộng, và tail tối 2.0
+hiện đủ giá kèm đơn vị sau cuộn. Đây là đối chiếu hình học tại các vùng đã
+chụp, không nhận toàn surface/app, detector native, tương phản/target đo
+native, motion hoặc iOS.
+
+[Verdict gallery 6f3f5af2](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-6f3f5af2/gallery-independent-verdict-6f3f5af2.md)
+chốt **ship chỉ P2-01 composition viewport đầu và P2-02 «Để sau», cả hai
+resolved**. Root và reviewer mở đủ 10/10 ảnh packet, gồm fingerprint đúng
+JS. Baseline Android portrait 320×640/font 1.0 sáng/tối: Community có tác giả
+và bốn dòng body trước nav, consent sau bài đầu; Explore có tên hai dòng/fact
+đầu và artwork rõ trước nav. Dataset/địa điểm dẫn đã đổi sau lưu gu thật,
+nên đối chiếu hierarchy và vùng đọc, không yêu cầu nội dung pixel giống nhau.
+
+Community top, Explore top, consent sau bài đầu và settings scheme snapshots
+được chấm **14/14 tĩnh** ở baseline sáng/tối; interaction/motion **N/E**,
+responsive/accessibility chỉ cấu trúc nhìn thấy. Ảnh font 2.0 chỉ chứng minh
+đủ nhãn/control tại viewport đã cuộn: hai action xuống hàng riêng, không
+chồng nhau. Không nhận toàn màn font 2.0 hoặc mọi breakpoint đã đạt.
+Runner sáng **35.859s**, tối **19.539s**, font 2.0 **13.933s**, đều exit 0;
+không thay full gate. Settings ảnh Tối/Sáng chỉ chứng minh state được chụp,
+không toàn lifecycle đổi theme.
+
+Không mở rộng verdict sang search/filter/save/error/empty/feed actions,
+mọi route/layer, PostDetail/Nếp keyboard, privacy hay motion. Chưa TalkBack,
+target/contrast đo native, iOS/tablet. Plugin/detector và craft-floor vẫn
+thiếu; không detector clean, không quy /14 thành /16 và không APPROVE toàn
+Community/Explore/frontend.
+
+### Gu — đo nhãn theo giấy, bàn giao giới hạn 09/10/2026
+
+Artifact được review là `d3c4a3aa3db5ee40ca28229103ae87f874a04dcd`, nguồn
+`screens/Onboarding.tsx`. Sửa production chỉ thêm `alignSelf: "stretch"`
+cho `styles.giua`, giữ `textAlign: "center"`, kèm comment đo nhãn.
+Nhãn sticker, band ngân sách và dòng phụ lấy toàn bề rộng nội dung của giấy
+để đo/wrap; không giảm font, đổi ngưỡng tiền, từ vựng hoặc handler.
+
+Giữ câu hỏi Bricolage → dẫn system → tám sticker `GuGlyph` → count → bốn
+phong bì → `StampButton`. Sticker hiện hành có GuGlyph 42, giấy note co theo
+layout, grain chỉ trong object, dấu chọn riêng; sáng/tối dùng token của hệ.
+Ở 320dp, sticker hai cột; ngân sách 2×2 khi font 1.0, một cột khi
+`Math.round(fontScale * 100) >= 130`. Chữ lớn cuộn qua các vùng, không ép
+toàn màn vào một viewport. Các mô tả Sở thích ở mốc cũ vẫn là lịch sử;
+không lấy kích thước/chip của mốc đó thay cho artifact này.
+
+[Verdict Gu d3c4a3aa](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-d3c4a3aa/gu-independent-verdict-d3c4a3aa.md)
+chốt **ship chỉ sửa nhãn giữa và state tĩnh đã chụp, finding resolved**.
+Reviewer context riêng đã mở **27 ảnh**: 24 after (top/three-selection/
+budget/save-action, sáng/tối × font 1.0/1.3/2.0), reference board02-panel4,
+fingerprint đúng JS và before130. Before130 chỉ thấy «Trên»; after130
+save-action sáng/tối thấy đủ «Trên 500K» và «Rộng tay». Mép phong bì cuối
+trong budget130 là vị trí cuộn; ảnh save-action cùng case cho thấy đủ nhãn.
+
+Android portrait **320×640**, state **3-selected / `vua-phai` / enabled**:
+**14/14 tĩnh** trên bảy trục quan sát được, interaction/motion **N/E**.
+Không quy thành /16 hoặc vượt cổng đại diện toàn sản phẩm. Sáu receipt
+after đều exit 0, cùng SHA, `not_full_gate: true`: sáng1.0 **17.988s**,
+sáng1.3 **18.840s**, tối1.0 **18.038s**, tối1.3 **19.040s**,
+sáng2.0-visible **25.798s**, tối2.0-visible **25.648s**. Hai lượt font2.0
+đầu đỏ vì assertion count ngoài fold được giữ nguyên; lượt visible là capture
+cuộn bổ sung riêng, không sửa lịch sử thành xanh hoặc coi đó là lỗi UI.
+Font theo OS trước fresh attach, chưa telemetry số RN về font/window.
+
+Packet và report nằm ngoài mọi worktree. Reviewer thấy PNG mode0664 ở lần
+đọc đầu; sau phát hiện, parent siết quyền và reviewer kiểm lại **27/27 mode0600**.
+Không gán quyền hiện tại cho thời điểm đọc ban đầu. Documenter đọc source,
+packet/receipt và verdict; không tự chạy lại native hoặc chấm lại ảnh.
+
+Save/cancel/restore tại `6f3f5af2` là bằng chứng chức năng riêng; diff handler
+rỗng không kiểm lại flow đó. Chưa nhận toàn Gu/onboarding: new-account/name,
+disabled/loading/error/offline/retry, TalkBack/focus/target/contrast đo native,
+motion/reduced/lifecycle, native390/430/tablet/iOS hoặc toàn frontend.
+
+**Đính chính availability 09/10:** runtime plugin/detector vẫn không tìm
+thấy, `imp preflight` exit127; không có detector clean. Tuy nhiên craft-floor
+**có và đã được đọc** tại
+`/home/lakiet/.claude/plugins/marketplaces/impeccable/plugin/skills/impeccable/reference/craft-floor.md`.
+Các dòng trước ghi «craft-floor thiếu» được giữ như lịch sử và được đính chính
+bởi ghi chú này; không tiếp tục kết luận bản reference không tồn tại.
+
 ### Inputs / Fields
+
+**Luật Nét Kẻ Nhường Chữ.** Nét kẻ trang trí của ô multiline phải nhường
+chữ và dấu tiếng Việt. Từ scale hiệu dụng (1.25), `ONhapMuc` bỏ các nét
+bên trong, giữ gạch ranh giới/focus dưới vùng nhập; không ép baseline native
+khớp một nhịp trang trí bằng phép tính line-height.
+
 - **`Field`**: cao 52 (108 `multiline`), nền `card`, viền 1px `lineStrong`, bo
   14, chữ `body`, placeholder `inkFaint`, nhãn `label` `ink` phía trên, icon
   dẫn 20 `inkFaint`. **`SearchField`** cùng khung, bo pill, placeholder «Tìm
@@ -2424,8 +3068,14 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   UI-001 đo 44; 4dp thêm cũng lấy từ khe chữ–gạch nên hàng không đổi cao).
   Chữ `body`; `co="lon"` viết giá trị bằng `h2` (tên trên bìa, số trên hoá đơn).
   Placeholder `inkFaint` do kit vẽ một dòng; tên trợ năng là nhãn hoặc placeholder;
-  `helper` là `note inkSoft`; `error` (`caption warn`) thay dòng `helper` và được đọc lịch sự; `multiline` kẻ dòng mờ dưới
-  mỗi dòng chữ, quá 8 dòng thì cuộn. `oRef` để form bị từ chối đặt con trỏ
+  `helper` là `note inkSoft`; `error` (`caption warn`) thay dòng `helper` và được đọc lịch sự.
+  Vùng `multiline` lấy chiều cao dòng chữ nhân scale hiệu dụng: (1) nếu tắt
+  font scaling, nếu không lấy font scale cửa sổ và giới hạn bởi
+  `maxFontSizeMultiplier` khi giá trị từ (1) trở lên. Chiều cao tối thiểu theo số dòng yêu cầu
+  trong (2–8), tối đa tám dòng đã scale rồi cuộn. Chỉ khi scale dưới (1.25)
+  mới có nét kẻ trang trí `line` theo nhịp đó; từ (1.25) bỏ nét bên trong
+  theo Luật Nét Kẻ Nhường Chữ. Gạch control/focus/error dưới vẫn giữ nguyên.
+  `oRef` để form bị từ chối đặt con trỏ
   vào đúng chỗ cần sửa. `Field` có hộp chỉ còn ở màn chưa làm lại.
 - **`ChonNgayLich`**: một lá lịch xé (số ngày Bricolage 34/40) hoặc gõ tay
   `dd/mm/yyyy`; tháng mở **tại chỗ** dưới lá (sheet trong trang cuộn sẽ nổi
@@ -2662,16 +3312,76 @@ react-native-web tự tô núm teal, màu của tiền.
   vẽ control chết.
 
 ### Signature: Bìa mở ra trang (Welcome → Login)
-Welcome là bìa đóng (ảnh `01-welcome`): indigo tràn màn với vân vải, wordmark
-rất lớn ở phần ba trên (`coverInk`), washi cam nghiêng -2° cao 34 mang «AI đi
-chơi, chia bill thông minh» bằng mực tối, route mực 4 chặng với glyph (people
-· compass · receipt · images) và chặng đang ở tô coral chạy theo trang pager,
-pager 4 trang (tiêu đề EB 28/33, body `coverInkSoft`), chấm 7 (đang ở 20
-rộng, cam), rồi con dấu «Rủ Đi thôi!» nghiêng -3 rộng bằng chữ và liên kết
-«Tìm hiểu thêm ›» dưới nó. Bấm con dấu: bìa **nhấc** (translateY -48, mờ tới
-0.65) trong `shared` 300ms easing `accelerate`, rồi push `/login`; Login mở
-với `CoverBand` dưới status bar và con dấu «Gửi mã» cỡ `vua`, tức lời rủ có
-một ngôn ngữ ở cả hai màn. Reduce Motion: pager nhảy thẳng, bìa không nhấc.
+Welcome tại `34d57ca9` là bìa indigo tràn màn với `Grain vaiBia` 0.30,
+`Logo compact` ở đầu, bốn chương dẫn từ lời rủ tới chọn nơi, rõ phần mỗi
+người và giữ kỷ niệm. Tiêu đề ExtraBold 34/40 (30/36 dưới 360dp), body
+17/24 `coverInkSoft`. Cảnh `scene-street` ở trang 1/3, `scene-cafe` ở trang
+2 và `scene-coast` ở trang 4; chúng là illustration địa phương, không mang
+thông tin thay chữ. Chỉ báo gồm bốn chấm 6dp, chấm đang chọn dài 22dp màu
+coral, mỗi vùng chạm 48×48dp; dưới là «Trang n trên 4», con dấu «Rủ Đi
+thôi!» rộng hết cột và link đầy đủ. Link tới chương sau, trang cuối trở lại
+đầu; pager giữ cùng chương khi bề rộng đổi.
+
+Bấm con dấu khoá lần mở cho tới khi màn nhận focus lại và push `/login`
+trực tiếp; source chuẩn bị Login bằng `prefetch`, không còn pha nhấc bìa
+và chờ trước điều hướng. Artwork xuất hiện bằng opacity và translateY 12
+với `motion.timing("shared", "decelerate")`; pager không animate khi giảm
+chuyển động. Đây là mô tả cơ chế từ mã, chưa phải chứng nhận motion của
+source `34d57ca9`.
+
+### Bàn giao Welcome 08/10/2026 — phạm vi đã ship
+
+Ghi từ source `34d57ca9dbcf032bf9c8b21b41e6b059a6f4e00c`:
+`screens/Welcome.tsx`, `ui/CoverButton.tsx`, `theme.ts`, `ui/Grain.tsx` và
+`ui/art/Nep.tsx`. Concept `board02-panel1-welcome-cover.png` là reference,
+**chưa phải approved comp**; giữ Nếp canonical, không thay bằng mascot của
+concept. Bố cục xếp dọc ở 320dp/font lớn là adaptation của bìa, giấy, cảnh,
+nhân vật và hành động. Mã bố cục cao còn có cảnh cạnh cột chữ và
+`spot-memory`; verdict dưới đây không xác nhận bố cục rộng đó.
+
+| Phần bố cục ngắn | Artifact đã ship |
+|---|---|
+| Cảnh | Cao 144dp, rộng vùng nội dung, `fit="cover"`; giữ focal của cảnh trên màn ngắn |
+| Nếp | `pose="moi"`, 96dp, trái 12dp/đáy 4dp; giữ mặt, tay và chân canonical |
+| Mép giấy/vải | Giấy rộng 136dp, bo dưới phải 72dp; vải rộng 124dp, bo dưới phải 104dp; mép giấy khoảng 12dp ở đầu mở dần về chân Nếp |
+| Vật liệu | Giấy theo scheme, gradient ngang `paperShade → paper → paperShade` tại 0/0.55/1, `Grain giayTrang` 0.45, `bongGiay(1, dark)`; vải `cover` + `Grain vaiBia` 0.30 |
+| Hành động | CTA `tilt={0}`, link `full`; nhãn phụ đủ chữ, nội dung và action đi trong vùng cuộn khi font lớn |
+
+[Verdict độc lập Welcome](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-verdict-34d57ca9.md)
+chốt **15/16, `ship` chỉ cho ba finding nhãn phụ, artwork và mép giấy:
+cả ba resolved**. Reviewer đã mở 17 ảnh Android portrait 320×640: thường
+3, font 1.3 có 4, font 2.0 có 4, giảm chuyển động 3, tối 3. Ảnh của source
+này phủ trang 1/2/4, không tự nhận đã mở trang 3. Năm functional case exit 0
+(22,745s / 21,493s / 29,903s / 20,941s / 22,595s) không thay verdict thị
+giác hoặc full gate. Nền APK là `b87a16f1`, backend `54b5dc0e`, không gán
+chúng thành build `34d57ca9`; diễn biến ghi tại
+[RECOVERY-20261008.md](docs/design/nep-ui-implementation/RECOVERY-20261008.md).
+
+Clip motion chỉ thuộc `f26c3dd7`, không chứng minh motion `34d57ca9`.
+Plugin/detector và craft-floor hiện thiếu, không có kết luận detector clean.
+Phạm vi này không phải APPROVE toàn app, không phủ iOS, tablet/cửa sổ rộng,
+TalkBack hoặc toàn bộ trạng thái Welcome.
+
+### Welcome CTA → Login — bằng chứng bổ sung normal/warm 3b
+
+[Review motion 3b](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-peer-r1/welcome-independent-motion-3b71838e.md)
+trả **`ship` riêng đoạn CTA→Login normal/warm đã quay**, đóng finding thiếu
+pha giữa của clip04. Source
+`3b71838e057c2daef6500f04a91b44edf7d20b4e`; diff34→3b rỗng cho Welcome,
+CoverButton và `_layout.tsx`. Không đổi provenance clipf26 hoặc verdict34
+ở mục trên, không cộng điểm interaction/motion hay nâng tổng **15/16**.
+
+Reviewer mở đủ **29 frame gốc** và ảnh before/after trên Android emulator
+5560, 320×640, font 1.0: Welcome rút sang trái, Login trượt vào từ phải với
+header, lời chào, input và action đã vẽ; không thấy frame trắng/trống, Nếp
+và fold đi cùng bìa. Đây là native slide giữa hai trang của sổ, không phải
+pagecurl/3D hoặc signature nhấc bìa lịch sử. Clip encoded **2,436411s**, tốc
+độ biến thiên trung bình khoảng **11,9fps**; không suy timing animation hoặc
+60fps từ duration/frame count. Warm flow exit 0/**16,086s**, một tap CTA thật.
+
+Phạm vi chưa phủ reduced lifecycle, Back/cancel, double tap, background/resume,
+cold transfer, iOS hoặc timing/FPS chính xác. Đoạn này không thay full motion
+gate hay APPROVE toàn app; detector vẫn thiếu.
 
 ### Signature: Con dấu rơi xuống (trạng thái thành đúng dưới ngón tay)
 Dòng FORM của hợp đồng gọi tên «một cú đóng dấu khi một trạng thái thành
@@ -2737,7 +3447,8 @@ plan này», «Thêm khoảnh khắc»), không «OK»/«Tiếp». `accessibilit
 bằng động từ: «Mở {tên địa điểm}», «Mở ảnh 3», «Chọn ảnh», «Đóng chọn ảnh»,
 «Thêm ảnh», «Lưu …». Con dấu là danh từ/trạng thái ngắn IN HOA. Dữ liệu
 fixture luôn dán «Dữ liệu demo» (đầy đủ), «Demo»/«Nháp» (trong `TopBar`),
-«Bản trải nghiệm» (Welcome). Số tiền viết «1.106.250đ»; không có số nào màn
+«Bản trải nghiệm» (Welcome ở mốc cũ, không có tại `34d57ca9`). Số tiền viết
+«1.106.250đ»; không có số nào màn
 tự bịa: đếm ảnh, huy hiệu, ngày còn lại đều tính từ dữ liệu.
 
 **Luật Một Cách Viết Ngày** (01–04/10, QA UI-103, UI-104): ngày và giờ đi qua
@@ -2819,6 +3530,90 @@ nhập `ONhapMuc` 48, ngoại lệ duy nhất có tên là lưới ngày 44 củ
 riêng mang tên của hàng; tay cầm sheet ẩn khỏi trình đọc, lối ra là
 «Đóng bảng»; Back (cứng, trình duyệt, Esc) đóng lớp trên cùng trước khi rời
 màn.
+
+### Chín bề mặt native — candidate 797, ghi 10/10/2026
+
+**Phạm vi và nguồn.** Đây là hồ sơ build sau lượt sửa review `d9c06bf4`, chưa
+có verdict ship sau sửa. Đọc `ui.tsx`, `screens/Profile.tsx`,
+`screens/profile/HoSoSong.tsx`, `screens/explore/HangDiaDiem.tsx`,
+`screens/keo/PlanLive.tsx`, `screens/keo/CreateOutingLive.tsx`,
+`ui/ThanhNganSach.tsx`, `screens/groups/Conversations.tsx`,
+`community/Composer.tsx`, `community/MediaPicker.tsx` và `screens/Create.tsx`
+(đường dẫn tương đối dưới `apps/mobile/src/rudi/`). Route viết bài hiện dùng
+`community/Composer.tsx`, không có `screens/community/New.tsx`; hàng địa điểm
+ở `screens/explore/`, MediaPicker ở `community/`.
+
+| Bề mặt | Điều có trong source 797 và mẫu native đã mở |
+|---|---|
+| Sửa hồ sơ | Form riêng cùng component mounted giữ bản sửa; header «Chỉnh hồ sơ»/«Huỷ» và footer «Lưu hồ sơ» cố định, cụm avatar 64/đổi ảnh + lời dẫn gọn, gap form 20. Tên tối đa 200, giới thiệu 500 có counter, thành phố 120. Back giữ bản nháp trong phiên mounted; Huỷ bỏ bản nháp; không khẳng định lưu qua process death. Source giữ lỗi và khóa gửi khi đang lưu. |
+| Khám phá | Phone đi một trục lead rồi hàng để so; source lead dùng ảnh 16:9 compact/21:9 rộng, artwork minh hoạ cao 160dp ở phone, tên `h2`, phụ đề wrap, facts rồi hai chip lý do/giá như source. Ảnh minh hoạ có nhãn rõ, không giả ảnh địa điểm; không nhập người, số liệu hay online status từ reference. Đây cập nhật dạng source, không khôi phục lead ngang 112 của mốc 3bb. |
+| Hàng địa điểm | Ở chữ thường, thumbnail 88×88 và cột chữ top-aligned, gap 14; đệm dọc 16, hairline dưới. Thứ tự: tên/mô tả/facts → giá kèm đơn vị dùng toàn bề ngang → lý do AI đọc hết, không `numberOfLines` trên lời giải thích hàng. Từ `chuLon`, ảnh rộng toàn cột/cao 132dp, chữ xuống dưới, tim ở góc phải ảnh; nhãn Minh hoạ nằm dưới bên trái. Mẫu supplement 200 đã mở thấy đủ giá 200.000–250.000đ mỗi người và câu so ngân sách 175k, rồi hàng tiếp; không coi một viewport cuộn là toàn danh sách. |
+| Lên plan | Plus nhỏ `IconButton quiet` ở header cho cả nhánh có nhóm và `contextId===null`. Empty state có nhóm vẫn có CTA «Tạo kèo»; chưa nhóm dẫn «Tới Tin nhắn». Chữ lớn chuyển vé/cuống sang luồng dọc; ngày và tháng cùng hàng, tên/facts được wrap. Ảnh plan-header 200 có ngày 11/TH10 và dữ kiện vé đủ. Hai ảnh visible-final light100 của thiết bị 5562 đã mở thấy empty chưa nhóm và khay Tạo sau chạm plus header; bằng chứng ADB có phạm vi ghi riêng bên dưới. |
+| Khay Tạo | `BillShareIllustration` là SVG native 76×72: giấy biên lai mép răng cưa, tiêu đề coral, dòng món/tổng và đường chia ra hai phần. Đọc token light/dark, không raster mới; Nếp canonical và các vật lịch/ảnh/thư giữ world. Ở chữ lớn, các lựa chọn chuyển một cột ngang hình/chữ thay vì hai ô hẹp. Đây cấu trúc có trong source, ảnh đã mở chỉ trực tiếp chứng minh khay light100. |
+| Ngân sách | `ThanhNganSach` cùng trường nhập chính xác chia sẻ một giá trị nguyên đồng. Thanh 0–2 triệu, bước 25.000đ, target cao 56dp, thumb 28dp, mức nhanh 200 nghìn/500 nghìn/1 triệu minHeight 48. Exact entry dùng parser tiền chung; vượt thang vẫn giữ số, hiện ngay câu «Ngoài thang kéo 0–2 triệu. Giữ nguyên số bạn nhập.» và thumb đổi chấm thành vạch. Supplement200 đã mở giữ 3.250.123đ với câu giải thích; endpoint không được hiểu thành giá trị đã clamp. Role adjustable/actions có trong source; chưa nghiệm thu TalkBack hoặc haptic bằng ảnh. |
+| Tin nhắn | Heading + plus nhỏ tạo nhóm, search «Tìm người hoặc nhóm» và xoá search; danh sách lọc tên người/nhóm từ dữ liệu đang đọc. Giữ story rail, lời mời và đường E2EE. Ảnh dark100 đã mở chứng minh hierarchy title/search/hội thoại; không chứng minh trọn search hoặc crypto từ ảnh. |
+| Back/header | Cùng primitive TopBar và quy tắc nhường ngang cho title được ghi ở Layout; không sửa bằng cách thu font hay target. Có thể wrap khi chữ lớn. Không biến offset của chevron thành offset cho mọi icon. |
+| Viết bài | Header gọn, avatar 44 + tên/người đọc ở đầu; canvas viết là vùng chính, giới hạn 5000 có counter; minHeight theo chiều cao cửa sổ trong 112–240dp, maxHeight 420 và lineHeight 26. Công cụ ảnh/video là ghost compact; chủ đề/tag mở tại chỗ. Footer giữ lời duyệt công khai, lỗi và CTA trên IME. Ảnh dark100-writing và light200-empty đã mở có canvas/counter/footer tương ứng; công cụ dưới fold cuộn tới được theo cấu trúc, ảnh tĩnh không tự chứng minh thao tác đó. |
+
+**Bằng chứng chức năng khác bằng chứng thị giác.** Bó evidence ngoài repo:
+[/native-audit-797a3f52/](/home/lakiet/.local/share/rudi-nep-ui/runtime-private-merged-20261006/native-audit-797a3f52/).
+`after-matrix-results.json` ghi 24/24 flow exit0, tổng 714.665s: social,
+places, budget, budget-exact × light/dark × font 1.0/1.3/2.0, source và harness
+đều 797. `after-matrix-restore.json` ghi font đã phục hồi, viewport 320×640.
+Lượt documenter chỉ đọc kết quả có sẵn và mở mẫu ảnh, không chạy lại matrix.
+
+`profile-functional-result-r2.json` và `supp-profile-draft-save-r2.result.json`
+ghi Back giữ nháp, Huỷ bỏ nháp, native save quay lại hồ sơ và server giữ
+`display_name`, `bio`, `city`, `avatar_url`; flow r2 exit 0/53.785s. Đây là
+bằng chứng chức năng riêng của hồ sơ; không đưa giá trị fixture vào hệ thiết
+kế, không gọi các lỗi assertion ở lượt harness trước là chính sách bố cục.
+Supplement chữ 200 `supp-large-rows-tabs-budget.result.json` exit 0/43.672s.
+Ảnh `supp-large-community-selected` chỉ cho thấy tab Cộng đồng đã chọn và
+skeleton đang tải; không chứng minh feed đã tải, empty hoặc error đã đạt.
+
+**Nhận diện runtime.** `runtime-provenance.json` ghi JS 797 từ tree sạch,
+APK vẫn ở checkpoint `2f20a30179d0e21a1f4b3244dfbd685b5bade7e9`, SHA-256
+`963bd5daa0be4348606158dd3c06848e7ef604e06ebbdf035136a718cae0d514`.
+API chạy source `9a6d69563a503860774f291f22b4806082b970a6`;
+`services/core` không đổi từ 9a đến 797. Không gọi APK/API là bản rebuild 797;
+đây là thay đổi JS. Documenter không mở web, điều khiển UI hoặc khởi động server.
+
+**Mẫu đã mở.** `captures/**/takeScreenshot/`: light100 profile-edit,
+profile-keyboard, explore-lead, explore-rows, create-tray; dark100
+composer-writing/inbox; light200 composer-empty/plan-header; dark200
+explore-rows; supplement row-price-reason, next-row, community-selected,
+exact-outside-scale. Bổ sung đã mở hai ảnh ngoài thư mục captures:
+`no-group-plan-light100-visible-final.png` và
+`no-group-create-from-header-plus-visible-final.png`; tổng cộng 16 ảnh native
+được lượt documenter mở. Các ảnh có tên after là viewport/state của flow tương
+ứng, không phải chứng nhận cả route. Reference cấu trúc cũng đã mở riêng,
+không dùng nó làm ảnh after.
+
+**Bổ sung Plan chưa nhóm, chỉ light100.** Ảnh visible-final đầu có title,
+plus nhỏ, bản đồ, empty «Gom hội mình trước» và CTA «Tới Tin nhắn»; ảnh sau
+có khay Tạo thật với lời dẫn chọn hội ở bước tiếp theo. Phiên tổng hợp không
+có nhóm đã đăng nhập bằng UI native và giữ session; kiểm HTTP login xác nhận
+không có nhóm. `no-group-native-adb-visible-final.result.json` ghi chạm
+«Tạo mới» theo bounds XML thực `[256,32][304,80]` và mở sheet.
+`no-group-visible-window-receipt.json` ghi thiết bị 5562 có cửa sổ thật,
+pid 888644, chạy SDK launcher. Đây là ADB XML/input/screencap, không phải
+Maestro pass, không cộng vào matrix 24/24. Các lỗi transport Maestro, thiếu
+reverse mapping và capture headless trước vẫn ngoài nghiệm thu thị giác;
+chỉ hai ảnh visible-final này là bằng chứng bổ sung được ghi ở đây. Thiết
+bị chính 5558 và peer 5560 không bị thay đổi bởi lượt bổ sung này.
+
+**Cổng kỹ thuật có giới hạn.** `clean-checks.json` ghi đúng SHA 797,
+clean_before/after đều true: typecheck, guide, build-check, compile, fixup,
+Go guide và repo-tree exit0; Node subset 214 file, 1608/1608 pass, 0 skip.
+Năm driver browser bị loại có tên trong record: `che-chu-lo-to-cha`,
+`che-chu`, `rudi-nep-web`, `rudi-opening-web`, `rudi-welcome-web`.
+Đây không phải full strict 32, full gate hay merge main.
+`final-tsx-detector.json`/log ghi quét chín file TSX ở source 797,
+exit 0/`[]`/0.040s và byte khớp commit 797. Detector này chỉ là regex TSX,
+không phải phép đo geometry/contrast native; lượt documenter chỉ đọc kết quả. Motion, TalkBack, tablet,
+iOS, state tải/lỗi/offline/retry toàn bộ và verdict thị giác mới vẫn chưa
+được hồ sơ này chứng minh; không có điểm 14/16, total-app acceptance hoặc
+quyền merge vào main từ các số trên.
 
 ## Do's and Don'ts
 
@@ -3009,7 +3804,9 @@ màn.
   `*_unavailable`, hay «Cập nhật app» cho một thứ không tìm thấy; đừng in mã,
   status hay địa chỉ.
 - **Don't** tô nền `warn`, hay vẽ hành động phá huỷ bằng nút cam đặc; đừng
-  mở hộp thoại để xác nhận xoá.
+  mở hộp thoại để xác nhận xoá. Ngoại lệ giới hạn là Story viewer c9: Modal
+  native cách ly nền và nút «Xoá» dùng `warn` đặc như mục bàn giao Story;
+  không dùng ngoại lệ đó cho hàng trên giấy.
 - **Don't** mờ nút tắt bằng opacity, hay để nút tắt không lời.
 - **Don't** đặt `Sheet` trong thân màn khi nó phải phủ header; đừng để
   `Sheet` nhận chạm trong pha mở, hay trượt một quãng cố định thay vì chiều
@@ -3018,6 +3815,62 @@ màn.
   tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**GPL/J 11/10:** không phong thánh nhãn wrap/đầy cột/chiều cao thừa của
+7cf/8ec/814, hoặc giả thuyết cached-height thành nguyên nhân đã chứng minh.
+Probe1e56 chỉ là chẩn đoán;048 compatibility identity7/2 không có kill/visual
+credit,814 detector0 không đổi thành scan061. Text opacity0 đo chức năng
+không cho phép giấu nội dung người dùng. F3 ship061 và J P1/P2 ship7cf chỉ
+đóng finding đã chấm; F2 (9/0), Node subset và regex `[]` không chứng minh
+native causal sequence, geometry/contrast, target thực, TalkBack, motion,
+hardware/iOS, strict gate/E2E hoặc deployment. Bản ghi mechanical và verdict
+là snapshot khác thời điểm, không sửa câu pending cũ thành cùng chứng kiến
+nhau. Toàn app/M–N/I/P–Q/L–R/A–B–S/C–D–E–F/G/K và các cổng cuối còn ngoài
+phạm vi bàn giao này; không tuyên bố main/app đã ship.
+
+**I2 10/10 tại814:** ship chỉ F1 và regression hẹp; bảy target còn lại
+carry full review a24, không đổi nhãn 96 frame cũ thành814. Không biến
+footer phục hồi Gu thành mặc định mọi sheet, giới hạn ô nhập 3–8 dòng thành
+lý do cắt nội dung, hoặc minWidth88 thành token tem chung. Giữ harness đỏ
+r0 tối200: default scroll chạm footer mới đã thất bại sau assertion lỗi/nút
+visible; r1 vuốt riêng thân cuộn, source không đổi. Không nâng witness API,
+regex rỗng hay unit xanh thành thị giác; không tổng điểm đẹp hoặc full I/A–S.
+
+**I1 10/10 tại 7d:** không biến F5 partial của62, lỗi nhãn «Để» của4a hay
+scan nhầm đường dẫn `ChuKy` (`[]`/exit1) thành pass. Sáu finding carry vẫn
+thuộc62; M6 thật không đổi nhãn thành7d. Opt-in wrap không thu chữ hoặc đổi
+mặc định mọi caller; nét ký trang trí không thay đồng thuận thật. Ở mốc I1,
+I2 còn mở; bàn giao I2 có bằng chứng riêng bên trên. Expanded là cùng
+AVD đổi kích thước; subset/regex không thay nghiệm thu thị giác, computed
+contrast, native iOS, motion/TalkBack hoặc full strict gate.
+
+**H 10/10 tại d91:** tên dài trong ô Android vẫn cuộn nội bộ hai dòng;
+ảnh long chỉ hiện vùng gần caret cuối, không chứng minh toàn bộ (95 ký tự)
+cùng thấy. Không biến giới hạn này thành quy tắc cắt tên hoặc chuẩn ô nhập
+đã nghiệm thu. Min-height của vùng vải New expanded không thành token
+chiều cao nhãn giấy. Sáu fixes resolved không nghiệm thu toàn H/A–S; gate
+subset/regex không thành đo tương phản, motion hay điểm đẹp. Nhánh pressed
+opacity của hàng người và drift cũ ngoài phạm vi giữ nguyên, không thành
+phản hồi bấm thứ hai của hệ.
+
+**K 10/10:** không biến giả định baseline Android thành luật kẻ dòng, hoặc
+việc bỏ nét trang trí ở chữ lớn thành lý do thu font/khóa chiều cao. Toolbar
+icon chỉ là công cụ ngữ cảnh của trang sửa K, không thay luật nhãn chữ cho
+mọi hành động của hệ. Bốn finding đã đóng không thành nghiệm thu toàn K hay
+toàn app; phạm vi chưa kiểm giữ mở. Không tạo world/raster mới từ mockup K
+chưa duyệt, và không dùng regex TSX làm chứng nhận geometry/contrast native.
+
+**Chín bề mặt 10/10, candidate 797:** không phong thánh điểm 5/10 cũ thành
+ngưỡng chấp nhận, verdict fix d9 thành ship 797, số 24/24 thành pass toàn app,
+hoặc screenshot Cộng đồng đang tải thành feed đã đạt. Hai ảnh Plan chưa nhóm
+visible-final chỉ chứng minh light100 và chạm plus mở khay; không dùng capture
+headless, lỗi transport hoặc log regex TSX để tuyên bố native matrix/geometry
+đã đạt. Source Composer còn override nút tắt bằng nền
+`line`/viền solid thay disabled primitive ADR-0038; đây là drift cục bộ,
+không thành mẫu disabled mới, và chưa có đo contrast native cho biến thể.
+Metadata/story label inbox rút ngắn ở chữ lớn vẫn là điểm cần review theo
+ngữ cảnh, không phải giấy phép cắt dữ kiện. Các nợ cũ ngoài chín bề mặt giữ
+nguyên; không dọn source hoặc tạo quy tắc để hợp thức lỗi trong lượt tài liệu.
 
 **Giới hạn lượt 27/09:** theo
 [biên bản native](docs/testing/so-ky-niem-native.md), Pixel 6 Android đã build
@@ -3170,6 +4023,13 @@ nằm ở `docs/claude/2026-10-01/ui-ux-upgrade/` (`change-log.md`,
   - `CHUA_VE` trống;
   - `lyDo` có cổng `nut-tat-co-ly-do.test.mjs`.
 
+**Đợt hoàn thiện Đua vịt và Chat E2EE 15/10 (nhánh `codex/nep-ui-recovery-handoff-20261014`).**
+Đã đóng các finding mở từ đợt bàn giao 14/10 và kiểm chứng trực tiếp trên Android emulator (`320×640`, `390×844`, `768×1024`, sáng/tối, chữ `1.0`/`2.0`, IME mở):
+
+- **Sân sông và làn vịt (`duong-dua.ts`, `RandomGame.tsx`):** pitch dọc tách đủ cho cả full stage và compact stage ở 2–8 lựa chọn (4 lựa chọn: full `216dp` / compact `176dp`; 8 lựa chọn: full `306dp`, sprite `36dp` / compact `256dp`, sprite `28dp`, badge thu gọn `18×18dp` khi `> 6` làn) để không chồng vịt hoặc badge tại vạch xuất phát và vạch đích caro. Nền sông và các cutout vịt đang dùng được preload bằng `Image.prefetch` với timeout hữu hạn `450ms` trước khi hiển thị lớp nghệ thuật của sân, không để nhịp đếm ngược đầu tiên hiện nền phẳng hoặc thiếu vịt.
+- **Thẻ Đua vịt trong chat (`ChatRandomCard.tsx`):** sân thu gọn nằm trong `stageWrap` có đệm ngang `16dp` khớp trục lề trái của dòng trạng thái `Đang đua · Xs`; ẩn dòng tóm tắt lặp khi sân thu gọn đang hiển thị trực tiếp.
+- **Ranh giới cụm tin và khung ảnh (`nhip-tin.ts`, `anh-niem.ts`, `GroupChatLive.tsx`):** tin đã giải mã thành thẻ bình chọn hoặc thẻ Nếp chọn giúp (`poll`/`random`) là tin độc lập, không nhập vào cụm `dau`/`giua`/`cuoi` của tin chữ liền kề; khung ảnh co theo bề rộng khả dụng của cột (`availableWidth - 18`, sàn `132dp`, trần `208dp`); chú thích ảnh chưa tải được của tin mình dùng bảng màu theo nền bong bóng thật, đảm bảo tương phản ở cả giao diện sáng và tối.
+
 ## Cổng phải xanh trước khi đổi hệ này
 
 ```bash
@@ -3206,7 +4066,7 @@ node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, s�
 node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
 ```
 
-Cổng của đợt nâng cấp UI/UX 01–04/10 (cũng trong `npm test`, cùng bước dựng như trên):
+Cổng của đợt nâng cấp UI/UX 01–04/10 và hoàn thiện Đua vịt / Chat E2EE 15/10 (cũng trong `npm test`, cùng bước dựng như trên):
 
 ```bash
 node --test tests/nut-pha-huy-tong-warn.test.mjs  # mọi RudiButton có nhãn phá huỷ mang tone="warn"; ngoại lệ có tên và lý do; quét ≥ 10 nút
@@ -3215,9 +4075,11 @@ node --test tests/cau-loi-theo-ma.test.mjs        # câu lỗi theo code trướ
 node --test tests/o-nhap-muc.test.mjs             # ONhapMuc: không hộp, chỉ gạch; ô nhập 48; gạch 2dp khi viết/sai mà chữ không nhích; lỗi thay dòng phụ và được đọc
 node --test tests/khe-lop.test.mjs                # LenLop đưa con lên khe lớp của RudiScreen, giữ state và callback
 node --test tests/rudi-b9-ke-va-tuong.test.mjs    # khoangNgayChuyen («28 - 29/09», «30/09 - 02/10»), thangNamVN
+node --test tests/rudi-random-native.test.mjs tests/rudi-chat-nhip-tin.test.mjs tests/rudi-e2ee-anh-niem.test.mjs  # pitch làn vịt 2..8 lựa chọn, preload sân, lề 16dp thẻ chat, tách cụm poll/random và co khung ảnh
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của
 hợp đồng): light/1.0, dark/1.3, tablet bằng `wm size`, rồi đọc ảnh và đo
 pixel; tsc, web export và detector đã mù với ba lỗi thật ở lát này (crash
 `transform: undefined`, crash parse `d`, vân dừng ở một phần ba).
+

@@ -104,6 +104,7 @@ func New(o Options) *Handler {
 	}
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/events", h.send)
 	h.mux.HandleFunc("GET /v2/chat/{conversation}/events", h.events)
+	h.mux.HandleFunc("GET /v2/chat/{conversation}/clock", h.clock)
 	h.mux.HandleFunc("PUT /v2/chat/{conversation}/marks", h.mark)
 	h.mux.HandleFunc("GET /v2/chat/{conversation}/stream", h.stream)
 	h.lifecycleRoutes()

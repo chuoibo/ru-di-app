@@ -1,78 +1,146 @@
-import { translatedAsActor, newAttempt } from "../../api";
+import { translatedAsActor } from "../../api";
 import { COMMUNITY_ERRORS } from "./api";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { Image } from "expo-image";
-import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ScrollView, View } from "react-native";
+import { Text } from "../ui/NativeFontMetrics";
 import { typography, useRudiTheme } from "../theme";
-import { RudiButton } from "../ui";
+import { IconButton, RudiButton } from "../ui";
 import { imageSource, uploadMedia, type Media } from "./api";
-export function MediaPicker({ person, media, onChange, video = true, onBusy }: {
+import { cauLoiTep, LoiTep } from "./loi-tep";
+
+export type SelectedFile = { asset: ImagePicker.ImagePickerAsset; uploaded?: Media & { state?: string } };
+
+export type MediaPickerLayoutParts = {
+    preview: ReactNode;
+    notice: ReactNode;
+    busy: boolean;
+    pending: boolean;
+    retry?: () => void;
+    discard?: () => void;
+    stop?: () => void;
+};
+
+export function MediaPicker({ person, media, onChange, video = true, onBusy, initialFile, onFileChange, compact = false, disabled = false, canEdit, renderToolbar, renderLayout }: {
     person: string;
     media: Media[];
     onChange: (next: Media[]) => void;
     video?: boolean;
     onBusy?: (value: boolean) => void;
+    initialFile?: SelectedFile | null;
+    onFileChange?: (file: SelectedFile | null) => void;
+    /** An attachment tool in a composer, rather than a standalone form field. */
+    compact?: boolean;
+    /** Block attachment edits while the enclosing form is submitting. */
+    disabled?: boolean;
+    /** Recheck the enclosing form before retained handlers run in the same batch. */
+    canEdit?: () => boolean;
+    /** Keep a composer's tools together while previews/errors retain full width. */
+    renderToolbar?: (pick: () => void, busy: boolean) => ReactNode;
+    /** A compact editor can scroll attachment details while keeping its tools visible. */
+    renderLayout?: (details: ReactNode, toolbar: ReactNode, parts: MediaPickerLayoutParts) => ReactNode;
 }) {
     const { colors } = useRudiTheme();
     const [busy, setBusy] = useState(false);
+    const [phase, setPhase] = useState<"picking" | "uploading" | "processing" | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const pick = async () => {
-        setError(null);
+    const [selected, setSelected] = useState<SelectedFile | null>(initialFile ?? null);
+    useEffect(() => { onFileChange?.(selected); }, [selected, onFileChange]);
+    const working = useRef(false);
+    const disabledNow = useRef(disabled);
+    disabledNow.current = disabled;
+    const canEditNow = useRef(canEdit);
+    canEditNow.current = canEdit;
+    const editsBlocked = () => disabledNow.current || canEditNow.current?.() === false;
+    const mounted = useRef(true);
+    const generation = useRef(0);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; generation.current++; }; }, []);
+    const prepare = async (retry?: SelectedFile) => {
+        if (editsBlocked() || working.current) return;
+        working.current = true;
+        const operation = ++generation.current;
+        const current = () => mounted.current && generation.current === operation;
+        setBusy(true); setPhase(retry?.uploaded ? "processing" : "picking"); onBusy?.(true); setError(null);
         try {
-            const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: video ? ["images", "videos"] : ["images"], allowsMultipleSelection: false, quality: 0.85, videoMaxDuration: 180 });
-            if (result.canceled)
-                return;
-            const asset = result.assets[0];
-            if (!asset)
-                return;
-            if (asset.type === "video" && (asset.duration ?? 0) > 180000)
-                throw new Error("Chọn video dài tối đa 3 phút nhé.");
-            if (media.length >= (video ? 10 : 1))
-                throw new Error(video ? "Mỗi bài tối đa 10 ảnh." : "Mỗi bình luận có một ảnh.");
-            if (media.length && (asset.type === "video" || media.some((m) => m.type.startsWith("video/"))))
-                throw new Error("Video có một bài riêng. Bỏ ảnh đã chọn để thêm video nhé.");
-            setBusy(true);
-            onBusy?.(true);
-            let uri = asset.uri;
-            let mime = asset.mimeType ?? (asset.type === "video" ? "video/mp4" : "image/jpeg");
-            if (asset.type !== "video") {
-                const clean = await manipulateAsync(uri, [{ resize: { width: Math.min(asset.width, 2048) } }], { compress: 0.86, format: SaveFormat.JPEG });
-                uri = clean.uri;
-                mime = "image/jpeg";
+            let file = retry;
+            if (!file) {
+                const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: video ? ["images", "videos"] : ["images"], allowsMultipleSelection: false, quality: 0.85, videoMaxDuration: 180 });
+                if (!current() || result.canceled || !result.assets[0]) return;
+                file = { asset: result.assets[0] };
             }
-            const uploaded = await uploadMedia(person, uri, mime);
+            const asset = file.asset;
+            if (asset.type === "video" && (asset.duration ?? 0) > 180000) throw new LoiTep("Chọn video dài tối đa 3 phút nhé.");
+            if (media.length >= (video ? 10 : 1)) throw new LoiTep(video ? "Mỗi bài tối đa 10 ảnh." : "Mỗi bình luận có một ảnh.");
+            if (media.length && (asset.type === "video" || media.some((m) => m.type.startsWith("video/")))) throw new LoiTep("Video có một bài riêng. Bỏ ảnh đã chọn để thêm video nhé.");
+            setSelected(file);
+            let uploaded = file.uploaded;
+            if (!uploaded) {
+                setPhase("uploading");
+                let uri = asset.uri;
+                let mime = asset.mimeType ?? (asset.type === "video" ? "video/mp4" : "image/jpeg");
+                if (asset.type !== "video") {
+                    const clean = await manipulateAsync(uri, [{ resize: { width: Math.min(asset.width, 2048) } }], { compress: 0.86, format: SaveFormat.JPEG });
+                    uri = clean.uri; mime = "image/jpeg";
+                }
+                if (!current()) return;
+                uploaded = await uploadMedia(person, uri, mime);
+                if (!current()) return;
+                file = { asset, uploaded }; setSelected(file);
+            }
             if (uploaded.state === "processing") {
+                setPhase("processing");
                 let ready = false;
                 for (let n = 0; n < 60; n++) {
                     await new Promise((resolve) => setTimeout(resolve, 3000));
-                    const status = await translatedAsActor<{
-                        state: string;
-                    }>(COMMUNITY_ERRORS, `/v2/community/media/${uploaded.id}/status`, {
-                        actorId: person,
-                        method: "GET"
-                    });
-                    if (status.state === "failed")
-                        throw new Error("Video chưa xử lý được. Thử tệp MP4 khác nhé.");
-                    if (status.state === "ready") {
-                        ready = true;
-                        break;
+                    if (!current()) return;
+                    const status = await translatedAsActor<{ state: string }>(COMMUNITY_ERRORS, `/v2/community/media/${uploaded.id}/status`, { actorId: person, method: "GET" });
+                    if (!current()) return;
+                    if (status.state === "failed") {
+                        setSelected({ asset });
+                        throw new LoiTep("Video chưa xử lý được. Thử tải lại hoặc chọn tệp MP4 khác nhé.");
                     }
+                    if (status.state === "ready") { ready = true; break; }
                 }
-                if (!ready)
-                    throw new Error("Video vẫn đang xử lý. Bạn thử lại sau nhé.");
-                uploaded.type = "video/mp4";
+                if (!ready) throw new LoiTep("Video vẫn đang xử lý. Thử lại để kiểm tra tệp này nhé.");
+                uploaded = { ...uploaded, type: "video/mp4", state: "ready" };
             }
-            onChange([...media, uploaded]);
-        }
-        catch (e) {
-            setError(e instanceof Error ? e.message : "Chưa chọn được ảnh.");
-        }
-        finally {
-            setBusy(false);
-            onBusy?.(false);
+            if (current()) { onChange([...media, uploaded]); setSelected(null); }
+        } catch (e) {
+            if (current()) setError(cauLoiTep(e));
+        } finally {
+            if (current()) { working.current = false; setBusy(false); setPhase(null); onBusy?.(false); }
         }
     };
-    return <View style={{ gap: 12 }}><ScrollView horizontal contentContainerStyle={{ gap: 12 }}>{media.map((m) => <View key={m.id} style={{ width: 120, gap: 4 }}>{m.type.startsWith("image/") ? <Image source={imageSource(person, m.url)} cachePolicy="none" style={{ width: 120, height: 120, borderRadius: 12 }}/> : <Text style={[typography.label, { color: colors.ink, padding: 20 }]}>Video đã sẵn sàng</Text>}<RudiButton compact label="Bỏ tệp" variant="ghost" disabled={busy} onPress={() => onChange(media.filter((item) => item.id !== m.id))}/></View>)}</ScrollView><RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant="outline" disabled={busy} onPress={() => void pick()}/>{error ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.accent }]}>{error}</Text> : null}</View>;
+    const previews = media.length ? <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>{media.map((m) => <View key={m.id} style={{ width: renderLayout ? 128 : 120, gap: renderLayout ? 8 : 4, flexDirection: renderLayout ? "row" : "column", alignItems: renderLayout ? "center" : undefined }}>
+            {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: renderLayout ? 72 : 120, height: renderLayout ? 72 : 120, borderRadius: 8 }}/> : <Text style={[typography.label, { color: colors.ink, paddingVertical: 20 }]}>Video đã sẵn sàng</Text>}
+            {renderLayout ? <IconButton quiet icon="close" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} disabled={disabled || busy} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/> : <RudiButton compact label="Bỏ tệp" accessibilityLabel={`Bỏ tệp đính kèm ${media.indexOf(m) + 1}`} variant="ghost" disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
+            }
+        </View>)}</ScrollView> : null;
+    const toolbar = renderToolbar ? renderToolbar(() => void prepare(), busy || disabled) : <RudiButton full={false} compact icon="images-outline" label={busy ? "Đang chuẩn bị tệp…" : video ? "Thêm ảnh hoặc video" : "Thêm ảnh"} variant={compact ? "ghost" : "outline"} disabled={disabled || busy} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : busy ? "Chờ tệp chuẩn bị xong." : undefined} loading={busy} onPress={() => void prepare()}/>;
+    const discard = () => { if (editsBlocked() || working.current) return; setSelected(null); setError(null); };
+    const stop = () => { if (editsBlocked()) return; generation.current++; working.current = false; setBusy(false); setPhase(null); onBusy?.(false); setError("Đã dừng chờ. Thử lại để kiểm tra tệp đang xử lý."); };
+    const retry = selected && !busy ? () => void prepare(selected) : undefined;
+    const recovery = <>
+        {error ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.accent }]}>{error}</Text> : null}
+        {selected && !busy ? <View style={{ flexDirection: "row", gap: 8 }}><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Thử lại" accessibilityLabel="Thử lại tệp đã chọn" variant="outline" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={retry}/></View><View style={{ flex: 1, minWidth: 0 }}><RudiButton compact label="Bỏ chọn" accessibilityLabel="Bỏ tệp đang chờ" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={discard}/></View></View> : null}
+        {phase === "processing" ? <RudiButton full={false} label="Dừng chờ tệp" variant="ghost" disabled={disabled} lyDo={disabled ? "Đợi gửi xong rồi sửa tệp." : undefined} onPress={stop}/> : null}
+        {busy ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Lời viết vẫn ở đây trong lúc tệp được chuẩn bị.</Text> : null}
+    </>;
+    // Presentation can keep recovery targets outside its bounded details scroll.
+    const parts: MediaPickerLayoutParts = {
+        preview: media.length ? <View style={{ gap: 8 }}>{media.map((m, index) => <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {m.type.startsWith("image/") ? <Image accessibilityLabel="Ảnh đã đính kèm" source={imageSource(person, m.url)} cachePolicy="none" style={{ width: 64, height: 64, borderRadius: 8 }}/> : <View style={{ width: 64 }}/>}
+            <Text style={[typography.note, { color: colors.inkSoft, flex: 1, minWidth: 0 }]}>{m.type.startsWith("image/") ? "Ảnh đã sẵn sàng" : "Tệp đã sẵn sàng"}</Text>
+            <IconButton quiet icon="close" accessibilityLabel={`Bỏ tệp đính kèm ${index + 1}`} disabled={disabled || busy} onPress={() => { if (!editsBlocked() && !working.current) onChange(media.filter((item) => item.id !== m.id)); }}/>
+        </View>)}</View> : null,
+        notice: error ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null,
+        busy,
+        pending: selected !== null,
+        retry,
+        discard: selected && !busy ? discard : undefined,
+        stop: phase === "processing" ? stop : undefined,
+    };
+    return renderLayout ? renderLayout(media.length || error || selected || busy ? <View style={{ gap: 8 }}>{previews}{recovery}</View> : null, toolbar, parts) : <View style={{ gap: 12 }}>{previews}{toolbar}{recovery}</View>;
 }

@@ -11,23 +11,22 @@
  * Editing goes through `PATCH /people/me` and the card re-reads the server's
  * answer rather than trusting the form.
  *
- * UI v2 (đợt 7): a footprint, not a trophy page -- initial, name, one line,
- * and the five counts as one sentence on the paper. The form sits on the
- * page too, with the error next to the field it is about.
+ * The mounted form owns its draft and field-local errors. The parent places
+ * saved content and tools after this identity through a read-only content slot.
  */
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
-import { nhanCua } from "../../cai-dat/phien-cai-dat";
-import { bongGiay, typography, useRudiTheme } from "../../theme";
-import { RudiButton } from "../../ui";
-import { DauLon } from "../../ui/DauLon";
-import { ONhapMuc } from "../../ui/ONhapMuc";
-import { Ionicons } from "@expo/vector-icons";
+import { typography, useRudiTheme } from "../../theme";
+import { Field } from "../../ui";
+import { chuLon } from "../../adaptive";
+import { Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { RudiIcon } from "../../ui/RudiIcon";
+import { PressScale } from "../../ui/PressScale";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
@@ -42,23 +41,35 @@ function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
 
-export function HoSoSong({ phien }: { phien: Phien }) {
+export type ProfileEditorControls = { busy: boolean; save: () => void; back: () => void; cancel: () => void };
+
+export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phien; onEditorChange: (controls: ProfileEditorControls | null) => void; renderContent?: (profile: HoSoToi | null) => ReactNode }) {
   const { datPhien } = useRudiSession();
-  const { colors, dark } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  const metricsOwned = useNativeFontMetricsOwner();
+  const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
   const router = useRouter();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangSua, setDangSua] = useState(false);
   const [ten, setTen] = useState("");
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");
+  const saving = useRef(false);
   const [dangLuu, setDangLuu] = useState(false);
   const [loiLuu, setLoiLuu] = useState<string | null>(null);
   // QA UI-108: Back closes the form and stays on Cá nhân; what was typed is
   // kept and comes back when the form opens again. «Huỷ» is what drops it.
   const [conNhap, setConNhap] = useState(false);
+  // The passport and its form are different pages in the same scroll view.
+  const doiSua = (editing: boolean) => {
+    setDangSua(editing);
+    if (!editing) Keyboard.dismiss();
+  };
   useLuiLop(dangSua, () => {
+    if (saving.current) return;
     setConNhap(true);
-    setDangSua(false);
+    doiSua(false);
   });
 
   const nap = useCallback(async () => {
@@ -82,139 +93,142 @@ export function HoSoSong({ phien }: { phien: Phien }) {
       setCity(hoSo.city ?? "");
     }
     setLoiLuu(null);
-    setDangSua(true);
+    doiSua(true);
   };
 
   const luu = async () => {
+    if (saving.current) return;
     if (ten.trim() === "") {
       setLoiLuu("Tên hiển thị không được rỗng.");
       return;
     }
-    setDangLuu(true);
+    saving.current = true; setDangLuu(true);
     try {
       const hoSo = await suaHoSoToi(phien.person_id, { display_name: ten.trim(), bio, city });
       setTrang({ pha: "xong", hoSo });
       // Keep the session's greeting in step with the server (QA 23/09).
       datPhien(await doiTenTrongPhien(phien, hoSo.display_name));
       setConNhap(false);
-      setDangSua(false);
+      doiSua(false);
     } catch (error) {
       setLoiLuu(loiRaChu(error));
     } finally {
-      setDangLuu(false);
+      saving.current = false; setDangLuu(false);
     }
   };
 
+  // The parent owns the fixed app bar/footer; this mounted form owns its draft.
+  // Explicit draft dependencies keep the callbacks current without a render loop.
+  useLayoutEffect(() => {
+    onEditorChange(dangSua ? {
+      busy: dangLuu,
+      save: () => void luu(),
+      back: () => { if (!saving.current) { setConNhap(true); doiSua(false); } },
+      cancel: () => { if (!saving.current) { setConNhap(false); doiSua(false); } },
+    } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onEditorChange, dangSua, dangLuu, ten, bio, city, phien, datPhien]);
+
   if (trang.pha === "dang-doc") {
-    return (
+    return <>
       <SkeletonGroup>
         <SkeletonRow leading={64} />
       </SkeletonGroup>
-    );
+      {renderContent?.(null)}
+    </>;
   }
   if (trang.pha === "hong") {
-    return <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được hồ sơ" />;
+    return <><ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được hồ sơ" />{renderContent?.(null)}</>;
   }
   const { hoSo } = trang;
 
   if (dangSua) {
     return (
       <View style={styles.form}>
-        <Text style={[typography.h2, { color: colors.ink }]}>Chỉnh hồ sơ</Text>
-        {/* Edited on the passport page itself: its lines are pen lines. */}
-        <ONhapMuc accessibilityLabel="Ô tên hiển thị" label="Tên" maxLength={200} onChangeText={setTen} value={ten} />
-        {loiLuu ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiLuu}</Text> : null}
-        <ONhapMuc
+        <View style={styles.editIdentity}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.editAvatar}>
+            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={64} ring />
+            <View style={[styles.editCamera, { backgroundColor: colors.card, borderColor: colors.line }]}><RudiIcon name="camera-outline" color={colors.ink} size={16} /></View>
+          </Pressable>
+          <View style={styles.editIdentityText}>
+            <Text style={[typography.title, { color: colors.ink }]}>Một chút về bạn</Text>
+            <Text style={[typography.note, { color: colors.inkSoft }]}>Tên, vài lời giới thiệu và nơi bạn hay ở.</Text>
+          </View>
+        </View>
+        <Field nativeMetrics accessibilityLabel="Ô tên hiển thị" label="Tên hiển thị" icon="person-outline" maxLength={200} editable={!dangLuu} onChangeText={setTen} value={ten} error={loiLuu} />
+        <View style={styles.editBio}>
+        <Field
+          nativeMetrics
           accessibilityLabel="Ô giới thiệu"
           label="Giới thiệu"
           maxLength={500}
           multiline
+          numberOfLines={3}
+          editable={!dangLuu}
+          style={{ minHeight: 56 }}
           onChangeText={setBio}
-          placeholder="Vài chữ về bạn"
+          placeholder="Bạn thích đi đâu, làm gì?"
           value={bio}
         />
-        <ONhapMuc
+        <Text style={[typography.note, styles.editCounter, { color: colors.inkSoft }]}>{bio.length}/500</Text>
+        </View>
+        <Field
+          nativeMetrics
           accessibilityLabel="Ô thành phố"
           label="Thành phố"
+          icon="location-outline"
           maxLength={120}
+          editable={!dangLuu}
           onChangeText={setCity}
-          placeholder="Bạn hay ở đâu"
+          placeholder="Nơi bạn hay ở"
           value={city}
         />
-        <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
-        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => { setConNhap(false); setDangSua(false); }} variant="ghost" />
       </View>
     );
   }
 
-  const soDem = [
-    `${hoSo.counts.friends} bạn bè`,
-    `${hoSo.counts.contexts} nhóm`,
-    `${hoSo.counts.outings} kèo`,
-    `${hoSo.counts.places_checked_in} nơi đã tới`,
-    // The moments posted to a group's wall, named as «Thả khoảnh khắc» names
-    // them: «6 kỷ niệm» sat over «Chưa giữ ngày nào» (the kept days, a
-    // different thing) and read as lost data (B11 critique).
-    `${hoSo.counts.memories} khoảnh khắc`,
-  ].join(" · ");
-
-  const namVao = new Date(hoSo.created_at).getFullYear();
-  // A passport (ADR-0037 D1, plan S6): the cloth cover band with its title,
-  // then the data page -- photo, name, city, the year stamped in -- and the
-  // footprint as one sentence under it, not a scoreboard.
-  return (
-    <View style={[styles.hoChieu, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
-      <View style={[styles.bia, { backgroundColor: colors.cover }]}>
-        <Text style={[typography.stamp, { color: colors.coverInk }]}>Hộ chiếu Rủ Đi</Text>
-        <Ionicons color={colors.coverInkSoft} name="compass-outline" size={18} />
-      </View>
-      <View style={styles.trang}>
-        <View style={styles.dau}>
-          {/* The picture is changed where it is picked, compressed and uploaded
-              (Cài đặt); tapping it here is the way there, not a second uploader. */}
-          <Pressable
-            accessibilityLabel="Đổi ảnh đại diện"
-            accessibilityRole="button"
-            onPress={() => router.push("/settings" as never)}
-            style={({ pressed }) => [styles.anhHoChieu, { borderColor: colors.lineStrong }, pressed && styles.bam]}
-          >
-            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} ring size={64} />
+  const largeText = bodyMetrics !== null
+    ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
+    : metricsOwned || chuLon(fontScale);
+  const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
+  return <View style={styles.passport}>
+    <View testID="profile-identity" style={styles.identityBlock}>
+      <View style={styles.identityRow}>
+        <View style={[styles.identityMain, largeText && styles.identityMainStack]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
+            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={56} ring />
           </Pressable>
-          <View style={styles.dauChu}>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Họ tên</Text>
-            <Text style={[typography.h1, { color: colors.ink }]}>{hoSo.display_name}</Text>
-            {hoSo.city ? (
-              <>
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>Thành phố</Text>
-                <Text style={[typography.label, { color: colors.ink }]}>{hoSo.city}</Text>
-              </>
-            ) : null}
+          <View style={[styles.identityCopy, largeText && styles.identityCopyStack]}>
+            <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>{hoSo.display_name}</Text>
+            <Text style={[typography.note, { color: colors.inkSoft }]}>{[hoSo.city, `Tham gia ${new Date(hoSo.created_at).getFullYear()}`].filter(Boolean).join(" · ")}</Text>
           </View>
         </View>
-        {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
-        <View style={styles.hangDau}>
-          <DauLon co="nho" nhan={`Tham gia ${namVao}`} tilt={-6} tone="ink" />
-          <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-            Phiên này: {nhanCua(phien.issued_via ?? "")}
-          </Text>
-        </View>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{soDem}</Text>
-        <RudiButton compact full={false} icon="create-outline" label={conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"} onPress={() => moSua(hoSo)} variant="outline" />
-        {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
+        <PressScale accessibilityRole="button" accessibilityLabel={editLabel} accessibilityHint="Sửa tên, giới thiệu và thành phố" onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { borderRadius: radius.control }]}>
+          <RudiIcon color={colors.inkSoft} name="create-outline" size={20} />
+        </PressScale>
       </View>
+      {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
+      {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
     </View>
-  );
+    {renderContent?.(hoSo)}
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  hoChieu: { borderWidth: 1, borderRadius: 8, overflow: "hidden" },
-  bia: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 8 },
-  trang: { gap: 10, padding: 14 },
-  anhHoChieu: { borderWidth: 1, padding: 4, borderRadius: 4 },
-  hangDau: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" },
-  form: { gap: 12 },
-  dau: { flexDirection: "row", alignItems: "center", gap: 14 },
-  dauChu: { flex: 1, gap: 2 },
-  bam: { opacity: 0.7 },
+  passport: { gap: 20 },
+  identityBlock: { gap: 12 },
+  identityRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  identityMain: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 14 },
+  identityMainStack: { flexDirection: "column", alignItems: "flex-start" },
+  identityCopy: { flex: 1, minWidth: 0, gap: 4 },
+  identityCopyStack: { flex: 0, alignSelf: "stretch" },
+  avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
+  editAction: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center" },
+  form: { gap: 20 },
+  editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
+  editIdentityText: { flex: 1, minWidth: 0, gap: 4 },
+  editAvatar: { width: 68, height: 76, justifyContent: "center" },
+  editCamera: { position: "absolute", right: 0, bottom: 0, width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  editBio: { gap: 4 },
+  editCounter: { textAlign: "right", fontVariant: ["tabular-nums"] },
 });

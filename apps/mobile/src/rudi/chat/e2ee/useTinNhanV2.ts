@@ -30,8 +30,12 @@ import { apiV2 } from "./api-v2";
 import type { Card, MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
-import { CHU_MA_HOA } from "./tom-tat";
+import { xemTruocTinV2 } from "./tom-tat";
 import { danhSach, moiTruoc } from "./so-tin";
+import { chuDongBinhChon } from "./binh-chon-v2";
+import { encodeRandomRound, type RandomRound } from "./random-v2";
+import { encodeRandomLiveRound, type RandomLiveRound } from "./random-live";
+import { useRandomRoomClock } from "./useRandomLive";
 import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
 
 const NHIP_MS = 3000;
@@ -97,7 +101,7 @@ export async function xemTruocV2(personId: string, rooms: string[]): Promise<Rec
   for (const room of rooms) {
     const cuoi = danhSach(dungPhong((await may.soPhong(room)).ban).so).at(-1);
     if (cuoi === undefined) continue;
-    out[room] = cuoi.deleted ? "Tin nhắn đã bị xoá" : cuoi.ai !== null ? "Rủ Đi AI đã trả lời" : cuoi.sticker !== null ? "Đã gửi một sticker" : cuoi.media?.type === "image" ? "Đã gửi một ảnh" : cuoi.body ?? CHU_MA_HOA;
+    out[room] = xemTruocTinV2(cuoi);
   }
   return out;
 }
@@ -161,6 +165,11 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
   const [anhDaMo, setAnhDaMo] = useState<Record<string, string>>({});
   const theHe = useRef(0);
   const { so, cho, khongMo } = useMemo(() => dungPhong(phong.ban), [phong]);
+  const sampleRandomClock = useCallback(async () => {
+    const may = await mayCua(personId);
+    return apiV2.clock(personId, contextId, await may.thietBi());
+  }, [contextId, personId]);
+  const randomClock = useRandomRoomClock(sampleRandomClock, !tat && trang.sanSang);
 
   /** Draws the room's record as it is now. */
   const ve = useCallback(async () => {
@@ -233,14 +242,28 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
   );
 
   const guiOp = useCallback(
-    async (op: Operation): Promise<TinDaGui | null> => {
+    async (op: Operation, logicalId?: string): Promise<TinDaGui | null> => {
       const may = await mayCua(personId);
-      const ev = await may.gui(contextId, op);
+      const ev = await may.gui(contextId, op, logicalId);
       const id = ev?.envelope?.logical_send_id;
       return id === undefined ? null : daGui(id);
     },
     [contextId, personId, daGui],
   );
+
+  const guiPhieu = useCallback(async (pollId: string, optionId: string | null) => {
+    const may = await mayCua(personId);
+    const poll = dungPhong((await may.soPhong(contextId)).ban).so.byId[pollId];
+    if (!poll?.poll || poll.deleted || poll.poll.closed ||
+        (optionId === null ? poll.authorId !== personId : !poll.poll.options.some((option) => option.id === optionId))) {
+      throw new ApiError(0, "chat_v2_poll_refused", "Bình chọn này không còn nhận thao tác đó. Mở lại cuộc trò chuyện để xem trạng thái mới.");
+    }
+    const ev = await may.gui(contextId, optionId === null
+      ? { type: "edit", message_id: pollId, body: chuDongBinhChon(poll.body!) }
+      : { type: "vote", poll_id: pollId, option_id: optionId });
+    await ve();
+    if (ev === null) throw new ApiError(0, "chat_v2_poll_pending", "Thao tác chưa được xác nhận. Xem lại bình chọn rồi thử lại khi có mạng.");
+  }, [contextId, personId, ve]);
 
   /** Opens a sealed image once: downloads the ciphertext, opens it on the device. */
   const moAnh = useCallback(
@@ -367,6 +390,11 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     /** Envelopes skipped because they will never open. */
     khongMo,
     taiLai: nap,
+    boPhieu: (pollId: string, optionId: string) => guiPhieu(pollId, optionId),
+    dongBinhChon: (pollId: string) => guiPhieu(pollId, null),
+    guiRandom: (round: RandomRound) => guiOp({ type: "text", body: encodeRandomRound(round) }, round.id),
+    guiRandomLive: (round: RandomLiveRound) => guiOp({ type: "text", body: encodeRandomLiveRound(round) }, round.id),
+    randomClock,
     gui: (body: string, traLoi: { id: string } | null = null) =>
       guiOp(traLoi === null ? { type: "text", body } : { type: "reply", reply_to: traLoi.id, body }),
     sua: (messageId: string, body: string) => guiOp({ type: "edit", message_id: messageId, body }),

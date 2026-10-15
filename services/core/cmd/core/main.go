@@ -349,8 +349,11 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			assistant.WithNepEngine(engine).WithNhomEngine(engine)
 			logger.Info("AI engine runs in this process")
 		case may != nil:
-			assistant.WithCoMay()
-			logger.Info("AI jobs run in `core work`; this process has a model")
+			// Queue admission needs a configured read-only catalogue port,
+			// not the worker's embedding client or execution engine. The
+			// separate worker validates and builds its own execution ports.
+			assistant.WithCoMay().WithRandomNguon(aidoc.Lexical{C: aidoc.Moi(pool, 0)})
+			logger.Info("AI command admission configured; jobs run in `core work`")
 		}
 		// The answer streams (slice 11): this process serves the SSE routes
 		// and, with its in-process workers, writes the streams too. Empty
@@ -543,7 +546,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	// present but the schema not as this binary expects, or the question not
 	// answerable, refuses to start; only a database that never had chat v2
 	// runs without the guard.
-	if pool != nil {
+	if pool != nil && (chat.on || getenv("MOBILE_CHAT_V2_ENABLED") == "1") {
 		check, cancel := context.WithTimeout(ctx, 10*time.Second)
 		installed, err := chatv2.Installed(check, pool)
 		if err == nil && installed {

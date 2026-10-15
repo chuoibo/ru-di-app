@@ -18,7 +18,7 @@ import { chuKyTraLoi, type TheAi, type Tin } from "../../chat/tin-song";
 import { typography, useRudiTheme } from "../../theme";
 import { TheAiView } from "./TheAi";
 
-export function TraLoiAi({ tin, the, contextId, personId, tenNguoi, onOpenPlan, onMenu }: {
+export function TraLoiAi({ tin, the, contextId, personId, tenNguoi, onOpenPlan, onMenu, readOnly = false }: {
   tin: Tin;
   the: Extract<TheAi, { loai: "tra_loi" }>;
   contextId: string;
@@ -26,6 +26,7 @@ export function TraLoiAi({ tin, the, contextId, personId, tenNguoi, onOpenPlan, 
   tenNguoi: (id: string | null) => string;
   /** Opens the itinerary part the way any tờ hẹn opens. */
   onOpenPlan: () => void;
+  readOnly?: boolean;
   /** The message menu: react, and «Trả lời» to ask a follow-up. */
   onMenu: () => void;
 }) {
@@ -57,6 +58,7 @@ export function TraLoiAi({ tin, the, contextId, personId, tenNguoi, onOpenPlan, 
           </Pressable>
         ) : (
           <TheAiView
+            readOnly={readOnly}
             contextId={contextId}
             key={`${phan.loai}-${i}`}
             onOpenPlan={phan.loai === "itinerary" ? onOpenPlan : undefined}

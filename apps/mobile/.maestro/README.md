@@ -40,3 +40,12 @@ chúng (khai báo, không phải bằng chứng).
 
 Flow `_community*`, `_diary*` là flow lẻ chạy bằng tay, không thuộc bảng (như
 trên `main`).
+
+
+## Phạm vi Nếp UI 2026-10-06
+
+Các nhãn giao diện hiện hành được đồng bộ trong flow tạo nhóm, mời thành viên, kết bạn, quyết toán và ba helper nhật ký. Selector tạo nhóm là «Tên nhóm mới»; «Ô tên nhóm» vẫn thuộc màn chỉnh nhóm. Bản đồ hướng dẫn được sinh từ nguồn đã gộp. Kiểm `chuoi-maestro-con-song` chỉ chứng minh nhãn và testID tồn tại trong nguồn cùng bộ tên ảnh đã ghim, không chứng minh các flow native đã chạy.
+
+Main đã nối adapter chat v2. Màn chat xác định làn từ máy chủ: phòng v2 hiện «Mã hoá đầu cuối», phòng legacy hiện «Chưa mã hoá đầu cuối»; khi chưa biết làn, thao tác gửi bị khoá. Phòng v2 gửi qua E2EE và không hạ xuống tin thường chưa mã hoá. Các nhãn này phải phản ánh đúng làn của phòng, không gắn mọi phòng thành kho cũ.
+
+`30-chat-that.yaml` giữ các assertion gửi tin, phản ứng và bỏ phiếu; `kiem_may_chu_sau_30` tiếp tục đòi dữ liệu thật từ máy chủ. Flow 24 chờ ô soạn rồi mở thành viên từ header; lời mời tra người nhận trước khi gửi tới đúng người. Flow 40, 41 và 48 giữ các hành trình AI, nhắn riêng và tờ hẹn chung. `49-chat-e2ee.yaml` kiểm MLS native thật theo hai chiều và lịch sử sau khi tắt mở app. Mỗi cổng vẫn cần lượt chạy trên thiết bị ở nguồn cuối; cập nhật nhãn và adapter có mặt trong mã chưa là bằng chứng native pass.

@@ -187,8 +187,15 @@ class TheExemptionIsNotABlanket(unittest.TestCase):
         """
         if not TEMPLATES.is_dir():
             self.skipTest("services/api/app/web/templates không có trên nhánh này")
+        template_files = sorted(TEMPLATES.glob("*.html"))
+        go_dieuchinh = (
+            REPO_ROOT / "services" / "core" / "internal" / "dieuchinh" / "page.html"
+        )
+        if go_dieuchinh.is_file():
+            template_files.append(go_dieuchinh)
         blob = "\n".join(
-            p.read_text(encoding="utf-8") for p in sorted(TEMPLATES.glob("*.html"))
+            p.read_text(encoding="utf-8").replace("{{ .Token }}", "{{ token }}")
+            for p in template_files
         )
         for entry in gate.EXEMPT_ROUTES:
             route = entry["route"]

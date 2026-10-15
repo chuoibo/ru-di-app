@@ -35,44 +35,6 @@ function hideNativeCover() {
   if (Platform.OS !== "web") SplashScreen.hide();
 }
 
-/*
- * Direction contract v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24; plan copy in
- * docs/architecture/04-ui-v3-san-khau-giay.md). Builds on v2 (seed c8e88116,
- * «the travel journal»); what v2 promised still holds unless named here.
- * THESIS  -- The group's travel journal is a pop-up book. Every screen is a
- *            stage of cut paper that stands up out of the page's fold; every
- *            job is a paper object you handle (receipt, invitation, folded
- *            letter, ticket, stamp, passport), not a form you fill in. It still
- *            refuses sunset photo + white cards + coral pill, and it refuses the
- *            stacked-input screen.
- * OWN-WORLD -- Indigo cloth cover, bright paper pages; the three meaning tones
- *            are three paper stocks (coral = the ask, teal = money, violet = AI
- *            tracing paper). Paper height 0-3 is the only depth: printed,
- *            pasted, standing, lifted; one light from the top left (a desk lamp
- *            at night). People are paper standees in their own ink. Nếp is a
- *            paper puppet with brads at its joints.
- * STORY   -- Open the cover -> Rủ Đi thôi! -> a city stage pops up -> send an
- *            invitation card -> the ticket joins the plan -> the table pops up,
- *            dishes go to seats -> the receipt tears into everyone's stub, Nếp
- *            stamps «ĐÃ GHI SỔ» -> the night becomes a print on the wall.
- * FIRST VIEWPORT -- Welcome is the closed cover: indigo full-bleed, wordmark
- *            very large in the upper third, one diagonal orange washi strip
- *            carrying "AI đi chơi, chia bill thông minh", the CTA
- *            "Rủ Đi thôi!" as a large stamp; pressing it turns the cover on
- *            its spine onto the bright Login page.
- * FORM    -- expo-router stack + 4 tabs + create sheet; 48dp targets, 13sp
- *            floor, tabular money; four motion steps plus composite stage
- *            budgets (pop-up <= 420 ms, a Nếp performance <= 1400 ms, never
- *            holding input), input-linked motion only while the finger moves,
- *            Reduce Motion to the final frame. Skia draws stages, the puppet
- *            and materials; SVG draws rows and is the fallback. Every word is
- *            React Native text. Signatures: the pop-up, the page turn, the
- *            stamp, the folding letter, the tearing receipt, Nếp performing
- *            eight moments and never touching a number.
- * FINISH: unreviewed and undocumented is unfinished; this campaign ends with
- *         captures on the LIVE seeded world, a blind read, the finish review,
- *         DESIGN.md v3, and every shipping raster carrying its provenance
- */
 /** Decides the first screen of a cold start, and routes warm links.
  *
  * The URL decision lives in `src/rudi/duong-vao.ts` so it can be tested
@@ -156,9 +118,6 @@ function RootInner() {
   if (!fontsLoaded && !fontsError) return <OpeningApp onLayout={hideNativeCover} />;
   const chuyen = (wanted: "slide_from_right" | "slide_from_bottom" | "fade") => stackAnimation(wanted, motion.reduced);
 
-  // Design contract: warm editorial surfaces, one semantic leading tone per
-  // screen, native 44pt targets, real text, restrained motion, and no visual
-  // treatment that could blur what the ledger says.
   return (
     <GestureHandlerRootView onLayout={hideNativeCover} style={{ flex: 1, backgroundColor: colors.cover }}>
     <SafeAreaProvider>
@@ -177,11 +136,13 @@ function RootInner() {
             animation: chuyen("slide_from_right"),
             contentStyle: { backgroundColor: colors.ground },
             headerShown: false,
+            statusBarStyle: dark ? "light" : "dark",
           }}
         >
           {/* Cold redirects reveal an already-present cover, never a white page. */}
-          <Stack.Screen name="index" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover } }} />
-          <Stack.Screen name="welcome" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover } }} />
+          <Stack.Screen name="index" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, statusBarStyle: "light" }} />
+          <Stack.Screen name="welcome" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, statusBarStyle: "light" }} />
+          <Stack.Screen name="login" options={{ statusBarStyle: "light" }} />
           <Stack.Screen name="(tabs)" options={{ animation: chuyen("fade") }} />
           <Stack.Screen
             name="create"
@@ -205,7 +166,7 @@ function RootInner() {
               `check_screens_reachable` finds it; full screen over the cover. */}
           <Stack.Screen
             name="stories/[personId]"
-            options={{ animation: chuyen("fade"), presentation: "fullScreenModal" }}
+            options={{ animation: chuyen("fade"), presentation: "fullScreenModal", statusBarStyle: "light" }}
           />
         </Stack>
         {/* Last child: the dock paints over whatever route is open. */}

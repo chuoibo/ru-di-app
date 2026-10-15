@@ -16,7 +16,7 @@ env:
     direction: DOWN
 - tapOn: "Khép cuộc đi"
 - extendedWaitUntil:
-    visible: "Mang theo điều gì vào sổ?"
+    visible: "Những điều bạn muốn giữ"
     timeout: 30000
 - scrollUntilVisible:
     element:

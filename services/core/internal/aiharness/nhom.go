@@ -18,6 +18,7 @@ import (
 	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/aiharness/tactu"
 	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/traloi"
 	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/thoigian"
@@ -102,6 +103,9 @@ func loiDanNhanPhong(t Turn, nhan string) string {
 
 // phienBanPhong is the prompt version the room's record carries.
 func phienBanPhong(t Turn) obs.PromptVersion {
+	if t.Lenh == obs.LenhRandom {
+		return obs.PromptVersion(traloi.VersionRandom())
+	}
 	if t.Doi {
 		return obs.PromptVersion(prompts.VersionDoi())
 	}
@@ -125,6 +129,10 @@ func cauPhong(t Turn, nhom, doi string) string {
 func (e *Engine) RunNhom(ctx context.Context, t Turn, s Sink) (Result, error) {
 	return e.boc(ctx, t, s, phienBanPhong(t), t.SoTin, e.nhomVaPhat)
 }
+
+// RandomSanSang reports whether this engine has a real catalogue retriever.
+// A provider alone cannot advertise a source-backed choice search.
+func (e *Engine) RandomSanSang() bool { return e != nil && e.nguon.Quan != nil }
 
 // nhomVaPhat is the group's turn, then the release of its card's text the
 // way Nếp's answer is released (draft, verify, stream: phatRa through the
@@ -241,6 +249,13 @@ func epLenh(lenh obs.Lenh, kq hieu.KetQua) hieu.KetQua {
 	case obs.LenhChiaBill:
 		if kq.Tien == hieu.TienNone {
 			kq.Tien = hieu.SplitDraft
+		}
+	case obs.LenhRandom:
+		// The explicit command searches for choices, never a plan or a
+		// split draft. The money-action refusal and safety labels survive.
+		kq.YDinh = []hieu.YDinh{hieu.FindPlaces}
+		if kq.Tien == hieu.SplitDraft {
+			kq.Tien = hieu.TienNone
 		}
 	}
 	return kq
@@ -384,6 +399,37 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	bc.ChoNhom()
 	khoi := []string{prompts.BocDuLieu(prompts.MayChu, strings.Join(dongMayChuHieu(t.Luc, kq.Slots), "\n"))}
 	k := khuonNhom(t.Doi)
+	if t.Lenh == obs.LenhRandom && !q.KhongCongCu {
+		// Search is the command's whole job. Keep the router's hard
+		// constraints and suitable query; with no places query, search the
+		// caller's exact words. Never fall through to an itinerary or tool
+		// drafting loop, including when the source is unavailable.
+		var caus []hieu.TruyVan
+		for _, tv := range kq.TruyVan {
+			if tv.Nguon == truyhoi.Places {
+				caus = append(caus, tv)
+			}
+		}
+		if len(caus) == 0 {
+			caus = []hieu.TruyVan{{Nguon: truyhoi.Places, Cau: hoi.Chu}}
+		}
+		kq.TruyVan = caus
+		res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, tools.SearchPlaces, k)
+		if err != nil {
+			if !isLoi(err) {
+				return Result{}, loi(err)
+			}
+			return Result{}, err
+		}
+		if !chay {
+			return theMotChu("Nguồn tìm địa điểm chưa sẵn sàng. Bạn có thể tự thêm lựa chọn để chơi."), nil
+		}
+		res, err = e.luuYDiUng(res, kq, rec, k)
+		if err != nil {
+			return Result{}, err
+		}
+		return phanNhom(res.Text, res.QuanIDs, nil), nil
+	}
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && ten == tools.SearchPlaces && t.Lenh != obs.LenhPlan {
 		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten, k); chay {
 			if err != nil {

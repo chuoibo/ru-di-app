@@ -46,48 +46,54 @@ export function GuHaiBan({
 }) {
   const { colors, space } = useRudiTheme();
   const cau = cauGu(gu, tenNguoiKia, guChat);
+  const canBatLai = Boolean(onBatLai && canBatLaiChoChat(gu, guChat));
+  const hanhDong = (
+    <View style={{ gap: space.sm }}>
+      {canBatLai ? <RudiButton disabled={dangLam} label="Bật lại cho chat" loading={dangLam} onPress={onBatLai!} /> : null}
+      {gu?.mine_shared ? (
+        <RudiButton disabled={dangLam} label={`Thôi cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onTat} variant="outline" />
+      ) : (
+        <RudiButton disabled={dangLam} label={`Cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onBat} />
+      )}
+    </View>
+  );
   return (
-    <Sheet accessibilityLabel="Gu của hai bạn" onClose={onClose} open={open} testID="gu-hai-ban">
-      <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Mỗi người tự bật cho riêng mình. Tắt là thôi ngay." title="Gu của hai bạn" />
-        {cau?.chung ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.title, { color: colors.ink }]} testID="gu-chung">
-            {cau.chung}
-          </Text>
-        ) : null}
-        {cau?.cuaHo ? (
-          <Text style={[typography.body, { color: colors.ink }]} testID="gu-cua-ho">
-            {cau.cuaHo}
-          </Text>
-        ) : (
-          <Text style={[typography.body, { color: colors.inkSoft }]}>{`${tenNguoiKia} chưa chia gu của mình.`}</Text>
-        )}
-        <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-cua-toi">
-          {cau?.cuaToi ?? "Gu của bạn đang để riêng."}
-        </Text>
-        {/* The notebook command's own sentence, under the notebook's own id. */}
+    <Sheet accessibilityLabel="Gu của hai bạn" onClose={onClose} open={open} prioritizeFooter={Boolean(loi)} showsVerticalScrollIndicator testID="gu-hai-ban" footer={loi ? (
+      <View style={[styles.phucHoi, { borderTopColor: colors.line, gap: space.sm, paddingTop: space.sm }]}>
         <CauTaiCho cau={loi} testID="loi-lenh-so" />
-        {onBatLai && canBatLaiChoChat(gu, guChat) ? (
-          <>
-            <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-bat-lai-cau">
+        {hanhDong}
+      </View>
+    ) : undefined}>
+      <View style={[styles.noiDung, { gap: space.lg }]}>
+        <Heading size="h2" subtitle="Mỗi người tự bật cho riêng mình. Tắt là thôi ngay." title="Gu của hai bạn" />
+        <View style={{ gap: space.sm }}>
+          <Text style={[typography.body, { color: colors.ink }]} testID="gu-cua-toi">
+            {cau?.cuaToi ?? "Gu của bạn đang để riêng."}
+          </Text>
+          {canBatLai ? (
+            <Text style={[typography.note, { color: colors.inkSoft }]} testID="gu-bat-lai-cau">
               {CAU_BAT_LAI_CHO_CHAT}
             </Text>
-            <RudiButton disabled={dangLam} label="Bật lại cho chat" loading={dangLam} onPress={onBatLai} />
-          </>
-        ) : null}
-        {gu?.mine_shared ? (
-          <RudiButton disabled={dangLam} label={`Thôi cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onTat} variant="outline" />
-        ) : (
-          <>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauBatGu(gu, tenNguoiKia)}</Text>
-            <RudiButton disabled={dangLam} label={`Cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onBat} />
-          </>
-        )}
-        <ListRow icon="options-outline" onPress={onSuaGuCuaToi} subtitle="Chọn lại những gì bạn thích" title="Sửa gu của mình" />
+          ) : null}
+          {!gu?.mine_shared ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cauBatGu(gu, tenNguoiKia)}</Text> : null}
+          {/* Keep a failed command and its real control together above the fold. */}
+          {!loi ? hanhDong : null}
+          <ListRow icon="options-outline" onPress={onSuaGuCuaToi} subtitle="Chọn lại những gì bạn thích" title="Sửa gu của mình" />
+        </View>
+        <View style={[styles.thamKhao, { borderTopColor: colors.line, gap: space.sm }]}>
+          {cau?.chung ? (
+            <Text accessibilityLiveRegion="polite" style={[typography.title, { color: colors.ink }]} testID="gu-chung">{cau.chung}</Text>
+          ) : null}
+          {cau?.cuaHo ? (
+            <Text style={[typography.body, { color: colors.inkSoft }]} testID="gu-cua-ho">{cau.cuaHo}</Text>
+          ) : (
+            <Text style={[typography.body, { color: colors.inkSoft }]}>{`${tenNguoiKia} chưa chia gu của mình.`}</Text>
+          )}
+        </View>
         <RudiButton label="Xong" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>
   );
 }
 
-const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 } });
+const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, phucHoi: { borderTopWidth: StyleSheet.hairlineWidth }, thamKhao: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16 } });

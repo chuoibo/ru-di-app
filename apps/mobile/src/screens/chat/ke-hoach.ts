@@ -61,6 +61,8 @@ export type DiaDiem = {
   cachKm?: number;
   gioMo?: string;
   loai?: string;
+  /** Catalogue provenance, supplied on random search cards by the server. */
+  nguon?: string;
 };
 
 export type Chang = {
@@ -91,6 +93,12 @@ function chuoi(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
+}
+
+/** Catalogue identity is not display copy; preserve its exact codepoints. */
+function khoaCatalogue(value: unknown): string | null {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  return value;
 }
 
 /** Integer đồng, or nothing. A float here is a server defect, not a rounding. */
@@ -127,7 +135,7 @@ function soThuc(value: unknown): number | null {
 export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null {
   const o = asRecord(raw);
   if (!o) return null;
-  const id = chuoi(o.id);
+  const id = khoaCatalogue(o.id);
   const ten = chuoi(o.name);
   // A suggestion always names a catalogue place: without an id there is
   // nothing to link to, so the row is dropped. A stop somebody typed on the
@@ -151,6 +159,8 @@ export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null
   if (gioMo) diaDiem.gioMo = gioMo;
   const loai = chuoi(o.category);
   if (loai) diaDiem.loai = loai;
+  const nguon = chuoi(o.source);
+  if (nguon) diaDiem.nguon = nguon;
   return diaDiem;
 }
 

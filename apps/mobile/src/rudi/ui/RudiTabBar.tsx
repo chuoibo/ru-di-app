@@ -1,18 +1,21 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
-import { useEffect } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useRef } from "react";
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
-import { typography, useRudiTheme } from "../theme";
+import { useNativeFontScale } from "../chia-bill/useBillFontScale";
+import { lopPhu, typography, useRudiTheme } from "../theme";
+import { useSoSheetDangMo } from "../nep/NepProvider";
 import { TABLIST, tabState } from "../../ui/a11y";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { ConDauTao } from "./ConDauTao";
+import { NativeFontMetricsProvider, Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "./NativeFontMetrics";
+import { RudiIcon, type IconName } from "./RudiIcon";
 import { dichCuaCot, oCuaCot, xepThanh } from "./thanh-tab";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 import { useMotion } from "./useMotion";
@@ -21,7 +24,7 @@ import { Wordmark } from "./Wordmark";
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 /** Icon per column, filled when current. */
-const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]> = {
+const ICONS: Record<string, [IconName, IconName]> = {
   explore: ["compass-outline", "compass"],
   plan: ["map-outline", "map"],
   messages: ["chatbubbles-outline", "chatbubbles"],
@@ -53,13 +56,44 @@ const HANG_LOGO_RAIL = 56;
  * at 320 dp). The active strip
  * follows reduced-motion preferences.
  */
-export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
+export function RudiTabBar(props: TabBarProps) {
+  const owned = useNativeFontMetricsOwner();
+  return owned ? <TabBarContent {...props} /> : <ObserveTabMetrics {...props} />;
+}
+
+function ObserveTabMetrics(props: TabBarProps) {
+  const snapshot = useNativeFontScale();
+  return <NativeFontMetricsProvider snapshot={snapshot}>
+    <TabBarContent {...props} observedFontScale={snapshot.status === "available" ? snapshot.fontScale : undefined} />
+  </NativeFontMetricsProvider>;
+}
+
+function TabBarContent({ state, descriptors, navigation, observedFontScale }: TabBarProps & { observedFontScale?: number }) {
   const { colors, dark } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout();
   const { fontScale } = useWindowDimensions();
+  const labelMetrics = useNativeStandaloneTextMetrics([typography.caption, styles.label]);
+  const lineHeight = labelMetrics?.lineHeight;
+  const labelPitch = lineHeight !== undefined && Number.isFinite(lineHeight) && lineHeight > 0 ? lineHeight : null;
+  const lastKnownGeometry = useRef<{ bar: number; rail: number } | null>(null);
+  const policyHeight = tabBarHeight(observedFontScale ?? fontScale);
+  // Reserve two full label lines, including the strip's icon, gap and inset.
+  const geometry = labelPitch !== null ? {
+    bar: Math.max(policyHeight, Math.ceil(24 + 2 + 8 + 2 * labelPitch + StyleSheet.hairlineWidth)),
+    rail: Math.max(HANG_RAIL, Math.ceil(24 + 2 + 2 * labelPitch)),
+  } : {
+    bar: Math.max(policyHeight, lastKnownGeometry.current?.bar ?? 0),
+    rail: lastKnownGeometry.current?.rail ?? HANG_RAIL,
+  };
+  // An unavailable native snapshot cannot make a previously known reserve smaller.
+  // Keep original RN scaling in fallback; this memory describes geometry only.
+  useEffect(() => {
+    if (labelPitch !== null || observedFontScale !== undefined) lastKnownGeometry.current = geometry;
+  }, [labelPitch, observedFontScale, geometry.bar, geometry.rail]);
   const motion = useMotion();
   const { phien } = useRudiSession();
+  const coSheet = useSoSheetDangMo() > 0;
   const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
 
   const routes = state.routes;
@@ -89,7 +123,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   }, [viTriVach, indicator, motion]);
 
   const indicatorStyle = useAnimatedStyle(() => {
-    if (layout.rail) return { transform: [{ translateY: dauRail + HANG_LOGO_RAIL + HANG_DAU_RAIL + indicator.value * HANG_RAIL }] };
+    if (layout.rail) return { transform: [{ translateY: dauRail + HANG_LOGO_RAIL + HANG_DAU_RAIL + indicator.value * geometry.rail }] };
     return { left: `${(indicator.value / columns) * 100}%` as const };
   });
 
@@ -118,9 +152,9 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         {...tabState(focused)}
         accessibilityLabel={label}
         onPress={onPress}
-        style={layout.rail ? styles.railItem : styles.item}
+        style={layout.rail ? [styles.railItem, { height: geometry.rail }] : [styles.item, { width: `${100 / columns}%` }]}
       >
-        <Ionicons color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
+        <RudiIcon color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
         {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
             tab (review 08/09 F04); the bar grows with the text (`tabBarHeight`). */}
         <Text numberOfLines={2} style={[typography.caption, styles.label, { color: focused ? colors.accent : colors.inkFaint }]}>
@@ -134,7 +168,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   items.splice(
     viTriDau,
     0,
-    <View aria-hidden importantForAccessibility="no-hide-descendants" key="o-dau" pointerEvents="none" style={layout.rail ? styles.oDauRail : styles.item} />,
+    <View aria-hidden importantForAccessibility="no-hide-descendants" key="o-dau" pointerEvents="none" style={layout.rail ? styles.oDauRail : [styles.item, { width: `${100 / columns}%` }]} />,
   );
 
   const bottom = Math.max(insets.bottom, 10);
@@ -142,6 +176,10 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
 
   const bar = (
     <View
+      pointerEvents={coSheet ? "none" : "auto"}
+      accessibilityElementsHidden={coSheet}
+      importantForAccessibility={coSheet ? "no-hide-descendants" : "auto"}
+      aria-hidden={coSheet}
       style={[
         layout.rail ? styles.rail : styles.bar,
         {
@@ -149,7 +187,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
           borderColor: colors.line,
           ...(layout.rail
             ? { width: RAIL_WIDTH, paddingTop: dauRail, paddingBottom: Math.max(insets.bottom, 12) }
-            : { height: tabBarHeight(fontScale) + bottom, paddingBottom: bottom }),
+            : { height: geometry.bar + bottom, paddingBottom: bottom }),
         },
       ]}
     >
@@ -159,7 +197,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         testID="vach-thanh"
         style={[
           layout.rail ? styles.railIndicator : styles.indicator,
-          layout.rail ? { backgroundColor: colors.accent, width: 4 } : { width: `${100 / columns}%` },
+          layout.rail ? { backgroundColor: colors.accent, width: 4, height: geometry.rail } : { width: `${100 / columns}%` },
           indicatorStyle,
         ]}
       >
@@ -175,7 +213,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         {items}
       </View>
       {/* Over the empty slot, from outside the list. */}
-      <View
+      {coSheet ? null : <View
         pointerEvents="box-none"
         style={
           layout.rail
@@ -184,7 +222,8 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         }
       >
         <ConDauTao coCap={coCap} rail={layout.rail} tab={tabDangMo} />
-      </View>
+      </View>}
+      {coSheet ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }]} testID="tab-sheet-scrim" /> : null}
     </View>
   );
   return bar;
@@ -192,6 +231,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
 
 const styles = StyleSheet.create({
   bar: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "stretch",
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -202,17 +242,19 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
     height: "100%",
   },
-  danhSach: { flex: 1, flexDirection: "row", alignItems: "stretch" },
-  danhSachRail: { flexDirection: "column", alignItems: "stretch" },
-  item: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
+  // Definite list and slot widths bypass a flex basis cached on the prior axis.
+  danhSach: { width: "100%", flexGrow: 0, flexShrink: 0, flexBasis: "auto", flexDirection: "row", alignItems: "stretch" },
+  danhSachRail: { width: "100%", flexGrow: 0, flexShrink: 0, flexBasis: "auto", flexDirection: "column", alignItems: "stretch" },
+  item: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", minWidth: 0, height: "100%", minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   // No `flex` here: react-native-web writes `flex: 0` as `flex-basis: 0`,
   // which outranks `height`, so every rail tab was 48 dp on the web while the
   // indicator stepped by 72 (QA UI-004).
-  railItem: { height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
-  oDauRail: { height: HANG_DAU_RAIL },
+  // Clear strip growth and its zero basis while retaining the rail height as the basis.
+  railItem: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
+  oDauRail: { flexGrow: 0, flexShrink: 0, flexBasis: "auto", height: HANG_DAU_RAIL },
   logoRail: { height: HANG_LOGO_RAIL, alignItems: "center", justifyContent: "center" },
-  label: { fontSize: 12, lineHeight: 14, textAlign: "center" },
-  dauThanh: { position: "absolute", top: 0, alignItems: "stretch" },
+  label: { alignSelf: "stretch", fontSize: 12, lineHeight: 14, textAlign: "center" },
+  dauThanh: { position: "absolute", top: 0, height: "auto", alignItems: "stretch" },
   dauRail: { position: "absolute", left: 0, right: 0, height: HANG_DAU_RAIL, alignItems: "stretch" },
   indicator: { position: "absolute", top: 0, height: 6, alignItems: "center", backgroundColor: "transparent" },
   tape: { width: 28, height: 4, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },

@@ -1,0 +1,498 @@
+// Actual application graph with native, package, and I/O boundaries only.
+// Native host props establish React ownership; Android layout still needs device evidence.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const crypto = require('node:crypto');
+const { createRequire } = require('node:module');
+const { repo, sourceRoot } = require('./repository.cjs');
+const dependency = createRequire(path.join(repo, 'apps/mobile/package.json'));
+const React = dependency('react');
+const Renderer = dependency('react-test-renderer');
+const ts = dependency('typescript');
+const { act } = React;
+
+function flatten(value) {
+  if (value === null || typeof value !== 'object') return undefined;
+  if (!Array.isArray(value)) return value;
+  return Object.assign({}, ...value.map(flatten).filter(Boolean));
+}
+function person(id = 'synthetic-A') {
+  return { person_id: id, token: `synthetic-token-${id}`, profile: { display_name: `Synthetic ${id}` }, context_id: null, contexts: [] };
+}
+function post(id = 'synthetic-post-1', author = 'synthetic-B') {
+  return { id, author_id: author, author: `Synthetic ${author}`, body: `Synthetic body ${id}`, revision: 1, audience: 'public', status: 'published', topics: ['Synthetic topic'], mentions: [], media: [], context_id: null, can_comment: true, saved: false, diary: false, created_at: '2026-10-01T00:00:00Z', liked: false, following: false, likes: 2, comments: 3, why: 'Synthetic feed explanation' };
+}
+function commentRow() {
+  return { id: 'synthetic-parent', author_id: 'synthetic-B', author: 'Synthetic comment author', body: 'Synthetic server comment', parent_id: null, media_id: null, mentions: [], created_at: '2026-10-01T00:00:00Z', status: 'approved', can_delete: false };
+}
+function deferred() { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
+const BASES = [-0.65, -0.3, -0.15, 0.4, 0.8, 1.6, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 27, 28, 34];
+const DOUBLE_DP = [-1.1, -0.49, -0.24, 0.62, 1.2, 2.3, 18.5, 20.25, 21.5, 23.25, 25, 28.75, 30.25, 31.75, 34.25, 36, 37.5, 39.25, 43, 44.25, 52];
+function snapshot(scale = 1, lineHeight) {
+  return { status: 'available', fontScale: scale, fontMetrics: { density: 2, spToDp: BASES.map((base, i) => ({ base, dp: base === 24 && lineHeight !== undefined ? lineHeight : scale === 1 ? base : DOUBLE_DP[i] })) } };
+}
+
+function createHost({ surface = 'comments', initialSnapshot = snapshot(), explicitProvider = false, deferPost = false, strict = false, commentsProps = {}, feedPosts, boundaryChildren, friends = [], nativeGeometry = false, nepTransport = false, nativeFontModulePresent = true, initialWindow = { width: 390, height: 844, fontScale: 1, scale: 2 }, exploreIO = null, exploreProps = {}, inheritedExploreMetrics = false, inboxIO = null, inheritedInboxMetrics = false, inboxView = 'screen', inboxStoryProps = {}, communityIO = null, communityView = 'tab' } = {}) {
+  assert.ok(['comments', 'detail', 'feed', 'boundary', 'composer', 'keeps', 'explore', 'inbox', 'community'].includes(surface));
+  assert.equal(surface === 'community', communityIO !== null, 'Community transport requires its own explicit fixture boundary');
+  if (surface === 'community') { assert.ok(['tab', 'standalone', 'defaults'].includes(communityView)); assert.equal(explicitProvider, false, 'Community owns its existing metrics provider'); assert.equal(nativeGeometry, true); }
+  assert.equal(surface === 'inbox', inboxIO !== null, 'Inbox requires its own explicit synthetic I/O boundary');
+  assert.equal(inheritedInboxMetrics && surface !== 'inbox', false);
+  if (surface === 'inbox') {
+    assert.ok(['screen', 'story'].includes(inboxView));
+    assert.equal(explicitProvider, inheritedInboxMetrics, 'An inherited Inbox metrics owner is explicit');
+    if (inboxView === 'story') assert.equal(inheritedInboxMetrics, true, 'A shared StoryRail probe receives an inherited owner');
+  }
+  assert.equal(surface === 'explore', exploreIO !== null, 'Explore transport must be explicitly isolated to the Explore surface');
+  if (exploreIO !== null) {
+    assert.ok(Array.isArray(exploreIO.placeIds) && exploreIO.placeIds.length > 0, 'Explicit synthetic place-id allowlist');
+    assert.ok(exploreIO.placeIds.every(id => typeof id === 'string' && id.startsWith('synthetic-place-')));
+    assert.ok(Array.isArray(exploreIO.destinationIds));
+    assert.ok(exploreIO.destinationIds.every(id => typeof id === 'string' && id.startsWith('synthetic-city-')));
+    assert.ok((exploreIO.saved ?? []).every(id => exploreIO.placeIds.includes(id)));
+    assert.ok(exploreIO.storedDestination == null || exploreIO.destinationIds.includes(exploreIO.storedDestination));
+    assert.equal(inheritedExploreMetrics ? explicitProvider : !explicitProvider, true, 'Home inherited provider is explicit opt-in; default host cannot invent one');
+  }
+  assert.equal(inheritedExploreMetrics && surface !== 'explore', false, 'Inherited Home provider seam is limited to Home');
+  const state = { actor: person(), params: { id: 'synthetic-post-1' }, post: post(), feedPosts: feedPosts ?? [post('synthetic-feed-1'), post('synthetic-feed-2'), post('synthetic-feed-3')], nativeFont: initialSnapshot, explicitProvider, commentsProps, boundaryChildren, friends, show: true, tick: 0, token: null, window: { ...initialWindow }, exploreProps, exploreSaved: [...(exploreIO?.saved ?? [])], exploreStoredDestination: exploreIO?.storedDestination ?? null };
+  const cache = new Map(), consumed = new Map(), consumedHashes = new Map();
+  const listeners = new Set(), callbacks = [], retiredCallbacks = [], timers = new Map();
+  const commentsReadQueue = [], friendsReadQueue = [];
+  const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
+  const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [], keepReads = [], keepDeletes = [];
+  const exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [];
+  const exploreCatalogueRoutes = new Set(['/places', ...(exploreIO?.destinationIds ?? []).map(id => '/places?' + new URLSearchParams({ destination: id }).toString())]);
+  const exploreWriteRoutes = new Map((exploreIO?.placeIds ?? []).map(id => ['/people/me/saved-places/' + encodeURIComponent(id), id]));
+  let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
+  const keepIds = new Set(['synthetic-keep-1', 'synthetic-keep-2']), keepAttempts = new Set();
+  let getterReads = 0, subscriptions = 0, removals = 0, maxLive = 0, postDeferredRemaining = deferPost;
+  const visual = name => React.forwardRef(function NativeBoundary(props, ref) { return React.createElement(name, { ...props, ref }); });
+  const Native = {};
+  for (const name of ['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'KeyboardAvoidingView', 'ActivityIndicator', 'RefreshControl', 'Image', 'Switch', 'Modal']) Native[name] = visual(`RN${name}`);
+  Native.TextInput.State = { currentlyFocusedInput: () => focused };
+  class AnimatedValue { constructor(value) { this.value = value; } setValue(value) { this.value = value; } interpolate() { return this; } }
+  Object.assign(Native, {
+    Platform: { OS: 'android', select: choices => choices.android ?? choices.default },
+    Appearance: { getColorScheme: () => 'light' },
+    StyleSheet: { create: value => value, flatten, hairlineWidth: 0.5, absoluteFill: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } },
+    useWindowDimensions: () => state.window,
+    PixelRatio: { get: () => state.window.scale, getFontScale: () => state.window.fontScale, roundToNearestPixel: value => Math.round(value * state.window.scale) / state.window.scale },
+    Keyboard: { dismiss() { nativeHostCalls.push({ kind: 'keyboard.dismiss' }); }, addListener(name, callback) {
+      if (!nativeGeometry) return { remove() {} };
+      assert.ok(['keyboardDidShow', 'keyboardDidHide'].includes(name), `Supported keyboard boundary ${name}`);
+      const entries = keyboardListeners.get(name) ?? new Set(); keyboardListeners.set(name, entries); entries.add(callback);
+      return { remove() { entries.delete(callback); } };
+    } },
+    BackHandler: { addEventListener: () => ({ remove() {} }) },
+    AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(true), addEventListener: () => ({ remove() {} }), setAccessibilityFocus() {}, announceForAccessibility() {} },
+    AppState: { currentState: 'active', addEventListener: () => ({ remove() {} }) },
+    findNodeHandle: value => value?.id ?? null,
+    Share: { dismissedAction: 'dismissedAction', share: async () => ({ action: 'dismissedAction' }) },
+    Easing: { bezier: (...values) => values },
+    Animated: { Value: AnimatedValue, View: visual('RNLegacyAnimatedView'), timing: (value, options) => ({ start(callback) { value.setValue(options.toValue); callback?.({ finished: true }); }, stop() {} }), parallel: animations => ({ start(callback) { animations.forEach(animation => animation.start()); callback?.({ finished: true }); }, stop() {} }) },
+  });
+  // A real renderItem tree for every row, with stable keys and a forwarded native ref.
+  // No native windowing, clipping, layout or pixel scroll behavior is simulated.
+  Native.FlatList = React.forwardRef(function NativeFlatList(props, ref) {
+    const element = value => typeof value === 'function' ? React.createElement(value) : value;
+    return React.createElement('RNFlatList', { ...props, ref }, element(props.ListHeaderComponent), props.data.length ? props.data.map((item, index) => React.createElement(React.Fragment, { key: props.keyExtractor?.(item, index) ?? String(index) }, props.renderItem({ item, index }))) : element(props.ListEmptyComponent), element(props.ListFooterComponent));
+  });
+  const Animated = { View: visual('RNAnimatedView'), ScrollView: Native.ScrollView, createAnimatedComponent: component => component };
+  const animation = { duration() { return this; }, reduceMotion() { return this; }, delay() { return this; }, springify() { return this; } };
+  const reanimated = {
+    __esModule: true, default: Animated, FadeIn: animation, FadeOut: animation,
+    ReduceMotion: { Always: 'always', Never: 'never' }, Easing: { bezier: (...values) => values, inOut: value => value, ease: 'ease' }, useReducedMotion: () => true,
+    useSharedValue(initial) {
+      const ref = React.useRef(null);
+      if (ref.current === null) {
+        let value = initial; const id = ++sharedId; const shared = {};
+        Object.defineProperty(shared, 'value', { get() { if (collecting) collecting.add(id); return value; }, set(next) { if (next && next.nativeAnimation) { value = next.target; if (next.kind === 'timing') timings.push({ ...next, shared: id }); } else value = next; } });
+        ref.current = shared;
+      }
+      return ref.current;
+    },
+    useAnimatedStyle(callback) { const used = new Set(); collecting = used; const value = callback(); collecting = null; return { ...value, syntheticSharedIds: [...used] }; },
+    useAnimatedScrollHandler: callback => callback,
+    withTiming: (target, config, callback) => ({ nativeAnimation: true, kind: 'timing', target, config, callback }),
+    withSpring: (target, config) => ({ nativeAnimation: true, kind: 'spring', target, config }),
+    withRepeat: value => value, cancelAnimation() {}, runOnJS: callback => callback, interpolate: value => value,
+  };
+  function gestureChain() {
+    const values = {};
+    const chain = new Proxy(values, { get(target, key) { if (key in target) return target[key]; return value => { target[String(key) + 'Value'] = value; return chain; }; } });
+    return chain;
+  }
+  const nativeFontModule = {
+    getFontScale() { getterReads += 1; if (community) community.fontSnapshot(state.nativeFont); return state.nativeFont; },
+    addListener(name, callback) {
+      assert.equal(name, 'onFontScaleChanged'); subscriptions += 1; listeners.add(callback); callbacks.push(callback); maxLive = Math.max(maxLive, listeners.size);
+      let live = true;
+      return { remove() { assert.equal(live, true, 'native subscription is removed once'); live = false; removals += 1; listeners.delete(callback); retiredCallbacks.push(callback); } };
+    },
+  };
+  function parked(store, call) { const pending = deferred(); Object.assign(call, pending); store.push(call); return pending.promise; }
+  const community = surface === 'community' ? require('./community-boundaries.cjs').createCommunityBoundary({ state, parked, io: communityIO }) : null;
+  const inbox = surface === 'inbox' ? require('./inbox-boundaries.cjs').createInboxBoundary({ React, state, parked, io: inboxIO }) : null;
+  if (community) {
+    Native.AppState.addEventListener = (name, callback) => community.listen('app', name, callback);
+    Native.BackHandler.addEventListener = (name, callback) => community.listen('back', name, callback);
+    Native.AccessibilityInfo.addEventListener = (name, callback) => community.listen('accessibility', name, callback);
+  }
+  if (inbox) Native.AppState.addEventListener = (name, callback) => {
+    assert.equal(name, 'change'); inbox.appState.add(callback); return { remove() { inbox.appState.delete(callback); } };
+  };
+  // Opt-in Home transport: actual catalogue/parser/save code executes above this boundary.
+  // Reads and writes are parked until the test explicitly supplies a response or failure.
+  async function exploreTransport(route, options, call) {
+    assert.equal(options.actorId, state.actor.person_id, 'Home reads/writes use the actual supplied session actor');
+    assert.deepEqual(Object.keys(options).sort(), ['actorId', 'method'], 'No unplanned query context/body/header payload');
+    const method = options.method;
+    if (exploreCatalogueRoutes.has(route) && method === 'GET') {
+      call.kind = 'exploreCatalogueRead'; return parked(exploreCatalogueReads, call);
+    }
+    if (route === '/people/me/saved-places' && method === 'GET') {
+      call.kind = 'exploreSavedRead'; exploreSavedReads.push(call);
+      return { saved: state.exploreSaved.map(id => ({ place_id: id })) };
+    }
+    const placeId = exploreWriteRoutes.get(route);
+    if (placeId !== undefined && (method === 'PUT' || method === 'DELETE')) {
+      call.kind = 'exploreSavedWrite'; call.placeId = placeId;
+      const response = await parked(exploreSavedWrites, call);
+      state.exploreSaved = method === 'PUT' ? [...new Set([...state.exploreSaved, placeId])] : state.exploreSaved.filter(id => id !== placeId);
+      return response;
+    }
+    throw new Error(`Unexpected synthetic Explore transport ${method} ${route}`);
+  }
+  const api = {
+    BASE_URL: 'https://synthetic.invalid', LOI_KHONG_NOI_DUOC: 'Synthetic transport refusal',
+    ApiError: class ApiError extends Error { constructor(status, message) { super(message); this.status = status; } },
+    thongDiepNguoiDoc: () => 'Synthetic refusal', newAttempt: () => {
+      const key = `synthetic-attempt-${++attempt}`;
+      return surface === 'keeps' || surface === 'inbox' || community ? { key, at: Date.parse('2026-10-01T00:00:00Z') + attempt } : { key };
+    },
+    datTokenPhien: token => { state.token = token; }, tokenPhienHienTai: () => state.token, duongDanAnhDaiDien: id => `/people/${id}/avatar`,
+    translatedAsActor: async (_errors, route, options = {}) => {
+      const method = options.method ?? 'GET'; const call = { route, options, kind: 'transport' }; calls.push(call);
+      if (community) return community.transport(route, options, call);
+      if (inbox) return inbox.transport(route, options, call);
+      if (surface === 'explore') return exploreTransport(route, options, call);
+      // This opt-in surface has no generic route fallbacks or real I/O.
+      if (surface === 'keeps') {
+        assert.equal(state.actor.person_id, 'synthetic-A', 'Keeps uses the exact fixture actor');
+        assert.equal(options.actorId, 'synthetic-A');
+        if (route === '/v2/community/keeps' && method === 'GET') {
+          assert.equal(options.method, 'GET', 'Keeps reads use an explicit method');
+          assert.equal(Object.keys(options).sort().join(','), 'actorId,method', 'Exact Keeps GET options');
+          call.kind = 'readKeeps';
+          const pending = deferred(); Object.assign(call, pending);
+          call.resolve = value => {
+            assert.equal(Object.keys(value).join(','), 'keeps', 'Exact synthetic Keeps page shape');
+            assert.equal(Array.isArray(value.keeps), true);
+            const ids = value.keeps.map(row => row.id);
+            assert.equal(new Set(ids).size, ids.length, 'Fixture IDs are unique');
+            for (const row of value.keeps) {
+              assert.equal(keepIds.has(row.id), true, 'Only the two synthetic keep IDs');
+              assert.equal(Object.keys(row).sort().join(','), 'ai_generated,body,created_at,id');
+              assert.equal(typeof row.body, 'string'); assert.equal(typeof row.ai_generated, 'boolean');
+              assert.equal(typeof row.created_at, 'string'); assert.equal(Number.isFinite(Date.parse(row.created_at)), true);
+            }
+            pending.resolve(value);
+          };
+          keepReads.push(call); return pending.promise;
+        }
+        const id = route.slice('/v2/community/keeps/'.length);
+        if (method === 'DELETE' && route === '/v2/community/keeps/' + id && keepIds.has(id)) {
+          assert.equal(Object.keys(options).sort().join(','), 'actorId,attempt,method', 'Exact Keeps DELETE options');
+          assert.equal(Object.keys(options.attempt ?? {}).sort().join(','), 'at,key', 'Attempt retains the actual API shape');
+          assert.match(options.attempt?.key ?? '', /^synthetic-attempt-[1-9][0-9]*$/);
+          assert.equal(Number.isSafeInteger(options.attempt.at), true);
+          assert.equal(options.attempt.at, Date.parse('2026-10-01T00:00:00Z') + Number(options.attempt.key.slice('synthetic-attempt-'.length)), 'Exact synthetic attempt identity');
+          assert.equal(keepAttempts.has(options.attempt.key), false, 'Each transport retry has a fresh attempt');
+          keepAttempts.add(options.attempt.key);
+          call.kind = 'deleteKeep'; return parked(keepDeletes, call);
+        }
+        throw new Error(`Unexpected synthetic Keeps transport ${method} ${route}`);
+      }
+      if (route.startsWith('/people/avatars?')) return { avatars: {} };
+      if (route.startsWith('/friends')) return [];
+      if (/^\/people\/[^/]+\/friends$/.test(route) && method === 'GET') {
+        call.kind = 'readFriends'; friendReads.push(call);
+        const queued = friendsReadQueue.shift();
+        if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
+        return { friends: state.friends };
+      }
+      if (route.startsWith('/v2/community/feed?')) { call.kind = 'readFeed'; return { posts: state.feedPosts, next_cursor: null, personalized: false }; }
+      if (route === '/v2/community/preferences' && method === 'GET') return { asked: true, personalized: false };
+      if (route === '/v2/community/notifications') return { notifications: [] };
+      if (route === '/v2/community/follows' && method === 'GET') return { follows: [] };
+      if (route.includes('/comments') && method === 'GET') {
+        call.kind = 'readComments'; reads.push(call);
+        const queued = commentsReadQueue.shift();
+        if (queued) { Object.assign(call, queued); queued.started = true; return queued.promise; }
+        return { comments: [commentRow()], pending: [], next_cursor: null };
+      }
+      // Opt-in deferred transport for the exact synthetic Nếp editor fixture.
+      // Unknown routes/methods retain the fail-closed boundary below.
+      if (nepTransport && route === '/v2/community/posts/synthetic-post-1/nep' && method === 'POST') {
+        assert.equal(state.params.id, 'synthetic-post-1'); assert.equal(options.actorId, state.actor.person_id);
+        call.kind = 'nepRequest'; return parked(nepRequests, call);
+      }
+      if (nepTransport && route === '/v2/community/keeps' && method === 'POST') {
+        assert.equal(options.actorId, state.actor.person_id);
+        call.kind = 'keepWrite'; return parked(keepWrites, call);
+      }
+      if (route.endsWith('/comments') && method === 'POST') { call.kind = 'comment'; return parked(writes, call); }
+      if (/^\/v2\/community\/posts\/[^/]+\/comments\/[^/]+$/.test(route) && method === 'DELETE') {
+        call.kind = 'deleteComment'; return parked(deletes, call);
+      }
+      if (/^\/v2\/community\/posts\/[^/]+$/.test(route) && method === 'GET') {
+        call.kind = 'getPost'; gets.push(call);
+        if (postDeferredRemaining) { postDeferredRemaining = false; const pending = deferred(); Object.assign(call, pending); return pending.promise; }
+        return { ...state.post, id: route.split('/').at(-1) };
+      }
+      if (route.endsWith('/status') && method === 'GET') return { state: 'ready' };
+      throw new Error(`Unexpected synthetic transport ${method} ${route}`);
+    },
+  };
+  if (surface === 'explore') api.translatedAnonymous = async (_errors, route, options = {}) => {
+    const call = { route, options, kind: 'unexpectedExploreAnonymousRead' }; calls.push(call);
+    throw new Error(`Unexpected anonymous transport in authenticated Explore fixture ${options.method ?? 'GET'} ${route}`);
+  };
+  const adapters = {
+    'apps/mobile/src/api': api,
+    'apps/mobile/src/phien': { khoiPhucPhien: () => Promise.resolve(state.actor), dangXuat: async () => {}, quenPhienDaThuHoi: async () => {}, docNhomCuaToi: async () => [] },
+    'apps/mobile/src/danh-tinh': { ngheThuHoiPhien: callback => { state.revoke = callback; return () => { state.revoke = null; }; }, tokenPhienHienTai: () => state.token, headerNguoiGoi: () => ({ Authorization: 'Bearer synthetic-only' }) },
+    'apps/mobile/src/rudi/kho': { xoaPhienAsync: async () => {}, docGiaoDienAsync: async () => null, ghiGiaoDienAsync: async () => {} },
+  };
+  if (community) {
+    adapters['apps/mobile/src/rudi/kho'] = community.storage;
+    adapters['apps/mobile/src/phien'] = community.session;
+    api.translatedAnonymous = async (_errors, route) => community.forbidden('anonymous', route);
+    api.goiNhiPhan = async (...args) => community.forbidden('binary', args[0]);
+  }
+  if (inbox) {
+    delete adapters['apps/mobile/src/phien']; // Actual session/wire helpers execute; only the hook below is supplied.
+    adapters['apps/mobile/src/rudi/session'] = inbox.sessionBoundary;
+    adapters['apps/mobile/src/rudi/kho'] = inbox.localStorage;
+    api.translatedAnonymous = async (_errors, route) => inbox.forbidden('anonymous', route);
+    api.goiNhiPhan = async (...args) => inbox.forbidden('binary', args[0]);
+  }
+  const router = { canGoBack: () => false, back() { if (inbox) inbox.forbidden('navigation', 'back'); }, push: value => { if (inbox) inbox.navigation('push', value); routes.push(value); }, replace: value => { if (inbox) inbox.navigation('replace', value); routes.push(value); } };
+  if (community) for (const method of ['push', 'replace', 'navigate', 'back']) router[method] = value => { community.navigation(method, value); routes.push(value); };
+  const svg = new Proxy({ __esModule: true, default: visual('RNSvg') }, { get(target, key) { if (key in target) return target[key]; target[key] = visual(`RNSvg${String(key)}`); return target[key]; } });
+  const externals = {
+    react: React, 'react/jsx-runtime': dependency('react/jsx-runtime'), 'react-native': Native, 'react-native-reanimated': reanimated,
+    'expo-modules-core': { requireOptionalNativeModule: name => { if (community) community.optionalModule(name); if (inbox && name !== 'RudiFontScale') return inbox.optionalModule(name); assert.equal(name, 'RudiFontScale'); return nativeFontModulePresent ? nativeFontModule : null; } },
+    'expo-image': { Image: visual('RNExpoImage') }, 'expo-video': { VideoView: visual('RNVideoView'), useVideoPlayer: (_source, setup) => { const ref = React.useRef(null); if (ref.current === null) { ref.current = { pause() {}, loop: false, muted: false }; setup?.(ref.current); } return ref.current; } },
+    'expo-blur': { BlurView: visual('RNBlurView') }, 'expo-linear-gradient': { LinearGradient: visual('RNLinearGradient') }, 'expo-status-bar': { StatusBar: visual('RNStatusBar') },
+    'expo-router': { useLocalSearchParams: () => state.params, usePathname: () => surface === 'inbox' ? '/messages' : surface === 'explore' ? '/explore' : surface === 'detail' ? `/community/posts/${state.params.id}` : surface === 'keeps' ? '/community/keeps' : '/community', useRouter: () => router, useFocusEffect: callback => React.useEffect(callback, [callback]) },
+    'expo-router/build/react-navigation/core/NavigationContext': { NavigationContext: React.createContext(null) },
+    'react-native-safe-area-context': { SafeAreaView: visual('RNSafeAreaView'), useSafeAreaInsets: () => ({ top: 24, bottom: 12, left: 0, right: 0 }) },
+    '@expo/vector-icons': { Ionicons: visual('RNIonicons') }, 'react-native-svg': svg,
+    'react-native-gesture-handler': { GestureHandlerRootView: visual('RNGestureHandlerRootView'), GestureDetector: visual('RNGestureDetector'), Gesture: { Pan: gestureChain, Pinch: gestureChain, Tap: gestureChain, Race: gestureChain, Simultaneous: gestureChain, Exclusive: gestureChain } },
+    'expo-haptics': { ImpactFeedbackStyle: { Medium: 'medium' }, NotificationFeedbackType: { Success: 'success' }, selectionAsync() {}, impactAsync() {}, notificationAsync() {} },
+    'expo-image-picker': { launchImageLibraryAsync: (...args) => { const pending = deferred(); picks.push({ ...pending, args }); return pending.promise; } },
+    'expo-image-manipulator': { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: async (...args) => { nativeHostCalls.push({ kind: 'manipulateAsync', args }); return { uri: 'file:///synthetic-clean.jpg', width: 32, height: 32 }; } },
+  };
+  if (inbox) {
+    externals['@react-native-async-storage/async-storage'] = inbox.asyncStorage;
+    externals['expo-secure-store'] = inbox.secureStore;
+    externals['expo-file-system'] = inbox.fileSystem;
+    externals['expo-image-picker'] = { launchImageLibraryAsync: async () => inbox.forbidden('picker', 'launch') };
+    externals['expo-image-manipulator'] = { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: async () => inbox.forbidden('manipulator', 'run') };
+    for (const method of ['selectionAsync', 'impactAsync', 'notificationAsync']) externals['expo-haptics'][method] = async (...args) => { nativeHostCalls.push({ kind: 'inbox.haptic', method, args }); };
+    Native.AccessibilityInfo.setAccessibilityFocus = node => { nativeHostCalls.push({ kind: 'inbox.accessibilityFocus', node }); };
+    Native.AccessibilityInfo.announceForAccessibility = text => { nativeHostCalls.push({ kind: 'inbox.announce', text }); };
+    Native.Share.share = async () => inbox.forbidden('share', 'sheet');
+  }
+  if (community) {
+    for (const method of ['selectionAsync', 'impactAsync', 'notificationAsync']) externals['expo-haptics'][method] = async (...args) => community.haptic(method, args);
+    externals['expo-image-picker'] = { launchImageLibraryAsync: async () => community.forbidden('picker', 'launch') };
+    externals['expo-image-manipulator'] = { SaveFormat: { JPEG: 'jpeg' }, manipulateAsync: async () => community.forbidden('manipulator', 'run') };
+    Native.Share.share = async () => community.forbidden('share', 'sheet');
+  }
+  if (surface === 'explore') externals['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      async getItem(key) { assert.equal(key, 'rudi.diem-den.v1'); exploreStorage.push({ method: 'getItem', key }); return state.exploreStoredDestination; },
+      async removeItem(key) { assert.equal(key, 'rudi.diem-den.v1'); exploreStorage.push({ method: 'removeItem', key }); state.exploreStoredDestination = null; },
+      async setItem() { throw new Error('Unexpected destination write: selection belongs to a separate route'); },
+    },
+  };
+  if (surface === 'boundary') externals['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      getItem(...args) { exploreStorage.push({ method: 'getItem', args }); throw new Error('Unexpected boundary destination storage getItem'); },
+      removeItem(...args) { exploreStorage.push({ method: 'removeItem', args }); throw new Error('Unexpected boundary destination storage removeItem'); },
+      setItem(...args) { exploreStorage.push({ method: 'setItem', args }); throw new Error('Unexpected boundary destination storage setItem'); },
+    },
+  };
+  class SyntheticSocket { constructor(url) { if (inbox) inbox.forbidden('socket', url); if (community) community.socket(this, url); this.url = url; sockets.push(this); } send(value) { if (community) community.send(this, value); nativeHostCalls.push({ socket: value }); } close() { this.closed = true; } }
+  const globals = {
+    console, process: { env: surface === 'explore' ? { EXPO_PUBLIC_API_URL: api.BASE_URL } : {} }, URL, URLSearchParams, AbortController, WebSocket: SyntheticSocket,
+    setTimeout: callback => { const id = ++timerId; timers.set(id, callback); return id; }, clearTimeout: id => timers.delete(id),
+    requestAnimationFrame: callback => { const id = ++timerId; (nativeGeometry ? frames : timers).set(id, callback); if (nativeGeometry) frameCalls.push({ kind: 'request', id }); return id; },
+    cancelAnimationFrame: id => { timers.delete(id); frames.delete(id); if (nativeGeometry) frameCalls.push({ kind: 'cancel', id }); },
+    fetch: async (uri, options) => {
+      if (community) return community.forbidden('fetch', uri);
+      if (inbox) return inbox.forbidden('fetch', uri);
+      if (surface === 'explore') throw new Error(`Unexpected synthetic Explore fetch ${uri}`);
+      if (surface === 'keeps') throw new Error('Keeps has no synthetic fetch route');
+      if (String(uri).startsWith('file:///')) return { blob: async () => ({ size: 8, type: 'image/jpeg', slice() { return { size: 8, type: 'image/jpeg', close() {} }; }, close() {} }) };
+      if (uri === api.BASE_URL + '/v2/community/media') { const response = await parked(uploads, { uri, options }); return { ok: true, json: async () => response }; }
+      throw new Error(`Unexpected synthetic fetch ${uri}`);
+    },
+  };
+  function load(relative) {
+    relative = relative.replace(/\\/g, '/').replace(/\.(tsx?|js)$/, '');
+    if (Object.hasOwn(adapters, relative)) return adapters[relative];
+    if (cache.has(relative)) return cache.get(relative).exports;
+    const variants = /\.(json|png|jpe?g|webp)$/.test(relative) ? [''] : ['.ts', '.tsx', '/index.ts', '/index.tsx'];
+    const file = variants.map(ext => path.resolve(sourceRoot, relative + ext)).find(fs.existsSync);
+    assert.ok(file && (file === path.resolve(sourceRoot) || file.startsWith(path.resolve(sourceRoot) + path.sep)), `Strict frozen source must exist: ${relative}`);
+    const canonicalRoot = fs.realpathSync(sourceRoot), canonicalFile = fs.realpathSync(file);
+    assert.ok(canonicalFile.startsWith(canonicalRoot + path.sep), `Frozen source cannot escape through a symlink: ${relative}`);
+    const bytes = fs.readFileSync(file); consumed.set(relative, file); consumedHashes.set(relative, crypto.createHash('sha256').update(bytes).digest('hex'));
+    const module = { exports: {} }; cache.set(relative, module);
+    if (/\.(png|jpe?g|webp)$/.test(file)) { module.exports = 1; return module.exports; }
+    if (file.endsWith('.json')) { module.exports = JSON.parse(bytes.toString('utf8')); return module.exports; }
+    const output = ts.transpileModule(bytes.toString('utf8'), { fileName: file, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true }, reportDiagnostics: true });
+    assert.deepEqual((output.diagnostics ?? []).filter(item => item.category === ts.DiagnosticCategory.Error).map(item => ({ code: item.code, start: item.start, message: ts.flattenDiagnosticMessageText(item.messageText, '\n') })), [], `Syntax diagnostics: ${relative}`);
+    function req(specifier) {
+      if (Object.hasOwn(externals, specifier)) return externals[specifier];
+      assert.ok(specifier.startsWith('.'), `Unmapped external boundary ${specifier} from ${relative}`);
+      return load(path.posix.normalize(path.posix.join(path.posix.dirname(relative), specifier)));
+    }
+    vm.runInNewContext(`(function(require,module,exports){${output.outputText}\n})`, globals, { filename: file })(req, module, module.exports);
+    return module.exports;
+  }
+  const Session = load('apps/mobile/src/rudi/session');
+  const metrics = load('apps/mobile/src/rudi/ui/NativeFontMetrics');
+  const comments = load('apps/mobile/src/rudi/community/Comments');
+  const Field = load('apps/mobile/src/rudi/ui/Field').Field;
+  const Component = surface === 'community' ? (communityView === 'tab' ? load('apps/mobile/app/(tabs)/community').default : load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen) : surface === 'inbox' ? (inboxView === 'story' ? load('apps/mobile/src/rudi/screens/story/StoryRail').StoryRail : load('apps/mobile/src/rudi/screens/groups/Conversations').ConversationsScreen) : surface === 'explore' ? load('apps/mobile/src/rudi/screens/explore/ExploreLive').ExploreLiveScreen : surface === 'keeps' ? load('apps/mobile/src/rudi/community/Keeps').Keeps : surface === 'composer' ? load('apps/mobile/src/rudi/community/Composer').Composer : surface === 'detail' ? load('apps/mobile/src/rudi/community/PostDetail').PostDetail : surface === 'feed' ? load('apps/mobile/src/rudi/community/CommunityScreen').CommunityScreen : comments.Comments;
+  const PostCard = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/community/PostCard').PostCard : null;
+  const Sheet = surface === 'detail' || surface === 'feed' ? load('apps/mobile/src/rudi/ui/Sheet').Sheet : null;
+  const CommunityHeader = community ? load('apps/mobile/src/rudi/ui/DauKhamPha').DauKhamPha : null;
+  const CommunityTabs = community ? load('apps/mobile/src/rudi/ui/HangChuTab').HangChuTab : null;
+  function CommunityDefaultsProbe() {
+    return React.createElement(comments.CommunityFontMetrics, null,
+      React.createElement(CommunityHeader, { muc: 'community', onDoiMuc: () => community.forbidden('probe', 'navigation') }),
+      React.createElement(CommunityTabs, { muc: [{ id: 'one', nhan: 'Một' }, { id: 'two', nhan: 'Hai' }], chon: 'one', onChon: () => community.forbidden('probe', 'tab') }));
+  }
+  function BoundaryProbe() {
+    const [value, setValue] = React.useState('Synthetic boundary draft');
+    const owned = metrics.useNativeFontMetricsOwner();
+    return React.createElement('OwnerProbe', { owned }, React.createElement(metrics.Text, { testID: 'owner-probe-text', style: { fontSize: 17, lineHeight: 24 } }, 'Synthetic boundary text'), React.createElement(Field, { testID: 'owner-probe-input', nativeMetrics: true, multiline: true, numberOfLines: 3, value, onChangeText: setValue, oRef: value => refs.push(value) }), state.boundaryChildren?.({ React, load, metrics }));
+  }
+  function SessionProbe() { session = Session.useRudiSession(); return null; }
+  const InboxNepProvider = inbox ? load('apps/mobile/src/rudi/nep/NepProvider').NepProvider : null;
+  function App() {
+    if (inbox) inbox.useActor(); // A session-hook boundary, not a substituted app component.
+    let element;
+    if (community && communityView === 'defaults') element = React.createElement(CommunityDefaultsProbe);
+    else if (inbox) element = React.createElement(Component, inboxView === 'story' ? { personId: state.actor.person_id, ...inboxStoryProps } : { phien: state.actor });
+    else if (surface === 'comments') element = React.createElement(Component, { person: state.actor.person_id, post: state.post, onDraftChange: draft => drafts.push(draft), ...state.commentsProps });
+    else if (surface === 'boundary') element = React.createElement(comments.CommunityFontMetrics, null, React.createElement(BoundaryProbe));
+    else if (surface === 'explore') element = React.createElement(Component, { ...state.exploreProps, phien: state.actor });
+    else element = React.createElement(Component);
+    if (state.explicitProvider) element = React.createElement(metrics.NativeFontMetricsProvider, { snapshot: state.nativeFont }, element);
+    const content = inbox ? React.createElement(InboxNepProvider, null, state.show ? element : null) : React.createElement(Session.RudiSessionProvider, null, React.createElement(SessionProbe), state.show ? element : null);
+    return strict ? React.createElement(React.StrictMode, null, content) : content;
+  }
+  function hosts(kind, match = () => true) { assert.ok(root, 'mounted host'); return root.root.findAll(node => node.type === kind && match(node.props)); }
+  function one(kind, match) { const values = hosts(kind, match); assert.equal(values.length, 1, `One ${kind} host`); return values[0]; }
+  function measure(kind, target, callback, ancestor, onFail) {
+    assert.equal(nativeGeometry, true, `Explicit native geometry boundary for ${kind}`);
+    assert.equal(typeof callback, 'function');
+    const entry = { kind, target, ancestor, callback, onFail, pending: true };
+    measurements.push(entry);
+  }
+  function nativeNode(element) {
+    const node = { id: ++nodeId, kind: element.type,
+      focus() { focused = this; }, blur() { if (focused === this) focused = null; }, isFocused() { return focused === this; },
+      scrollTo(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollTo', target: this.id, options } : { kind: 'scrollTo', options }); },
+      scrollToEnd(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollToEnd', target: this.id, options } : { kind: 'scrollToEnd', options }); },
+      scrollToOffset(options) { nativeHostCalls.push(nativeGeometry ? { kind: 'scrollToOffset', target: this.id, options } : { kind: 'scrollToOffset', options }); },
+      getNativeScrollRef() { return this; },
+      measure(callback) { measure('measure', this, callback); },
+      measureLayout(ancestor, callback, onFail) { assert.ok(ancestor && Number.isInteger(ancestor.id), 'actual native ancestor handle'); measure('measureLayout', this, callback, ancestor, onFail); },
+      measureInWindow(callback) { if (nativeGeometry) measure('measureInWindow', this, callback); else callback(0, 0, 390, 400); },
+    };
+    return node;
+  }
+  const h = {
+    state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
+    inbox, community,
+    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage,
+    exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
+    exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,
+    get root() { return root; },
+    attemptCount() { return attempt; },
+    observation() { return { live: listeners.size, subscriptions, removals, reads: getterReads, maxLive }; },
+    hosts, one,
+    input() { return one('RNTextInput', props => surface === 'inbox' ? props.accessibilityLabel === 'Tìm cuộc trò chuyện' : surface === 'explore' ? props.accessibilityLabel === 'Ô tìm địa điểm' : props.testID === (surface === 'boundary' ? 'owner-probe-input' : surface === 'composer' ? 'community-body' : 'community-comment-input')); },
+    text(match = () => true) { return hosts('RNText', props => typeof match === 'string' ? props.children === match : match(props)); },
+    textContent() { return hosts('RNText').map(node => node.props.children).filter(value => typeof value === 'string').join('\n'); },
+    owner(name) { const values = root.root.findAll(node => typeof node.type === 'function' && node.type.name === name); assert.equal(values.length, 1, `One ${name} owner`); return values[0]; },
+    editors() { return root.root.findAllByType(comments.Comments); },
+    writer() { const values = h.editors(); assert.equal(values.length, 1, 'one Comments writer'); return values[0].props.onDraftChange; },
+    cards() { return root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'PostCard'); },
+    commentSheet() { const values = root.root.findAllByType(Sheet).filter(node => node.props.accessibilityLabel === 'Bình luận'); assert.equal(values.length, 1, 'one actual comment Sheet'); return values[0]; },
+    panel() { return one('RNAnimatedView', props => props.accessibilityLabel === 'Bình luận'); },
+    callsFor(kind) { return calls.filter(call => call.kind === kind); },
+    async mount() { await act(async () => { root = Renderer.create(React.createElement(App), { createNodeMock: nativeNode }); }); },
+    async update(callback = () => {}) { await act(async () => { callback(state); root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    async nativeFont(value) { await act(async () => { state.nativeFont = value; [...listeners].forEach(callback => callback()); if (state.explicitProvider) root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    async invokeRetired(index = retiredCallbacks.length - 1) { assert.ok(retiredCallbacks[index]); await act(async () => retiredCallbacks[index]()); },
+    async change(value) { await act(async () => h.input().props.onChangeText(value)); },
+    async focus() { await act(async () => h.input().props.onFocus?.({ nativeEvent: { synthetic: true } })); },
+    async pressAccessibility(label) {
+      // A legacy semantic tool step now follows the actual disclosure UI first.
+      const commentTool = ['comments', 'detail'].includes(surface) && (label === 'Thêm ảnh' || label.startsWith('Gắn bạn bè'));
+      if (commentTool && hosts('RNPressable', props => props.accessibilityLabel === label).length === 0) {
+        const disclosure = one('RNPressable', props => /^(Thêm vào bình luận|Đóng công cụ bình luận)$/.test(props.accessibilityLabel));
+        if (disclosure.props.disabled) return false;
+        if (!disclosure.props.accessibilityState?.expanded) await act(async () => disclosure.props.onPress());
+      }
+      await act(async () => one('RNPressable', props => props.accessibilityLabel === label).props.onPress());
+      return true;
+    },
+    async pressText(label) { const values = hosts('RNPressable').filter(node => node.findAllByType('RNText').some(text => text.props.children === label)); assert.equal(values.length, 1, `One pressable ${label}`); await act(async () => values[0].props.onPress()); },
+    async openComments(index = 0) { const values = h.cards(); assert.ok(values[index], 'actual PostCard exists'); await act(async () => values[index].props.onComment()); },
+    async closeComments() { await act(async () => h.commentSheet().props.onClose()); },
+    closeAnimation() { const panel = h.panel(); const ids = [panel.props.style].flat(Infinity).flatMap(style => style?.syntheticSharedIds ?? []); const event = timings.filter(item => ids.includes(item.shared) && item.target === 0).at(-1); assert.ok(event?.callback, 'actual Sheet native completion'); return event; },
+    async completeClose(event = h.closeAnimation(), finished = true) { await act(async () => event.callback(finished)); },
+    deferCommentsRead() { const queued = { ...deferred(), started: false }; commentsReadQueue.push(queued); return queued; },
+    deferFriendsRead() { const queued = { ...deferred(), started: false }; friendsReadQueue.push(queued); return queued; },
+    async resolvePost(value = state.post, index = gets.findIndex(call => typeof call.resolve === 'function')) { assert.ok(gets[index]?.resolve, 'deferred actual getPost transport'); await act(async () => gets[index].resolve(value)); },
+    async rejectPost(error, index = gets.findIndex(call => typeof call.reject === 'function')) { assert.ok(gets[index]?.reject); await act(async () => gets[index].reject(error)); },
+    async send() { const button = one('RNPressable', props => /^(Gửi bình luận|Đang gửi…)$/.test(props.accessibilityLabel)); assert.equal(Boolean(button.props.disabled), false, 'send is enabled'); await act(async () => button.props.onPress()); },
+    async resolveWrite(index, value = { id: 'synthetic-accepted', status: 'pending' }) { assert.ok(writes[index]); await act(async () => writes[index].resolve(value)); },
+    async rejectWrite(index, error = new Error('Synthetic response lost')) { assert.ok(writes[index]); await act(async () => writes[index].reject(error)); },
+    async finish(call, value) { assert.ok(call?.resolve); await act(async () => call.resolve(value)); },
+    async fail(call, error) { assert.ok(call?.reject); await act(async () => call.reject(error)); },
+    async flushInboxTimers() { assert.ok(inbox); let count = 0; while (timers.size) { assert.ok(++count <= 100, 'Inbox timers cannot loop indefinitely'); const [id, callback] = timers.entries().next().value; timers.delete(id); await act(async () => callback()); } },
+    async inboxActorTo(value) { assert.ok(inbox); await act(async () => inbox.replaceActor(value)); },
+    async actorTo(id) { await act(async () => { state.actor = person(id); session.datPhien(state.actor); root.update(React.createElement(App, { tick: ++state.tick })); }); },
+    native: {
+      node(host) { assert.equal(nativeGeometry, true); const ref = host.props.ref; if (ref && typeof ref === 'object' && ref.current) return ref.current; if (!hostNodes.has(host)) hostNodes.set(host, host.instance); const node = hostNodes.get(host); assert.ok(node && Number.isInteger(node.id), 'actual native renderer handle'); return node; },
+      replace(host) { const ref = host.props.ref, previous = this.node(host); ref.current = nativeNode({ type: host.type }); return { previous, current: ref.current, restore() { ref.current = previous; } }; },
+      pendingFrames() { return frames.size; }, frameCalls,
+      async frame() { assert.equal(nativeGeometry, true); const entry = frames.entries().next().value; assert.ok(entry, 'one scheduled native frame'); frames.delete(entry[0]); frameCalls.push({ kind: 'fire', id: entry[0] }); await act(async () => entry[1]()); },
+      async emitKeyboard(name) { assert.equal(nativeGeometry, true); assert.ok(['keyboardDidShow', 'keyboardDidHide'].includes(name)); const entries = keyboardListeners.get(name); assert.ok(entries?.size, `actual listener for ${name}`); await act(async () => [...entries].forEach(callback => callback({ endCoordinates: { height: 259 } }))); },
+      async focus(host) { const node = this.node(host); await act(async () => { node.focus(); host.props.onFocus?.({ nativeEvent: { synthetic: true } }); }); },
+      async blur(host) { const node = this.node(host); await act(async () => { node.blur(); host.props.onBlur?.({ nativeEvent: { synthetic: true } }); }); },
+      pending(kind, target) { return measurements.filter(entry => entry.pending && (!kind || entry.kind === kind) && (!target || entry.target === target)); },
+      take(kind, target) { const entries = this.pending(kind, target); assert.equal(entries.length, 1, `One pending ${kind} native measure for target ${target?.id}`); return entries[0]; },
+      async resolve(entry, values) { assert.equal(entry.pending, true); const count = entry.kind === 'measure' ? 6 : 4; assert.equal(values.length, count, 'native callback arity'); entry.pending = false; await act(async () => entry.callback(...values)); },
+      async fail(entry) { assert.equal(entry.pending, true); assert.equal(typeof entry.onFail, 'function', 'native failure callback exists'); entry.pending = false; await act(async () => entry.onFail()); },
+    },
+    async dispose() { if (root) { const current = root; root = null; await act(async () => current.unmount()); } timers.clear(); frames.clear(); },
+  };
+  return h;
+}
+
+module.exports = { createHost, snapshot, flatten, person, post, React, act, repo, sourceRoot };
