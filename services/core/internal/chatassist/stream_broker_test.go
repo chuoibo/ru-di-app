@@ -25,6 +25,7 @@ import (
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/auth"
+	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/httpapi/mw/cors"
 )
 
@@ -447,6 +448,12 @@ func TestStreamViecV2KhongGhiKhoaPhong(t *testing.T) {
 	f := setup(t, nil)
 	d := moDongSong(t, f)
 	v := f.create(t)
+	if err := chatv2.Migrate(context.Background(), f.pool); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.pool.Exec(context.Background(), `INSERT INTO chat_v2_conversations(context_id,epoch,ready,last_sequence) VALUES($1,1,true,0)`, f.context); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET lane='v2' WHERE id=$1`, v.ID); err != nil {
 		t.Fatal(err)
 	}
