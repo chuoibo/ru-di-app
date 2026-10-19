@@ -10,10 +10,10 @@
  *
  * The app opens the group the session already holds (`moNhomDaCo`): only
  * step 4 below runs. `khoiDongNhom` is the end-to-end harness's way to reach
- * a seeded group on a throwaway stack (`tests/e2e`, via
+ * a test group on a throwaway stack (`tests/e2e`, via
  * `rudi/nhom-demo.ts`); no screen calls it.
  *
- * It builds the group the way `scripts/seed_demo_data.py` does, through the
+ * It builds a test group through the
  * HTTP API, in four steps that are stable under retry:
  *
  *   1. `PUT /people/{id}` for the person signed in, and for `minh` (the
@@ -61,7 +61,7 @@
  * than the evidence supports.
  *
  * There is no `GET /contexts`, so replay is the only route to the seeded
- * group -- inventing a fresh key would create a SECOND "Team Đà Lạt" beside
+ * group -- inventing a fresh key would create a SECOND group beside
  * the one holding the members and the history. So the idempotent writes below
  * are serialised by `thanNhuSeed`, which reproduces Python's default
  * `json.dumps` output byte for byte.
@@ -247,7 +247,7 @@ function docThanhVien(raw: unknown, field: string): ThanhVien {
 /**
  * Serialise a flat string object the way Python's `json.dumps` does by
  * default, so an idempotent write from this client digests to the same
- * fingerprint as the same write from `scripts/seed_demo_data.py`.
+ * fingerprint as the same write from the Python client.
  *
  * Two differences from `JSON.stringify`, and both matter because the server
  * hashes raw bytes:
