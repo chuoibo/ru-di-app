@@ -2,9 +2,8 @@
 # Prepare the Milvus secrets of the vnlocal stack, once per machine, outside
 # the repository (ADR-0049 §2.6):
 #   ~/.config/rudi/milvus/user.yaml      server config: auth on, the root
-#                                         password, embedded etcd, MinIO
+#                                         password, etcd (milvus-etcd), MinIO
 #                                         storage, woodpecker, GPU memory pool
-#   ~/.config/rudi/milvus/embedEtcd.yaml  embedded etcd
 #   ~/.config/rudi/milvus/minio.env       the milvus-minio root credentials
 #   ~/.config/rudi/milvus.env             MOBILE_MILVUS_USER / _PASSWORD for core
 # Re-running keeps existing passwords: Milvus only reads defaultRootPassword
@@ -53,11 +52,8 @@ gpu_max="${RUDI_MILVUS_GPU_MAX_MB:-6144}"
 (umask 077; cat >"$dir/user.yaml" <<YAML
 etcd:
   use:
-    embed: true
-  data:
-    dir: /var/lib/milvus/etcd
-  config:
-    path: /milvus/configs/embedEtcd.yaml
+    embed: false
+  endpoints: milvus-etcd:2379
 common:
   storageType: remote
   security:
@@ -80,16 +76,6 @@ gpu:
   maxMemSize: $gpu_max
 YAML
 )
-# etcd's heartbeat-interval / election-timeout are milliseconds: leave them
-# at the defaults (100 / 1000). A hand edit to 2 / 10 on 02/10 made etcd
-# 50-100x tighter, not looser.
-cat >"$dir/embedEtcd.yaml" <<YAML
-listen-client-urls: http://0.0.0.0:2379
-advertise-client-urls: http://0.0.0.0:2379
-quota-backend-bytes: $((4 << 30))
-auto-compaction-mode: revision
-auto-compaction-retention: '1000'
-YAML
 # The server runs as root in the container and reads the bind mount.
-chmod 644 "$dir/user.yaml" "$dir/embedEtcd.yaml"
-echo "xong: $dir/user.yaml, $dir/embedEtcd.yaml, $minio_envf"
+chmod 644 "$dir/user.yaml"
+echo "xong: $dir/user.yaml, $minio_envf"
