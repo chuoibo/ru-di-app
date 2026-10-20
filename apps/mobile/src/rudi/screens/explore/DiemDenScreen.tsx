@@ -250,7 +250,7 @@ export function DiemDenScreen() {
                   </View>
                 )}
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
-                  <Text numberOfLines={noiBat ? undefined : 1} style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
+                  <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhu === "" ? null : (
                     // Never clipped: a row reserves two lines so rows keep one height, and longer copy (320 dp, large text) wraps on.
                     <Text style={[typography.caption, { color: colors.inkSoft }, !noiBat && { minHeight: typography.caption.lineHeight * 2 }]}>{dongPhu}</Text>

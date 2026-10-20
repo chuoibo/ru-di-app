@@ -75,6 +75,7 @@ test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề khôn
   assert.match(diemDen, /typography\.caption, \{ color: colors\.inkSoft \}, !noiBat && \{ minHeight: typography\.caption\.lineHeight \* 2 \}/);
   assert.doesNotMatch(diemDen, /numberOfLines=\{noiBat \? undefined : 1\} style=\{\[typography\.caption/, "phụ đề bị cắt «…» là lỗi review 02c94551");
   assert.match(diemDen, /thuHang: \{ width: RONG_THU, height: 64 \}/);
+  assert.doesNotMatch(diemDen, /numberOfLines=\{noiBat \? undefined : 1\}/, "tên tỉnh bị cắt «…» ở 320 dp (review 52b4c7d6)");
   assert.match(diemDen, /canhDiemDen\(d\.id\)/);
 });
 
