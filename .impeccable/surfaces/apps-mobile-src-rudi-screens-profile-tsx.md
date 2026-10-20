@@ -136,7 +136,7 @@ THESIS: Một trục giữa cho mọi trạng thái rỗng và một lưới đ�
 
 OWN-WORLD: Giữ Sân Khấu Giấy v3: giấy, mực, coral, Bricolage; không thêm màu, font, radius hay tranh mới.
 
-STORY: Cá nhân giữ hướng 13/10 (trang thật đã giữ dẫn màn) khi có trang; chưa có trang thì thẻ hồ sơ một khung → dấu chân (số trên, danh từ dưới, ô cao bằng nhau) → tab → sổ rỗng gọn, căn đúng trục thẻ. Tin nhắn rỗng: một EmptyState căn giữa, lối «Thêm bạn» nằm cùng trục.
+STORY: Cá nhân giữ hướng 13/10 (trang thật đã giữ dẫn màn) khi có trang; chưa có trang thì thẻ hồ sơ một khung → tab → dấu chân (số trên, danh từ dưới, ô cao bằng nhau) → sổ rỗng gọn, căn đúng trục thẻ. Tin nhắn rỗng: một EmptyState căn giữa, lối «Thêm bạn» nằm cùng trục.
 
 FIRST VIEWPORT: 390×844 khi chưa có trang: tên, dấu chân và hai tab nằm trên nếp gấp; tiêu đề h1 như Tin nhắn.
 

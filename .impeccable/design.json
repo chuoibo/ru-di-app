@@ -1,5 +1,5 @@
 {
-  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script. shippedV6 là Phase 1 «Nếp truyền giấy» 2026-09-12 (nhánh claude/p0-w-hn-1-nen-to-giay, head 137c6c04): nền không cần máy chủ của sổ hai người, chỉ trên ui-lab, ba vòng đọc mù. shippedV7 là đợt nâng cấp UI/UX 01–04/10 (B1–B11, ghi từ mã 04/10).",
+  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script. shippedV6 là Phase 1 «Nếp truyền giấy» 2026-09-12 (nhánh claude/p0-w-hn-1-nen-to-giay, head 137c6c04): nền không cần máy chủ của sổ hai người, chỉ trên ui-lab, ba vòng đọc mù. shippedV7 là đợt nâng cấp UI/UX 01–04/10 (B1–B11, ghi từ mã 04/10). shippedKhamPhaCaNhan20261021 ghi đợt tinh chỉnh code-led 2d0ced17..670a2a28 (trang quán, tranh cảnh dự phòng, Khám phá phân trang, chọn điểm đến, Cá nhân, Tin nhắn rỗng), đọc từ mã đã ship, chưa có verdict ship.",
   "source": "packages/shared/tokens.json",
   "measuredFrom": "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. Các tỷ lệ token không thay thế bằng chứng native của từng component.",
   "color": {
@@ -757,7 +757,7 @@
     "DongTien": "dòng sổ: tên body (label khi dam) + phụ caption inkSoft, Money label (money khi dam) tone ink/split/warn, minHeight 52, paddingVertical 10, gap 12, hairline line dưới, cuoi bỏ kẻ",
     "KhungAnh": "card, hairline line, bo radius.small, cardShadow, padding 8 / paddingBottom 14, gap 8, ảnh bo 4 trên nền line; chuThich body ink, xuatXu caption inkFaint 1 dòng; tilt ±1/±2 tay, 0 danh sách",
     "HangChang": "row minHeight 64 gap 10; giờ label tabular minWidth 46 canh phải; axis 14, node 12 bo 6 viền 2 ink (daToi tô split), line 2 lineStrong hoặc dashed 2 inkFaint khi phac; body label ink + caption phuTone + caption inkSoft, paddingBottom 18, minHeight 48; slot phai; cuoi không đường dưới; prop anh {anh: AnhCoGhiCong, alt, loai?} (vòng 2 08/09, AnhChang không export): ảnh 44x44 expo-image cover trong khung padding 2 card + hairline line bo radius.small (ảnh bo 8, nền line) ở khe phải, chặng tự in cauGhiCong(anh.nguon) caption inkFaint không trần số dòng làm dòng cuối; ảnh hỏng → GuGlyph theo loai trong cùng khung + chữ «Chưa tải được ảnh» caption warn; chỉ khi chặng có địa điểm có ảnh; dùng ở Outing (Lên plan) và Group (tờ lịch trình AI); phu = tên địa điểm khi có, «Chọn địa điểm» khi chưa (live «Mở địa điểm» khi chỉ có id); nháp nói một lần ở đầu màn",
-    "PlaceLead": "MediaSlot ratio 16:10 compact / 21:9 medium+, bo 20, attribution = anh.nguon in caption inkFaint dưới khung, Stamp ai nen tilt -2 trên ảnh chỉ khi không có lyDo (dauCon); anh null → KyHoa (tờ paper rộng cột, 3:1 · 4:1 chữ lớn) rồi tên + sự thật (tới 11/09: PlaceGlyph 34); tên h2, lyDo: một dòng LyDo (sparkles 13 + label ai, numberOfLines 1) dưới tên thay con dấu — một tag qua chonLyDo (fixture) hoặc reason của mô hình (live); mô tả body inkSoft không lặp từ của lý do, sự thật icon 16 + label inkSoft; IconButton lưu",
+    "PlaceLead": "Hiện hành 21/10: MediaSlot ratio 16:9 compact / 21:9 rộng; anh null → PlaceArtwork (tranh cảnh theo canh-ve.ts, không nhãn), không KyHoa. Lịch sử: MediaSlot ratio 16:10 compact / 21:9 medium+, bo 20, attribution = anh.nguon in caption inkFaint dưới khung, Stamp ai nen tilt -2 trên ảnh chỉ khi không có lyDo (dauCon); anh null → KyHoa (tờ paper rộng cột, 3:1 · 4:1 chữ lớn) rồi tên + sự thật (tới 11/09: PlaceGlyph 34); tên h2, lyDo: một dòng LyDo (sparkles 13 + label ai, numberOfLines 1) dưới tên thay con dấu — một tag qua chonLyDo (fixture) hoặc reason của mô hình (live); mô tả body inkSoft không lặp từ của lý do, sự thật icon 16 + label inkSoft; IconButton lưu",
     "HaiCot": "twoPane → hàng 3:2 gap lg, mỗi cột gap 18; điện thoại xếp dọc; phaiChiKhiRong bỏ cột phải trên điện thoại; bill: AiCoGi (label + caption món, warn cho món chưa người) cạnh gán món, ai-đã-trả + tên khoản cạnh sổ",
     "TouchTarget": "mọi node bấm được ≥48dp kể cả TextInput trong Field (52/48), ô soạn chat, pill; Pressable chỉ khi còn bấm được; nhãn a11y phân biệt control cùng chữ; đo bằng scripts/a11y_native_audit.py; ONhapMuc ô nhập 48 (UI-001); đợt 01–04/10 nâng các đích 44 còn lại lên 48; ngoại lệ có tên: lưới ngày ChonNgayLich 44 (bảy cột 48 không vừa 320); hành động lặp theo hàng giữ nhãn ngắn, tên trợ năng mang tên hàng («Đặt <tên> làm quản trị», «Đồng ý vào nhóm <tên nhóm>»)",
     "ChatM15": "sticker vector 120 (từ vựng đóng 8 id, không GIF); lớp tô hoặc nét (net, round cap), vai thêm line; hai cỡ đọc: chiTiet=size>=72, khay 64 dùng HINH_RUT_GON, không thu 120 xuống; cho-ti là sticker đầu vẽ bằng ngôn ngữ Nếp qua tuLopVe (ghế + tay lên lưng ghế + đồng hồ), bảy hình còn lại chờ Lead (docs/archive/claude/2026-09-08/tra-loi-sticker-cho-ti.md); tests/rudi-chat-sticker.test.mjs; trích dẫn trả lời TRÊN bong bóng: viền line, vạch trái 3 accent theme, caption; tin đã xoá: bong bóng giấy + caption nghiêng inkFaint; theme bong bóng (tokens.chatTheme, mac-dinh = accent scheme) chỉ tô bong bóng người gửi + viền chip mình; hàng hai pill dưới tiêu đề (thành viên|Xem hồ sơ, Cài đặt) caption inkSoft icon 15 cao 40; cặp = Avatar 44 + «Nhắn riêng»",
@@ -939,7 +939,7 @@
       },
       {
         "name": "Luật Ký Hoạ Trong Sổ",
-        "body": "Nơi chưa có ảnh ở vị trí dẫn của Khám phá (PlaceLead anh null) và ở đầu bài chi tiết không bìa (Discovery fixture, PlaceDetailLive dauGon) nhận một tờ ký hoạ KyHoa (art/ky-hoa.ts): tờ paper rộng hết cột, viền hairline line, bo radius.small, 3:1 ở chữ 1.0 và 4:1 khi chuLon — cùng một hình, hai khung cắt (preserveAspectRatio slice; bản gon ít lớp hơn). Hình = sân khấu theo loại (quan-an-local hiên quán · cafe góc cửa kính · vui-choi đồi thông · di-choi-dem quầy đêm · loại lạ tờ ghi gấp) + tối đa hai đạo cụ từ tag có thật (bảng DAO_CU_CUA mỗi sân khấu đánh dấu ca-hai | chi-day) + đúng một lớp coral = nguồn sáng; ba cỡ nét theo độ sâu 3.0/2.4/1.7, bóng là mảng bong đi theo đúng đường cong của nét viền. Thật thà: vẽ một loại nơi, không tên, không bảng hiệu, không giả ảnh, không chữ. Câu a11y (moTaKyHoa, role image) mở bằng «Ký hoạ …» và chỉ kể đạo cụ mà khung đọc ấy thật sự vẽ; bản gọn là tập con của bản đủ (chỉ bỏ, không bù tag sau). Live chỉ truyền loại (tags []) nên hai quán ăn nhận cùng một hiên. Không dùng ở hàng, cặp so sánh, fallback ảnh hỏng (giữ PlaceGlyph) và không bao giờ thay ảnh thật có ghi công. 11/09, review Codex A1, đọc mù v2 trượt → v3, finish review ship; tests/art-ky-hoa.test.mjs; bằng chứng docs/archive/claude/2026-09-11/ky-hoa-trong-so/.",
+        "body": "Hiện hành 21/10: lead Khám phá và bìa trang quán không ảnh đã rời KyHoa sang tranh cảnh PlaceArtwork chọn theo loại rồi vùng (kham-pha/canh-ve.ts), không nhãn chữ; phần sau là lịch sử của tờ ký hoạ. Nơi chưa có ảnh ở vị trí dẫn của Khám phá (PlaceLead anh null) và ở đầu bài chi tiết không bìa (Discovery fixture, PlaceDetailLive dauGon) nhận một tờ ký hoạ KyHoa (art/ky-hoa.ts): tờ paper rộng hết cột, viền hairline line, bo radius.small, 3:1 ở chữ 1.0 và 4:1 khi chuLon — cùng một hình, hai khung cắt (preserveAspectRatio slice; bản gon ít lớp hơn). Hình = sân khấu theo loại (quan-an-local hiên quán · cafe góc cửa kính · vui-choi đồi thông · di-choi-dem quầy đêm · loại lạ tờ ghi gấp) + tối đa hai đạo cụ từ tag có thật (bảng DAO_CU_CUA mỗi sân khấu đánh dấu ca-hai | chi-day) + đúng một lớp coral = nguồn sáng; ba cỡ nét theo độ sâu 3.0/2.4/1.7, bóng là mảng bong đi theo đúng đường cong của nét viền. Thật thà: vẽ một loại nơi, không tên, không bảng hiệu, không giả ảnh, không chữ. Câu a11y (moTaKyHoa, role image) mở bằng «Ký hoạ …» và chỉ kể đạo cụ mà khung đọc ấy thật sự vẽ; bản gọn là tập con của bản đủ (chỉ bỏ, không bù tag sau). Live chỉ truyền loại (tags []) nên hai quán ăn nhận cùng một hiên. Không dùng ở hàng, cặp so sánh, fallback ảnh hỏng (giữ PlaceGlyph) và không bao giờ thay ảnh thật có ghi công. 11/09, review Codex A1, đọc mù v2 trượt → v3, finish review ship; tests/art-ky-hoa.test.mjs; bằng chứng docs/archive/claude/2026-09-11/ky-hoa-trong-so/.",
         "section": "components"
       },
       {
@@ -2626,6 +2626,68 @@
       "Không chứng minh target thực48dp, computed geometry/contrast toàn màn, TalkBack, motion/reduced motion, hardware/iOS, strict gate/E2E/load hoặc deployment.",
       "Giữ UI3/seed c8e88116, giấy/mực/coral/Bricolage/Nếp canonical; generated/historical reference chỉ để critique, không approved comp mới.",
       "Toàn app/M–N/I/P–Q/L–R/A–B–S/C–D–E–F/G/K và các cổng cuối ngoài scope; không main/app ship."
+    ]
+  },
+  "shippedKhamPhaCaNhan20261021": {
+    "_": "Mở rộng Sân Khấu Giấy v3, không thêm token. Đọc từ mã tại 670a2a28 và ảnh .impeccable/review/{02c94551,52b4c7d6}/ (dữ liệu seed, ảnh đồi gradient là placeholder). Không verdict ship, không native/TalkBack/iOS/tablet.",
+    "date": "2026-10-21",
+    "range": "2d0ced17..670a2a28",
+    "source": "670a2a28",
+    "authority": {
+      "design": "DESIGN.md — Components › «Khám phá, trang quán và Cá nhân — tinh chỉnh 2d0ced17..670a2a28, ghi 21/10/2026»",
+      "briefs": [
+        ".impeccable/surfaces/rudi-screens-explore-placedetaillive-tsx-47895299.md",
+        ".impeccable/surfaces/src-rudi-screens-explore-explorelive-tsx-5ec3650c.md",
+        ".impeccable/surfaces/apps-mobile-src-rudi-screens-profile-tsx.md"
+      ],
+      "divergence": "Brief Cá nhân kể dấu chân → tab → sổ; build ship thẻ hồ sơ → tab → dấu chân → sổ. Bản ghi theo build."
+    },
+    "placeDetail": {
+      "cover": "BiaTrang: một khung 16:9 bo radius.base, pagingEnabled; mỗi trang MediaSlot với đúng một dòng ghi công của chính ảnh; viên n/N góc trên phải (card, viền hairline line, radius.small, caption ink, a11y «Ảnh n trên N») khi > 1 ảnh; chạm mở PhotoViewer. Không dải ảnh nhỏ dưới bìa. Không ảnh → PlaceArtwork fillFrame trong cùng khung. Tiền tố ghi công «Ảnh quanh đây: » (TIEN_TO_ANH).",
+      "order": "tên h1 → phụ đề body inkSoft → điểm một chữ số thập phân + chip Đang mở/Đã đóng → Tại sao đáng đến (3 dòng, Đọc thêm chỉ khi cắt) → khối dữ kiện → chip không khí → địa chỉ → mục",
+      "keyFacts": "dongChinh: nhãn label inkSoft cột 96, giá trị body ink, phụ note inkSoft, gap 12 baseline; Giá («Ước khoảng …/người» khi ước) · Hôm nay · Giờ đẹp nhất · Thời gian · Đặt chỗ; mỗi dòng chỉ khi máy chủ gửi; giá nói một lần, không mục Giá riêng.",
+      "chips": "nhanKhiChat: danh mục, khí chất, trong/ngoài, traits; khử trùng theo hoa thường/dấu/đ/khoảng trắng (khoaNhan), tối đa 10; không lặp dữ kiện.",
+      "sections": "Giới thiệu (chỉ khi khác Tại sao đáng đến) · Món nên thử (thẻ card hairline radius.small) · Không khí · Hợp với ai · Giờ (bảng tuần, nhãn cột 84) · Trải nghiệm nên thử · Lưu ý; mục rỗng ẩn hẳn.",
+      "address": "khối card viền 1 line radius.small đệm 14/12; ghim location-outline 20 accent + địa chỉ label ink + câu đường đi caption inkSoft, cả hàng ≥ 48; RudiButton outline compact «Chỉ đường» bên dưới thụt 30."
+    },
+    "sceneArt": {
+      "label": "Không bao giờ có nhãn chữ (chủ sản phẩm 20/10/2026, «Minh hoạ» đã xoá).",
+      "regions": {
+        "scene-hills": "lam-dong",
+        "scene-cafe": "lam-dong",
+        "scene-street": "hoi-an",
+        "scene-lanterns": "hoi-an",
+        "scene-coast": "bien",
+        "scene-atelier": null
+      },
+      "choice": "theo loại trước (cafe → cafe/atelier; quan-an-local → street/atelier; di-choi-dem → lanterns/street; vui-choi → atelier; khác → hills/coast) rồi lọc theo vùng điểm đến/địa chỉ.",
+      "neighbours": "phanCanhDanhSach: hai thẻ liền nhau không cùng tranh; tranh trung thực duy nhất trùng hàng xóm → vẽ đồ vật loại nơi (GuGlyph tone ink).",
+      "objectOnly": "nền paperShade, không paper trắng."
+    },
+    "explore": {
+      "pageSize": 30,
+      "more": "onGanCuoi trong một màn từ cuối + nút «Xem thêm N nơi» dự phòng, «Đang tải thêm…»",
+      "cache": "stale-while-revalidate theo người + điểm đến; skeleton chỉ khi tỉnh chưa đọc",
+      "cityStage": "SanThanhPho: MediaSlot bo 8 với ghi công khi điểm đến có ảnh bìa; tranh thành phố là fallback"
+    },
+    "destinationPicker": {
+      "layout": "danh sách một cột, không lưới",
+      "featured": "điểm đang xem: viền accent, ảnh bìa thật 3:2 qua MediaSlot + ghi công (không ảnh → canhDiemDen hoặc ký hoạ đường nét), DauLon co nho «Đang xem» ink tilt -8",
+      "rows": "thẻ card hairline line bo 8 đệm 10 gap 12 minHeight 84; cùng ký hoạ đường nét thành phố trong khung 96×64 (bo 4, hairline, paper); không ảnh ở hàng (thumbnail không chở trọn ghi công); chevron inkFaint / checkmark-circle accent",
+      "text": "tên và phụ đề không numberOfLines; giữ chỗ hai dòng phụ đề; một dòng lặng mỗi hàng"
+    },
+    "profile": {
+      "title": "«Cá nhân» h1",
+      "identity": "một khung (viền thẻ radius.base, đệm md); bỏ dải coral, kẻ đứt trong, triện chìm; avatar 56 (48 chữ lớn) – tên h2 + «thành phố · Tham gia năm» note inkSoft – nút sửa cùng hàng, gap 14",
+      "facts": "ProfileFacts một tầng: thẻ viền 1, hai hàng × ba cột bằng nhau, kẻ tóc line giữa; số h2 tabular trên, danh từ note inkSoft dưới, ô minHeight 56; bạn bè là cửa (danh từ accent, nhãn lời mời caption accent trên accentSoft); ô thứ sáu để trống; số 0 inkSoft. Không ô tô màu, không icon.",
+      "order": "có trang đã giữ → trang dẫn; chưa có → dấu chân dẫn, sổ rỗng compact (tranh 62×48, title, note, ghost compact) theo sau",
+      "journalSheet": "ray gáy 24 trong luồng; tờ căn giữa bù 24 phải để trục trùng trục thẻ; trang đã giữ không bìa chỉ chữ; Sở thích là ListRow trong thẻ viền"
+    },
+    "emptyPage": "EmptyState layout=page: một trục giữa, khối ≤ 420, chữ căn giữa, nút dọc căn giữa ≤ 360 rộng theo nhãn; Tin nhắn rỗng có «Thêm bạn bằng tên tài khoản» là secondary.",
+    "evidenceOpened": [
+      ".impeccable/review/02c94551/place-detail-390x3600.png",
+      ".impeccable/review/02c94551/profile-empty-390x844.png",
+      ".impeccable/review/52b4c7d6/destinations-390x2400.png"
     ]
   }
 }
