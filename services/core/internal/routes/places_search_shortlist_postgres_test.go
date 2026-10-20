@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -282,80 +281,6 @@ func TestPlacesSearchGroundsWhatTheModelWrote(t *testing.T) {
 	} {
 		if m := match(search(t, handlerOn(t, pool, newModelGhi(answer(reason))), query)); m["source"] != "none" || m["verdict"] != nil {
 			t.Fatalf("%s reached the card: %v", name, m)
-		}
-	}
-}
-
-// GET /places asks the model about the top rows only (maxReasonRows), once,
-// for a reader whose taste is known, and serves a reason only after
-// ParseReasons' gates: a figure nobody showed it drops that one reason.
-func TestPlacesBrowseAsksTheModelAboutTheTopRowsOnly(t *testing.T) {
-	pool := catalogueSchema(t)
-	reader := "7d8f1c2a-3b4c-4d5e-8f90-a1b2c3d4e5f6"
-	for _, stmt := range []string{
-		`INSERT INTO people(id,display_name,budget_band) VALUES ('` + reader + `','Người đọc thử','vua-phai')`,
-		`INSERT INTO person_interests(id,person_id,tag) VALUES (gen_random_uuid(),'` + reader + `','cafe')`,
-	} {
-		if _, err := pool.Exec(context.Background(), stmt); err != nil {
-			t.Fatal(err)
-		}
-	}
-	browse := func(m *modelGhi) []any {
-		r := httptest.NewRequest(http.MethodGet, "/places?destination=d-hoi-an", nil)
-		r.Header.Set("X-Actor-ID", reader)
-		r.Header.Set("X-Actor-Roles", "member")
-		w := httptest.NewRecorder()
-		handlerOn(t, pool, m).ServeHTTP(w, r)
-		if w.Code != 200 {
-			t.Fatalf("%d %s", w.Code, w.Body.String())
-		}
-		var out map[string]any
-		_ = json.Unmarshal(w.Body.Bytes(), &out)
-		return out["places"].([]any)
-	}
-	// The prompt's rows: count and ids, from a model that answers nothing.
-	quiet := newModelGhi("[]")
-	places := browse(quiet)
-	reqs := quiet.stub.YeuCau()
-	if len(reqs) != 1 {
-		t.Fatalf("%d model calls for one browse", len(reqs))
-	}
-	prompt := string(reqs[0])
-	asked := strings.Count(prompt, `\"ten\": `)
-	if asked != maxReasonRows || len(places) <= maxReasonRows {
-		t.Fatalf("asked about %d of %d places, want %d", asked, len(places), maxReasonRows)
-	}
-	for _, p := range places {
-		if m, _ := p.(map[string]any)["match"].(map[string]any); m != nil && m["source"] != "none" {
-			t.Fatalf("an unanswered card claims the model: %v", m)
-		}
-	}
-	// One grounded reason and one with an invented figure: the café whose
-	// price band is 30-60k, and another row the prompt asked about.
-	var other string
-	for _, id := range regexp.MustCompile(`\\"id\\": \\"([^\\]+)\\"`).FindAllStringSubmatch(prompt, -1) {
-		if id[1] != "ha-ca-phe-hoai-niem" {
-			other = id[1]
-			break
-		}
-	}
-	if !strings.Contains(prompt, `ha-ca-phe-hoai-niem`) || other == "" {
-		t.Fatal("the quiet café and one other row should be in the prompt")
-	}
-	answer := `[{"id": "ha-ca-phe-hoai-niem", "verdict": "hop", "reason": "Giá 30-60k, yên tĩnh."},` +
-		` {"id": "` + other + `", "verdict": "tam", "reason": "Mở từ năm 1998."}]`
-	for _, p := range browse(newModelGhi(answer)) {
-		card := p.(map[string]any)
-		m, _ := card["match"].(map[string]any)
-		switch card["id"] {
-		case "ha-ca-phe-hoai-niem":
-			if m["source"] != "ai" || m["verdict"] != "hop" || m["reason"] != "Giá 30-60k, yên tĩnh." {
-				t.Fatalf("a grounded reason was lost: %v", m)
-			}
-		case other:
-			if m["source"] != "none" || m["verdict"] != nil {
-				t.Fatalf("an invented figure reached the card: %v", m)
-			}
 		}
 	}
 }

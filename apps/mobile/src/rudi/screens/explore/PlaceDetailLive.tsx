@@ -18,22 +18,20 @@
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
-import type { PlaceDetail } from "../../../screens/kham-pha/chi-tiet-dia-diem";
+import type { Highlights, PlaceDetail } from "../../../screens/kham-pha/chi-tiet-dia-diem";
 import { matchLabel } from "../../../screens/kham-pha/places";
 import {
   anhBiaThe,
   boLuuDiaDiem,
   CAU_ANH_NHOM,
   cauDuongDi,
-  cauGia,
   cauHoatDong,
-  cauMoCua,
   cauNguonDuLieu,
   chiTietNgan,
   daoLuu,
@@ -255,11 +253,14 @@ function ThanChiTiet({
   doi: { id: string; ten: string }[];
   onRu: (contextId: string) => void;
 }) {
-  const { colors } = useRudiTheme();
+  const { colors, space, radius } = useRudiTheme();
   const [moAnh, setMoAnh] = useState<number | null>(null);
+  const hl = place.highlights;
+  const coGia = hl !== null && (hl.gia !== null || hl.mucGia !== null);
   const hop = matchLabel(place.match);
   const coMatch = place.match !== null && place.match.source === "ai";
-  const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline");
+  // The price has its own section (with «ước» when it is an estimate) once the index has it: said once.
+  const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline" && !(coGia && muc.icon === "wallet-outline"));
   // The cover is drawn only with its credit (ADR-0017 §2.5); the gallery
   // strip carries the other licensed photographs, each with its own line.
   const bia = anhBiaThe(place);
@@ -290,11 +291,11 @@ function ThanChiTiet({
       <PhotoViewer photos={anhBiaViewer} index={moAnh} onIndex={setMoAnh} onClose={() => setMoAnh(null)} />
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
-      {/* The sentence the pictures are shown on, said once under them: where
-          they came from and that the place did not supply them (M12, ADR-0017
-          §2.5). Built from the gallery itself, which may hold licensed
-          photographs, frames of people's posts, or both. */}
-      {cauAnh !== null && (bia !== null || conLai.length > 0) ? (
+      {/* The credit is said once. With a cover, the line under the cover (and
+          under each strip photograph) is the credit; this sentence stands only
+          when the pictures have no cover to carry it: where they came from and
+          that the place did not supply them (ADR-0017 §2.5). */}
+      {cauAnh !== null && bia === null && conLai.length > 0 ? (
         <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauAnh}</Text>
       ) : null}
       <View style={styles.dau}>
@@ -326,29 +327,8 @@ function ThanChiTiet({
         </Pressable>
         <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} variant="outline" />
       </View>
-      {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
-      {/* Each fact said once (Luật Nói Một Lần): the price is in the facts at
-          the head and the open/closed state is its badge there, so this block
-          carries only what the head does not -- the hours, and the words for
-          an unknown price. It used to repeat both. */}
-      {place.openHours !== null || place.openNow === null || place.priceMinVnd === null || place.priceMaxVnd === null ? (
-        <View style={styles.suKien}>
-          {place.openHours !== null || place.openNow === null ? (
-            <View style={styles.hangSuKien}>
-              <Ionicons color={colors.inkFaint} name="time-outline" size={18} />
-              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>
-                {place.openHours !== null ? `Giờ mở cửa: ${place.openHours}` : cauMoCua(place)}
-              </Text>
-            </View>
-          ) : null}
-          {place.priceMinVnd === null || place.priceMaxVnd === null ? (
-            <View style={styles.hangSuKien}>
-              <Ionicons color={colors.inkFaint} name="wallet-outline" size={18} />
-              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cauGia(place)}</Text>
-            </View>
-          ) : null}
-        </View>
-      ) : null}
+      <LoiMo hl={hl} mota={place.description} />
+      <Chips place={place} hl={hl} />
       {/* From a place to an invitation in one step: the sheet of the two of
           them opens with this place as the main stop (QA 23/09: a place page
           had no way to become an evening for a couple). */}
@@ -361,13 +341,7 @@ function ThanChiTiet({
           <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="ghost" />
         )
       ))}
-      {place.traits.length > 0 ? (
-        <Inline gap={8} wrap>
-          {place.traits.map((t) => (
-            <Chip key={t} label={t} />
-          ))}
-        </Inline>
-      ) : null}
+      <ChiMuc hl={hl ?? KHONG_CO_CHI_MUC} openHours={place.openHours} space={space} colors={colors} radius={radius} />
       {cauNguonDuLieu(place) === null ? null : (
         <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauNguonDuLieu(place)}</Text>
       )}
@@ -383,26 +357,17 @@ function ThanChiTiet({
           </Inline>
         </View>
       )}
-      <View style={styles.khoi}>
-        <SectionHeader title="Vì sao hợp nhóm?" />
-        {coMatch && place.match !== null ? (
-          <>
-            <AiNote>{place.match.reason}</AiNote>
-            {place.match.factors.map((f) => (
-              <Text key={f.label} style={[typography.caption, { color: colors.inkSoft }]}>
-                {f.label}: {f.detail}
-              </Text>
-            ))}
-          </>
-        ) : (
-          <View style={[styles.hopNhomGoiY, { backgroundColor: colors.paper, borderColor: colors.line }]}>
-            <Ionicons color={colors.ai} name="sparkles-outline" size={16} />
-            <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>
-              Chưa có điểm theo gu nhóm cho nơi này. Ở Khám phá, hỏi Rủ Đi AI một câu để nó chấm.
+      {coMatch && place.match !== null ? (
+        <View style={styles.khoi}>
+          <SectionHeader title="Vì sao hợp nhóm?" />
+          <AiNote>{place.match.reason}</AiNote>
+          {place.match.factors.map((f) => (
+            <Text key={f.label} style={[typography.caption, { color: colors.inkSoft }]}>
+              {f.label}: {f.detail}
             </Text>
-          </View>
-        )}
-      </View>
+          ))}
+        </View>
+      ) : null}
       {place.reviews.length > 0 ? (
         <View style={styles.khoi}>
           <SectionHeader title={`${place.reviews.length} nhận xét`} />
@@ -429,6 +394,125 @@ function ThanChiTiet({
       {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{thongBao}</Text> : null}
     </>
   );
+}
+
+/** Nothing to index: the sections still fall back to the one hours line the row itself carries. */
+const KHONG_CO_CHI_MUC: Highlights = {
+  taiSaoDangDen: null, khongKhi: null, khungGioDep: null, mucGia: null, gioGhiChu: null,
+  phuHopVoi: [], khauViPhuHop: [], luuY: [], traiNghiem: [], monChinh: [], monPhaiThu: [],
+  gia: null, gioMoCua: [], canDatTruoc: null, trongNgoai: null, thoiLuong: null, danhMuc: [], khiChat: [],
+};
+
+/** The price band of the index, saying «ước» when the server calls it an estimate. */
+function cauKhoangGia(g: NonNullable<Highlights["gia"]>): string {
+  const k = (v: number) => `${Math.round(v / 1000)}`;
+  const dai = g.maxVnd === null || g.maxVnd === g.minVnd ? `${k(g.minVnd)}k` : `${k(g.minVnd)}–${k(g.maxVnd)}k`;
+  return `${g.uoc ? "Ước khoảng" : "Khoảng"} ${dai}/người`;
+}
+
+function cauThoiLuong(t: NonNullable<Highlights["thoiLuong"]>): string {
+  if (t.min !== null && t.max !== null && t.min !== t.max) return `Khoảng ${t.min}–${t.max} phút`;
+  return `Khoảng ${t.min ?? t.max} phút`;
+}
+
+/** «Tại sao đáng đến»: the reason first, the longer description behind «Đọc thêm». */
+function LoiMo({ hl, mota }: { hl: Highlights | null; mota: string | null }) {
+  const { colors, space } = useRudiTheme();
+  const [mo, setMo] = useState(false);
+  const dau = hl?.taiSaoDangDen ?? mota;
+  if (dau === null || dau === undefined) return null;
+  const them = hl?.taiSaoDangDen != null && mota !== null && mota !== dau ? mota : null;
+  const dai = them !== null || dau.length > 150;
+  return (
+    <View style={{ gap: space.xs }}>
+      {hl?.taiSaoDangDen != null ? <SectionHeader title="Tại sao đáng đến" /> : null}
+      <Text numberOfLines={mo ? undefined : 3} style={[typography.body, { color: colors.ink }]}>{dau}</Text>
+      {mo && them !== null ? <Text style={[typography.body, { color: colors.inkSoft }]}>{them}</Text> : null}
+      {dai ? (
+        <RudiButton compact full={false} label={mo ? "Thu gọn" : "Đọc thêm"} onPress={() => setMo((v) => !v)} variant="ghost" />
+      ) : null}
+    </View>
+  );
+}
+
+/** One quick row of what kind of place this is: category, mood, indoors, booking, time. Each only when sent. */
+function Chips({ place, hl }: { place: PlaceDetail; hl: Highlights | null }) {
+  const nhan = [
+    ...(hl?.danhMuc.map((d) => d.nhan) ?? []),
+    ...(hl?.khiChat.map((d) => d.nhan) ?? []),
+    ...(hl?.trongNgoai ? [hl.trongNgoai.nhan] : []),
+    ...(hl?.canDatTruoc ? [hl.canDatTruoc.nhan] : []),
+    ...(hl?.thoiLuong ? [cauThoiLuong(hl.thoiLuong)] : []),
+    ...place.traits,
+  ];
+  const duy = [...new Set(nhan)].slice(0, 10);
+  if (duy.length === 0) return null;
+  return (
+    <Inline gap={8} wrap>
+      {duy.map((t) => (
+        <Chip key={t} label={t} />
+      ))}
+    </Inline>
+  );
+}
+
+/** The index sections, each only when the server sent something for it. */
+function ChiMuc({ hl, openHours, space, colors, radius }: { hl: Highlights; openHours: string | null; space: { xs: number; sm: number; md: number }; colors: ReturnType<typeof useRudiTheme>["colors"]; radius: ReturnType<typeof useRudiTheme>["radius"] }) {
+  const muc = (tieuDe: string, noiDung: ReactNode) => (
+    <View key={tieuDe} style={{ gap: space.xs }}>
+      <SectionHeader title={tieuDe} />
+      {noiDung}
+    </View>
+  );
+  const dong = (chu: string, i: number) => (
+    <View key={`${i}-${chu}`} style={styles.hangBullet}>
+      <Ionicons color={colors.inkFaint} importantForAccessibility="no" name="ellipse" size={6} style={styles.chamBullet} />
+      <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{chu}</Text>
+    </View>
+  );
+  const ra: ReactNode[] = [];
+  if (hl.monPhaiThu.length > 0) {
+    ra.push(muc("Món nên thử", hl.monPhaiThu.map((m) => (
+      <View key={m.ten} style={[styles.theMon, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small, padding: space.sm, gap: 2 }]}>
+        <Text style={[typography.label, { color: colors.ink }]}>{m.ten}</Text>
+        {[m.moTa, m.huongVi, m.cachAn, m.gia].filter((x): x is string => x !== null).map((x) => (
+          <Text key={x} style={[typography.note, { color: colors.inkSoft }]}>{x}</Text>
+        ))}
+      </View>
+    ))));
+  } else if (hl.monChinh.length > 0) {
+    ra.push(muc("Món nên thử", <Inline gap={8} wrap>{hl.monChinh.map((m) => <Chip key={m} label={m} />)}</Inline>));
+  }
+  if (hl.khongKhi !== null) ra.push(muc("Không khí", <Text style={[typography.body, { color: colors.ink }]}>{hl.khongKhi}</Text>));
+  const hop = [...hl.phuHopVoi, ...hl.khauViPhuHop];
+  if (hop.length > 0) ra.push(muc("Hợp với ai", <View style={{ gap: space.xs }}>{hop.map(dong)}</View>));
+  if (hl.gia !== null || hl.mucGia !== null) {
+    ra.push(muc("Giá", (
+      <>
+        {hl.gia !== null ? <Text style={[typography.body, { color: colors.ink }]}>{cauKhoangGia(hl.gia)}</Text> : null}
+        {hl.mucGia !== null ? <Text style={[typography.note, { color: colors.inkSoft }]}>{hl.mucGia}</Text> : null}
+      </>
+    )));
+  }
+  if (hl.gioMoCua.length > 0 || hl.khungGioDep !== null || hl.gioGhiChu !== null || openHours !== null) {
+    ra.push(muc("Giờ", (
+      <>
+        {hl.gioMoCua.length > 0
+          ? hl.gioMoCua.map((g) => (
+              <View key={g.thu} style={styles.hangGio}>
+                <Text style={[typography.label, styles.nhanGio, { color: colors.inkSoft }]}>{g.nhan}</Text>
+                <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{`${g.mo} – ${g.dong}${g.quaDem ? " (qua đêm)" : ""}`}</Text>
+              </View>
+            ))
+          : openHours !== null ? <Text style={[typography.body, { color: colors.ink }]}>{`Giờ mở cửa: ${openHours}`}</Text> : null}
+        {hl.khungGioDep !== null ? <Text style={[typography.body, { color: colors.ink }]}>{`Giờ đẹp nhất: ${hl.khungGioDep}`}</Text> : null}
+        {hl.gioGhiChu !== null ? <Text style={[typography.note, { color: colors.inkSoft }]}>{hl.gioGhiChu}</Text> : null}
+      </>
+    )));
+  }
+  if (hl.traiNghiem.length > 0) ra.push(muc("Trải nghiệm nên thử", <View style={{ gap: space.xs }}>{hl.traiNghiem.map(dong)}</View>));
+  if (hl.luuY.length > 0) ra.push(muc("Lưu ý", <View style={{ gap: space.xs }}>{hl.luuY.map(dong)}</View>));
+  return <>{ra}</>;
 }
 
 /**
@@ -509,9 +593,11 @@ const styles = StyleSheet.create({
   duongDi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
   diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
   bam: { opacity: 0.7 },
-  suKien: { gap: 10 },
-  hangSuKien: { flexDirection: "row", alignItems: "center", gap: 10 },
   khoi: { gap: 8 },
-  hopNhomGoiY: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 10, borderWidth: StyleSheet.hairlineWidth },
+  hangBullet: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  chamBullet: { marginTop: 9 },
+  hangGio: { flexDirection: "row", alignItems: "baseline", gap: 12 },
+  nhanGio: { width: 84 },
+  theMon: { borderWidth: StyleSheet.hairlineWidth },
   nhanXet: { gap: 2, paddingVertical: 8 },
 });

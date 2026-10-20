@@ -36,6 +36,8 @@ function text(value) {
 }
 const semantic = value => text(value).replace(/\u00a0/g, ' ').replace(/\u2060/g, '');
 function one(nodes, message) { assert.equal(nodes.length, 1, message); return nodes[0]; }
+// Owner decision 2026-10-20: category artwork carries no text label of any kind.
+function assertNoIllustrationLabel(artwork) { assert.deepEqual(artwork.findAllByType('RNText').map(node => semantic(node.props.children)), [], 'artwork prints no «Minh hoạ» label'); }
 function leaf(owner, copy) { return one(owner.findAllByType('RNText').filter(node => semantic(node.props.children) === copy), `exact complete copy: ${copy}`); }
 function ancestor(node, type) { for (let at = node.parent; at; at = at.parent) if (at.type === type) return at; assert.fail(`actual ancestor ${String(type)}`); }
 function within(node, parent) { for (let at = node.parent; at; at = at.parent) if (at === parent) return true; return false; }
@@ -195,7 +197,7 @@ test('HC13 actual rating paragraph uses nonlinear native metrics with a sibling 
     const image = one(card.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'one real licensed image');
     await act(async () => image.props.onError());
     const artwork = one(card.findAllByType(h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceArtwork), 'actual category fallback');
-    converted(h, leaf(artwork, 'Minh hoạ'), { fontSize: 13, lineHeight: 18 }); consumed(h);
+    assertNoIllustrationLabel(artwork); consumed(h);
   });
   // A distance-only paragraph must convert too; no star is fabricated.
   const h = createHost({ surface: 'boundary', initialSnapshot: snapshot(2), boundaryChildren: ({ React, load }) => {
@@ -331,24 +333,23 @@ test('HC16 actual wide comparison fallback fills its own ratio frame and retaine
       const licensed = one(slot.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'actual licensed comparison image');
       await act(async () => licensed.props.onError());
       const artwork = one(slot.findAllByType(Artwork), 'actual failed-media artwork'), illustration = one(artwork.findAllByType(Illustration), 'actual raster illustration');
-      const image = one(illustration.findAllByType('RNExpoImage'), 'actual local artwork image'), root = ancestor(image, 'RNView'), label = leaf(artwork, 'Minh hoạ'), labelBox = ancestor(label, 'RNView');
+      const image = one(illustration.findAllByType('RNExpoImage'), 'actual local artwork image'), root = ancestor(image, 'RNView');
       const frame = one(slot.findAllByType('RNView').filter(node => flatten(node.props.style)?.aspectRatio !== undefined), 'actual MediaSlot ratio frame');
-      fixtures.push({ slot, artwork, illustration, image, root, label, labelBox, frame, retainedLayout: root.props.onLayout });
+      fixtures.push({ slot, artwork, illustration, image, root, frame, retainedLayout: root.props.onLayout });
     }
     const before = counters(h);
     const check = (fixture, scale) => {
-      const { slot, artwork, illustration, image, root, label, labelBox, frame } = fixture;
+      const { slot, artwork, illustration, image, root, frame } = fixture;
       assert.equal(slot.findAllByType(Artwork)[0] === artwork, true, 'failed-media fallback controller survives font changes');
-      assert.equal(artwork.findAllByType(Illustration)[0] === illustration, true); assert.equal(illustration.findAllByType('RNExpoImage')[0] === image, true); assert.equal(leaf(artwork, 'Minh hoạ') === label, true);
+      assert.equal(artwork.findAllByType(Illustration)[0] === illustration, true); assert.equal(illustration.findAllByType('RNExpoImage')[0] === image, true); assertNoIllustrationLabel(artwork);
       assert.equal(slot.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string').length, 0, 'font-only changes cannot reset actual failed-media state');
-      const bounds = flatten(root.props.style), picture = flatten(image.props.style), media = flatten(frame.props.style), tag = flatten(labelBox.props.style);
+      const bounds = flatten(root.props.style), picture = flatten(image.props.style), media = flatten(frame.props.style);
       assert.equal(media.width, '100%'); assert.equal(media.aspectRatio, scale === 2 ? 2 : 16 / 7);
       assert.equal(bounds.position, 'absolute', 'fallback consumes the MediaSlot frame instead of adding an intrinsic fixed-height box');
       for (const edge of ['left', 'right', 'top', 'bottom']) { assert.equal(bounds[edge], 0); assert.equal(picture[edge], 0); }
       assert.equal(Object.hasOwn(bounds, 'width'), false); assert.equal(Object.hasOwn(bounds, 'height'), false);
       assert.equal(picture.position, 'absolute'); assert.equal(picture.width, '100%', 'numeric raster width cannot feed back into the comparison column'); assert.equal(picture.height, '100%', 'numeric raster height cannot leave bands or clip the label');
-      assert.equal(tag.position, 'absolute'); assert.equal(tag.bottom, 8); assert.equal(tag.paddingVertical, 2); assert.equal(within(label, root), true); assert.equal(within(root, frame), true);
-      converted(h, label, { fontSize: 13, lineHeight: 18 });
+      assert.equal(within(root, frame), true); assertNoIllustrationLabel(artwork);
       assert.equal(Number.isFinite(illustration.props.width) && illustration.props.width > 0, true); assert.equal(Number.isFinite(illustration.props.height) && illustration.props.height > 0, true);
     };
     for (const scale of [1, 2, 1]) {
@@ -360,8 +361,6 @@ test('HC16 actual wide comparison fallback fills its own ratio frame and retaine
         const width = scale === 2 ? 616 : 300, height = width / (scale === 2 ? 2 : 16 / 7);
         await act(async () => fixture.root.props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width, height } } }));
         assert.equal(fixture.illustration.props.width, width); assert.equal(fixture.illustration.props.height, height);
-        const tag = flatten(fixture.labelBox.props.style), line = flatten(fixture.label.props.style).lineHeight;
-        assert.equal(height - tag.bottom - 2 * tag.paddingVertical - line >= 0, true, 'the supplied native frame has room for one declared label line pitch');
         for (const invalid of [{ width: NaN, height }, { width: Infinity, height }, { width: 0, height }, { width, height: -1 }, { width, height: NaN }]) {
           await act(async () => fixture.root.props.onLayout({ nativeEvent: { layout: invalid } }));
           assert.equal(fixture.illustration.props.width, width); assert.equal(fixture.illustration.props.height, height);
@@ -384,7 +383,7 @@ test('HC16 actual wide comparison fallback fills its own ratio frame and retaine
     assert.equal(flatten(frame.props.style).width, '100%'); assert.equal(flatten(frame.props.style).height, 180); assert.equal(flatten(frame.props.style).position, undefined);
     await act(async () => frame.props.onLayout({ nativeEvent: { layout: { width: 300, height: 131.25 } } }));
     assert.equal(flatten(image.props.style).width, 300); assert.equal(flatten(image.props.style).height, 180); assert.equal(flatten(image.props.style).position, undefined);
-    raw(leaf(artwork, 'Minh hoạ'), 13, 18); assert.equal(h.exploreStorage.length, 0);
+    assertNoIllustrationLabel(artwork); assert.equal(h.exploreStorage.length, 0);
   } finally { await h.dispose(); }
 });
 
@@ -406,7 +405,7 @@ test('HC17 actual retained wide Compare axes declare fresh width containment whi
     await act(async () => candidates[0].image.props.onError());
     const artwork = one(candidates[0].media.findAllByType(Artwork), 'actual first media failed fallback');
     const fallbackImage = one(artwork.findAllByType('RNExpoImage'), 'actual fallback raster');
-    const artworkRoot = ancestor(fallbackImage, 'RNView'), label = leaf(artwork, 'Minh hoạ');
+    const artworkRoot = ancestor(fallbackImage, 'RNView'); assertNoIllustrationLabel(artwork);
     // Retain the prior stacked frame's numeric raster hints on purpose. They must not allocate columns.
     await act(async () => artworkRoot.props.onLayout({ nativeEvent: { layout: { width: 616, height: 308 } } }));
     await h.native.focus(input); await h.change('kiểm thử'); const before = counters(h);
@@ -443,7 +442,7 @@ test('HC17 actual retained wide Compare axes declare fresh width containment whi
       }
       assert.equal(candidates[0].media.findAllByType(Artwork)[0] === artwork, true, 'failed-media controller is retained');
       assert.equal(candidates[0].media.findAllByType('RNExpoImage').some(node => typeof node.props.source?.uri === 'string'), false, 'font-only transitions cannot clear failed-media state');
-      assert.equal(artwork.findAllByType('RNExpoImage')[0] === fallbackImage, true); assert.equal(leaf(artwork, 'Minh hoạ') === label, true); converted(h, label, { fontSize: 13, lineHeight: 18 });
+      assert.equal(artwork.findAllByType('RNExpoImage')[0] === fallbackImage, true); assertNoIllustrationLabel(artwork);
       assert.equal(one(candidates[1].media.findAllByType('RNExpoImage').filter(node => typeof node.props.source?.uri === 'string'), 'retained second licensed image') === candidates[1].image, true);
       const rootStyle = flatten(artworkRoot.props.style), rasterStyle = flatten(fallbackImage.props.style);
       assert.equal(rootStyle.position, 'absolute'); assert.equal(rootStyle.width, undefined); assert.equal(rootStyle.height, undefined);

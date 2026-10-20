@@ -28,6 +28,12 @@
 # Go unit test (`places_wai_test.go`) instead, and stays in the code because
 # production may well hold two rows at one point even though this seed does
 # not.
+#
+# NOT COMPARED HERE, ON PURPOSE: `?include=cover` (cover_photo_* per
+# destination) is a Go-only opt-in; Python has no such field. No step sends
+# it, so the default bytes stay compared; the opt-in is held by
+# places_paging_test.go and places_scale_postgres_test.go.
+
 id: wai/places/get-destinations
 routes: ['GET /destinations']
 auth_mode: dev

@@ -38,7 +38,106 @@ export type Review = {
   body: string;
 };
 
-/** A `Place`, plus the two fields only the detail route carries. */
+/** One signature dish; every field but the name may be absent. */
+export type MonNenThu = { ten: string; moTa: string | null; huongVi: string | null; cachAn: string | null; gia: string | null };
+export type NhanMa = { id: string; nhan: string };
+export type GioTheoThu = { thu: string; nhan: string; mo: string; dong: string; quaDem: boolean };
+
+/**
+ * The page's index of a place (`?include=highlights`): what is worth knowing,
+ * grouped the way a reader looks things up. The server drops every empty key
+ * and filters what it must never print (evidence, gaps, allergy claims), so
+ * an empty value here means «nothing to say» and the screen hides the section
+ * rather than writing «Chưa có…». A malformed piece is dropped, never thrown:
+ * the facts above it on the page do not depend on this.
+ */
+export type Highlights = {
+  taiSaoDangDen: string | null;
+  khongKhi: string | null;
+  khungGioDep: string | null;
+  mucGia: string | null;
+  gioGhiChu: string | null;
+  phuHopVoi: string[];
+  khauViPhuHop: string[];
+  luuY: string[];
+  traiNghiem: string[];
+  monChinh: string[];
+  monPhaiThu: MonNenThu[];
+  gia: { minVnd: number; maxVnd: number | null; uoc: boolean } | null;
+  gioMoCua: GioTheoThu[];
+  canDatTruoc: { ma: string; nhan: string } | null;
+  trongNgoai: { ma: string; nhan: string } | null;
+  thoiLuong: { min: number | null; max: number | null } | null;
+  danhMuc: NhanMa[];
+  khiChat: NhanMa[];
+};
+
+const chuKhac = (v: unknown): string | null => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+const dsChu = (v: unknown): string[] => (Array.isArray(v) ? v.map(chuKhac).filter((x): x is string => x !== null) : []);
+const dongDem = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+function nhanMa(v: unknown): { ma: string; nhan: string } | null {
+  const o = v as Record<string, unknown> | null;
+  const ma = chuKhac(o?.ma);
+  const nhan = chuKhac(o?.nhan);
+  return ma !== null && nhan !== null ? { ma, nhan } : null;
+}
+function dsNhan(v: unknown): NhanMa[] {
+  if (!Array.isArray(v)) return [];
+  return v.flatMap((x) => {
+    const o = x as Record<string, unknown> | null;
+    const id = chuKhac(o?.id);
+    const nhan = chuKhac(o?.nhan);
+    return id !== null && nhan !== null ? [{ id, nhan }] : [];
+  });
+}
+
+export function parseHighlights(raw: unknown): Highlights | null {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const h = raw as Record<string, unknown>;
+  const monPhaiThu = Array.isArray(h.mon_phai_thu)
+    ? h.mon_phai_thu.flatMap((m): MonNenThu[] => {
+        const o = m as Record<string, unknown> | null;
+        const ten = chuKhac(o?.ten);
+        return ten === null ? [] : [{ ten, moTa: chuKhac(o?.mo_ta), huongVi: chuKhac(o?.huong_vi), cachAn: chuKhac(o?.cach_an), gia: chuKhac(o?.gia) }];
+      })
+    : [];
+  const g = h.gia as Record<string, unknown> | null | undefined;
+  const giaMin = dongDem(g?.min_vnd);
+  const gioMoCua = Array.isArray(h.gio_mo_cua)
+    ? h.gio_mo_cua.flatMap((x): GioTheoThu[] => {
+        const o = x as Record<string, unknown> | null;
+        const thu = chuKhac(o?.thu);
+        const nhan = chuKhac(o?.nhan);
+        const mo = chuKhac(o?.mo);
+        const dong = chuKhac(o?.dong);
+        return thu && nhan && mo && dong ? [{ thu, nhan, mo, dong, quaDem: o?.qua_dem === true }] : [];
+      })
+    : [];
+  const tl = h.thoi_luong_phut as Record<string, unknown> | null | undefined;
+  const thoiLuong = tl && typeof tl === "object" ? { min: dongDem(tl.min), max: dongDem(tl.max) } : null;
+  return {
+    taiSaoDangDen: chuKhac(h.tai_sao_dang_den),
+    khongKhi: chuKhac(h.khong_khi),
+    khungGioDep: chuKhac(h.khung_gio_dep_nhat),
+    mucGia: chuKhac(h.muc_gia),
+    gioGhiChu: chuKhac(h.gio_ghi_chu),
+    phuHopVoi: dsChu(h.phu_hop_voi),
+    khauViPhuHop: dsChu(h.khau_vi_phu_hop),
+    luuY: dsChu(h.luu_y),
+    traiNghiem: dsChu(h.trai_nghiem_phai_thu),
+    monChinh: dsChu(h.mon_chinh),
+    monPhaiThu,
+    gia: giaMin === null ? null : { minVnd: giaMin, maxVnd: dongDem(g?.max_vnd), uoc: g?.uoc === true },
+    gioMoCua,
+    canDatTruoc: nhanMa(h.can_dat_truoc),
+    trongNgoai: nhanMa(h.trong_nha_ngoai_troi),
+    thoiLuong: thoiLuong !== null && (thoiLuong.min !== null || thoiLuong.max !== null) ? thoiLuong : null,
+    danhMuc: dsNhan(h.danh_muc),
+    khiChat: dsNhan(h.khi_chat),
+  };
+}
+
+/** A `Place`, plus the fields only the detail route carries. */
 export type PlaceDetail = Place & {
   /** Prose about the venue, or null when the server has none for it. */
   description: string | null;
@@ -63,6 +162,8 @@ export type PlaceDetail = Place & {
    * leaves the section out instead of inventing a line for it.
    */
   activities: string[];
+  /** The index of what is worth knowing; null when the server sent none. */
+  highlights: Highlights | null;
 };
 
 /**
@@ -134,6 +235,7 @@ export function parsePlaceDetail(body: unknown): PlaceDetail {
       }
       return a;
     }),
+    highlights: parseHighlights(p.highlights),
   };
 }
 

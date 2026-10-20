@@ -81,6 +81,8 @@ type ScreenProps = {
    * window. The header keeps to the same column (QA UI-093, UI-047).
    */
   cot?: "doc" | "form" | "rong";
+  /** Called when the reader scrolls within a screenful of the end (an endless list reads its next page). */
+  onGanCuoi?: () => void;
 };
 
 /** The tablet column widths of `RudiScreen`'s `cot`. */
@@ -109,6 +111,7 @@ export function RudiScreen({
   canh,
   cuonVeDau,
   cot = "rong",
+  onGanCuoi,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
@@ -295,7 +298,12 @@ export function RudiScreen({
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
           onLayout={recordViewport}
-          onScroll={avoidKeyboard ? (event) => {
+          onScroll={avoidKeyboard || onGanCuoi ? (event) => {
+            if (onGanCuoi) {
+              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+              if (contentOffset.y + layoutMeasurement.height >= contentSize.height - layoutMeasurement.height) onGanCuoi();
+            }
+            if (!avoidKeyboard) return;
             cuonY.value = event.nativeEvent.contentOffset.y;
             if (!keyboardVisible.current) return;
             const input = TextInput.State.currentlyFocusedInput();
@@ -308,7 +316,7 @@ export function RudiScreen({
             if (keyboardReveal.current) revealFocusedField();
           } : undefined}
           onScrollBeginDrag={avoidKeyboard ? () => { keyboardReveal.current = false; cancelKeyboardReveal(); } : undefined}
-          scrollEventThrottle={avoidKeyboard ? 16 : undefined}
+          scrollEventThrottle={avoidKeyboard ? 16 : onGanCuoi ? 100 : undefined}
           onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : avoidKeyboard ? revealFocusedField : undefined}
           refreshControl={
             keoLamMoi ? (

@@ -19,7 +19,8 @@ const CatalogueCacheTTLEnv = "MOBILE_CATALOGUE_CACHE_TTL"
 
 // catalogueSnapshot is one destination's list rows and photo summary: the
 // part of GET /places that is the same for every caller. Filtering, taste
-// scoring and reasons stay per request.
+// scoring and ordering are cached next to it per (destination, taste,
+// category): see rankedEntry.
 type catalogueSnapshot struct {
 	rows   []repo.Place
 	covers map[string]repo.PlacePhoto
@@ -28,59 +29,105 @@ type catalogueSnapshot struct {
 }
 
 type catalogueCache struct {
-	once    sync.Once
-	ttl     time.Duration
-	mu      sync.RWMutex
-	byDest  map[string]*catalogueSnapshot
-	replies map[string]cachedReply
+	once   sync.Once
+	ttl    time.Duration
+	mu     sync.RWMutex
+	byDest map[string]*catalogueSnapshot
+	// ranked holds whole ordered lists of wired cards, built once per TTL for
+	// a (destination, taste, category) and cut into pages per request.
+	ranked  map[string]rankedEntry
 	flight  singleflight.Group
+	rflight singleflight.Group
+	// covers is GET /destinations' cover photo per destination.
+	coverMu sync.RWMutex
+	cover   *coverEntry
+	cflight singleflight.Group
+	reasons reasonCache
 }
 
-// cachedReply is a whole GET /places body for a caller with no known taste:
-// the same bytes for everybody asking the same destination, category and q.
-type cachedReply struct {
-	body *pyjson.OrderedMap
+// rankedEntry is the final order of one catalogue view. at is the snapshot's
+// read time, so an entry can never outlive the rows it shows.
+type rankedEntry struct {
+	list []*pyjson.OrderedMap
 	at   time.Time
 }
 
-var catalogue = &catalogueCache{
-	byDest:  map[string]*catalogueSnapshot{},
-	replies: map[string]cachedReply{},
+type coverEntry struct {
+	byDestination map[string]repo.PlacePhoto
+	at            time.Time
 }
 
-// reply returns a cached body for key, or nil. Only while the cache is on.
-func (c *catalogueCache) reply(key string) *pyjson.OrderedMap {
+var catalogue = &catalogueCache{
+	byDest: map[string]*catalogueSnapshot{},
+	ranked: map[string]rankedEntry{},
+}
+
+// maxRankedViews and maxRankedCards bound the ordered-list cache. An entry is
+// a whole city's cards (9,514 for TP.HCM), so the card budget is what bounds
+// memory: about six of the biggest lists. Free-text q is never cached, which
+// keeps the key space to destination x taste x category.
+const (
+	maxRankedViews = 48
+	maxRankedCards = 60000
+)
+
+// rankedView returns a cached ordered list for key, or nil. Only while the
+// cache is on.
+func (c *catalogueCache) rankedView(key string) []*pyjson.OrderedMap {
 	ttl := c.configuredTTL()
 	if ttl == 0 {
 		return nil
 	}
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	if hit, ok := c.replies[key]; ok && time.Since(hit.at) < ttl {
-		return hit.body
+	if hit, ok := c.ranked[key]; ok && time.Since(hit.at) < ttl {
+		return hit.list
 	}
 	return nil
 }
 
-// keepReply stores body under key, stamped with the snapshot it was built
-// from so it can never outlive the rows it shows.
-func (c *catalogueCache) keepReply(key string, body *pyjson.OrderedMap, snap *catalogueSnapshot) {
-	if c.configuredTTL() == 0 {
+// keepRanked stores list under key, stamped with the snapshot it was built
+// from. At the bound it drops expired entries first, then the oldest.
+func (c *catalogueCache) keepRanked(key string, list []*pyjson.OrderedMap, snap *catalogueSnapshot) {
+	ttl := c.configuredTTL()
+	if ttl == 0 {
 		return
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if len(c.replies) > maxCachedReplies {
-		// Free-text q makes keys unbounded; a full map starts over rather
-		// than growing with whatever strangers type.
-		c.replies = map[string]cachedReply{}
+	if len(list) > maxRankedCards {
+		return
 	}
-	c.replies[key] = cachedReply{body: body, at: snap.at}
+	delete(c.ranked, key)
+	cards := func() int {
+		n := 0
+		for _, e := range c.ranked {
+			n += len(e.list)
+		}
+		return n
+	}
+	full := func() bool { return len(c.ranked) >= maxRankedViews || cards()+len(list) > maxRankedCards }
+	if full() {
+		for k, e := range c.ranked {
+			if time.Since(e.at) >= ttl {
+				delete(c.ranked, k)
+			}
+		}
+		for len(c.ranked) > 0 && full() {
+			oldest, oldestAt := "", time.Time{}
+			for k, e := range c.ranked {
+				if oldest == "" || e.at.Before(oldestAt) {
+					oldest, oldestAt = k, e.at
+				}
+			}
+			delete(c.ranked, oldest)
+		}
+	}
+	c.ranked[key] = rankedEntry{list: list, at: snap.at}
 }
 
-// maxCachedReplies bounds the reply cache (bodies are ~MB for big cities).
-const maxCachedReplies = 256
-
+// configuredTTL is MOBILE_CATALOGUE_CACHE_TTL read once as a Go duration
+// ("30s", "2m"); unset, 0 or unreadable means the cache is off.
 func (c *catalogueCache) configuredTTL() time.Duration {
 	c.once.Do(func() {
 		if d, err := time.ParseDuration(os.Getenv(CatalogueCacheTTLEnv)); err == nil && d > 0 {

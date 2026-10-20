@@ -20,7 +20,6 @@ import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions } from "reac
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
-import { KHUNG_DAU_CHAN, hinhDauChan } from "../../art/dau-chan";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field } from "../../ui";
@@ -32,7 +31,6 @@ import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useLuiLop } from "../../ui/useLuiLop";
-import { VeLop } from "../../ui/art/VeLop";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -47,7 +45,7 @@ export type ProfileEditorControls = { busy: boolean; save: () => void; back: () 
 
 export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phien; onEditorChange: (controls: ProfileEditorControls | null) => void; renderContent?: (profile: HoSoToi | null) => ReactNode }) {
   const { datPhien } = useRudiSession();
-  const { colors, radius } = useRudiTheme();
+  const { colors, radius, space } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   const metricsOwned = useNativeFontMetricsOwner();
   const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
@@ -193,7 +191,7 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
     ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
     : metricsOwned || chuLon(fontScale);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
-  return <View style={styles.passport}>
+  return <View style={[styles.passport, { gap: space.md }]}>
     <View
       testID="profile-identity"
       style={[
@@ -202,6 +200,8 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
           backgroundColor: colors.card,
           borderColor: colors.lineStrong,
           borderRadius: radius.base,
+          padding: space.md,
+          gap: space.sm,
         },
       ]}
     >
@@ -217,14 +217,6 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
         pointerEvents="none"
         style={[styles.passportInnerRule, { borderColor: colors.line, borderRadius: Math.max(4, radius.base - 4) }]}
       />
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={styles.passportSealMark}
-      >
-        <VeLop height={36} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("passport-seal")} width={36} />
-      </View>
       <View style={styles.identityRow}>
         <View style={[styles.identityMain, largeText && styles.identityMainStack]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
@@ -262,10 +254,9 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
 
 const styles = StyleSheet.create({
   passport: { gap: 16 },
-  identityBlock: { position: "relative", overflow: "hidden", borderWidth: 1, paddingHorizontal: 16, paddingTop: 18, paddingBottom: 16, gap: 12 },
+  identityBlock: { position: "relative", overflow: "hidden", borderWidth: 1 },
   passportTopBand: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
   passportInnerRule: { position: "absolute", top: 6, left: 6, right: 6, bottom: 6, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed" },
-  passportSealMark: { position: "absolute", right: 74, bottom: 12, opacity: 0.26 },
   identityRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   identityMain: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 14 },
   identityMainStack: { flexDirection: "column", alignItems: "flex-start" },

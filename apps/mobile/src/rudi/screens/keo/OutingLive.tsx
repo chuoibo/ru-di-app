@@ -37,7 +37,7 @@ import {
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
 import { tabBarHeight } from "../../adaptive";
-import { choDeChon, docChiTiet, docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { choDeChon, docChiTiet, docDanhMucCoLui, TRANG_CHO_BO_CHON } from "../../kham-pha/dia-diem";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
   cauDaToi,
@@ -198,7 +198,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       // The destination the person picked on Khám phá, not the default one:
       // the default is a curated town, so reading it here meant no real place
       // could ever be attached to a stop.
-      setDanhMuc((await docDanhMucCoLui(await docDiemDenDaChon())).places);
+      setDanhMuc((await docDanhMucCoLui(await docDiemDenDaChon(), undefined, TRANG_CHO_BO_CHON)).places);
       danhMucRef.current = "xong";
       setDanhMucPha("xong");
     } catch (error) {
@@ -468,8 +468,11 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => luiVeVe(router as never, "/plan") }} title="Chưa mở được kèo" />
       ) : null}
-      {trang.pha === "xong" && hanhTrinh ? (
-        <View style={{ flex: 1 }}>
+      {trang.pha === "xong" ? (
+        // Stays mounted while the timeline view shows: the day editor's draft
+        // and the selected stop live in this component and must survive a
+        // switch of view (journey-web e2e: 07:45 kept across Lịch trình and back).
+        <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
         <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} daToiIds={daToiIds} dangTimCho={idCanDoc.length > 0} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
         </View>
       ) : null}

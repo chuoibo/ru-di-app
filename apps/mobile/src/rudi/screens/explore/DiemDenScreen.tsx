@@ -11,7 +11,9 @@
  * city by name -- and it works with no permission at all.
  *
  * A large catalogue preview and medium illustrated rows; only the persisted
- * city carries the selected state. Local artwork is always labelled.
+ * city carries the selected state. A destination shows its real cover photo
+ * (with the credit that came with it) through MediaSlot, or its drawn scene
+ * with no label.
  */
 import { Canh } from "../../ui/art/Canh";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +32,7 @@ import {
 import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
 import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
 import { VeLop } from "../../ui/art/VeLop";
+import { MediaSlot } from "../../ui/MediaSlot";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { DauLon } from "../../ui/DauLon";
@@ -104,6 +107,15 @@ const MO_TA_VUNG: Readonly<Record<string, string>> = {
   "d-tinh-92": "Đồng bằng sông Cửu Long · Bến Ninh Kiều & chợ nổi",
   "d-tinh-96": "Đồng bằng sông Cửu Long · Đất Mũi & rừng ngập mặn",
 };
+
+/** The destination's drawn scene: the unlabelled stand-in where there is no photograph. */
+function tranhCanh(d: DiemDen, canh: IllustrationName | undefined, rongCanh: number) {
+  return canh ? (
+    <AssetIllustration name={canh} width={rongCanh} height={rongCanh * 2 / 3} fit="contain" />
+  ) : (
+    <VeLop height={Math.round(rongCanh * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongCanh} />
+  );
+}
 
 export function DiemDenScreen() {
   const router = useRouter();
@@ -226,14 +238,20 @@ export function DiemDenScreen() {
                 ]}
               >
                 <View style={noiBat ? styles.canhDan : styles.canhHang}>
-                  <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>
-                    {canh ? (
-                      <AssetIllustration name={canh} width={rongCanh} height={rongCanh * 2 / 3} fit="contain" />
-                    ) : (
-                      <VeLop height={Math.round(rongCanh * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongCanh} />
-                    )}
-                  </View>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>Minh hoạ</Text>
+                  {d.anhBia !== null ? (
+                    <View style={{ width: rongCanh }}>
+                      <MediaSlot
+                        alt={`Ảnh ${d.name}`}
+                        fallback={tranhCanh(d, canh, rongCanh)}
+                        nguon={{ loai: "danh-muc", anh: d.anhBia }}
+                        ratio={3 / 2}
+                      />
+                    </View>
+                  ) : (
+                    <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>
+                      {tranhCanh(d, canh, rongCanh)}
+                    </View>
+                  )}
                 </View>
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
                   <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>

@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func TestPoolConfigAcceptsTheSQLAlchemySpelling(t *testing.T) {
@@ -105,5 +107,38 @@ func TestOnlyTheServerPoolBoundsItsSessions(t *testing.T) {
 	custom, _ := ServerPoolConfig("postgresql://u:p@h:5432/d?statement_timeout=0")
 	if custom.ConnConfig.RuntimeParams["statement_timeout"] != "0" {
 		t.Error("a URL's own setting must win")
+	}
+}
+
+// rolledBack stands in for a begun transaction: only Rollback is ever called.
+type rolledBack struct {
+	pgx.Tx
+	rollbacks int
+}
+
+func (r *rolledBack) Rollback(context.Context) error { r.rollbacks++; return nil }
+
+// Release must free the held transaction (so a slow model call does not pin a
+// pooled connection) yet leave the unit usable and finishable.
+func TestReleaseEndsTheTransactionButNotTheUnit(t *testing.T) {
+	fake := &rolledBack{}
+	unit := NewUnit(nil)
+	unit.tx = fake
+	if err := unit.Release(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if fake.rollbacks != 1 || unit.Begun() {
+		t.Fatalf("rollbacks=%d begun=%v", fake.rollbacks, unit.Begun())
+	}
+	// Idempotent, and the end-of-request commit has nothing left to do.
+	if err := unit.Release(context.Background()); err != nil || fake.rollbacks != 1 {
+		t.Fatalf("second release: %v rollbacks=%d", err, fake.rollbacks)
+	}
+	if err := unit.Commit(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	// After the unit is finished, Release does nothing.
+	if err := unit.Release(context.Background()); err != nil {
+		t.Fatal(err)
 	}
 }

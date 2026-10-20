@@ -171,6 +171,22 @@ func (u *Unit) Begun() bool {
 	return u.tx != nil
 }
 
+// Release ends an open transaction early, discarding it, and leaves the unit
+// usable: a later Tx call begins a fresh one. A handler that has finished its
+// reads and is about to wait on something slow (a model call) uses it so the
+// pooled connection is not held for the wait. Writes made before Release are
+// discarded, so it is for read-only requests.
+func (u *Unit) Release(ctx context.Context) error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if u.done || u.tx == nil {
+		return nil
+	}
+	tx := u.tx
+	u.tx = nil
+	return tx.Rollback(ctx)
+}
+
 // Commit commits a begun transaction; a unit that never began commits nothing.
 func (u *Unit) Commit(ctx context.Context) error {
 	u.mu.Lock()

@@ -113,10 +113,14 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
   );
 }
 
-/** Generic category artwork is labelled, never presented as the venue itself. */
-export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false, fillFrame = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean; fillFrame?: boolean }) {
+/**
+ * Generic category artwork stands in when a place has no photograph. It carries
+ * no text label (owner decision 2026-10-20): the drawn scene reads as a drawing,
+ * and a real photograph always arrives through MediaSlot with its credit.
+ * `nativeMetrics` is accepted for call-site symmetry; there is no text left to measure.
+ */
+export function PlaceArtwork({ loai, width, height = 180, fillFrame = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean; fillFrame?: boolean }) {
   const { colors } = useRudiTheme();
-  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const [measured, setMeasured] = useState({ width: width ?? 280, height });
   const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
   return (
@@ -139,9 +143,6 @@ export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false,
         height={fillFrame ? measured.height : height}
         style={fillFrame ? [StyleSheet.absoluteFill, { width: "100%", height: "100%" }] : undefined}
       />
-      <View pointerEvents="none" style={{ position: "absolute", left: width !== undefined && width < 100 ? 6 : 10, bottom: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card }}>
-        <CopyText style={[typography.caption, { color: colors.ink }]}>Minh hoạ</CopyText>
-      </View>
     </View>
   );
 }

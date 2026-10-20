@@ -125,3 +125,21 @@ FORM: Chỉ alignSelf stretch ở summary Text, không key/remount, observer, fi
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 Native2c cho thấy budget bị thiếu ở100light/dark/return, đầy đủ ở200. Root mở ảnh và independent agent xác nhận; evidence và candidate contract nằm trong private profile-gu-f5-direction-2c96ce60-20261013-r1. Native AFTER và fresh finish vẫn OPEN.
+
+## 20/10 · cân trục Cá nhân và Tin nhắn rỗng (PR #667)
+
+Ghi sau khi đã sửa mã (đợt sửa theo ảnh iPhone của chủ sản phẩm): hợp đồng mô tả hướng đã làm để reviewer chấm, không phải kế hoạch trước.
+
+## Direction contract
+
+THESIS: Một trục giữa cho mọi trạng thái rỗng và một lưới đều cho dấu chân; không khối nào lệch sang một bên.
+
+OWN-WORLD: Giữ Sân Khấu Giấy v3: giấy, mực, coral, Bricolage; không thêm màu, font, radius hay tranh mới.
+
+STORY: Cá nhân: thẻ hồ sơ đệm đối xứng → lưới dấu chân 2 cột đều → tab gạch chân rộng đủ ô → sổ nhật ký rỗng căn giữa. Tin nhắn rỗng: một EmptyState căn giữa, lối «Thêm bạn» nằm cùng trục.
+
+FIRST VIEWPORT: 390×844: tên + dấu chân + hai tab; ô lẻ cuối của lưới không lệch; tiêu đề h1 như Tin nhắn.
+
+FORM: EmptyState layout="page"; ProfileFacts lưới đều; bỏ dấu ấn toạ độ cứng; ListRow cho Sở thích.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

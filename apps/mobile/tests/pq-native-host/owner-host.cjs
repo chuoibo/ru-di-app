@@ -62,8 +62,10 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const commentsReadQueue = [], friendsReadQueue = [];
   const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
   const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [], keepReads = [], keepDeletes = [];
-  const exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [];
-  const exploreCatalogueRoutes = new Set(['/places', ...(exploreIO?.destinationIds ?? []).map(id => '/places?' + new URLSearchParams({ destination: id }).toString())]);
+  const exploreReasonReads = [], exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [];
+  // The app always asks for a page of 30 (server contract 20/10/2026).
+  const exploreCatalogueRoutes = new Set(['/places?limit=30', ...(exploreIO?.destinationIds ?? []).map(id => '/places?' + new URLSearchParams({ limit: '30', destination: id }).toString())]);
+
   const exploreWriteRoutes = new Map((exploreIO?.placeIds ?? []).map(id => ['/people/me/saved-places/' + encodeURIComponent(id), id]));
   let root, session, focused = null, timerId = 0, nodeId = 0, attempt = 0, sharedId = 0, collecting = null;
   const keepIds = new Set(['synthetic-keep-1', 'synthetic-keep-2']), keepAttempts = new Set();
@@ -151,6 +153,11 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     const method = options.method;
     if (exploreCatalogueRoutes.has(route) && method === 'GET') {
       call.kind = 'exploreCatalogueRead'; return parked(exploreCatalogueReads, call);
+    }
+    if (route.startsWith('/places?reasons_for=') && method === 'GET') {
+      // Reasons load apart from the list and never block it; the synthetic model has none.
+      call.kind = 'exploreReasonRead'; exploreReasonReads.push(call);
+      return { reasons: {} };
     }
     if (route === '/people/me/saved-places' && method === 'GET') {
       call.kind = 'exploreSavedRead'; exploreSavedReads.push(call);
@@ -426,7 +433,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const h = {
     state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     inbox, community,
-    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage,
+    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage, exploreReasonReads,
     exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
     exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,
     get root() { return root; },

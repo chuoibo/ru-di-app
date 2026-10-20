@@ -10,6 +10,7 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 const unavailable = () => ({ status: 'unavailable', reason: 'module-unavailable' });
 const labels = ['Ô tên hiển thị', 'Ô giới thiệu', 'Ô thành phố'];
 const syntheticDraft = ['Synthetic edited name', 'Synthetic edited bio', 'Synthetic edited city'];
+function friendCell(h) { return h.one('RNPressable', props => props.testID === 'profile-fact-friends'); }
 async function withHost(options, callback) {
   const h = createProfileHost(options);
   try { await h.mount(); await callback(h); } finally { await h.dispose(); }
@@ -207,7 +208,8 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
   };
   await withHost({ deferSaved: true }, async h => {
     const title = text(h, 'Cá nhân');
-    assert.equal(flatten(title.props.style).fontSize, 17); assert.equal(flatten(title.props.style).lineHeight, 23);
+    // 20/10/2026: «Cá nhân» shares the page-title level of «Tin nhắn» (h1 28/34), no longer a 17/23 `title`.
+    assert.equal(flatten(title.props.style).fontSize, 28); assert.equal(flatten(title.props.style).lineHeight, 34);
     const original = await exerciseFacts(h);
     assert.equal(h.root.root.findAll(node => typeof node.type === 'function' && node.type.name === 'AssetIllustration' && node.props.name === 'decor-cover').length, 0);
     for (const group of ['Sổ của bạn', 'Quản lý']) assert.equal(text(h, group).props.accessibilityRole, 'header');
@@ -215,6 +217,17 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
     assert.equal(tabs.length, 2);
     assert.equal(tabs.every(node => flatten(node.props.style).minHeight >= 48), true);
     assert.equal(tabs.filter(node => node.props.accessibilityState.selected).length, 1);
+    // The selected tab's underline spans its whole cell (no fixed 36dp stub), and every fact cell is an equal flex column.
+    const selectedTab = tabs.find(node => node.props.accessibilityState.selected);
+    const indicator = selectedTab.findAllByType('RNView').find(node => node.props.accessible === false);
+    const underline = flatten(indicator.props.style);
+    assert.equal(underline.left, 0); assert.equal(underline.right, 0); assert.equal(underline.width, undefined);
+    const factCells = [friendCell(h), ...['contexts', 'outings', 'places', 'memories'].map(id => nearest(h.one('RNText', props => props.testID === `profile-fact-${id}`), 'RNView', () => true))];
+    for (const node of factCells) {
+      const st = flatten(node.props.style);
+      assert.equal(st.minHeight >= 48, true, 'every fact cell keeps a 48dp target'); assert.equal(st.flex, 1); assert.equal(st.flexBasis, 0, 'equal columns, no 132/96 basis');
+      assert.equal(st.borderColor, flatten(factCells[1].props.style).borderColor, 'friends cell has no private accent border');
+    }
     for (const tab of tabs) for (const label of tab.findAllByType('RNText')) assert.equal(label.props.numberOfLines, undefined);
     assert.equal(h.text('0 địa điểm').length, 0, 'unknown saved count is not zero');
     await h.finish(h.savedReads[0], { saved: [] });

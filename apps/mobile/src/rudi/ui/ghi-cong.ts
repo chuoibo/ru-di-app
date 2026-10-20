@@ -27,11 +27,11 @@ export interface Attribution {
 }
 
 /**
- * The qualifier of a stock photograph that illustrates a *kind* of place and
- * is not a picture of the place itself (assets/rudi/README.md). One constant,
- * so the fixture cannot spell it two ways.
+ * The qualifier every credit of a photograph taken around a place carries.
+ * Lives here, with the credit sentence, so the destination list and the place
+ * list say it one way without importing each other.
  */
-export const TIEN_TO_MINH_HOA = "Ảnh minh hoạ: ";
+export const TIEN_TO_ANH = "Ảnh quanh đây: ";
 
 /**
  * The credit as one sentence: qualifier, author, licence, source. Every frame

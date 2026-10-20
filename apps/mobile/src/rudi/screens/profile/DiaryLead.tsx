@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { tokenPhienHienTai } from "../../../api";
 import { KHUNG_CANH, hinhCanh } from "../../art/canh";
 import { KHUNG_DAU_CHAN, hinhDauChan } from "../../art/dau-chan";
@@ -30,11 +30,25 @@ function JournalBinding() {
   );
 }
 
+/**
+ * One ledger sheet: the binding rail is a flow sibling, so the content column
+ * has the same inset on both sides instead of being pushed by an overlay's width.
+ */
+function JournalSheet({ testID, children, style }: { testID: string; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const { colors, radius, space } = useRudiTheme();
+  return (
+    <View testID={testID} style={[styles.journalSheet, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+      <JournalBinding />
+      <View style={[styles.sheetBody, { padding: space.md }, style]}>{children}</View>
+    </View>
+  );
+}
+
 /** Saved content leads; collection state never invents a journey or an excerpt. */
 export function DiaryLead({ person, collection }: { person: string; collection: DiaryCollection }) {
-  const { colors } = useRudiTheme();
+  const { colors, space } = useRudiTheme();
   const first = collection.books[0];
-  return <View testID="profile-diary-lead" style={styles.lead}>
+  return <View testID="profile-diary-lead" style={[styles.lead, { paddingTop: space.md }]}>
     {collection.error ? <ProfileDiaryFailure message={collection.error} retry={collection.retry} /> : null}
     {first ? <SavedDiary person={person} diary={first} /> : collection.loading ? <View accessibilityLabel="Đang đọc trang đã giữ"><SkeletonLines lines={3} /></View> : !collection.error ? <ProfileDiaryEmpty /> : null}
     {first && collection.loading ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đang cập nhật trang đã giữ…</Text> : null}
@@ -42,20 +56,9 @@ export function DiaryLead({ person, collection }: { person: string; collection: 
 }
 
 export function ProfileDiaryFailure({ message, retry }: { message: string; retry: () => void }) {
-  const { colors, radius } = useRudiTheme();
+  const { colors } = useRudiTheme();
   return (
-    <View
-      testID="profile-diary-error"
-      style={[
-        styles.journalSheet,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.lineStrong,
-          borderRadius: radius.base,
-        },
-      ]}
-    >
-      <JournalBinding />
+    <JournalSheet testID="profile-diary-error">
       <View style={styles.emptyRow}>
         <VeLop height={64} khungH={KHUNG_CANH.h} khungW={KHUNG_CANH.w} lop={hinhCanh("chua-doc-duoc")} width={82} />
         <View style={styles.emptyCopy}>
@@ -64,35 +67,24 @@ export function ProfileDiaryFailure({ message, retry }: { message: string; retry
           <RudiButton full={false} label="Thử lại" labelAlign="left" variant="ghost" style={styles.textAction} onPress={retry} />
         </View>
       </View>
-    </View>
+    </JournalSheet>
   );
 }
 
 export function ProfileDiaryEmpty() {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, space } = useRudiTheme();
   return (
-    <View
-      testID="profile-diary-empty"
-      style={[
-        styles.journalSheet,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.lineStrong,
-          borderRadius: radius.base,
-        },
-      ]}
-    >
-      <JournalBinding />
-      <View style={styles.emptyRow}>
+    <JournalSheet testID="profile-diary-empty">
+      {/* One centred axis: the drawing, the words and the door share it, so the
+          empty sheet balances between the binding and the right edge. */}
+      <View style={[styles.emptyColumn, { gap: space.sm }]}>
         <VeLop height={74} khungH={KHUNG_CANH.h} khungW={KHUNG_CANH.w} lop={hinhCanh("chua-co-ky-niem")} width={96} />
-        <View style={styles.emptyCopy}>
-          <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>Chưa có trang đã giữ</Text>
-          <Text style={[typography.body, { color: colors.inkSoft }]}>Bạn có thể giữ lại cuộc đi từ trang của kèo.</Text>
-          <RudiButton full={false} label="Xem kèo của nhóm" labelAlign="left" variant="ghost" style={styles.textAction} onPress={() => router.push("/(tabs)/plan" as never)} />
-        </View>
+        <Text accessibilityRole="header" style={[typography.h2, styles.centred, { color: colors.ink }]}>Chưa có trang đã giữ</Text>
+        <Text style={[typography.body, styles.centred, { color: colors.inkSoft }]}>Bạn có thể giữ lại cuộc đi từ trang của kèo.</Text>
+        <RudiButton full={false} label="Xem kèo của nhóm" variant="ghost" onPress={() => router.push("/(tabs)/plan" as never)} />
       </View>
-    </View>
+    </JournalSheet>
   );
 }
 
@@ -126,19 +118,7 @@ function SavedDiary({ person, diary }: { person: string; diary: Diary }) {
   };
   const excerpt = diary.document.pages.find(page => page.text.trim() !== "")?.text;
   return (
-    <View
-      testID="profile-saved-diary"
-      style={[
-        styles.journalSheet,
-        styles.saved,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.lineStrong,
-          borderRadius: radius.base,
-        },
-      ]}
-    >
-      <JournalBinding />
+    <JournalSheet testID="profile-saved-diary" style={styles.saved}>
       <View style={[styles.content, stack && styles.contentStack]}>
         <View style={[styles.words, stack && styles.wordsStack]}>
           <Text accessibilityRole="header" style={[typography.h1, { color: colors.ink }]}>{diary.document.title}</Text>
@@ -158,14 +138,17 @@ function SavedDiary({ person, diary }: { person: string; diary: Diary }) {
         <Text style={[typography.note, styles.metadata, { color: colors.inkSoft }]}>{`${diary.kind === "trip" ? "Sổ chuyến đi" : "Khoảnh khắc"} · ${diary.audience === "private" ? "Chỉ mình tôi" : "Công khai"}`}</Text>
         <RudiButton full={false} label="Mở trang" labelAlign="left" variant="ghost" style={styles.textAction} onPress={() => router.push(`/diaries/${diary.id}` as never)} />
       </View>
-    </View>
+    </JournalSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  lead: { paddingTop: 18, gap: 14 },
-  journalSheet: { position: "relative", overflow: "hidden", borderWidth: 1, paddingLeft: 32, paddingRight: 16, paddingTop: 16, paddingBottom: 14 },
-  bindingRail: { position: "absolute", top: 0, bottom: 0, left: 0, width: 24 },
+  lead: { gap: 14 },
+  journalSheet: { flexDirection: "row", overflow: "hidden", borderWidth: 1 },
+  sheetBody: { flex: 1, minWidth: 0 },
+  bindingRail: { width: 24, alignSelf: "stretch" },
+  emptyColumn: { alignItems: "center" },
+  centred: { textAlign: "center", maxWidth: 420 },
   bindingRule: { position: "absolute", top: 0, bottom: 0, left: 22, width: 1.5 },
   bindingHole: { position: "absolute", left: 7, width: 9, height: 9, borderRadius: 5, borderWidth: 1 },
   saved: { gap: 12 },

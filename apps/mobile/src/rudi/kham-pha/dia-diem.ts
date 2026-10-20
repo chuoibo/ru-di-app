@@ -24,7 +24,7 @@ import {
 } from "../../screens/kham-pha/places";
 import type { TimKiemState } from "../../screens/kham-pha/tim-kiem";
 import { quenDiemDen } from "./diem-den";
-import { anhDanhMuc, type AnhCoGhiCong } from "../ui/ghi-cong";
+import { anhDanhMuc, TIEN_TO_ANH, type AnhCoGhiCong } from "../ui/ghi-cong";
 import type { IconName } from "../ui";
 
 const LOI_DIA_DIEM: Record<string, string> = {
@@ -41,7 +41,19 @@ export type DanhMuc = {
   destination: { id: string; name: string };
   /** Whose taste the match percentages are relative to (M11). */
   gu: Gu;
+  /** Places in the whole destination after the server's filters; null when the server did not page. */
+  total: number | null;
+  /** Where the next page starts; null means this was the last one. */
+  nextOffset: number | null;
 };
+
+/** The page size the app asks for on every read of `/places`. */
+export const TRANG_DIA_DIEM = 30;
+/** Pages a picker follows (30 x 4 = 120 places) before it stops. */
+export const TRANG_CHO_BO_CHON = 4;
+
+/** How many cards are asked for a reason in one go (the server's cap). */
+export const LY_DO_TOI_DA = 12;
 
 /**
  * The basis every badge on the screen is scored against.
@@ -130,9 +142,13 @@ export async function docDanhMuc(
      *  against their stated taste. Absent means an anonymous read, which the
      *  route serves as a catalogue with no percentages. */
     personId?: string | null;
+    /** Page start; the page size is always `TRANG_DIA_DIEM`. */
+    offset?: number;
   } = {},
 ): Promise<DanhMuc> {
   const params = new URLSearchParams();
+  params.set("limit", String(TRANG_DIA_DIEM));
+  if (opts.offset !== undefined && opts.offset > 0) params.set("offset", String(opts.offset));
   if (opts.category) params.set("category", opts.category);
   const q = opts.q?.trim();
   if (q) params.set("q", q);
@@ -143,7 +159,50 @@ export async function docDanhMuc(
     opts.personId != null
       ? await translatedAsActor<unknown>(LOI_DIA_DIEM, duong, { method: "GET", actorId: opts.personId })
       : await translatedAnonymous<unknown>(LOI_DIA_DIEM, duong, { method: "GET" });
-  return { ...parseCatalogue(body), gu: docGu(body) };
+  const raw = body as { total?: unknown; next_offset?: unknown } | null;
+  const so = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+  return { ...parseCatalogue(body), gu: docGu(body), total: so(raw?.total), nextOffset: so(raw?.next_offset) };
+}
+
+/**
+ * The model's reasons for the first cards, read apart from the list so the
+ * list never waits for a model. A failure is a list that keeps the server's
+ * own sentences, so the caller may ignore it; this returns `{}` for it.
+ *
+ * Only an answer with source `ai` and a verdict the app knows is taken, which
+ * is the same pairing `parseMatch` insists on for the list itself.
+ */
+export async function docLyDo(
+  placeIds: readonly string[],
+  opts: { personId?: string | null } = {},
+): Promise<Record<string, { reason: string; verdict: "hop" | "tam" | "khong-hop" }>> {
+  const ids = placeIds.slice(0, LY_DO_TOI_DA);
+  if (ids.length === 0) return {};
+  try {
+    const duong = `/places?reasons_for=${ids.map(encodeURIComponent).join(",")}`;
+    const body =
+      opts.personId != null
+        ? await translatedAsActor<unknown>(LOI_DIA_DIEM, duong, { method: "GET", actorId: opts.personId })
+        : await translatedAnonymous<unknown>(LOI_DIA_DIEM, duong, { method: "GET" });
+    const reasons = (body as { reasons?: Record<string, unknown> } | null)?.reasons;
+    const out: Record<string, { reason: string; verdict: "hop" | "tam" | "khong-hop" }> = {};
+    if (reasons === null || typeof reasons !== "object" || reasons === undefined) return out;
+    for (const id of ids) {
+      const e = reasons[id] as { reason?: unknown; verdict?: unknown; source?: unknown } | undefined;
+      if (e === undefined || e === null || e.source !== "ai" || typeof e.reason !== "string" || e.reason.trim() === "") continue;
+      if (e.verdict !== "hop" && e.verdict !== "tam" && e.verdict !== "khong-hop") continue;
+      out[id] = { reason: e.reason, verdict: e.verdict };
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** A place carrying the model's reason in place of the server's own sentence. */
+export function voiLyDo(place: Place, ly: { reason: string; verdict: "hop" | "tam" | "khong-hop" } | undefined): Place {
+  if (ly === undefined || place.match === null) return place;
+  return { ...place, match: { ...place.match, reason: ly.reason, source: "ai", verdict: ly.verdict } };
 }
 
 /**
@@ -157,21 +216,31 @@ export async function docDanhMuc(
 export async function docDanhMucCoLui(
   daChon: string | null,
   personId?: string | null,
+  soTrang = 1,
 ): Promise<DanhMuc> {
-  if (daChon === null) return docDanhMuc({ personId });
+  // A picker (outing, memory wall) asks for TRANG_CHO_BO_CHON pages: it needs a usable pool, not one page.
+  const nhieuTrang = async (destination?: string): Promise<DanhMuc> => {
+    let dm = await docDanhMuc({ destination, personId });
+    for (let i = 1; i < soTrang && dm.nextOffset !== null; i += 1) {
+      const tiep = await docDanhMuc({ destination, personId, offset: dm.nextOffset });
+      dm = { ...dm, places: [...dm.places, ...tiep.places], nextOffset: tiep.nextOffset };
+    }
+    return dm;
+  };
+  if (daChon === null) return nhieuTrang();
   try {
-    return await docDanhMuc({ destination: daChon, personId });
+    return await nhieuTrang(daChon);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       await quenDiemDen();
-      return docDanhMuc({ personId });
+      return nhieuTrang();
     }
     throw error;
   }
 }
 
 export async function docChiTiet(placeId: string): Promise<PlaceDetail> {
-  const body = await translatedAnonymous<unknown>(LOI_DIA_DIEM, `/places/${encodeURIComponent(placeId)}`, {
+  const body = await translatedAnonymous<unknown>(LOI_DIA_DIEM, `/places/${encodeURIComponent(placeId)}?include=highlights`, {
     method: "GET",
   });
   return parsePlaceDetail(body);
@@ -303,7 +372,7 @@ export function cauGiayPhep(anh: Pick<AnhDiaDiem, "author" | "license">): string
  * alike. One constant because two screens saying it two ways is how the
  * careful half of a sentence goes missing on one of them.
  */
-export const TIEN_TO_ANH = "Ảnh quanh đây: ";
+export { TIEN_TO_ANH };
 
 /**
  * The one sentence under a gallery, where there is room to say the whole

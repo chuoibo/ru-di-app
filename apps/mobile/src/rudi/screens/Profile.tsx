@@ -66,7 +66,7 @@ function ObserveProfileMetrics({ phien }: { phien: Phien }) {
 
 function ProfileContent({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, radius, space } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "saved">("home");
   const [page, setPage] = useState<"profile" | "kept">("profile");
@@ -171,8 +171,8 @@ function ProfileContent({ phien }: { phien: Phien }) {
       header={editor ? <TopBar title="Chỉnh hồ sơ" onBack={editor.back} right={<RudiButton compact full={false} label="Huỷ" disabled={dangLuuHoSo} onPress={editor.cancel} variant="ghost" />} /> : undefined}
       footer={editor ? <RudiButton label="Lưu hồ sơ" disabled={dangLuuHoSo} loading={dangLuuHoSo} onPress={editor.save} /> : undefined}
       footerInset={rail ? insets.bottom + 12 : 24}>
-      <View style={editingProfile ? undefined : styles.profileHero}>
-        {!editingProfile ? <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Cá nhân</Text> : null}
+      <View style={editingProfile ? undefined : [styles.profileHero, { gap: space.sm }]}>
+        {!editingProfile ? <Text accessibilityRole="header" style={[typography.h1, { color: colors.ink }]}>Cá nhân</Text> : null}
         {/* Settings keeps its single door in the management group below. */}
         <HoSoSong phien={phien} onEditorChange={setEditor} renderContent={(profile) => <View style={styles.profileBody}>
       <View accessibilityRole="tablist" style={[styles.profileTabs, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
@@ -181,18 +181,10 @@ function ProfileContent({ phien }: { phien: Phien }) {
       {page === "kept" ? <DiaryWall person={personId} owner={personId} collection={diaries} empty={<ProfileDiaryEmpty />} failure={diaries.error ? <ProfileDiaryFailure message={diaries.error} retry={diaries.retry} /> : undefined} /> : <>
       <DiaryLead person={personId} collection={diaries} />
       {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
-      <View style={[styles.preferences, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
-        <View style={styles.preferencesLead}>
-          <View style={[styles.preferencesIcon, { backgroundColor: colors.accentSoft, borderColor: colors.line }]}>
-            <VeLop height={34} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("taste")} width={34} />
-          </View>
-          <View style={styles.preferencesCopy}>
-            <Text style={[typography.note, { alignSelf: "stretch", color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
-            <RudiButton full={false} label="Sở thích" labelAlign="left" variant="ghost" style={styles.profileTextAction} onPress={() => router.push("/personalization")} />
-          </View>
-        </View>
+      <View style={[styles.preferences, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base, marginTop: space.md, paddingHorizontal: space.md, paddingVertical: space.xs }]}>
+        <ListRow icon="heart-outline" onPress={() => router.push("/personalization")} subtitle={tomTat(soThich)} title="Sở thích" />
       </View>
-      <View style={styles.menuGroups}>
+      <View style={[styles.menuGroups, { marginTop: space.lg, gap: space.md }]}>
         <View style={[styles.menuGroup, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Sổ của bạn</Text>
           <View style={[styles.hangMenu, styles.hangMenuCoKe, { borderBottomColor: colors.line }]}>
@@ -259,12 +251,10 @@ function ProfileContent({ phien }: { phien: Phien }) {
 
 /** Server facts are profile context, separate from the saved page's metadata. */
 function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pending: number; onFriends: () => void }) {
-  const { colors, radius } = useRudiTheme();
-  const footprints = [
-    ["outings", profile.counts.outings, "kèo"],
-    ["places", profile.counts.places_checked_in, "điểm check-in"],
-    ["memories", profile.counts.memories, "khoảnh khắc"],
-  ] as const;
+  const { colors, radius, space } = useRudiTheme();
+  const cell = [styles.factCell, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control, gap: space.sm, paddingHorizontal: space.sm }];
+  const hang = [styles.factRow, { gap: space.sm }];
+  // Two equal columns; the odd last fact takes the whole row instead of a stub.
   return (
     <View
       testID="profile-counts"
@@ -274,43 +264,52 @@ function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pendi
           backgroundColor: colors.card,
           borderColor: colors.lineStrong,
           borderRadius: radius.base,
+          gap: space.sm,
+          marginTop: space.md,
+          padding: space.md,
         },
       ]}
     >
-      <View style={[styles.relations, { borderBottomColor: colors.line }]}>
+      <View style={hang}>
         <Pressable
           testID="profile-fact-friends"
           accessibilityRole="button"
           accessibilityLabel={`${profile.counts.friends} bạn bè`}
           accessibilityHint={pending > 0 ? `${pending} lời mời đang chờ` : "Mở danh sách bạn bè"}
           onPress={onFriends}
-          style={[
-            styles.friendsAction,
-            {
-              backgroundColor: colors.accentSoft,
-              borderColor: colors.accent,
-              borderRadius: radius.control,
-            },
-          ]}
+          style={cell}
         >
           <VeLop height={28} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("friends")} width={28} />
-          <View style={styles.friendsWords}>
+          <View style={styles.factWords}>
             <Text accessible={false} style={[typography.body, { color: colors.ink }]}>{`${profile.counts.friends} bạn bè`}</Text>
-            {pending > 0 ? <Text accessible={false} style={[typography.note, { color: colors.accent }]}>{`${pending} lời mời đang chờ`}</Text> : null}
+            {pending > 0 ? (
+              <View style={[styles.factBadge, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
+                <Text accessible={false} style={[typography.caption, { color: colors.accent }]}>{`${pending} lời mời đang chờ`}</Text>
+              </View>
+            ) : null}
           </View>
         </Pressable>
-        <View style={[styles.stampPill, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control }]}>
+        <View style={cell}>
           <VeLop height={26} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("contexts")} width={26} />
-          <Text testID="profile-fact-contexts" style={[typography.body, styles.contextWords, { color: colors.ink }]}>{`${profile.counts.contexts} nhóm`}</Text>
+          <Text testID="profile-fact-contexts" style={[typography.body, styles.factWords, { color: colors.ink }]}>{`${profile.counts.contexts} nhóm`}</Text>
         </View>
       </View>
-      <View style={styles.footprints}>
-        {footprints.map(([id, value, noun]) => (
-          <View key={id} style={[styles.footprintCell, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control }]}>
+      <View style={hang}>
+        {([
+          ["outings", profile.counts.outings, "kèo"],
+          ["places", profile.counts.places_checked_in, "điểm check-in"],
+        ] as const).map(([id, value, noun]) => (
+          <View key={id} style={cell}>
             <VeLop height={24} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan(id)} width={24} />
-            <Text testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
+            <Text testID={`profile-fact-${id}`} style={[typography.body, styles.factWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
           </View>
         ))}
+      </View>
+      <View style={hang}>
+        <View style={cell}>
+          <VeLop height={24} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("memories")} width={24} />
+          <Text testID="profile-fact-memories" style={[typography.body, styles.factWords, { color: colors.inkSoft }]}>{`${profile.counts.memories} khoảnh khắc`}</Text>
+        </View>
       </View>
     </View>
   );
@@ -477,26 +476,19 @@ const styles = StyleSheet.create({
   form: { maxWidth: 560 },
   khung: { gap: 14 },
   profileContent: { gap: 0 },
-  profileHero: { gap: 10 },
+  profileHero: {},
   profileBody: { gap: 0 },
-  profileTabs: { flexDirection: "row", marginTop: 4, borderWidth: 1, overflow: "hidden" },
+  profileTabs: { flexDirection: "row", borderWidth: 1, overflow: "hidden" },
   profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
-  profileTabIndicator: { position: "absolute", bottom: 0, width: 36, height: 2.5, borderRadius: 1.5 },
+  profileTabIndicator: { position: "absolute", bottom: 0, left: 0, right: 0, height: 3 },
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
-  profileContext: { gap: 12, marginTop: 18, padding: 14, borderWidth: 1 },
-  relations: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 10, rowGap: 8, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  friendsAction: { flexGrow: 1, flexBasis: 132, minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
-  friendsWords: { minWidth: 0, flexShrink: 1, gap: 2 },
-  stampPill: { flexGrow: 1, flexBasis: 132, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
-  contextWords: { minWidth: 0, flexShrink: 1 },
-  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 10 },
-  footprintCell: { flexGrow: 1, minWidth: 96, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1 },
-  preferences: { marginTop: 16, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1 },
-  preferencesLead: { flexDirection: "row", alignItems: "center", gap: 12 },
-  preferencesIcon: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  preferencesCopy: { flex: 1, minWidth: 0, alignItems: "flex-start", gap: 2 },
-  profileTextAction: { paddingHorizontal: 0, borderWidth: 0, justifyContent: "flex-start", minWidth: 48, minHeight: 48 },
-  menuGroups: { paddingTop: 20, gap: 16 },
+  profileContext: { borderWidth: 1 },
+  factRow: { flexDirection: "row", alignItems: "stretch" },
+  factCell: { flex: 1, flexBasis: 0, minWidth: 0, minHeight: 48, flexDirection: "row", alignItems: "center", paddingVertical: 8, borderWidth: 1 },
+  factWords: { minWidth: 0, flexShrink: 1, gap: 2, alignItems: "flex-start" },
+  factBadge: { paddingHorizontal: 6, paddingVertical: 2 },
+  preferences: { borderWidth: 1 },
+  menuGroups: {},
   menuGroup: { gap: 0, borderWidth: 1, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
   menuHeading: { marginBottom: 4 },
   subPanelSheet: { padding: 16, borderWidth: 1, gap: 14 },

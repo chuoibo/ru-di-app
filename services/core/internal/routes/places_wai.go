@@ -62,10 +62,25 @@ func listDestinations() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
+		// `?include=cover` adds a cover photograph to every destination. It
+		// is opt-in because Python, the oracle, has no such field: a caller
+		// that does not ask gets the bytes Python sends.
+		var covers *destinationCovers
+		if includes(call)["cover"] {
+			covers, err = coversFor(ctx, store, rows)
+			if err != nil {
+				return endpoint.Reply{}, err
+			}
+		}
+		wire := func(row repo.Destination, km *float64) *pyjson.OrderedMap {
+			out := wireDestination(row, km)
+			covers.decorate(out, row.ID)
+			return out
+		}
 		if lat == nil {
 			list := pyjson.List{}
 			for _, row := range rows {
-				list = append(list, wireDestination(row, nil))
+				list = append(list, wire(row, nil))
 			}
 			body := pyjson.NewOrderedMap()
 			body.Set("destinations", list)
@@ -90,12 +105,12 @@ func listDestinations() Route {
 		list := pyjson.List{}
 		for _, pair := range pairs {
 			km := pythonRound1(pair.km)
-			list = append(list, wireDestination(pair.row, &km))
+			list = append(list, wire(pair.row, &km))
 		}
 		var nearest pyjson.Value = pyjson.Null{}
 		if len(pairs) > 0 && pairs[0].km <= nearLimitKM {
 			km := pythonRound1(pairs[0].km)
-			nearest = wireDestination(pairs[0].row, &km)
+			nearest = wire(pairs[0].row, &km)
 		}
 		body := pyjson.NewOrderedMap()
 		body.Set("destinations", list)
@@ -106,6 +121,11 @@ func listDestinations() Route {
 
 func listPlacesWAI() Route {
 	return Route{ID: "GET /places", Status: 200, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
+		// `?reasons_for=` is the separate, slow half of this route: the
+		// model's sentence for a few places. It never rides on the list.
+		if ids, asked := reasonsRequested(call); asked {
+			return serveReasons(ctx, call, ids)
+		}
 		contextID, err := optionalUUIDParam(call, "context_id")
 		if err != nil {
 			return endpoint.Reply{}, err
@@ -119,6 +139,10 @@ func listPlacesWAI() Route {
 			return endpoint.Reply{}, err
 		}
 		destinationID, err := optionalStringParam(call, "destination")
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		page, err := pagingOf(call)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -137,72 +161,23 @@ func listPlacesWAI() Route {
 		if diemDen == nil {
 			return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
 		}
-		// No known taste means no personal ranking and no reasons: the body is
-		// the same for every such caller, so a cached one is served as is.
-		replyKey := ""
-		if !group.Known() {
-			replyKey = diemDen.ID + "\x00" + deref(category) + "\x00" + deref(query)
-			if body := catalogue.reply(replyKey); body != nil {
-				return endpoint.Reply{Body: body}, nil
-			}
-		}
 		snap, err := catalogue.load(ctx, store, diemDen.ID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		rows := snap.rows
-		selected := make([]repo.Place, 0, len(rows))
 		q := ""
 		if query != nil {
 			q = *query
 		}
-		for _, row := range rows {
-			if category != nil && row.Category != *category {
-				continue
-			}
-			if !placeMatches(q, row) {
-				continue
-			}
-			selected = append(selected, row)
+		// The list never waits for the model: cards carry the server's own
+		// sentence, and the app asks for the model's separately.
+		ranked, err := catalogue.rankedFor(snap, diemDen.ID, category, q, group)
+		if err != nil {
+			return endpoint.Reply{}, err
 		}
-		cards := cardsWithPhotos(selected, snap.covers, snap.counts)
-		written := map[string]reasonPair{}
-		if group.Known() {
-			safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
-			sort.SliceStable(safe, func(i, j int) bool {
-				si, sj := service.ScoreOrZero(safe[i], group), service.ScoreOrZero(safe[j], group)
-				if si != sj {
-					return si > sj
-				}
-				return service.PlaceID(safe[i]) < service.PlaceID(safe[j])
-			})
-			if len(safe) > maxReasonRows {
-				safe = safe[:maxReasonRows]
-			}
-			// The list rows were read without description, reviews and
-			// activities; the reasons prompt quotes whole cards, so its few
-			// rows are read in full and rebuilt exactly as before.
-			safe, err = fullCards(ctx, store, safe, snap)
-			if err != nil {
-				return endpoint.Reply{}, err
-			}
-			written = fetchReasons(ctx, call, safe, group)
-		}
-		out := make([]*pyjson.OrderedMap, 0, len(cards))
-		for _, card := range cards {
-			id := service.PlaceID(card)
-			pair := written[id]
-			wired, err := wirePlaceCard(card, pair.reason, pair.verdict, group)
-			if err != nil {
-				return endpoint.Reply{}, err
-			}
-			out = append(out, wired)
-		}
-		sort.SliceStable(out, func(i, j int) bool {
-			return placeSortLess(out[i], out[j])
-		})
-		places := pyjson.List{}
-		for _, card := range out {
+		window, next := page.cut(len(ranked))
+		places := make(pyjson.List, 0, window.end-window.start)
+		for _, card := range ranked[window.start:window.end] {
 			places = append(places, card)
 		}
 		body := pyjson.NewOrderedMap()
@@ -210,8 +185,13 @@ func listPlacesWAI() Route {
 		body.Set("categories", wireCategories())
 		body.Set("group", wireGroupSummary(group))
 		body.Set("destination", wireDestination(*diemDen, nil))
-		if replyKey != "" {
-			catalogue.keepReply(replyKey, body, snap)
+		if page.paged {
+			body.Set("total", pyjson.NewInt(int64(len(ranked))))
+			if next == nil {
+				body.Set("next_offset", pyjson.Null{})
+			} else {
+				body.Set("next_offset", pyjson.NewInt(int64(*next)))
+			}
 		}
 		return endpoint.Reply{Body: body}, nil
 	}}
@@ -373,6 +353,18 @@ func getPlaceWAI() Route {
 			}
 		}
 		card.Set("photos_available", pyjson.Bool(count > 0))
+		// `?include=highlights` adds the structured «what to know». Opt-in
+		// for the same reason as the destination cover: Python has no such
+		// field and is what the default bytes are compared with.
+		if includes(call)["highlights"] {
+			extras, err := store.PlaceExtras(ctx, placeID, time.Now().UTC())
+			if err != nil {
+				return endpoint.Reply{}, err
+			}
+			if highlights := buildHighlights(place.Reviews, extras); highlights != nil {
+				card.Set("highlights", highlights)
+			}
+		}
 		return endpoint.Reply{Body: card}, nil
 	}}
 }
