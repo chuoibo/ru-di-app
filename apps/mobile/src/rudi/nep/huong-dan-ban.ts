@@ -8,4 +8,4 @@
  * describes the app this person holds. `tests/huong-dan-khop-ma.test.mjs` and
  * a Go test in `services/core/internal/huongdan` turn a stale value red.
  */
-export const HUONG_DAN_BAN = "fe1cfcc3456a";
+export const HUONG_DAN_BAN = "6341e863b8f5";

@@ -20,7 +20,8 @@
 import { Canh } from "../../ui/art/Canh";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -36,6 +37,7 @@ import { canhDiemDen } from "../../kham-pha/canh-ve";
 import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
 import { VeLop } from "../../ui/art/VeLop";
 import { MediaSlot } from "../../ui/MediaSlot";
+import { khoaNguon, veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { DauLon } from "../../ui/DauLon";
@@ -231,7 +233,7 @@ export function DiemDenScreen() {
                 ]}
               >
                 {noiBat ? (
-                  // The featured card is the one place a photograph is shown, with its credit under it.
+                  // The featured card shows its photograph large, with the credit under it; rows show it as a thumbnail (ThuVaChu).
                   <View style={styles.canhDan}>
                     {d.anhBia !== null ? (
                       <View style={{ width: rongCanh }}>
@@ -241,14 +243,8 @@ export function DiemDenScreen() {
                       <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>{tranhCanh(d, rongCanh)}</View>
                     )}
                   </View>
-                ) : (
-                  // Every list row draws the same register in the same frame, photo or not:
-                  // a thumbnail cannot carry a credit whole, so the photograph waits for the
-                  // featured card, where it is shown with its credit (ADR-0017 §2.5).
-                  <View style={[styles.canhFrame, styles.thuHang, { backgroundColor: colors.paper, borderColor: colors.line }]}>
-                    <ThanhPhoNet id={d.id} width={RONG_THU} />
-                  </View>
-                )}
+                ) : null}
+                <ThuVaChu anh={noiBat ? null : d.anhBia} id={d.id} ten={d.name} thu={!noiBat} chu={(ghiCong) => (
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
                   <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhu === "" ? null : (
@@ -263,7 +259,9 @@ export function DiemDenScreen() {
                   )}
                   {chonRoi ? <DauLon co="nho" nhan="Đang xem" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
                   {dangLuu === d.id ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu…</Text> : null}
+                  {ghiCong}
                 </View>
+                )} />
                 {!noiBat ? (
                   <Ionicons
                     color={chonRoi ? colors.accent : colors.inkFaint}
@@ -278,6 +276,41 @@ export function DiemDenScreen() {
         </View>
       ) : null}
     </RudiScreen>
+  );
+}
+
+/**
+ * A list row's thumbnail and its text column, drawn together so a real photo
+ * and its credit cannot part: the owner asked for real province photos
+ * (20/10), and a 96 px thumbnail cannot hold a credit whole, so the credit is
+ * a line of the text column -- the Explore row's pattern (ADR-0017 §2.5). No
+ * photo, or one that failed, keeps the city's line sketch in the same frame.
+ * `thu` false (the featured card) draws no thumbnail: that card has its own.
+ */
+function ThuVaChu({ anh, id, ten, thu, chu }: { anh: AnhCoGhiCong | null; id: string; ten: string; thu: boolean; chu: (ghiCong: ReactNode) => ReactNode }) {
+  const { colors } = useRudiTheme();
+  const [hong, setHong] = useState(false);
+  const nguon = anh === null ? null : ({ loai: "danh-muc", anh } as const);
+  const khoa = khoaNguon(nguon);
+  useEffect(() => setHong(false), [khoa]);
+  const ve = veKhung(nguon, { hong });
+  return (
+    <>
+      {thu ? (
+        <View style={[styles.canhFrame, styles.thuHang, { backgroundColor: colors.paper, borderColor: colors.line }]}>
+          {ve.source !== null ? (
+            <Image accessibilityLabel={`Ảnh chụp quanh ${ten}`} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
+          ) : (
+            <ThanhPhoNet id={id} width={RONG_THU} />
+          )}
+        </View>
+      ) : null}
+      {chu(
+        thu && ve.ghiCong !== null ? (
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text>
+        ) : null,
+      )}
+    </>
   );
 }
 

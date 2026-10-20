@@ -267,7 +267,8 @@
         "Chọn …",
         "Tìm thành phố hoặc tỉnh",
         "Đang lưu…",
-        "Đi đâu?"
+        "Đi đâu?",
+        "Ảnh chụp quanh …"
       ],
       "tep": [
         "app/destinations/index.tsx",

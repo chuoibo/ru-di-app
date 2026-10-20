@@ -66,12 +66,17 @@ test("Khám phá: cuộn vô hạn theo next_offset, cache theo điểm đến, 
 test("điểm đến: ảnh thật đi qua MediaSlot/AnhCoGhiCong, thiếu ảnh dùng tranh vẽ không nhãn", () => {
   assert.match(diemDen, /d\.anhBia !== null/);
   assert.match(diemDen, /nguon=\{\{ loai: "danh-muc", anh: d\.anhBia \}\}/);
-  assert.doesNotMatch(diemDen, /<Image\b/, "không tự dựng Image");
+  // A row thumbnail draws only what veKhung hands out of an AnhCoGhiCong, and prints the credit beside it.
+  const images = diemDen.match(/<Image\b[\s\S]*?\/>/g) ?? [];
+  assert.equal(images.length, 1, "một Image duy nhất, ở ThuVaChu");
+  assert.match(images[0], /source=\{ve\.source\}/, "Image chỉ nhận địa chỉ từ veKhung");
+  assert.match(diemDen, /ve\.ghiCong !== null \? \(\s*<Text/, "ảnh hàng đi cùng dòng ghi công");
 });
 
-test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề không bị cắt, chỗ cho hai dòng nên hàng cao bằng nhau; ảnh thật chỉ ở thẻ nổi bật", () => {
+test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề không bị cắt, chỗ cho hai dòng nên hàng cao bằng nhau; hàng có ảnh thật thì hiện ảnh nhỏ + ghi công", () => {
   assert.doesNotMatch(diemDen, /CANH_DIEM_DEN/, "bảng cảnh cũ (Hội An cho Hà Nội) đã bỏ");
-  assert.match(diemDen, /<ThanhPhoNet id=\{d\.id\} width=\{RONG_THU\} \/>/);
+  assert.match(diemDen, /<ThanhPhoNet id=\{id\} width=\{RONG_THU\} \/>/, "thiếu ảnh hoặc ảnh hỏng thì nét vẽ thành phố cùng khung");
+  assert.match(diemDen, /<ThuVaChu anh=\{noiBat \? null : d\.anhBia\}/, "chủ sản phẩm 20/10: tỉnh dùng ảnh thật");
   assert.match(diemDen, /typography\.caption, \{ color: colors\.inkSoft \}, !noiBat && \{ minHeight: typography\.caption\.lineHeight \* 2 \}/);
   assert.doesNotMatch(diemDen, /numberOfLines=\{noiBat \? undefined : 1\} style=\{\[typography\.caption/, "phụ đề bị cắt «…» là lỗi review 02c94551");
   assert.match(diemDen, /thuHang: \{ width: RONG_THU, height: 64 \}/);
