@@ -96,8 +96,9 @@ function bam(id: string): number {
  * One place's scene, or null when no painted scene is honest for it.
  *
  * Category first; among the category's honest scenes the id picks where to
- * start, and `truoc` (the scene of the card just above) is skipped when there
- * is another to take, so two neighbours do not wear the same painting.
+ * start, and `truoc` (the scene of the card just above) is skipped; when it is
+ * the only honest scene, the card draws its object (null) instead, so two
+ * neighbours never wear the same painting.
  */
 export function canhChoDiaDiem(
   { id, loai, vung }: { id?: string; loai?: string; vung: ReadonlySet<Vung> },
@@ -110,7 +111,8 @@ export function canhChoDiaDiem(
     const c = ds[(dau + i) % ds.length];
     if (c !== truoc) return c;
   }
-  return ds[dau];
+  // The only honest scene is the neighbour's: draw the object rather than wear the same painting twice in a row.
+  return null;
 }
 
 /**

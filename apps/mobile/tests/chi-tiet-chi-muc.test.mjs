@@ -69,10 +69,11 @@ test("điểm đến: ảnh thật đi qua MediaSlot/AnhCoGhiCong, thiếu ảnh
   assert.doesNotMatch(diemDen, /<Image\b/, "không tự dựng Image");
 });
 
-test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề một dòng, hàng cao bằng nhau; ảnh thật chỉ ở thẻ nổi bật", () => {
+test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề không bị cắt, chỗ cho hai dòng nên hàng cao bằng nhau; ảnh thật chỉ ở thẻ nổi bật", () => {
   assert.doesNotMatch(diemDen, /CANH_DIEM_DEN/, "bảng cảnh cũ (Hội An cho Hà Nội) đã bỏ");
   assert.match(diemDen, /<ThanhPhoNet id=\{d\.id\} width=\{RONG_THU\} \/>/);
-  assert.match(diemDen, /numberOfLines=\{noiBat \? undefined : 1\} style=\{\[typography\.caption/);
+  assert.match(diemDen, /typography\.caption, \{ color: colors\.inkSoft \}, !noiBat && \{ minHeight: typography\.caption\.lineHeight \* 2 \}/);
+  assert.doesNotMatch(diemDen, /numberOfLines=\{noiBat \? undefined : 1\} style=\{\[typography\.caption/, "phụ đề bị cắt «…» là lỗi review 02c94551");
   assert.match(diemDen, /thuHang: \{ width: RONG_THU, height: 64 \}/);
   assert.match(diemDen, /canhDiemDen\(d\.id\)/);
 });

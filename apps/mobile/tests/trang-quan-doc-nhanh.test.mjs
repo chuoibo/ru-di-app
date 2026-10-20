@@ -101,9 +101,9 @@ test("hai thẻ liền nhau không cùng một tranh khi còn tranh khác; thẻ
   for (let i = 1; i < ds.length; i += 1) assert.notEqual(canh.get(ds[i].id), canh.get(ds[i - 1].id), `${ds[i - 1].id}/${ds[i].id}`);
   // The same place keeps its scene across reads.
   assert.equal(canhChoDiaDiem({ id: "a", loai: "cafe", vung: lamDong }), canhChoDiaDiem({ id: "a", loai: "cafe", vung: lamDong }));
-  // A single honest scene is reused rather than dropped.
-  const haNoi = phanCanhDanhSach([{ id: "x", loai: "cafe", coAnh: false }, { id: "y", loai: "cafe", coAnh: false }], vungCua({ diemDen: "d-tinh-1" }));
-  assert.deepEqual([...haNoi.values()], ["scene-atelier", "scene-atelier"]);
+  // A single honest scene alternates with the category's object instead of repeating back to back (review 02c94551).
+  const haNoi = phanCanhDanhSach([{ id: "x", loai: "cafe", coAnh: false }, { id: "y", loai: "cafe", coAnh: false }, { id: "w", loai: "cafe", coAnh: false }], vungCua({ diemDen: "d-tinh-1" }));
+  assert.deepEqual([...haNoi.values()], ["scene-atelier", null, "scene-atelier"]);
   assert.equal(phanCanhDanhSach([{ id: "z", loai: "di-choi-dem", coAnh: false }], vungCua({ diemDen: "d-tinh-1" })).get("z"), null, "không còn tranh đúng thì vẽ đồ vật của loại");
 });
 
@@ -122,4 +122,15 @@ test("thẻ trang đã giữ không ảnh bìa chỉ có chữ; ô vẽ đồ v�
   assert.doesNotMatch(saved, /<VeLop/, "icon thay ảnh bìa từng đè lên tiêu đề (review 1fd5d576)");
   const hang = await readFile(new URL("../src/rudi/screens/explore/HangDiaDiem.tsx", import.meta.url), "utf8");
   assert.match(hang, /scene === null \? colors\.paperShade : colors\.paper/);
+});
+
+test("danh sách không bao giờ có hai thẻ liền nhau cùng một tranh, kể cả khi loại quán chỉ có một cảnh trung thực", () => {
+  const lamDongVung = vungCua({ diemDen: "d-tinh-68" });
+  for (const loai of ["food", "cafe", "nightlife", "activity", "stay", "khac", ""]) {
+    const ds = Array.from({ length: 8 }, (_, i) => ({ id: `q-${loai}-${i}`, loai, coAnh: false }));
+    const ra = ds.map((d) => phanCanhDanhSach(ds, lamDongVung).get(d.id));
+    for (let i = 1; i < ra.length; i += 1) {
+      if (ra[i] !== null) assert.notEqual(ra[i], ra[i - 1], `${loai}: thẻ ${i - 1} và ${i} cùng tranh ${ra[i]}`);
+    }
+  }
 });

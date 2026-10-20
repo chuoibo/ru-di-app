@@ -14,7 +14,7 @@
  * carries the selected state. The featured card shows the destination's real
  * cover photo (with the credit that came with it) through MediaSlot, or its
  * drawn scene with no label. Every list row draws the same line sketch in the
- * same frame, with its subtitle on one line, so 33 rows scan at one height
+ * same frame, with room for a two-line subtitle, so 33 rows scan at one height
  * (finish review 21/10).
  */
 import { Canh } from "../../ui/art/Canh";
@@ -252,12 +252,12 @@ export function DiemDenScreen() {
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
                   <Text numberOfLines={noiBat ? undefined : 1} style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhu === "" ? null : (
-                    // One line in a row, so every row is the same height and no word sits alone.
-                    <Text numberOfLines={noiBat ? undefined : 1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhu}</Text>
+                    // Never clipped: a row reserves two lines so rows keep one height, and longer copy (320 dp, large text) wraps on.
+                    <Text style={[typography.caption, { color: colors.inkSoft }, !noiBat && { minHeight: typography.caption.lineHeight * 2 }]}>{dongPhu}</Text>
                   )}
                   {/* A row has room for one quiet line: the subtitle, or the blurb when there is none. */}
                   {d.blurb === null || (!noiBat && dongPhu !== "") ? null : (
-                    <Text numberOfLines={noiBat ? 2 : 1} style={[typography.note, { color: colors.inkSoft }]}>
+                    <Text numberOfLines={noiBat ? 2 : undefined} style={[typography.note, { color: colors.inkSoft }, !noiBat && { minHeight: typography.note.lineHeight * 2 }]}>
                       {d.blurb}
                     </Text>
                   )}
