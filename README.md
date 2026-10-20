@@ -334,15 +334,11 @@ cd services/api && python3 -m app.web.preview
 <table>
 <tr><td width="50%" valign="top">
 
-**Đường nhanh nhất — Docker, có sẵn dữ liệu demo**
+**Chạy app trên dữ liệu thật**
 
-```bash
-make demo     # dựng hệ + nạp "Team Đà Lạt":
-              # 7 người, 3 chuyến, còn nợ thật
-make smoke    # gọi /healthz qua cổng đã publish
-make logs     # bám log API và Postgres
-make down     # tắt, GIỮ dữ liệu trong volume
-```
+Không còn dữ liệu demo hay seed (xoá 20/10/2026). Stack chạy trên danh mục thật
+của vnlocal; người dùng đăng ký bằng email/Google thật. Hướng dẫn cho người thử:
+[`docs/CHAY-DU-LIEU-THAT.md`](docs/CHAY-DU-LIEU-THAT.md).
 
 </td><td width="50%" valign="top">
 

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { AssetIllustration } from "../ui/AssetIllustration";
 import { useRouter } from "expo-router";
 import { useEffect, useState, type ReactNode } from "react";
@@ -34,7 +35,12 @@ function DiaryShelf({ person, owner, collection, empty, failure }: WallProps & {
   return <View style={styles.wall} testID="diary-wall">
     <Heading size="h2" title="Những ngày muốn giữ" subtitle={person === owner ? "Những cuộc đi trở thành chuyện của bạn." : undefined} />
     {error ? failure ?? <ErrorState title="Sổ chưa mở được" body={error} onRetry={collection.retry} /> : null}
-    {!loading && !error && !books.length ? empty ?? (person === owner ? <KeTrong /> : <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có trang nào được mở cho mọi người.</Text>) : null}
+    {!loading && !error && !books.length ? empty ?? (person === owner ? <KeTrong /> : (
+      <View style={[styles.emptyNote, { backgroundColor: colors.paper, borderColor: colors.lineStrong }]}>
+        <Ionicons color={colors.inkSoft} name="book-outline" size={18} />
+        <Text style={[typography.body, styles.emptyNoteText, { color: colors.inkSoft }]}>Chưa có trang nào được mở cho mọi người.</Text>
+      </View>
+    )) : null}
     {loading && !books.length ? <SkeletonLines lines={3}/> : null}
     {books.map((b, i) => <View key={b.id} style={styles.entry}>
       {b.kind === "moment" && (i === 0 || books[i - 1].created_at.slice(0, 7) !== b.created_at.slice(0, 7)) ? <Text style={[typography.label, { color: colors.inkSoft }]}>{thangNamVN(b.created_at)}</Text> : null}
@@ -82,4 +88,9 @@ function KeTrong() {
   />;
 }
 
-const styles = StyleSheet.create({ wall: { gap: 24, paddingVertical: 20 }, entry: { gap: 10 } });
+const styles = StyleSheet.create({
+  wall: { gap: 24, paddingVertical: 20 },
+  entry: { gap: 10 },
+  emptyNote: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderStyle: "dashed", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  emptyNoteText: { flex: 1 },
+});

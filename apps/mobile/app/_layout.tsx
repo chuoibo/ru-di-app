@@ -1,4 +1,5 @@
 import { Stack, useRouter } from "expo-router";
+import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
@@ -18,6 +19,11 @@ import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
 import { OpeningApp, SessionOpening } from "../src/rudi/ui/OpeningApp";
 import "../src/rudi/tep-anh-native";
+
+// Expo Go's Info.plist keeps UIViewControllerBasedStatusBarAppearance off, so a
+// per-screen statusBarStyle raises a red box there; <StatusBar> still sets it.
+const theoManHinh = !(Platform.OS === "ios" && Constants.executionEnvironment === "storeClient");
+const thanhTrang = (statusBarStyle: "light" | "dark") => (theoManHinh ? { statusBarStyle } : {});
 
 // Module level, before the first frame: `index.ts` never runs under
 // `expo-router/entry`, so the call that used to live in the legacy App.tsx never
@@ -136,13 +142,13 @@ function RootInner() {
             animation: chuyen("slide_from_right"),
             contentStyle: { backgroundColor: colors.ground },
             headerShown: false,
-            statusBarStyle: dark ? "light" : "dark",
+            ...thanhTrang(dark ? "light" : "dark"),
           }}
         >
           {/* Cold redirects reveal an already-present cover, never a white page. */}
-          <Stack.Screen name="index" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, statusBarStyle: "light" }} />
-          <Stack.Screen name="welcome" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, statusBarStyle: "light" }} />
-          <Stack.Screen name="login" options={{ statusBarStyle: "light" }} />
+          <Stack.Screen name="index" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, ...thanhTrang("light") }} />
+          <Stack.Screen name="welcome" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover }, ...thanhTrang("light") }} />
+          <Stack.Screen name="login" options={{ ...thanhTrang("light") }} />
           <Stack.Screen name="(tabs)" options={{ animation: chuyen("fade") }} />
           <Stack.Screen
             name="create"
@@ -166,7 +172,7 @@ function RootInner() {
               `check_screens_reachable` finds it; full screen over the cover. */}
           <Stack.Screen
             name="stories/[personId]"
-            options={{ animation: chuyen("fade"), presentation: "fullScreenModal", statusBarStyle: "light" }}
+            options={{ animation: chuyen("fade"), presentation: "fullScreenModal", ...thanhTrang("light") }}
           />
         </Stack>
         {/* Last child: the dock paints over whatever route is open. */}

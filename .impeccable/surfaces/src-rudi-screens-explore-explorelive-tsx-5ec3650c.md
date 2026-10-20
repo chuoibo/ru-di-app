@@ -46,3 +46,21 @@ Canonical `source-screen-receipt.json` và `root-visual-review.json` ở bó `na
 Verdict độc lập `impeccable-finish-review-e338-private-20261013-r1/scoped-verdict-five-sections.md` ghi S1 resolved trong scale/theme/window đã chụp: hai mép ngoài search/AI đồng nhất, glyph AI ở giữa; inset1px của EditText không phải lệch chiều cao. Reviewer mở23 ảnh trong cả bó Composer/Search/source, không mở26 ảnh của root. Disposition chung vẫn **FIX** vì F3 Composer partial; không suy S1 thành nghiệm thu cả Khám phá. Section tab cắt chữ200 là finding riêng tại e338, không phải hồi quy S1; bản sửa tab sau đó nằm ngoài đối chiếu này và chưa được các ảnh e338 chứng minh.
 
 Quality bar rộng còn thiếu landscape/phone thường, tablet200/IME, query dài/lỗi/permission/network, TalkBack, contrast/target đo thật, reduced motion, phần cứng/iOS. Clean9/9 cùng Node1880 và Go hướng dẫn98 chỉ là cổng exact source, không verdict đẹp hoặc full gate/main/deploy. FINISH chưa đóng; đây là bản ghi lịch sử e338, cần source/capture mới nếu UI đổi tiếp.
+
+## 20/10 · Khám phá nhanh và điểm đến bằng ảnh thật (PR #667)
+
+Ghi sau khi đã sửa mã: hợp đồng mô tả hướng đã làm để reviewer chấm.
+
+## Direction contract
+
+THESIS: Khám phá hiện ngay: trang đầu 30 quán, cuộn thêm khi gần cuối, đổi tỉnh thấy ngay danh sách cũ trong lúc làm mới.
+
+OWN-WORLD: Giữ thế giới hiện hữu; ảnh tỉnh là ảnh quán thật có ghi công qua MediaSlot; thiếu ảnh là tranh cảnh vẽ không nhãn chữ. Chữ «Minh hoạ» không bao giờ xuất hiện.
+
+STORY: Chọn tỉnh (danh sách một cột: 33 tỉnh dò theo tên nhanh hơn lưới; thẻ đầu là tỉnh đang xem với ảnh thật, các hàng cùng một lối vẽ và cao bằng nhau) → danh sách hiện trong một nhịp → lý do gợi ý của AI tới sau, thay câu tại chỗ không xô bố cục.
+
+FIRST VIEWPORT: Thanh tìm + chip loại + quán đầu; skeleton chỉ khi tỉnh chưa đọc bao giờ.
+
+FORM: limit/offset, SWR theo người + điểm đến, reasons_for không chặn, nút «Xem thêm» dự phòng; tranh cảnh dự phòng chọn theo loại quán, không bao giờ cảnh mốc của vùng khác. Seed: none — mở rộng thế giới đã có (Sân Khấu Giấy v3, ADR-0037); concept-seed chỉ dành cho thế giới mới hoặc thay thế, nên không roll.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

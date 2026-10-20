@@ -13,7 +13,7 @@ Phạm vi: Welcome/auth/OTP/gu → Explore/destinations/địa điểm/chọn k�
 
 **THESIS:** Mở một cuốn sổ để đi từ lời rủ đến một cuộc đi thực có. Mỗi màn đặt tác vụ chính và trạng thái thật trước vật liệu giấy. Không dùng khung icon trống thay ảnh, không bịa địa điểm hay tuyến đường.
 
-**OWN-WORLD:** Bìa chàm, trang giấy theo theme, Bricolage ở tiêu đề, body theo hệ thống; coral cho thao tác và chọn, teal cho tiền/check-in, tím cho AI. Dùng registry asset-pack chung. Minh hoạ địa điểm có nhãn; ảnh API luôn đi với credit. Form dùng material quiet; vé và trang hành trình giữ đường cắt/giấy của hệ thống.
+**OWN-WORLD:** Bìa chàm, trang giấy theo theme, Bricolage ở tiêu đề, body theo hệ thống; coral cho thao tác và chọn, teal cho tiền/check-in, tím cho AI. Dùng registry asset-pack chung. Tranh cảnh dự phòng của địa điểm không mang nhãn chữ (chủ sản phẩm 20/10/2026); ảnh API luôn đi với credit. Form dùng material quiet; vé và trang hành trình giữ đường cắt/giấy của hệ thống.
 
 **STORY:** Bốn trang Welcome dẫn đến login. Xác minh email và trả lời gu giữ thông tin khi API lỗi. Khám phá mở thành phố đang xem, search/filter rồi một kết quả dẫn và cặp so sánh. Lưu là thao tác độc lập. Địa điểm thêm vào kèo có thật; tạo kèo giữ chặng đầu và đúng context. Timeline sửa bằng bản nháp/revision, check-in chỉ báo đã tới sau API.
 

@@ -134,3 +134,28 @@ test("tìm trong Cộng đồng không thấy: cảnh tránh chỗ khi bàn phí
   assert.match(tim, /const banPhim = useKeyboardOpen\(\);/);
   assert.match(tim, /illustration=\{banPhim \? undefined : <Canh id="tim-khong-ra" width=\{168\} \/>\}/);
 });
+
+// 20/10/2026 căn lề: a whole-page silence sits on ONE centred axis.
+test("EmptyState layout=page: một trục giữa, chữ ≤ 420, nút theo chữ; Tin nhắn đưa link bạn bè vào secondary", () => {
+  const es = readFileSync(new URL("../src/rudi/ui/EmptyState.tsx", import.meta.url), "utf8");
+  assert.match(es, /layout\?: "full" \| "inline" \| "page"/);
+  assert.match(es, /page: \{ alignItems: "center"[^}]*maxWidth: 420/);
+  assert.match(es, /const giua = full \|\| page;/);
+  assert.match(es, /textAlign: giua \? "center" : "left"/);
+  const tin = readFileSync(new URL("../src/rudi/screens/groups/Conversations.tsx", import.meta.url), "utf8");
+  assert.match(tin, /layout="page"/);
+  assert.match(tin, /secondary=\{\{ label: "Thêm bạn bằng tên tài khoản"/);
+  assert.doesNotMatch(tin, /<RudiButton icon="person-add-outline"/, "không còn nút mồ côi lệch trục ngoài EmptyState");
+  const dai = readFileSync(new URL("../src/rudi/screens/story/StoryRail.tsx", import.meta.url), "utf8");
+  assert.match(dai, /hangMotO: \{ flexGrow: 1, justifyContent: "center" \}/);
+  const nhat = readFileSync(new URL("../src/rudi/screens/profile/DiaryLead.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(nhat, /paddingLeft: 32/, "gáy sổ không đẩy nội dung lệch phải");
+  const ho = readFileSync(new URL("../src/rudi/screens/profile/HoSoSong.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(ho, /passportSealMark/, "không còn dấu toạ độ cứng đè lên thẻ hồ sơ");
+  // 21/10/2026: the empty sheet pads its right by the binding rail, so its axis is the card's; no lone «kèo.».
+  assert.match(nhat, /giua && \{ paddingRight: space\.md \+ RAY_GAY \}/);
+  assert.match(nhat, /<JournalSheet giua testID="profile-diary-empty"/);
+  assert.match(nhat, /trang của\\u00a0kèo\./);
+  // One frame on the identity card: no coral band, no dashed inner rule, no stacked avatar.
+  assert.doesNotMatch(ho, /passportTopBand|passportInnerRule|identityMainStack/);
+});

@@ -326,9 +326,47 @@ const BUU_THIEP: ThanhPho = {
 /** The destination ids this table draws; any other id gets the postcard. */
 export const THANH_PHO_IDS: readonly string[] = Object.keys(THANH_PHO);
 
+/** Map administrative province IDs to regional city ink sketches (`THANH_PHO_IDS`). */
+const KY_HOA_TINH: Readonly<Record<string, string>> = {
+  "d-tinh-1": "d-ha-noi",
+  "d-tinh-4": "d-sa-pa",
+  "d-tinh-8": "d-ninh-binh",
+  "d-tinh-11": "d-sa-pa",
+  "d-tinh-12": "d-sa-pa",
+  "d-tinh-14": "d-da-lat",
+  "d-tinh-15": "d-sa-pa",
+  "d-tinh-19": "d-da-lat",
+  "d-tinh-20": "d-ninh-binh",
+  "d-tinh-22": "d-ha-long",
+  "d-tinh-25": "d-hue",
+  "d-tinh-31": "d-ha-long",
+  "d-tinh-33": "d-hoi-an",
+  "d-tinh-37": "d-ninh-binh",
+  "d-tinh-38": "d-nha-trang",
+  "d-tinh-40": "d-hue",
+  "d-tinh-42": "d-quy-nhon",
+  "d-tinh-44": "d-hue",
+  "d-tinh-46": "d-hue",
+  "d-tinh-48": "d-da-nang",
+  "d-tinh-51": "d-phu-quoc",
+  "d-tinh-52": "d-quy-nhon",
+  "d-tinh-56": "d-nha-trang",
+  "d-tinh-66": "d-da-lat",
+  "d-tinh-68": "d-da-lat",
+  "d-tinh-75": "d-vung-tau",
+  "d-tinh-79": "d-tphcm",
+  "d-tinh-80": "d-vung-tau",
+  "d-tinh-82": "d-can-tho",
+  "d-tinh-86": "d-can-tho",
+  "d-tinh-91": "d-phu-quoc",
+  "d-tinh-92": "d-can-tho",
+  "d-tinh-96": "d-phu-quoc",
+};
+
 /** The scene of a destination, as layers in the city frame. */
 export function hinhThanhPho(id: string | null | undefined): LopVe[] {
-  const tp = THANH_PHO[id ?? ""] ?? BUU_THIEP;
+  const ma = id ?? "";
+  const tp = THANH_PHO[ma] ?? THANH_PHO[KY_HOA_TINH[ma] ?? ""] ?? BUU_THIEP;
   return tp.hinh();
 }
 

@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text as RNText, View, useWindowDimensions, type TextStyle } from "react-native";
 
-import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { Text as NativeMetricText } from "../../ui/NativeFontMetrics";
@@ -14,6 +14,7 @@ import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { chiaDongSuThat, guTheoLoai, moDauBangSao, tachGia } from "../../kham-pha/dia-diem";
+import { canhChoDiaDiem, type TenCanh, type Vung } from "../../kham-pha/canh-ve";
 
 /*
  * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
@@ -78,6 +79,8 @@ export interface DiaDiemHienThi {
   gu?: string;
   /** Tags the place really carries; the lead's sketch picks at most two props from them. Live rows pass none. */
   tags?: readonly string[];
+  /** The painted stand-in the list chose for this card (`phanCanhDanhSach`); absent, the category's region-free scene. */
+  canh?: TenCanh | null;
 }
 
 interface CommonProps {
@@ -113,12 +116,23 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
   );
 }
 
-/** Generic category artwork is labelled, never presented as the venue itself. */
-export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false, fillFrame = false }: { loai?: string; width?: number; height?: number; nativeMetrics?: boolean; fillFrame?: boolean }) {
+/**
+ * Generic category artwork stands in when a place has no photograph. It carries
+ * no text label (owner decision 2026-10-20): the drawn scene reads as a drawing,
+ * and a real photograph always arrives through MediaSlot with its credit.
+ *
+ * Because there is no label, a painting of another city reads as this place
+ * (finish review 21/10): the scene comes from `canh-ve.ts`, by category first
+ * and only where the painting is of the place's own region. `canh` is what the
+ * caller chose for this card (a list varies neighbours); left out, the
+ * category's scene that is true of anywhere. `null` -- nothing painted is
+ * honest here -- draws the category's object on the paper instead.
+ * `nativeMetrics` is accepted for call-site symmetry; there is no text left to measure.
+ */
+export function PlaceArtwork({ loai, canh, width, height = 180, fillFrame = false }: { loai?: string; canh?: TenCanh | null; width?: number; height?: number; nativeMetrics?: boolean; fillFrame?: boolean }) {
   const { colors } = useRudiTheme();
-  const CopyText = nativeMetrics ? NativeMetricText : RNText;
   const [measured, setMeasured] = useState({ width: width ?? 280, height });
-  const scene: IllustrationName = loai === "cafe" ? "scene-cafe" : loai === "quan-an-local" ? "scene-street" : loai === "di-choi-dem" ? "scene-lanterns" : loai === "vui-choi" ? "scene-atelier" : "scene-hills";
+  const scene: TenCanh | null = canh === undefined ? canhChoDiaDiem({ loai, vung: KHONG_VUNG }) : canh;
   return (
     <View
       onLayout={(e) => {
@@ -130,21 +144,29 @@ export function PlaceArtwork({ loai, width, height = 180, nativeMetrics = false,
           setMeasured((current) => Object.is(current.width, nextWidth) ? current : { ...current, width: nextWidth });
         }
       }}
-      style={fillFrame ? [StyleSheet.absoluteFill, { backgroundColor: colors.paper, overflow: "hidden" }] : { width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}
+      // The object-only fallback sits on the shaded sheet: bare white next to painted cards reads as a missing image.
+      style={fillFrame ? [StyleSheet.absoluteFill, { backgroundColor: scene === null ? colors.paperShade : colors.paper, overflow: "hidden" }] : { width: width ?? "100%", height, backgroundColor: scene === null ? colors.paperShade : colors.paper, overflow: "hidden" }}
     >
-      {/* The frame owns layout; numeric dimensions choose raster resolution only. */}
-      <AssetIllustration
-        name={scene}
-        width={fillFrame ? measured.width : width ?? measured.width}
-        height={fillFrame ? measured.height : height}
-        style={fillFrame ? [StyleSheet.absoluteFill, { width: "100%", height: "100%" }] : undefined}
-      />
-      <View pointerEvents="none" style={{ position: "absolute", left: width !== undefined && width < 100 ? 6 : 10, bottom: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card }}>
-        <CopyText style={[typography.caption, { color: colors.ink }]}>Minh hoạ</CopyText>
-      </View>
+      {scene === null ? (
+        // The category's object in ink on the paper: a drawing of the kind of place, of nowhere in particular.
+        <View style={[StyleSheet.absoluteFill, styles.giua]}>
+          <GuGlyph id={guTheoLoai(loai ?? "")} size={Math.max(28, Math.min(72, Math.round((fillFrame ? measured.height : height) * 0.42)))} tone="ink" />
+        </View>
+      ) : (
+        /* The frame owns layout; numeric dimensions choose raster resolution only. */
+        <AssetIllustration
+          name={scene}
+          width={fillFrame ? measured.width : width ?? measured.width}
+          height={fillFrame ? measured.height : height}
+          style={fillFrame ? [StyleSheet.absoluteFill, { width: "100%", height: "100%" }] : undefined}
+        />
+      )}
     </View>
   );
 }
+
+/** No region known: only scenes true of anywhere. */
+const KHONG_VUNG: ReadonlySet<Vung> = new Set();
 
 /**
  * The one reason a place prints: a small spark and the text, in the AI tone.
@@ -217,11 +239,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID, saving, compact =
             {dd.anh === null ? (
               // No honest picture: the sketch of the KIND of place («ký hoạ trong
               // sổ», review 11/09 A1), never a 16:10 frame of nothing.
-              <PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
+              <PlaceArtwork canh={dd.canh} nativeMetrics={nativeMetrics} loai={dd.loai} height={sizeClass === "compact" ? 160 : 220} />
             ) : (
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} height={180} />}
+                fallback={<PlaceArtwork canh={dd.canh} nativeMetrics={nativeMetrics} loai={dd.loai} height={180} />}
                 nguon={{ loai: "danh-muc", anh: dd.anh }}
                 overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
                 radius={0}
@@ -282,7 +304,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving, nativeMetr
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
-          <PlaceArtwork nativeMetrics={nativeMetrics} loai={dd.loai} width={chuLonHon ? undefined : 88} height={chuLonHon ? 132 : 88} />
+          <PlaceArtwork canh={dd.canh} nativeMetrics={nativeMetrics} loai={dd.loai} width={chuLonHon ? undefined : 88} height={chuLonHon ? 132 : 88} />
         )}
         <View style={[styles.rowText, chuLonHon && styles.rowTextLarge]}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
@@ -307,7 +329,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving, nativeMetr
           ) : null}
         </View>
         </View>
-        {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</CopyText> : null}
+        {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card, borderColor: colors.line }]}>{cuoiFact}</CopyText> : null}
         {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
       </Pressable>
       <View style={chuLonHon ? styles.rowHeartLarge : styles.rowHeart}>
@@ -393,7 +415,7 @@ export function PlaceCompare({
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceArtwork nativeMetrics={nativeMetrics} fillFrame={nativeMetrics} loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
+                fallback={<PlaceArtwork canh={dd.canh} nativeMetrics={nativeMetrics} fillFrame={nativeMetrics} loai={dd.loai} height={xepDoc ? 132 : sizeClass === "compact" ? 96 : 180} />}
                 overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                 // The credit is the frame's own line now, printed under the
                 // picture instead of after the facts: it was the one call site
@@ -462,6 +484,7 @@ function DongSuThat({ facts, kieu, mau, soDong, nativeMetrics = false }: { facts
 }
 
 const styles = StyleSheet.create({
+  giua: { alignItems: "center", justifyContent: "center" },
   factLine: { flexDirection: "row", alignItems: "baseline", gap: 4 },
   factCopy: { flex: 1, minWidth: 0 },
   soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
@@ -502,7 +525,7 @@ const styles = StyleSheet.create({
   rowMainLarge: { flexDirection: "column" },
   rowHeart: { position: "absolute", top: 20, left: 36 },
   rowHeartLarge: { position: "absolute", right: 10, top: 24 },
-  rowPrice: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  rowPrice: { alignSelf: "flex-start", borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 10, paddingVertical: 6 },
   rowPress: { gap: 10, minHeight: 88 },
   thumb: { width: 88, height: 88, overflow: "hidden", flexShrink: 0 },
   thumbLarge: { width: "100%", height: 132 },

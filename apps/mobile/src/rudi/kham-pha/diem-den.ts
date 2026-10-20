@@ -13,8 +13,10 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { translatedAnonymous } from "../../api";
+import { BASE_URL, translatedAnonymous } from "../../api";
+import { nguonAnhAnToan } from "../../ui/nguon-anh";
 import { gridFor } from "../adaptive";
+import { anhDanhMuc, TIEN_TO_ANH, type AnhCoGhiCong } from "../ui/ghi-cong";
 
 export type DiemDen = {
   id: string;
@@ -25,6 +27,13 @@ export type DiemDen = {
   lng: number;
   /** Straight-line kilometres from coordinates the caller sent, else null. */
   distanceKm: number | null;
+  /**
+   * A real photograph of the destination with its credit, as one value (the
+   * address cannot be taken out without its sentence). Null when the catalogue
+   * has none, or has one that cannot say whose it is: the screen then draws
+   * its own scene, unlabelled.
+   */
+  anhBia: AnhCoGhiCong | null;
 };
 
 export type DanhSachDiemDen = {
@@ -39,6 +48,16 @@ const LOI_DIEM_DEN: Record<string, string> = {
   destination_not_found: "Điểm đến này không còn trong danh mục.",
 };
 
+/** The cover photo of a destination, only with the author and licence that came with it (ADR-0017). */
+function docAnhBia(o: Record<string, unknown>): AnhCoGhiCong | null {
+  const url = nguonAnhAnToan(o.cover_photo_url, BASE_URL);
+  const chu = (v: unknown): string | null => (typeof v === "string" && v.trim() !== "" ? v : null);
+  const author = chu(o.cover_photo_author);
+  const license = chu(o.cover_photo_license);
+  if (url === null || author === null || license === null) return null;
+  return anhDanhMuc({ uri: url }, { author, license, prefix: TIEN_TO_ANH });
+}
+
 function doc(wire: unknown): DiemDen {
   const o = wire as Record<string, unknown>;
   return {
@@ -50,6 +69,7 @@ function doc(wire: unknown): DiemDen {
     lng: Number(o.lng),
     distanceKm:
       o.distance_km === null || o.distance_km === undefined ? null : Number(o.distance_km),
+    anhBia: docAnhBia(o),
   };
 }
 
@@ -62,6 +82,8 @@ function doc(wire: unknown): DiemDen {
  */
 export async function docDiemDen(viTri?: { lat: number; lng: number }): Promise<DanhSachDiemDen> {
   const params = new URLSearchParams();
+  // The cover photos come with the list, in the same read.
+  params.set("include", "cover");
   if (viTri !== undefined) {
     params.set("lat", String(viTri.lat));
     params.set("lng", String(viTri.lng));
@@ -78,6 +100,26 @@ export async function docDiemDen(viTri?: { lat: number; lng: number }): Promise<
     diemDen: (wire.destinations ?? []).map(doc),
     ganNhat: wire.nearest === null || wire.nearest === undefined ? null : doc(wire.nearest),
   };
+}
+
+/**
+ * The covers of every destination, read once per app run and shared: Khám
+ * phá's city stage shows the real photograph the picker already has rather
+ * than a drawing (finish review 21/10). A failed read is forgotten, so the
+ * next visit asks again; the stage keeps its drawing meanwhile.
+ */
+let biaDaDoc: Promise<ReadonlyMap<string, AnhCoGhiCong | null>> | null = null;
+
+/** One destination's cover with its credit, or null when it has none. */
+export async function docBiaDiemDen(id: string): Promise<AnhCoGhiCong | null> {
+  if (biaDaDoc === null) {
+    const dang = docDiemDen().then((ds) => new Map(ds.diemDen.map((d) => [d.id, d.anhBia] as const)));
+    biaDaDoc = dang;
+    dang.catch(() => {
+      if (biaDaDoc === dang) biaDaDoc = null;
+    });
+  }
+  return (await biaDaDoc).get(id) ?? null;
 }
 
 const KHOA = "rudi.diem-den.v1";

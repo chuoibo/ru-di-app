@@ -284,7 +284,11 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
     <View style={{ gap: space.sm }}>
       {comments.phase === "loading" ? <SkeletonRow lines={2} /> : null}
       {comments.phase === "error" ? <ErrorState body={comments.message} onRetry={() => void loadComments()} title="Chưa đọc được bình luận" /> : null}
-      {comments.phase === "ready" && comments.items.length === 0 ? <EmptyState kind="first-use" layout="inline" title="Chưa có lời nhắn nào" body="Bạn có thể mở lời đầu tiên ở đây." /> : null}
+      {comments.phase === "ready" && comments.items.length === 0 ? (
+        <View style={[styles.emptyCommentsBox, { borderColor: colors.lineStrong, backgroundColor: colors.card }]}>
+          <EmptyState kind="first-use" layout="inline" title="Chưa có lời nhắn nào" body="Bạn có thể mở lời đầu tiên ở đây." />
+        </View>
+      ) : null}
       {comments.phase === "ready" ? comments.items.map((item) => (
         <View key={item.id} style={{ gap: space.xs }}>
           {commentRow(item)}
@@ -366,8 +370,8 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
             ) : null}
             {post.phase === "error" && post.vinhVien ? null : <>
               <Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới trang</Text>
-              {commentsBlock}
               {composer}
+              {commentsBlock}
             </>}
             {error ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
             {notice ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.accent }]}>{notice}</Text> : null}
@@ -430,7 +434,8 @@ const styles = StyleSheet.create({
   commentHeading: { flexDirection: "row", alignItems: "center", gap: 8 },
   commentActions: { flexDirection: "row", gap: 16 },
   touchAction: { flexDirection: "row", gap: 6, minHeight: 48, alignItems: "center", minWidth: 68 },
-  composer: { gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
+  emptyCommentsBox: { borderWidth: 1, borderStyle: "dashed", borderRadius: 12, padding: 14 },
+  composer: { gap: 8, paddingTop: 4 },
   composeRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   viewer: { flex: 1 },
   viewerClose: { position: "absolute", right: 20, zIndex: 4, minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },

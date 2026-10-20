@@ -235,7 +235,8 @@ function ConversationsContent({ phien }: { phien: Phien }) {
           body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
           illustration={<AssetIllustration name="spot-keeps" width={220} height={170} />}
           kind="first-use"
-          layout="inline"
+          layout="page"
+          secondary={{ label: "Thêm bạn bằng tên tài khoản", onPress: () => router.push("/friends/add") }}
           title="Chưa có nhóm nào"
         />
       ) : null}
@@ -244,9 +245,6 @@ function ConversationsContent({ phien }: { phien: Phien }) {
         <Text style={[typography.body, { color: colors.inkSoft }]}>Thử tên khác hoặc xoá tìm kiếm để xem tất cả.</Text>
         <RudiButton compact full={false} label="Xoá tìm kiếm" variant="ghost" onPress={() => setQuery("")} />
       </View> : null}
-      {trang.pha === "xong" && trang.nhom.length === 0 ? (
-        <RudiButton icon="person-add-outline" label="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} variant="ghost" />
-      ) : null}
       {trang.pha === "xong" ? (
         <View>
           {matching.map((nhom) => {

@@ -284,3 +284,18 @@ Từ nhánh `claude/p0-ai-go-agy-bo-brain`:
 Python đổi cùng Go trong một diff, theo ngoại lệ có tên trong ADR-0054 (sửa sai tiền, blocker loại 2). `expenses.outing_id` (Alembic `d5e1a7c3b902`, khoá ghép `(outing_id, context_id) → outings(id, context_id)`, backfill theo luật 2) thay phép nối theo ngày: tiền của một kèo là các khoản chi **thuộc** kèo đó. Hai kèo trùng ngày không còn cùng tính một khoản. Bằng chứng: oracle tiền Go↔Python 7 ca mới (`repo/money_oracle_postgres_test.go`), oracle recap trên fixture có quy thuộc, `tests/postgres/test_expense_belongs_to_one_trip_postgres.py` 9 ca, kịch bản parity `w1/recap/GET-contexts-context_id-recap.yaml` thêm đề nghị/xác nhận có `outing_id`, `409 expense_outing_mismatch`, `422 outing_not_in_context`.
 
 - `GET /contexts/{context_id}/albums`, `GET /contexts/{context_id}/albums/{outing_id}`: đổi thật: `SqlAlchemyApiRepository.group_recap` — «đã chia» và số khoản chi của album đọc theo `expenses.outing_id`; ảnh và check-in vẫn theo ngày lịch Việt Nam. Go repo/recap.go `GroupRecap` cùng phép nối. Σ «đã chia» các album ≤ tổng sổ của nhóm.
+
+## Đổi 2026-10-20 — Khám phá: phân trang, bỏ LLM khỏi `GET /places`, ảnh bìa tỉnh, `highlights` (chỉ Go, mở theo yêu cầu)
+
+Nguyên nhân gốc đo được: `GET /places?destination=d-tinh-79` (TP.HCM, 9.514 quán) trả 6,18 MB, 2,77 s lúc cache nguội; Hà Nội 107 KB. Câu SQL không chậm (`EXPLAIN ANALYZE` trên DB vnlocal: `ListPlaceCards` 66 ms, `PhotoCoversAndCounts` 101 ms); chậm là dựng và gửi 9.514 thẻ cho mỗi lần mở, cộng một lời gọi model đồng bộ giữ connection tới 45 s cho người có gu.
+
+Python là oracle và không có các trường dưới đây, nên **mọi thứ mới đều là tham số mở, đọc từ query string thô** (cùng cách `?destination=` của `/places/search`): request không gửi tham số nhận đúng byte Python gửi, nên mọi kịch bản parity cũ giữ nguyên và không thêm bước parity nào cho hành vi mới (Python sẽ không phân trang theo `limit`). Bằng chứng của phần mới là test Go: `places_paging_test.go`, `place_highlights_test.go`, `places_scale_postgres_test.go`.
+
+| Request | Thêm | Ghi chú |
+|---|---|---|
+| `GET /places?limit=&offset=` | `total`, `next_offset` (số nguyên hoặc `null`) | `limit` 1..100 (mặc định 30 khi chỉ có `offset`, vượt 100 thì cắt về 100, sai thì 422 `invalid_paging`); sắp xếp trên toàn bộ danh sách TRƯỚC khi cắt trang |
+| `GET /places?reasons_for=id1,id2` | `{"reasons": {id: {reason, verdict, source:"ai"}}}` | chỗ duy nhất chờ model; tối đa 12 id; nhả transaction (`db.Unit.Release`) trước khi chờ; cache theo `(gu, id)` 30 phút, singleflight |
+| `GET /destinations?include=cover` | `cover_photo_url`, `cover_photo_author`, `cover_photo_license` mỗi điểm đến (`null` khi không có ảnh) | một câu `DISTINCT ON`; điểm đến cũ không có ảnh lấy ảnh của tỉnh chứa nó (`rag.TinhCua`) |
+| `GET /places/{id}?include=highlights` | `highlights` (vắng khi không có gì) | không bao giờ đọc `bang_chung`, `thieu_gi`, `di_ung`, `an_kieng`, `chen_lenh`, `tin_cay`; `place_facts` chỉ khi `het_han_at > now` |
+
+`GET /places` không còn gọi model ở bất kỳ nhánh nào: thẻ luôn mang câu của máy chủ (`match.source = "none"`); `fetchReasons` chỉ chạy ở `reasons_for` và ở `GET /places/{id}` (chưa đổi). Cache: danh sách đã xếp hạng giữ theo `(điểm đến, gu, danh mục)` trong `MOBILE_CATALOGUE_CACHE_TTL` (compose đặt 30s), `q` tự do không cache; `MOBILE_CATALOGUE_WARM` (mặc định `d-tinh-79,d-tinh-1`, `off` để tắt) làm nóng và làm mới lúc khởi động mà không chặn.

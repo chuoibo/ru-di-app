@@ -27,6 +27,15 @@
 # match percentage is a statement about particular people and an anonymous
 # reader is nobody. Same row, two readers, two answers -- a port that computed
 # the card once and served it to everybody passes every anonymous test.
+#
+# NOT COMPARED HERE, ON PURPOSE: `limit`/`offset` (paging + `total`/
+# `next_offset`), `reasons_for` and `include=highlights` are Go-only opt-ins
+# read off the raw query string. Python ignores them, so a step that sent one
+# would compare a page with the whole list. Every step below sends none of
+# them, which is what proves the default bytes did not move; the new
+# behaviour is held by places_paging_test.go, place_highlights_test.go and
+# places_scale_postgres_test.go (docs/migration/live-go-25-route-wai.md, 2026-10-20).
+
 id: wai/places/get-places-and-search
 routes:
   - 'GET /places'

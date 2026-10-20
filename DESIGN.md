@@ -1779,8 +1779,8 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
 ở tầng kiểu và cả ba khung tự in `cauGhiCong(anh.nguon)`. Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
 **một cặp so sánh** (khi còn ≥ 2) → **các hàng** (`sua2-sang-1.0/bs-04-kham-pha*`).
 - **`PlaceLead`** — **hiện hành (02/10): một thẻ.** Nền `card`, viền kẻ tóc
-  `line`, bo `radius.control` (14), `overflow` cắt; ảnh (hoặc tờ ký hoạ `KyHoa`
-  bỏ viền và bo riêng của nó) **tràn mép trên thẻ**, 16:10 compact / 21:9 rộng,
+  `line`, bo `radius.control` (14), `overflow` cắt; ảnh (hoặc tranh cảnh `PlaceArtwork`, 21/10; tới 11/09 là tờ ký hoạ `KyHoa`)
+  **tràn mép trên thẻ**, 16:9 compact / 21:9 rộng,
   `MediaSlot radius={0}`. Tim là `IconButton tron` treo **trên ảnh** góc trên
   phải (10/10), anh em với vùng bấm mở thẻ (trình đọc màn hình gặp hai control).
   Dưới ảnh, đệm 14 gap 6: tên `h2 ink`; phụ đề `body inkSoft` **một dòng**;
@@ -1815,7 +1815,8 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   `attribution={anh.nguon}` nên ghi công in ngay dưới khung; `anh === null`
   thì không khung 16:10 mà là **tờ ký hoạ** (`KyHoa`, 3:1 · 4:1 ở chữ lớn) rồi
   tên + sự thật, cùng bố cục cột như lead có ảnh (tới 11/09 là ô giấy 34 + tên;
-  xem «Luật Ký Hoạ Trong Sổ»).
+  xem «Luật Ký Hoạ Trong Sổ»; *hiện hành 21/10:* tranh cảnh `PlaceArtwork`
+  trong khung 16:9, không `KyHoa`).
 - **`PlaceCompare`**: hai ứng viên **trên một trục**, không thẻ quanh ô nào:
   hàng `gap` 16, đệm dưới 12, kẻ tóc `line` dưới; mỗi ô `flex 1` gồm
   `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
@@ -1863,7 +1864,9 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   cặp so sánh (24/34), thumb hàng (33). **Lead không ảnh và đầu bài chi tiết
   không bìa (fixture + live `dauGon`) từ 11/09 dùng tờ ký hoạ `KyHoa` thay ô
   34/36** — vẫn không khung 16:10 rỗng (`ky-hoa-trong-so/`). Khung trống
-  **không bao giờ** là ảnh stock. Không thêm token.
+  **không bao giờ** là ảnh stock. Không thêm token. *Hiện hành (21/10):* lead
+  không ảnh và bìa trang quán không ảnh vẽ `PlaceArtwork` theo `canh-ve.ts`
+  (khung 16:9 của bìa, không nhãn), xem mục tinh chỉnh 21/10 trong Components.
 - **Sân khấu thành phố (`SanThanhPho`)** (02/10): đầu Khám phá › Địa điểm,
   dưới dòng vị trí («<thành phố>» `ink` + « · đổi nơi khác» `accent`), cả
   fixture lẫn live; gập đi khi đang tìm hay lọc. Sân khấu **dâng lên 32 dp dưới
@@ -3546,8 +3549,8 @@ có verdict ship sau sửa. Đọc `ui.tsx`, `screens/Profile.tsx`,
 | Bề mặt | Điều có trong source 797 và mẫu native đã mở |
 |---|---|
 | Sửa hồ sơ | Form riêng cùng component mounted giữ bản sửa; header «Chỉnh hồ sơ»/«Huỷ» và footer «Lưu hồ sơ» cố định, cụm avatar 64/đổi ảnh + lời dẫn gọn, gap form 20. Tên tối đa 200, giới thiệu 500 có counter, thành phố 120. Back giữ bản nháp trong phiên mounted; Huỷ bỏ bản nháp; không khẳng định lưu qua process death. Source giữ lỗi và khóa gửi khi đang lưu. |
-| Khám phá | Phone đi một trục lead rồi hàng để so; source lead dùng ảnh 16:9 compact/21:9 rộng, artwork minh hoạ cao 160dp ở phone, tên `h2`, phụ đề wrap, facts rồi hai chip lý do/giá như source. Ảnh minh hoạ có nhãn rõ, không giả ảnh địa điểm; không nhập người, số liệu hay online status từ reference. Đây cập nhật dạng source, không khôi phục lead ngang 112 của mốc 3bb. |
-| Hàng địa điểm | Ở chữ thường, thumbnail 88×88 và cột chữ top-aligned, gap 14; đệm dọc 16, hairline dưới. Thứ tự: tên/mô tả/facts → giá kèm đơn vị dùng toàn bề ngang → lý do AI đọc hết, không `numberOfLines` trên lời giải thích hàng. Từ `chuLon`, ảnh rộng toàn cột/cao 132dp, chữ xuống dưới, tim ở góc phải ảnh; nhãn Minh hoạ nằm dưới bên trái. Mẫu supplement 200 đã mở thấy đủ giá 200.000–250.000đ mỗi người và câu so ngân sách 175k, rồi hàng tiếp; không coi một viewport cuộn là toàn danh sách. |
+| Khám phá | Phone đi một trục lead rồi hàng để so; source lead dùng ảnh 16:9 compact/21:9 rộng, tranh cảnh cao 160dp ở phone, tên `h2`, phụ đề wrap, facts rồi hai chip lý do/giá như source. Tranh cảnh vẽ thay chỗ ảnh thật **không mang nhãn chữ** (chủ sản phẩm 20/10/2026, bỏ «Minh hoạ»): nó trông là tranh vẽ, không giả ảnh địa điểm, và ảnh thật luôn đi với dòng ghi công; không nhập người, số liệu hay online status từ reference. Đây cập nhật dạng source, không khôi phục lead ngang 112 của mốc 3bb. |
+| Hàng địa điểm | Ở chữ thường, thumbnail 88×88 và cột chữ top-aligned, gap 14; đệm dọc 16, hairline dưới. Thứ tự: tên/mô tả/facts → giá kèm đơn vị dùng toàn bề ngang → lý do AI đọc hết, không `numberOfLines` trên lời giải thích hàng. Từ `chuLon`, ảnh rộng toàn cột/cao 132dp, chữ xuống dưới, tim ở góc phải ảnh; tranh cảnh dự phòng không nhãn chữ (20/10/2026). Mẫu supplement 200 đã mở thấy đủ giá 200.000–250.000đ mỗi người và câu so ngân sách 175k, rồi hàng tiếp; không coi một viewport cuộn là toàn danh sách. |
 | Lên plan | Plus nhỏ `IconButton quiet` ở header cho cả nhánh có nhóm và `contextId===null`. Empty state có nhóm vẫn có CTA «Tạo kèo»; chưa nhóm dẫn «Tới Tin nhắn». Chữ lớn chuyển vé/cuống sang luồng dọc; ngày và tháng cùng hàng, tên/facts được wrap. Ảnh plan-header 200 có ngày 11/TH10 và dữ kiện vé đủ. Hai ảnh visible-final light100 của thiết bị 5562 đã mở thấy empty chưa nhóm và khay Tạo sau chạm plus header; bằng chứng ADB có phạm vi ghi riêng bên dưới. |
 | Khay Tạo | `BillShareIllustration` là SVG native 76×72: giấy biên lai mép răng cưa, tiêu đề coral, dòng món/tổng và đường chia ra hai phần. Đọc token light/dark, không raster mới; Nếp canonical và các vật lịch/ảnh/thư giữ world. Ở chữ lớn, các lựa chọn chuyển một cột ngang hình/chữ thay vì hai ô hẹp. Đây cấu trúc có trong source, ảnh đã mở chỉ trực tiếp chứng minh khay light100. |
 | Ngân sách | `ThanhNganSach` cùng trường nhập chính xác chia sẻ một giá trị nguyên đồng. Thanh 0–2 triệu, bước 25.000đ, target cao 56dp, thumb 28dp, mức nhanh 200 nghìn/500 nghìn/1 triệu minHeight 48. Exact entry dùng parser tiền chung; vượt thang vẫn giữ số, hiện ngay câu «Ngoài thang kéo 0–2 triệu. Giữ nguyên số bạn nhập.» và thumb đổi chấm thành vạch. Supplement200 đã mở giữ 3.250.123đ với câu giải thích; endpoint không được hiểu thành giá trị đã clamp. Role adjustable/actions có trong source; chưa nghiệm thu TalkBack hoặc haptic bằng ảnh. |
@@ -3615,6 +3618,128 @@ iOS, state tải/lỗi/offline/retry toàn bộ và verdict thị giác mới v�
 được hồ sơ này chứng minh; không có điểm 14/16, total-app acceptance hoặc
 quyền merge vào main từ các số trên.
 
+### Khám phá, trang quán và Cá nhân — tinh chỉnh `2d0ced17..670a2a28`, ghi 21/10/2026
+
+**Phạm vi và nguồn.** Mở rộng thế giới Sân Khấu Giấy v3, không thêm màu, font,
+radius hay tranh mới. Đọc từ mã đã ship tại `670a2a28` (đường dẫn dưới
+`apps/mobile/src/rudi/`): `screens/explore/PlaceDetailLive.tsx`,
+`kham-pha/chi-tiet-gon.ts`, `kham-pha/canh-ve.ts`,
+`screens/explore/HangDiaDiem.tsx`, `screens/explore/ExploreLive.tsx`,
+`screens/explore/DiemDenScreen.tsx`, `screens/Profile.tsx`,
+`screens/profile/HoSoSong.tsx`, `screens/profile/DiaryLead.tsx`,
+`screens/groups/Conversations.tsx`, `ui/EmptyState.tsx`, `ui/ghi-cong.ts`.
+Ảnh đã mở: `.impeccable/review/02c94551/place-detail-390x3600.png`,
+`profile-empty-390x844.png`, `.impeccable/review/52b4c7d6/destinations-390x2400.png`
+(dữ liệu seed vứt đi; ảnh đồi gradient phẳng là placeholder, không phải
+chuẩn ảnh). Hợp đồng hướng: mục «20/10» trong ba surface brief Khám phá,
+trang quán và Cá nhân. Chỗ build lệch hợp đồng: brief Cá nhân kể «dấu chân →
+tab → sổ rỗng», build ship **tab trước dấu chân** (thẻ hồ sơ → hai tab →
+dấu chân → sổ); bản ghi theo build.
+
+- **Trang quán: một bìa lật trang** (`BiaTrang`). Một khung **16:9** rộng hết
+  cột, bo `radius.base`, `ScrollView horizontal pagingEnabled`; mỗi trang là
+  một `MediaSlot` với **đúng một dòng ghi công của chính ảnh ấy**, nên ảnh và
+  ghi công đi cùng nhau và màn chỉ có một ghi công. Nhiều hơn một ảnh thì
+  viên «n/N» góc trên phải (nền `card`, viền kẻ tóc `line`, bo `radius.small`,
+  `caption ink`, trình đọc nghe «Ảnh n trên N»). Chạm trang mở `PhotoViewer`.
+  **Không còn dải ảnh nhỏ dưới bìa**; dải ngang duy nhất còn lại là «Ảnh của
+  nhóm» ở cuối trang (ô 280, ảnh nhóm, không phải bìa). Không ảnh thì
+  `PlaceArtwork fillFrame` trong cùng khung 16:9, nên tên không dời chỗ.
+  Ghi công ảnh quanh quán mở bằng «Ảnh quanh đây: » (`TIEN_TO_ANH`).
+- **Trang quán: thứ tự đọc.** Tên `h1 ink` → phụ đề `body inkSoft` → hàng
+  điểm (sao `accent` 15 + điểm **một chữ số thập phân**) và chip trạng thái
+  «Đang mở»/«Đã đóng» → **«Tại sao đáng đến»** (`SectionHeader`, `body`, ba
+  dòng, «Đọc thêm» chỉ khi ba dòng thật sự cắt) → **khối dữ kiện**
+  (`dongChinh`) → hàng chip không khí → khối địa chỉ → các mục.
+- **Khối dữ kiện (`dongChinh`).** Hàng nhãn/giá trị: nhãn `label inkSoft`
+  cột rộng 96, giá trị `body ink` (dòng phụ `note inkSoft` khi có), gap 12,
+  căn baseline; không thẻ, không icon. Thứ tự cố định, mỗi dòng chỉ khi máy
+  chủ gửi: **Giá** («Ước khoảng 35–90k/người» khi máy chủ gọi là ước, «Khoảng …»
+  khi không), **Hôm nay** (giờ của thứ hôm nay, «qua đêm» khi có), **Giờ đẹp
+  nhất**, **Thời gian** («Khoảng 60–120 phút»), **Đặt chỗ**. **Giá nói một
+  lần**: không còn mục «Giá» riêng, không còn giá trong hàng chip.
+- **Chip trang quán chỉ nói loại nơi** (`nhanKhiChat`): danh mục, khí chất,
+  trong nhà/ngoài trời, traits; **khử trùng không phân biệt hoa thường, dấu,
+  «đ» và khoảng trắng** (`khoaNhan`), giữ cách viết đầu, tối đa 10. Không
+  chip nào lặp một dữ kiện của khối trên.
+- **Các mục**, mỗi mục `SectionHeader` + thân, **mục rỗng ẩn hẳn** (không
+  «Chưa có…»): **Giới thiệu** (chỉ khi mô tả khác câu «Tại sao đáng đến») ·
+  **Món nên thử** (thẻ món: nền `card`, viền kẻ tóc `line`, bo `radius.small`,
+  tên `label ink` + dòng `note inkSoft`; chỉ có tên món thì chip) · **Không
+  khí** (`body`) · **Hợp với ai** · **Giờ** (bảng tuần: thứ `label inkSoft`
+  cột 84, giờ `body ink`, ghi chú `note inkSoft`) · **Trải nghiệm nên thử** ·
+  **Lưu ý**. Danh sách dùng chấm `ellipse` 6 `inkFaint` + `body ink`, gap 10.
+- **Địa chỉ rộng hết cột, «Chỉ đường» bên dưới.** Khối nền `card`, viền 1
+  `line`, bo `radius.small`, đệm 14/12: ghim `location-outline` 20 `accent`
+  + địa chỉ `label ink` + câu đường đi `caption inkSoft` (cả hàng bấm được,
+  cao ≥ 48); dưới là `RudiButton outline compact` «Chỉ đường» thụt 30 cho
+  thẳng cột chữ. Địa chỉ không bao giờ bị nút chia bề ngang.
+- **Tranh cảnh dự phòng (`PlaceArtwork` + `kham-pha/canh-ve.ts`)** — **không
+  bao giờ có nhãn chữ** (chủ sản phẩm 20/10/2026, «Minh hoạ» đã xoá). Vì
+  không nhãn, tranh được đọc là chính nơi ấy, nên **mỗi cảnh mang vùng**:
+  `scene-hills`/`scene-cafe` = Lâm Đồng, `scene-street`/`scene-lanterns` = Hội
+  An, `scene-coast` = biển, `scene-atelier` = nội thất, đúng ở mọi nơi. Chọn
+  **theo loại trước** (`cafe` → cafe/atelier, `quan-an-local` → street/atelier,
+  `di-choi-dem` → lanterns/street, `vui-choi` → atelier, khác → hills/coast)
+  **rồi lọc theo vùng** của điểm đến hoặc chữ trong địa chỉ. **Hai thẻ liền
+  nhau không mang cùng một tranh** (`phanCanhDanhSach`: chỉ thẻ đang vẽ tranh
+  mới tính là hàng xóm); khi tranh trung thực duy nhất trùng hàng xóm, thẻ vẽ
+  **đồ vật của loại nơi** (`GuGlyph tone="ink"`) thay vào. Bản chỉ-đồ-vật nằm
+  trên **`paperShade`**, không trên `paper` trắng: giấy trắng trần cạnh thẻ có
+  tranh đọc thành ảnh hỏng. Cảnh mốc không bao giờ vẽ cho vùng khác.
+- **Khám phá: danh sách phân trang.** `TRANG_DIA_DIEM` = 30 nơi một trang;
+  cuộn tới trong một màn từ cuối thì đọc trang sau (`RudiScreen onGanCuoi`),
+  nút «Xem thêm N nơi» (`cauXemThem`, không hứa nhiều hơn số còn) là lối dự
+  phòng, «Đang tải thêm…» khi đang đọc. Stale-while-revalidate theo người +
+  điểm đến: đổi lại tỉnh đã đọc thì danh sách cũ hiện ngay trong lúc làm mới;
+  skeleton chỉ khi tỉnh chưa đọc bao giờ. Lý do AI tới sau và thay câu tại
+  chỗ, không xô bố cục.
+- **Sân khấu thành phố dùng ảnh bìa thật của điểm đến** khi có: `SanThanhPho`
+  vẽ `MediaSlot` (bo 8) với ghi công, tranh vẽ thành phố là fallback.
+- **Chọn điểm đến (`DiemDenScreen`): danh sách một cột, không lưới.** Thẻ đầu
+  là **điểm đang xem**: viền `accent`, ảnh bìa thật 3:2 qua `MediaSlot` với
+  ghi công (không ảnh thì tranh vùng `canhDiemDen` hoặc ký hoạ đường nét), tên,
+  phụ đề, và con dấu `DauLon co="nho"` «ĐANG XEM» mực `ink` nghiêng -8. Mọi
+  hàng sau là thẻ nền `card` viền kẻ tóc `line` bo 8 đệm 10 gap 12, cao tối
+  thiểu 84, **cùng một ký hoạ đường nét thành phố trong khung 96×64** (bo 4,
+  viền kẻ tóc, nền `paper`) — hàng không in ảnh vì thumbnail không chở trọn
+  ghi công (ADR-0017 §2.5); chevron `inkFaint` hoặc `checkmark-circle`
+  `accent`. **Tên và phụ đề không bao giờ bị cắt**: không `numberOfLines`,
+  hàng **giữ chỗ hai dòng phụ đề** (`minHeight` = 2 × lineHeight) để 33 hàng
+  cùng một chiều cao, dài hơn thì gập tiếp (320 dp, chữ lớn). Một dòng lặng
+  mỗi hàng: phụ đề, hoặc blurb khi không có phụ đề.
+- **Cá nhân: thẻ hồ sơ một khung.** Chỉ viền của chính thẻ (`radius.base`,
+  đệm `space.md`); dải coral trên, kẻ đứt bên trong và dấu triện chìm đã bỏ
+  (ba khung quanh một cái tên). Avatar 56 (48 ở chữ lớn, co lại chứ không xếp
+  chồng) – tên `h2` + «thành phố · Tham gia năm» `note inkSoft` – nút sửa
+  cùng một hàng, căn giữa dọc, gap 14. Tiêu đề trang «Cá nhân» là `h1`, như
+  Tin nhắn.
+- **Cá nhân: dấu chân một tầng chứa** (`ProfileFacts`). Một thẻ viền 1, hai
+  hàng lưới **ba cột bằng nhau** cách bởi kẻ tóc `line`; mỗi ô **số trên
+  (`h2`, tabular) danh từ dưới (`note inkSoft`)**, cao tối thiểu 56, nên không
+  danh từ nào chung dòng với số và mọi ô một hàng cao bằng nhau. Hàng 1: bạn
+  bè (danh từ `accent`, là cửa duy nhất, nhãn lời mời đang chờ `caption accent`
+  trên `accentSoft`), nhóm, kèo; hàng 2: điểm check-in, khoảnh khắc, ô thứ ba
+  để trống giữ lưới. **Số 0 in mực `inkSoft`**, số khác `ink`: thẻ toàn 0 là
+  một sự thật, không phải tiêu đề. Không ô tô màu, không icon dấu chân.
+- **Cá nhân: thứ tự theo dữ liệu.** Có trang đã giữ thật thì trang ấy dẫn
+  (hướng 13/10); chưa có thì dấu chân dẫn và sổ rỗng **gọn** theo sau
+  (`DiaryLead compact`: tranh 62×48, tiêu đề `title`, câu `note`, nút ghost
+  compact). Tờ sổ (`JournalSheet`): ray gáy 24 là anh em trong luồng, không
+  đè nội dung; tờ căn giữa bù thêm 24 bên phải nên **trục tranh–chữ–cửa trùng
+  trục thẻ**. Câu giữ «của kèo.» liền bằng NBSP để dòng không kết bằng một chữ lẻ. Trang
+  đã giữ không bìa là **chỉ chữ**, không icon thế chỗ. «Sở thích» là `ListRow`
+  trong thẻ viền.
+- **Trạng thái rỗng cả trang (`EmptyState layout="page"`).** Mọi thứ trên một
+  trục giữa: khối rộng tối đa 420, chữ căn giữa, nút xếp dọc căn giữa rộng
+  tối đa 360 và rộng theo nhãn. Tin nhắn rỗng dùng nó với «Thêm bạn bằng tên
+  tài khoản» là **hành động phụ** của chính EmptyState, không còn nút ghost rời
+  bên dưới.
+
+**Chưa chứng minh.** Bản ghi đọc mã và mở ảnh web 390 dp/320 dp với dữ liệu
+seed; không có verdict ship, không chạy native, TalkBack, iOS, tablet hay đo
+tương phản trên máy cho các bề mặt này.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -3627,7 +3752,8 @@ quyền merge vào main từ các số trên.
   cắt».
 - **Do** trải chất liệu bằng `Grain` (lưới ô) ở đúng opacity đo được: vải
   0.30 (bìa **và nền tối**), giấy 0.45 (chỉ nền sáng), mực 0.26; dưới ngưỡng là màu phẳng.
-- **Luật Ký Hoạ Trong Sổ** (11/09, review Codex A1 «Khám phá vẫn là danh mục có style»): nơi **chưa có ảnh** ở vị trí
+- **Luật Ký Hoạ Trong Sổ** (11/09, review Codex A1 «Khám phá vẫn là danh mục có style»; *hiện hành 21/10:* lead Khám phá và bìa trang quán không ảnh
+  đã rời `KyHoa` sang tranh cảnh `PlaceArtwork` chọn theo loại rồi vùng, `canh-ve.ts`; đoạn dưới là lịch sử của tờ ký hoạ): nơi **chưa có ảnh** ở vị trí
   dẫn của Khám phá và ở đầu bài chi tiết không bìa nhận **một tờ ký hoạ** (`KyHoa`, `art/ky-hoa.ts`) — tờ `paper` rộng
   hết cột, 3:1 ở chữ 1.0 và 4:1 ở chữ lớn, **một hình, hai khung cắt** (`preserveAspectRatio slice`, bản `gon` ít lớp
   hơn). Hình gồm **sân khấu theo loại nơi** (`quan-an-local` hiên quán bàn dài · `cafe` góc cửa kính · `vui-choi` đồi
@@ -3636,7 +3762,7 @@ quyền merge vào main từ các số trên.
   nồi · «Ngoài trời»/«Săn mây» mây · «Đi đêm»/«Nhộn nhịp» thêm đèn · «BBQ» khói · «Hoa»/«Chụp ảnh» hoa · «Cà phê»/«Trà»
   cốc) và **đúng một điểm coral = nguồn sáng** (bóng đèn dưới mái, đèn thả, mặt trời sát đồi, bóng đèn giữa dây). Ba cỡ
   nét theo độ sâu (gần 3.0 · vừa 2.4 · xa 1.7), bóng là mảng `bong`, mọi mảng tô đi theo đúng đường cong của nét
-  viền. **Thật thà:** ký hoạ vẽ *một loại nơi*, không vẽ nơi cụ thể — không tên, không bảng hiệu, không giả ảnh; câu
+  viền. **Thật thà:** ký hoạ vẽ *một loại nơi*, không vẽ nơi cụ thể — không tên, không bảng hiệu, không giả ảnh, **không nhãn chữ «Minh hoạ»** (sự thật nằm ở hình vẽ, không ở nhãn); câu
   a11y mở bằng «Ký hoạ …» và **chỉ kể sân khấu/đạo cụ mà khung đọc ấy thật sự vẽ**; bản đồi gọn không có cây gọi
   «đồi nhìn từ lan can», không gọi «đồi thông». Bộ đọc không nhãn chỉ mang mã trung tính trong cả pixel, alt,
   title và tên file; caption/đáp án phải nằm ngoài thư mục phát cho người đọc. (Bản gọn bớt đạo cụ thì câu cũng bớt; test
@@ -3672,7 +3798,7 @@ quyền merge vào main từ các số trên.
   `Attribution` bên dưới; số ảnh đếm từ dữ liệu.
 - **Do** ký tờ AI ở chân («Rủ Đi AI gợi ý») và để ghi chú AI là ghi chú lề
   với kẻ tóc.
-- **Do** dùng `Photo ratio` 16:10 compact / 21:9 rộng cho ảnh dẫn, và
+- **Do** dùng `Photo ratio` 16:9 compact / 21:9 rộng cho ảnh dẫn Khám phá, 16:9 cho bìa lật trang của trang quán, và
   `ResponsiveRow maxColumns` khi ô là thumbnail (album 6).
 - **Do** giữ một tông dẫn mỗi màn; teal ở màn tiền, tím ở màn AI, cam ở lời
   rủ.
@@ -3700,7 +3826,8 @@ quyền merge vào main từ các số trên.
   chạy cả hai cỡ.
 - **Do** vẽ phân loại bằng `GuGlyph` (chip `leading`, ô gu, khung trống
   `PlaceGlyph` ở hàng, cặp so sánh, fallback ảnh hỏng), mực đổi coral khi chọn;
-  id lạ là thẻ gấp. Lead không ảnh và đầu bài không bìa là `KyHoa`, không ô gu.
+  id lạ là thẻ gấp. Lead không ảnh và bìa trang quán không ảnh là tranh cảnh
+  `PlaceArtwork` (21/10), không ô gu.
 - **Do** dùng `note` (13/400) cho dòng phụ là một câu và giữ `caption` (600)
   cho nhãn ngắn.
 - **Do** xếp kết quả Khám phá dẫn → cặp so sánh (4:3, tim trên ảnh, giá

@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
   giua: { alignSelf: "stretch", textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // Four envelopes since ADR-0038 §2.5: two to a row, never a lone fourth.
-  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 60, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 8, paddingTop: 14, overflow: "hidden" },
-  napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
+  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 68, borderRadius: 6, alignItems: "center", justifyContent: "flex-end", paddingHorizontal: 10, paddingBottom: 9, paddingTop: 22, overflow: "hidden" },
+  napPhongBi: { position: "absolute", top: -18, width: 26, height: 26, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },
   save: { alignSelf: "stretch" },

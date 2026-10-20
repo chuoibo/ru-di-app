@@ -145,8 +145,8 @@ function DangStory() {
       material="quiet"
       cot="doc"
       avoidKeyboard
-      bottomInset={16}
-      footerInset={12}
+      bottomInset={24}
+      footerInset={20}
       header={<TopBar title="Đăng story" />}
       footer={(
         <StampButton
@@ -179,7 +179,7 @@ function DangStory() {
         ) : null}
         {anh === null && anhDaTai === null ? (
           <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
-            <PaperObject name="photo-stack" width={140} />
+            <PaperObject name="photo-stack" width={120} />
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh nào. Chạm để chọn.</Text>
           </Pressable>
         ) : null}
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   // A polaroid: even sides, the deep margin under the picture for the words.
   polaroid: { gap: 12, padding: 12, paddingBottom: 18, borderWidth: 1, borderRadius: 3, alignSelf: "center", width: "100%", maxWidth: 420 },
   anhXem: { width: "100%" },
-  anhTrong: { width: "100%", aspectRatio: 3 / 4, alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed" },
+  anhTrong: { width: "100%", minHeight: 196, maxHeight: 220, paddingVertical: 16, alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed" },
   dongCuoi: { flexDirection: "row", alignItems: "center", gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 });

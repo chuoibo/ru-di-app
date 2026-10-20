@@ -34,8 +34,12 @@ export interface EmptyStateProps {
   /** Authored artwork from the visual world; nothing renders when absent. */
   illustration?: ReactNode;
   tone?: RudiTone;
-  /** `full` centres in the viewport; `inline` sits inside a list at content width. */
-  layout?: "full" | "inline";
+  /**
+   * `full` centres in the viewport; `inline` sits inside a list at content width;
+   * `page` is a whole-page silence inside a scrolling screen (Tin nhắn, Bạn bè):
+   * everything on one centred axis, copy at most 420 wide, buttons sized to their label.
+   */
+  layout?: "full" | "inline" | "page";
   style?: StyleProp<ViewStyle>;
   testID?: string;
   /** Use the surface owner's metrics; defaults to the original RN copy. */
@@ -57,24 +61,26 @@ export function EmptyState({
 }: EmptyStateProps) {
   const { colors, space } = useRudiTheme();
   const full = layout === "full";
+  const page = layout === "page";
+  const giua = full || page;
   const CopyText = nativeMetrics ? NativeMetricText : Text;
   return (
     <View
       testID={testID ?? `empty-${kind}`}
       accessibilityRole="summary"
-      style={[full ? styles.full : styles.inline, { gap: space.sm, paddingVertical: full ? space.xl : space.md }, style]}
+      style={[full ? styles.full : page ? styles.page : styles.inline, { gap: space.sm, paddingVertical: full ? space.xl : page ? space.lg : space.md }, style]}
     >
       {illustration ? <View style={{ marginBottom: space.xs }}>{illustration}</View> : null}
-      <CopyText style={[full ? typography.h1 : typography.h2, { color: colors.ink, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
+      <CopyText style={[full ? typography.h1 : typography.h2, { color: colors.ink, textAlign: giua ? "center" : "left", maxWidth: 420 }]}>
         {title}
       </CopyText>
       {body ? (
-        <CopyText style={[typography.body, { color: colors.inkSoft, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
+        <CopyText style={[typography.body, { color: colors.inkSoft, textAlign: giua ? "center" : "left", maxWidth: 420 }]}>
           {khongMoCoi(body)}
         </CopyText>
       ) : null}
       {action || secondary ? (
-        <View style={[styles.actions, full && styles.fullActions, { gap: space.sm, marginTop: full ? space.md : space.xs, alignSelf: full ? "center" : "flex-start" }]}>
+        <View style={[styles.actions, full && styles.fullActions, page && styles.pageActions, { gap: space.sm, marginTop: giua ? space.md : space.xs, alignSelf: giua ? "center" : "flex-start" }]}>
           {/* A full-page silence has one full-width way forward, as in the
               mockup. Inline list recovery stays sized to its own label. */}
           {action ? (
@@ -100,6 +106,8 @@ export function EmptyState({
 const styles = StyleSheet.create({
   full: { alignItems: "center", justifyContent: "center", flexGrow: 1 },
   inline: { alignItems: "flex-start" },
+  page: { alignItems: "center", alignSelf: "center", width: "100%", maxWidth: 420 },
+  pageActions: { flexDirection: "column", alignItems: "center", maxWidth: 360 },
   actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center" },
   fullActions: { width: "100%", maxWidth: 360 },
 });

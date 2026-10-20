@@ -1,5 +1,10 @@
 # Chạy app Rủ Đi để tự bấm thử
 
+> **20/10/2026: bản này là lịch sử.** `make demo`, `make demo-rudi`, `seed_demo_data.py`,
+> `tools/seed-rudi-world*` và nhóm «Team Đà Lạt» đã bị xoá khỏi repo cùng dữ liệu mẫu trong
+> DB; không có lệnh nào dưới đây về seed còn chạy được. Cách chạy hiện nay trên dữ liệu thật:
+> [`CHAY-DU-LIEU-THAT.md`](CHAY-DU-LIEU-THAT.md).
+
 Bản này thay bản 31/08 (Expo Go + dữ liệu fixture). Mọi lệnh dưới đây đã chạy
 thật trên máy này ngày **04/09/2026** trên cây `apps/mobile` sau khi xoá App B
 (#547) và lô đánh bóng dark/font 1.3 (#549). Chỗ nào chưa chạy tay thì ghi rõ ở

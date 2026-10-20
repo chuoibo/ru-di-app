@@ -36,6 +36,7 @@ export function LuoiNguoi({ hang, vachTrong = true, testID }: {
         >
           {vachTrong && !luoi && i > 0 ? <View style={[styles.vachCot, { backgroundColor: colors.line }]} /> : null}
           {typeof h.node === "function" ? h.node(luoi) : h.node}
+          {vachTrong && !luoi && i === hang.length - 1 ? <View style={[styles.vachCot, { backgroundColor: colors.line }]} /> : null}
         </View>
       ))}
     </View>

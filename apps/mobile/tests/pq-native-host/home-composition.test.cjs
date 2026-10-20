@@ -33,6 +33,8 @@ function textValue(value) {
   return '';
 }
 const semantic = value => textValue(value).replace(/\u00a0/g, ' ').replace(/\u2060/g, '');
+// Owner decision 2026-10-20: the «Minh hoạ» label is gone from every surface.
+function noMinhHoa(node) { assert.deepEqual(node.findAllByType('RNText').filter(leaf => /minh\s*ho[aạ]/i.test(String(semantic(leaf.props.children)))).length, 0, 'no «Minh hoạ» label'); }
 function textWithin(node, value) { return exactly(node.findAllByType('RNText').filter(leaf => semantic(leaf.props.children) === value), `one full native text: ${value}`); }
 function uncapped(node, message, h) {
   assert.equal(node.props.numberOfLines, undefined, `${message}: no line cap`);
@@ -123,7 +125,7 @@ function callShape(h, call, method, route) {
 async function press(node) { await act(async () => { node.props.onPress(); }); }
 function allNativeText(owner) { return owner.findAllByType('RNText').map(node => semantic(node.props.children)).join('\n'); }
 function noUnplanned(h) {
-  assert.equal(h.calls.filter(call => !['exploreCatalogueRead', 'exploreSavedRead', 'exploreSavedWrite'].includes(call.kind)).length, 0);
+  assert.equal(h.calls.filter(call => !['exploreCatalogueRead', 'exploreSavedRead', 'exploreSavedWrite', 'exploreReasonRead', 'exploreDestinationsRead'].includes(call.kind)).length, 0);
   assert.equal(h.calls.some(call => call.options.method === 'POST'), false, 'composition, local filter and bookmark actions cannot infer or post');
   assert.equal(h.uploads.length, 0); assert.equal(h.nepRequests.length, 0); assert.equal(h.keepWrites.length, 0);
 }
@@ -164,14 +166,14 @@ test('HC03 actual catalogue failure has no invented lead and its retry reads the
   await withHome({}, async h => {
     const PlaceLead = h.load('apps/mobile/src/rudi/screens/explore/HangDiaDiem').PlaceLead;
     assert.equal(h.root.root.findAllByType(PlaceLead).length, 0, 'loading has no fake lead');
-    callShape(h, h.exploreCatalogueReads[0], 'GET', '/places');
+    callShape(h, h.exploreCatalogueReads[0], 'GET', '/places?limit=30');
     const error = 'Lỗi đọc tổng hợp kiểm thử';
     await h.fail(h.exploreCatalogueReads[0], new (h.load('apps/mobile/src/api').ApiError)(503, error));
     assert.equal(h.root.root.findAllByType(PlaceLead).length, 0, 'failure has no fallback catalogue fixture');
     textWithin(h.root.root, 'Những chỗ hay chưa hiện lên'); textWithin(h.root.root, error);
     await h.pressText('Thử lại');
     assert.equal(h.exploreCatalogueReads.length, 2, 'actual ErrorState action starts another read');
-    callShape(h, h.exploreCatalogueReads[1], 'GET', '/places');
+    callShape(h, h.exploreCatalogueReads[1], 'GET', '/places?limit=30');
     await h.finish(h.exploreCatalogueReads[1], plain(emptyWire));
     composition(h, true); actual(h); noUnplanned(h);
   });
@@ -239,13 +241,13 @@ test('HC06 actual licensed media keeps complete facts and credit through native 
     const image = exactly(media.findAllByType('RNExpoImage'), 'actual venue ExpoImage host');
     assert.deepEqual(plain(image.props.source), { uri: expectedUri }); textWithin(media, fullCredit);
     await act(async () => { image.props.onError(); });
-    textWithin(media, 'Minh hoạ'); textWithin(media, 'Chưa tải được ảnh'); textWithin(media, fullCredit);
+    noMinhHoa(media); textWithin(media, 'Chưa tải được ảnh'); textWithin(media, fullCredit);
     assert.equal(media.findAllByType('RNExpoImage').filter(node => node.props.source?.uri === expectedUri).length, 0);
     for (const fontScale of [2, 1]) {
       await h.update(state => { state.window = { ...state.window, fontScale }; });
       const current = exactly(lead(h).findAllByType(MediaSlot), 'same actual MediaSlot after font rerender');
       assert.equal(current, media, 'unchanged URL preserves the failed media owner');
-      textWithin(current, 'Minh hoạ'); textWithin(current, 'Chưa tải được ảnh'); textWithin(current, fullCredit);
+      noMinhHoa(current); textWithin(current, 'Chưa tải được ảnh'); textWithin(current, fullCredit);
       assert.equal(current.findAllByType('RNExpoImage').filter(node => node.props.source?.uri === expectedUri).length, 0, 'a rebuilt source object cannot erase the native error');
       composition(h, true);
     }
@@ -260,8 +262,13 @@ test('HC07 compact empty facts leave no metadata slot while actual city search c
     assert.equal(parts.views.length, 2, 'empty card has only complete identity and media; no empty metadata frame');
     for (const absent of ['Chưa có giá', 'Chưa có giờ mở cửa', 'AI MATCH', 'Lý do tổng hợp', '4.6 (156)', '180.000đ']) assert.equal(copy.includes(absent), false, `no fabricated card fact: ${absent}`);
     const AssetIllustration = h.load('apps/mobile/src/rudi/asset-pack/react-native/AssetIllustration').AssetIllustration;
-    const cityStage = () => h.root.root.findAllByType(AssetIllustration).filter(node => node.props.name === 'scene-hills');
-    assert.equal(cityStage().length, 1); assert.equal(cityStage()[0].props.height, 80, 'compact artwork prop only; no pixel/fold claim');
+    const VeLop = h.load('apps/mobile/src/rudi/ui/art/VeLop').VeLop;
+    const cityStage = () => h.root.root.findAll(node => node.type === 'RNView' && node.props.testID === 'explore-city-stage');
+    assert.equal(cityStage().length, 1);
+    // 21/10/2026: a city no painted scene depicts gets its own line sketch, never Đà Lạt's lake.
+    assert.equal(cityStage()[0].findAllByType(AssetIllustration).length, 0, 'no landmark scene of another region for an unknown city');
+    assert.equal(cityStage()[0].findAllByType(VeLop)[0].props.height, 80, 'compact artwork prop only; no pixel/fold claim');
+    assert.equal(h.exploreDestinationReads.length, 1, 'the city stage reads the destination covers once');
     const location = h.one('RNPressable', props => props.accessibilityLabel === 'Đổi điểm đến');
     assert.equal(location.findAllByType('RNText').some(node => semantic(node.props.children) === `${cityName} · đổi nơi khác`), true, 'full response destination remains present');
     assert.equal(h.input().props.value, ''); h.one('RNPressable', props => props.accessibilityLabel === 'Hỏi Rủ Đi AI');
@@ -276,25 +283,40 @@ test('HC07 compact empty facts leave no metadata slot while actual city search c
   });
 });
 
+test('HC07b the city stage shows the real destination cover with its credit through MediaSlot', async () => {
+  const destinations = { destinations: [{ id: cityId, name: cityName, province: null, blurb: null, lat: 11.9, lng: 108.4, distance_km: null, cover_photo_url: '/places/synthetic-place-1/photos/synthetic-cover', cover_photo_author: 'Synthetic Author', cover_photo_license: 'CC BY 4.0' }], nearest: null };
+  await withHome({ exploreIO: { placeIds: [placeId], destinationIds: [cityId], saved: [], destinations } }, async h => {
+    await loaded(h);
+    const MediaSlot = h.load('apps/mobile/src/rudi/ui/MediaSlot').MediaSlot;
+    const stage = exactly(h.root.root.findAll(node => node.type === 'RNView' && node.props.testID === 'explore-city-stage'), 'one city stage');
+    const media = exactly(stage.findAllByType(MediaSlot), 'the real cover goes through MediaSlot');
+    const image = exactly(media.findAllByType('RNExpoImage'), 'one cover image');
+    assert.equal(image.props.source.uri, 'https://synthetic.invalid/places/synthetic-place-1/photos/synthetic-cover');
+    textWithin(media, 'Ảnh quanh đây: Synthetic Author · CC BY 4.0');
+    assert.equal(h.exploreDestinationReads.length, 1); noUnplanned(h);
+  });
+});
+
 test('HC08 missing license chooses actual fallback and the Explore boundary refuses unplanned transport and storage', async () => {
   await withHome({}, async h => {
     await loaded(h, unlicensedWire);
     const owner = lead(h);
     assert.equal(owner.props.dd.anh, null, 'actual catalogue adapter refuses unlicensed image');
-    textWithin(owner, 'Minh hoạ');
+    noMinhHoa(owner);
     assert.equal(owner.findAllByType('RNExpoImage').some(node => typeof node.props.source?.uri === 'string' && node.props.source.uri.includes('/photos/')), false);
     const api = h.load('apps/mobile/src/api'), actorId = h.state.actor.person_id;
     const before = h.calls.length;
     noUnplanned(h);
     for (const [route, options, expected] of [
       ['/places?unplanned=1', { method: 'GET', actorId }, /Unexpected synthetic Explore transport/],
-      ['/places', { method: 'POST', actorId }, /Unexpected synthetic Explore transport/],
+      ['/places', { method: 'GET', actorId }, /Unexpected synthetic Explore transport/], // an unpaged read is no longer planned
+      ['/places?limit=30', { method: 'POST', actorId }, /Unexpected synthetic Explore transport/],
       ['/people/me/saved-places/synthetic-place-unknown', { method: 'PUT', actorId }, /Unexpected synthetic Explore transport/],
-      ['/places', { method: 'GET', actorId: 'synthetic-other' }, /actual supplied session actor/],
-      ['/places', { method: 'GET', actorId, body: {} }, /No unplanned query context/],
+      ['/places?limit=30', { method: 'GET', actorId: 'synthetic-other' }, /actual supplied session actor/],
+      ['/places?limit=30', { method: 'GET', actorId, body: {} }, /No unplanned query context/],
     ]) await assert.rejects(api.translatedAsActor({}, route, options), expected);
     await assert.rejects(api.translatedAnonymous({}, '/places', { method: 'GET' }), /Unexpected anonymous transport/);
-    assert.equal(h.calls.length, before + 6, 'only the intentional negative-boundary calls are added');
+    assert.equal(h.calls.length, before + 7, 'only the intentional negative-boundary calls are added');
     assert.equal(h.exploreCatalogueReads.length, 1); assert.equal(h.exploreSavedWrites.length, 0);
     const storage = h.exploreStorageBoundary;
     assert.ok(storage);

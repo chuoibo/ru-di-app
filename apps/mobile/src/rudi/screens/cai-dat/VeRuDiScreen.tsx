@@ -15,7 +15,7 @@ import appConfig from "../../../../app.json";
 import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { Heading, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Heading, NhomHang, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 
 const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
@@ -72,11 +72,17 @@ export function VeRuDiScreen() {
   return (
     <RudiScreen material="quiet" cot="form" testID="ve-rudi-screen">
       <TopBar title="Về Rủ Đi" />
-      <Text style={[typography.title, { color: colors.ink }]}>Rủ Đi · {Constants.expoConfig?.version ?? appConfig.expo.version}</Text>
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>Giấy phép mã nguồn MIT · © 2026 chuoibo</Text>
-      <View style={styles.dau}>
-        <Stamp label="BẢN NHÁP" tilt={-3} tone="accent" variant="ink" />
-      </View>
+      <NhomHang>
+        <View style={styles.hangDau}>
+          <View style={styles.chuDau}>
+            <Text style={[typography.title, { color: colors.ink }]}>Rủ Đi · {Constants.expoConfig?.version ?? appConfig.expo.version}</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Giấy phép mã nguồn MIT · © 2026 chuoibo</Text>
+          </View>
+          <View style={styles.dau}>
+            <Stamp label="BẢN NHÁP" tilt={-3} tone="accent" variant="ink" />
+          </View>
+        </View>
+      </NhomHang>
       <Heading
         subtitle="Trang này nói đúng những gì app đang làm hôm nay. Chưa có người làm luật đọc nó, nên nó chưa phải điều khoản chính thức."
         title="Điều khoản và dữ liệu"
@@ -84,7 +90,7 @@ export function VeRuDiScreen() {
       {MUC.map((muc) => (
         <View key={muc.tieuDe}>
           <SectionHeader title={muc.tieuDe} />
-          <View style={styles.khoi}>
+          <View style={[styles.khoi, { borderLeftColor: colors.lineStrong }]}>
             {muc.cau.map((cau) => (
               <Text key={cau} style={[typography.body, { color: colors.inkSoft }]}>
                 {cau}
@@ -101,6 +107,8 @@ export function VeRuDiScreen() {
 }
 
 const styles = StyleSheet.create({
+  hangDau: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingVertical: 4 },
+  chuDau: { flex: 1, gap: 4 },
   dau: { flexDirection: "row" },
-  khoi: { gap: 10, paddingVertical: 6 },
+  khoi: { gap: 10, paddingVertical: 4, paddingLeft: 12, borderLeftWidth: 2 },
 });

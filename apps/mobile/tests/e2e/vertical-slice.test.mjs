@@ -86,8 +86,8 @@ function tenCuaNguoi(personId, displayName) {
  *
  *   - `khoiDongNhom` creates-or-REPLAYS one group under a fixed idempotency
  *     key, by design, so that chat, Lên plan and the expense flow all land in
- *     the same "Team Đà Lạt". On a database where `seed_demo_data.py` has run,
- *     that group already holds the seeded seven. Asking the roster for its
+ *     the same group. On a database where that group already exists,
+ *     it already holds its earlier members. Asking the roster for its
  *     length there answers 7, or 9 once anyone has invited a friend.
  *   - A bill is split between the people ON the bill, never between everyone
  *     in the group. `_require_participants_are_members` agrees: it asks that

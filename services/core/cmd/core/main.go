@@ -259,6 +259,9 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		}
 		defer pool.Close()
 		env.NewUnit = func() *db.Unit { return db.NewUnit(pool) }
+		// Keeps the biggest destinations' catalogue hot; a no-op while
+		// MOBILE_CATALOGUE_CACHE_TTL is unset. Runs in the background.
+		routes.StartCatalogueWarmer(ctx, pool)
 		// A store failure is an unhandled exception in Python, answered from
 		// the outermost layer; raising keeps it there instead of inside CORS.
 		options := []idem.Option{idem.WithErrorHandler(

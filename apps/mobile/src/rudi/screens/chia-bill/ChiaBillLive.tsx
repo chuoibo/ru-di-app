@@ -836,7 +836,7 @@ export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip
         );
         const hoTro = (
           <View style={styles.hoTroGan}>
-            <RudiButton expanded={moBan} icon={moBan ? "chevron-up" : "people-outline"} label={moBan ? "Gấp bàn chọn" : "Chọn trên bàn"} onPress={() => setMoBan((mo) => !mo)} tone="split" variant="ghost" />
+            <RudiButton expanded={moBan} icon={moBan ? "chevron-up" : "people-outline"} label={moBan ? "Gấp bàn chọn" : "Chọn trên bàn"} onPress={() => setMoBan((mo) => !mo)} tone="split" variant="outline" />
             {moBan ? (
               <>
                 <BanGanMon

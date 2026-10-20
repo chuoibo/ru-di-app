@@ -6,7 +6,7 @@ import { changeEmail, changePassword, getAccount, linkGoogle, logoutAll, reauthe
 import type { Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { OtpBoxes, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { OtpBoxes, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
@@ -33,10 +33,15 @@ export function AccountScreen() {
  const googleKey = `${phien.token}:${freshAt ?? 0}`;
  const rotated = (next: Phien) => { datPhien(next); setFreshAt(Date.now()); };
  const run = async (action: () => Promise<void>) => { if (lock.current) return; lock.current = true; setBusy(true); setError(null); setNotice(null); try { await action(); } catch (e) { setError(e instanceof ApiError ? e.message : "Chưa lưu được. Hãy thử lại."); } finally { setBusy(false); lock.current = false; setCurrent(""); setPassword(""); } };
- return <RudiScreen material="quiet" cot="form" avoidKeyboard testID="account-security-screen"><TopBar title="Tài khoản & bảo mật" /><View style={{ gap: 16, maxWidth: 560, alignSelf: "center", width: "100%" }}>
+ return <RudiScreen material="quiet" cot="form" avoidKeyboard testID="account-security-screen"><TopBar title="Tài khoản & bảo mật" /><View style={{ gap: 16, maxWidth: 560, alignSelf: "center", width: "100%", paddingBottom: 32 }}>
  {loading ? <SkeletonGroup><SkeletonRow /><SkeletonRow /></SkeletonGroup> : null}
- {account && <><Text style={[typography.h2, { color: colors.ink }]}>@{account.username}</Text><Text style={[typography.body, { color: colors.inkSoft }]}>{account.email || "Chưa có email khôi phục"}</Text>
- <View style={{ minHeight: 48, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}><Text style={[typography.body, { color: colors.ink, flex: 1, minWidth: 160 }]}>Cho bạn bè tìm theo username</Text><View style={{ minHeight: 48, minWidth: 48, justifyContent: "center", alignItems: "center" }}><Switch accessibilityLabel="Cho tìm theo username" disabled={busy} value={account.discoverable_by_username} onValueChange={value => void run(async () => { await setDiscovery(person, value); setAccount({ ...account, discoverable_by_username: value }); })} /></View></View>
+ {account && <><NhomHang>
+  <View style={{ gap: 4, paddingVertical: 4 }}>
+    <Text style={[typography.h2, { color: colors.ink }]}>@{account.username}</Text>
+    <Text style={[typography.body, { color: colors.inkSoft }]}>{account.email || "Chưa có email khôi phục"}</Text>
+  </View>
+  <View style={{ minHeight: 48, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}><Text style={[typography.body, { color: colors.ink, flex: 1, minWidth: 160 }]}>Cho bạn bè tìm theo username</Text><View style={{ minHeight: 48, minWidth: 48, justifyContent: "center", alignItems: "center" }}><Switch accessibilityLabel="Cho tìm theo username" disabled={busy} value={account.discoverable_by_username} onValueChange={value => void run(async () => { await setDiscovery(person, value); setAccount({ ...account, discoverable_by_username: value }); })} /></View></View>
+ </NhomHang>
  <SectionHeader title="Xác thực và khôi phục" />
  <Text style={[typography.body, { color: colors.inkSoft }]}>Xác thực lại trước khi đổi mật khẩu, email hoặc liên kết Google. Lượt xác thực có hiệu lực 5 phút.</Text>
  {account.has_password && <><ONhapMuc label="Mật khẩu hiện tại" secureTextEntry autoComplete="current-password" value={current} onChangeText={setCurrent} editable={!busy} /><RudiButton label="Xác thực lại" disabled={busy || !current} lyDo={!current ? "Nhập mật khẩu hiện tại trước đã." : undefined} onPress={() => void run(async () => { await reauthenticate(person, { password: current }); setFreshAt(Date.now()); setNotice("Đã xác thực lại."); })} /></>}

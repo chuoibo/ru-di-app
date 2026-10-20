@@ -171,9 +171,9 @@ function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi?: string; 
   const nhan = nhanNhip(nhipKeo(k.starts_on, k.ends_on, today));
   return (
     <View style={[styles.hang, { borderBottomColor: colors.line }, stacked && styles.hangDoc]}>
-      <View style={[styles.dauLich, stacked && styles.dauLichDong]}>
+      <View style={[styles.dauLich, { backgroundColor: colors.card, borderColor: colors.lineStrong }, stacked && styles.dauLichDong]}>
         <Text style={[styles.ngay, { color: colors.ink }]}>{dau?.ngay ?? "?"}</Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{dau?.thang ?? ""}</Text>
+        <Text style={[typography.stamp, { color: colors.inkSoft }]}>{dau ? dau.thang.replace(/^tháng /, "Th ") : ""}</Text>
       </View>
       <View style={[styles.hangChu, stacked && { flex: 0, minWidth: 0 }]}>
         <Text numberOfLines={stacked ? undefined : 2} style={[typography.title, { color: colors.ink }]}>{k.title}</Text>
@@ -188,10 +188,10 @@ function HangKeo({ k, voi, today, dangGhi, onThem }: { k: BuoiDi; voi?: string; 
 }
 
 const styles = StyleSheet.create({
-  hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12, minHeight: 68, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   hangDoc: { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch" },
-  dauLich: { width: 48, alignItems: "center" },
-  dauLichDong: { width: "auto", flexDirection: "row", alignSelf: "flex-start", columnGap: 8 },
-  ngay: { fontFamily: displayFace.extraBold, fontSize: 24, lineHeight: 28, fontVariant: ["tabular-nums"] },
+  dauLich: { width: 54, alignItems: "center", justifyContent: "center", borderRadius: 10, borderWidth: 1, paddingVertical: 6 },
+  dauLichDong: { width: "auto", flexDirection: "row", alignSelf: "flex-start", columnGap: 8, paddingHorizontal: 10 },
+  ngay: { fontFamily: displayFace.extraBold, fontSize: 22, lineHeight: 26, fontVariant: ["tabular-nums"] },
   hangChu: { flex: 1, minWidth: 100, gap: 3 },
 });

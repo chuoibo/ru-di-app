@@ -104,7 +104,7 @@ function BacDongY({
   </View>;
   return (
     <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID} footer={actions} showsVerticalScrollIndicator>
-      <View style={[styles.noiDung, { gap: space.md }]}>
+      <View style={[styles.noiDung, { gap: space.sm }]}>
         <Heading size="h2" title={tieuDe} />
         <TrangSo ke={false} tone="accent" testID={`${testID}-giao-keo`}>
           <View style={[styles.haiCot, xepDoc && styles.doc]}>
@@ -131,7 +131,7 @@ function BacDongY({
             <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
             <ChuKy wrapName showStatus style={xepDoc ? styles.chuKyDoc : undefined} choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
           </View>
-          <Text style={[typography.caption, { color: colors.inkSoft, marginTop: 16 }]}>Im lặng không phải đồng ý.</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft, marginTop: 10 }]}>Im lặng không phải đồng ý.</Text>
         </TrangSo>
       </View>
     </Sheet>
@@ -168,19 +168,19 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
 }
 
 const styles = StyleSheet.create({
-  noiDung: { paddingBottom: 8 },
-  actions: { gap: 8, paddingTop: 16 },
+  noiDung: { paddingBottom: 4 },
+  actions: { gap: 4, paddingTop: 8 },
   dau: { maxWidth: "100%" },
-  deSau: { minHeight: 48, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
+  deSau: { minHeight: 44, paddingVertical: 6, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
   deSauLabel: { alignSelf: "stretch", textAlign: "center" },
   flex: { flex: 1 },
   // Two columns when there is room for both at reading width, one under the other otherwise.
-  haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   cot: { flexGrow: 1, flexBasis: 200, gap: 4 },
   doc: { flexDirection: "column", flexWrap: "nowrap", alignItems: "stretch", width: "100%" },
   cotDoc: { flexGrow: 0, flexBasis: "auto", width: "100%" },
   chuKyDoc: { flex: 0, flexBasis: "auto", width: "100%" },
   dieu: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
   dauDieu: { marginTop: 3 },
-  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 24, marginTop: 24 },
+  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 14 },
 });

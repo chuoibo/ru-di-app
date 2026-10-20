@@ -31,7 +31,6 @@ import ts from "typescript";
 
 import {
   CAU_ANH_HONG,
-  TIEN_TO_MINH_HOA,
   anhDanhMuc,
   cauGhiCong,
   khoaNguon,
@@ -228,6 +227,9 @@ function timAnhTran(text, fileName) {
   return Object.assign(viPham, { daXet });
 }
 
+// A generic qualifier for the optional `prefix` field; the product no longer ships a fixed one.
+const TIEN_TIEN_TO = "Ảnh quanh đây: ";
+
 test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đều bị bắt, kể cả hai mẫu probe của Codex", () => {
   const mau = [
     `import { Image as ExpoImage } from "expo-image";`,
@@ -300,7 +302,7 @@ test("không file nào trong vỏ tách ảnh danh mục khỏi ghi công, và A
 });
 
 test("veKhung: ảnh danh mục không bao giờ vẽ ra mà thiếu câu ghi công", () => {
-  const anh = anhDanhMuc({ uri: "https://x/y.jpg" }, { prefix: TIEN_TO_MINH_HOA, author: "Kien Tran", license: "Pexels License" });
+  const anh = anhDanhMuc({ uri: "https://x/y.jpg" }, { prefix: TIEN_TIEN_TO, author: "Kien Tran", license: "Pexels License" });
   const nhom = { uri: "https://x/nhom.jpg" };
   const dauVao = [
     null,
@@ -314,7 +316,7 @@ test("veKhung: ảnh danh mục không bao giờ vẽ ra mà thiếu câu ghi c�
         // The invariant, over every input: a licensed picture and its sentence
         // are one decision, and the sentence stays even when the bytes failed.
         assert.equal(typeof ve.ghiCong, "string");
-        assert.ok(ve.ghiCong.startsWith(TIEN_TO_MINH_HOA));
+        assert.ok(ve.ghiCong.startsWith(TIEN_TIEN_TO));
       } else {
         assert.equal(ve.ghiCong, null, "ảnh của nhóm không bịa giấy phép");
       }
@@ -353,10 +355,28 @@ test("khoá nguồn ổn định và phân biệt được hai ảnh", () => {
   assert.equal(khoaNguon({ loai: "nhom", source: { uri: "u1" } }), khoaNguon({ loai: "danh-muc", anh: a }));
 });
 
-test("câu ghi công của ảnh minh hoạ mở bằng tiền tố và nêu tác giả · giấy phép", () => {
-  const cau = cauGhiCong({ prefix: TIEN_TO_MINH_HOA, author: "Kien Tran", license: "Pexels License" });
-  assert.equal(cau, "Ảnh minh hoạ: Kien Tran · Pexels License");
-  assert.ok(cau.startsWith(TIEN_TO_MINH_HOA));
+test("câu ghi công mở bằng tiền tố tuỳ chọn và nêu tác giả · giấy phép", () => {
+  const cau = cauGhiCong({ prefix: TIEN_TIEN_TO, author: "Kien Tran", license: "Pexels License" });
+  assert.equal(cau, "Ảnh quanh đây: Kien Tran · Pexels License");
+  assert.ok(cau.startsWith(TIEN_TIEN_TO));
   assert.equal(cauGhiCong({ author: "A", license: "B", source: "C" }), "A · B · C");
   assert.ok(!cau.includes("—"));
+});
+
+test("chữ «Minh hoạ» không còn trong mã giao diện (chủ sản phẩm 20/10/2026)", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const goc = path.resolve(import.meta.dirname, "..", "src");
+  const dinh = [];
+  const duyet = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) duyet(p);
+      else if (/\.(ts|tsx)$/.test(e.name)) {
+        if (/minh\s*ho[aạ]|minh\s*họ|TIEN_TO_MINH_HOA|nhanMinhHoa/i.test(fs.readFileSync(p, "utf8"))) dinh.push(path.relative(goc, p));
+      }
+    }
+  };
+  duyet(goc);
+  assert.deepEqual(dinh, [], "nhãn «Minh hoạ» quay lại:\n" + dinh.join("\n"));
 });

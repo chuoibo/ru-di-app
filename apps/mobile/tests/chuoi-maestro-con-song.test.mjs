@@ -3,8 +3,7 @@
  * làm gãy một flow native mà container này không chạy được.
  *
  * Mỗi chữ, nhãn trợ năng và testID mà `.maestro/*.yaml` bấm, chờ hay kiểm phải
- * còn có mặt ở đâu đó nó có thể đến từ: mã app (`src/`, `app/`), dữ liệu seed
- * (`tools/seed-rudi-world*.mjs`), mã máy chủ (`services/`), gói dùng chung, hoặc
+ * còn có mặt ở đâu đó nó có thể đến từ: mã app (`src/`, `app/`), mã máy chủ (`services/`), gói dùng chung, hoặc
  * chính chữ mà flow gõ vào (`inputText`). Chuỗi Maestro là regex; phép kiểm
  * tách nó thành các mảnh chữ thật (bỏ `.*`, `\d+`, lớp ký tự...) và đòi MỖI
  * mảnh từ 3 ký tự còn nằm nguyên văn trong kho đó.
@@ -104,7 +103,6 @@ function manhChu(chuoi) {
 const KHO = (() => {
   const phan = [];
   for (const f of [...tep(join(GOC, "src"), [".ts", ".tsx"]), ...tep(join(GOC, "app"), [".ts", ".tsx"])]) phan.push(readFileSync(f, "utf8"));
-  for (const f of readdirSync(join(GOC, "tools")).filter((x) => x.startsWith("seed-"))) phan.push(readFileSync(join(GOC, "tools", f), "utf8"));
   for (const d of ["services/core", "services/api/app", "packages/shared"]) {
     try {
       for (const f of tep(join(REPO, d), [".go", ".py", ".json", ".ts"])) phan.push(readFileSync(f, "utf8"));

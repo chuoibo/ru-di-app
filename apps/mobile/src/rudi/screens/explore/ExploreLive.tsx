@@ -33,12 +33,19 @@ import type { Phien } from "../../../phien";
 import { matchLabel, type Category, type Place } from "../../../screens/kham-pha/places";
 import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-pha/tim-kiem";
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
-import { docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { docBiaDiemDen, docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { canhDiemDen, phanCanhDanhSach, vungCua, type TenCanh } from "../../kham-pha/canh-ve";
+import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
+import { VeLop } from "../../ui/art/VeLop";
+import { MediaSlot } from "../../ui/MediaSlot";
+import type { AnhCoGhiCong } from "../../ui/ghi-cong";
 import {
   canDocLaiDanhMuc,
   anhBiaThe,
   cauXemThem,
-  HANG_MOI_LUOT,
+  docDanhMuc,
+  docLyDo,
+  voiLyDo,
   bieuTuongLoai,
   boLuuDiaDiem,
   cauChuaCo,
@@ -70,10 +77,49 @@ import { useMotion } from "../../ui/useMotion";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./HangDiaDiem";
 
+/**
+ * The city stage under the destination line: the destination's real cover
+ * with its credit when the catalogue has one (finish review 21/10: the drawn
+ * lake stood in front of a real photograph), else its own painted scene where
+ * one paints that region, else its line sketch. Never Đà Lạt's lake for Hà Nội.
+ */
+function SanThanhPho({ anh, id, ten, rong, cao }: { anh: AnhCoGhiCong | null; id: string; ten: string; rong: number; cao: number }) {
+  const canh = canhDiemDen(id);
+  const ve = canh !== null ? (
+    <AssetIllustration name={canh} width={rong} height={cao} />
+  ) : (
+    <View style={[styles.sanPhac, { width: rong, height: cao }]}>
+      <VeLop height={cao} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(id)} width={Math.min(rong, Math.round((cao * KHUNG_THANH_PHO.w) / KHUNG_THANH_PHO.h))} />
+    </View>
+  );
+  return (
+    <View style={[styles.buuThiep, { width: rong }]} testID="explore-city-stage">
+      {anh === null ? ve : <MediaSlot alt={`Ảnh ${ten}`} fallback={ve} height={cao} nguon={{ loai: "danh-muc", anh }} radius={8} width={rong} />}
+    </View>
+  );
+}
+
 type Trang =
   | { pha: "dang-doc" }
-  | { pha: "xong"; places: Place[]; categories: Category[] }
+  | { pha: "xong"; places: Place[]; categories: Category[]; tiep: number | null; total: number | null }
   | { pha: "hong"; loi: string };
+
+/** A filtered read of the same destination (a category, or a name), paged like the base list. */
+type Loc = { khoa: string; places: Place[]; tiep: number | null; total: number | null };
+
+/**
+ * Stale-while-revalidate, per person and destination: switching back to a
+ * destination shows what was read last at once, and the read behind it
+ * replaces it. Lives for the session, not on disk.
+ */
+type BoNho = { places: Place[]; categories: Category[]; tiep: number | null; total: number | null; destination: { id: string; name: string }; gu: Gu };
+const boNhoDanhMuc = new Map<string, BoNho>();
+
+/** Places of a later page after the ones already held, without repeats. */
+function noiTiep(co: readonly Place[], them: readonly Place[]): Place[] {
+  const da = new Set(co.map((p) => p.id));
+  return [...co, ...them.filter((p) => !da.has(p.id))];
+}
 
 const CAU_MAU = "quán nướng cho 6 người, 200k mỗi người";
 
@@ -88,7 +134,7 @@ function loaiSauBam(dangChon: boolean, id: string): string | null {
 }
 
 /** The server's place, in the vocabulary the row and the lead draw. */
-export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
+export function hienThiDiaDiem(place: Place, canh?: TenCanh | null): DiaDiemHienThi {
   const hop = matchLabel(place.match);
   const bia = anhBiaThe(place);
   return {
@@ -113,6 +159,8 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     // One grounded reason under the lead: the model's own sentence when the
     // match is real, nothing otherwise. Never the tagline dressed as a reason.
     lyDo: hop !== null && hop.real && place.match?.reason ? place.match.reason : undefined,
+    // The list picks the painted stand-in (region-true, neighbours varied); alone, the card's own default.
+    ...(canh === undefined ? {} : { canh }),
   };
 }
 
@@ -146,12 +194,28 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   // which, so this starts as null and is filled from the answer -- the screen
   // never guesses a city name it has not been told.
   const [diemDen, setDiemDen] = useState<{ id: string; name: string } | null>(null);
+  // The destination's real cover (the picker's own read), keyed by the city it is of.
+  const [biaDiemDen, setBiaDiemDen] = useState<{ id: string; anh: AnhCoGhiCong | null } | null>(null);
+  const idDiemDen = diemDen?.id ?? null;
+  useEffect(() => {
+    if (idDiemDen === null) return;
+    let con = true;
+    docBiaDiemDen(idDiemDen)
+      .then((anh) => { if (con) setBiaDiemDen({ id: idDiemDen, anh }); })
+      .catch(() => { if (con) setBiaDiemDen({ id: idDiemDen, anh: null }); });
+    return () => { con = false; };
+  }, [idDiemDen]);
   // The destination the list on screen was read for, readable inside `nap`
   // without making the read depend on it (it would re-run on its own answer).
   const dangHien = useRef<string | null>(null);
   // When, and for which destination, the catalogue was last read.
   const lanDoc = useRef<{ diemDen: string | null; luc: number } | null>(null);
-  const [soHang, setSoHang] = useState(HANG_MOI_LUOT);
+  const [loc, setLoc] = useState<Loc | null>(null);
+  const [dangTaiThem, setDangTaiThem] = useState(false);
+  const dangTai = useRef(false);
+  // The model's reasons for the first cards arrive after the list, apart from it.
+  const [lyDo, setLyDo] = useState<Record<string, { reason: string; verdict: "hop" | "tam" | "khong-hop" }>>({});
+  const daHoiLyDo = useRef(new Set<string>());
   // Whose taste the badges are relative to. Starts as «chưa biết» because that
   // is true until the server has answered, and it is what the screen says.
   const [gu, setGu] = useState<Gu | null>(null);
@@ -169,9 +233,18 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
         setDaLuu(await docDaLuu(phien.person_id));
         return;
       }
-      // A different city was chosen: the old list must not stand under the
-      // new name while a large catalogue loads (seconds, on real data).
-      if (daChon !== null && dangHien.current !== null && daChon !== dangHien.current) {
+      const khoaDem = `${phien.person_id}|${daChon ?? ""}`;
+      const cu = boNhoDanhMuc.get(khoaDem);
+      if (cu !== undefined && (daChon === null || daChon !== dangHien.current)) {
+        // What was read last for this destination shows now; the read below replaces it.
+        if (daChon !== null) dangHien.current = daChon;
+        else dangHien.current = cu.destination.id;
+        setDiemDen(cu.destination);
+        setGu(cu.gu);
+        setLoc(null);
+        setTrang({ pha: "xong", places: cu.places, categories: cu.categories, tiep: cu.tiep, total: cu.total });
+      } else if (daChon !== null && dangHien.current !== null && daChon !== dangHien.current) {
+        // A destination never read: nothing of the old city may stand under the new name.
         setTrang({ pha: "dang-doc" });
       }
       const [danhMuc, luu] = await Promise.all([
@@ -189,7 +262,11 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
       lanDoc.current = { diemDen: dangHien.current, luc: Date.now() };
       setDiemDen(danhMuc.destination);
       setGu(danhMuc.gu);
-      setTrang({ pha: "xong", places: danhMuc.places, categories: danhMuc.categories });
+      setLoc(null);
+      setTrang({ pha: "xong", places: danhMuc.places, categories: danhMuc.categories, tiep: danhMuc.nextOffset, total: danhMuc.total });
+      const moi: BoNho = { places: danhMuc.places, categories: danhMuc.categories, tiep: danhMuc.nextOffset, total: danhMuc.total, destination: danhMuc.destination, gu: danhMuc.gu };
+      boNhoDanhMuc.set(khoaDem, moi);
+      boNhoDanhMuc.set(`${phien.person_id}|${danhMuc.destination.id}`, moi);
       setDaLuu(luu);
       setLoiNapLai(null);
     } catch (error) {
@@ -259,12 +336,98 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   // waits to be sent, and not once one has been asked (its words are not a
   // place's name, whatever the answer was).
   const locTen = nenLocTheoTen(query, timKiem.kind, choGui);
-  const danhSach = useMemo(() => {
+  const locDangDung = loai !== null || locTen;
+  const khoaLoc = `${loai ?? ""}|${locTen ? query.trim() : ""}`;
+  const locSan = loc !== null && loc.khoa === khoaLoc ? loc : null;
+  const danhSachGoc = useMemo(() => {
     if (trang.pha !== "xong") return [];
     if (timKiem.kind === "co-ket-qua") return timKiem.places;
     const theoLoai = loai === null ? trang.places : trang.places.filter((p) => p.category === loai);
-    return locTen ? locTheoTen(theoLoai, query) : theoLoai;
-  }, [trang, timKiem, loai, query, locTen]);
+    const cucBo = locTen ? locTheoTen(theoLoai, query) : theoLoai;
+    // The loaded pages answer at once; the server's filtered read adds what the
+    // pages not yet loaded would have matched.
+    return locSan !== null ? noiTiep(cucBo, locSan.places) : cucBo;
+  }, [trang, timKiem, loai, query, locTen, locSan]);
+  const danhSach = useMemo(
+    () => (timKiem.kind === "co-ket-qua" ? danhSachGoc : danhSachGoc.map((p) => voiLyDo(p, lyDo[p.id]))),
+    [danhSachGoc, lyDo, timKiem.kind],
+  );
+  // Painted stand-ins for the cards without a photograph: by category, only
+  // scenes of this destination's own region, and no two neighbours alike.
+  const canhCho = useMemo(
+    () => phanCanhDanhSach(danhSach.map((p) => ({ id: p.id, loai: p.category, coAnh: anhBiaThe(p) !== null })), vungCua({ diemDen: diemDen?.id })),
+    [danhSach, diemDen?.id],
+  );
+  const tiepHienTai = trang.pha !== "xong" || timKiem.kind === "co-ket-qua" ? null : locDangDung ? (locSan?.tiep ?? null) : trang.tiep;
+  const tongHienTai = trang.pha !== "xong" ? null : locDangDung ? (locSan?.total ?? null) : trang.total;
+  const khoaTrang = useRef("");
+  khoaTrang.current = `${diemDen?.id ?? ""}|${khoaLoc}`;
+
+  // A category or a name is also read from the server, so what the loaded pages
+  // do not hold can still be found. Names wait for a pause in typing.
+  useEffect(() => {
+    if (!locDangDung || trang.pha !== "xong") {
+      setLoc(null);
+      return;
+    }
+    let huy = false;
+    const hen = setTimeout(() => {
+      docDanhMuc({ destination: dangHien.current, category: loai, q: locTen ? query.trim() : undefined, personId: phien.person_id })
+        .then((dm) => {
+          if (!huy) setLoc({ khoa: khoaLoc, places: dm.places, tiep: dm.nextOffset, total: dm.total });
+        })
+        .catch(() => undefined);
+    }, locTen ? 350 : 0);
+    return () => {
+      huy = true;
+      clearTimeout(hen);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [khoaLoc, locDangDung, trang.pha, diemDen?.id, phien.person_id]);
+
+  // The next page, from where the list on screen ends.
+  const taiThem = () => {
+    if (tiepHienTai === null || dangTai.current) return;
+    const khoa = khoaTrang.current;
+    const theoLoc = locDangDung;
+    dangTai.current = true;
+    setDangTaiThem(true);
+    docDanhMuc({ destination: dangHien.current, category: theoLoc ? loai : null, q: theoLoc && locTen ? query.trim() : undefined, personId: phien.person_id, offset: tiepHienTai })
+      .then((dm) => {
+        if (khoaTrang.current !== khoa) return;
+        if (theoLoc) {
+          setLoc((l) => (l !== null && l.khoa === khoaLoc ? { ...l, places: noiTiep(l.places, dm.places), tiep: dm.nextOffset, total: dm.total ?? l.total } : l));
+        } else {
+          setTrang((t) => (t.pha === "xong" ? { ...t, places: noiTiep(t.places, dm.places), tiep: dm.nextOffset, total: dm.total ?? t.total } : t));
+        }
+      })
+      .catch((error) => setLoiNapLai(loiRaChu(error)))
+      .finally(() => {
+        dangTai.current = false;
+        setDangTaiThem(false);
+      });
+  };
+
+  // Reasons for the first dozen cards on screen, once each, never blocking the list.
+  const idDauTien = danhSachGoc.slice(0, 12).map((p) => p.id).join(",");
+  useEffect(() => {
+    if (timKiem.kind === "co-ket-qua" || idDauTien === "") return;
+    const can = idDauTien.split(",").filter((id) => !daHoiLyDo.current.has(id));
+    if (can.length === 0) return;
+    can.forEach((id) => daHoiLyDo.current.add(id));
+    let huy = false;
+    void docLyDo(can, { personId: phien.person_id }).then((ly) => {
+      if (!huy && Object.keys(ly).length > 0) setLyDo((cu) => ({ ...cu, ...ly }));
+      // A read that returned nothing may be asked again if the card shows once more.
+      else if (!huy) can.forEach((id) => daHoiLyDo.current.delete(id));
+    });
+    return () => {
+      huy = true;
+      can.forEach((id) => { if (!(id in lyDoRef.current)) daHoiLyDo.current.delete(id); });
+    };
+  }, [idDauTien, timKiem.kind, phien.person_id]);
+  const lyDoRef = useRef(lyDo);
+  lyDoRef.current = lyDo;
 
   const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
   // A search session (a name, a question, an answer) keeps the top of the
@@ -277,10 +440,6 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
   const khoaKetQua = `${loai ?? ""}|${timKiem.kind === "co-ket-qua" ? timKiem.query : ""}`;
-  // A new list starts from its first step again.
-  useEffect(() => {
-    setSoHang(HANG_MOI_LUOT);
-  }, [khoaKetQua, query, diemDen?.id]);
   const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated);
   // Promote the first real result with either credited media or labelled category artwork.
   const daNhat = danhSach[0];
@@ -298,7 +457,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
 
 
   return (
-    <RudiScreen bottomInset="tab" header={dau?.()} contentStyle={compactLead ? { gap: 12 } : undefined} onRefresh={nap} testID="explore-screen">
+    <RudiScreen bottomInset="tab" header={dau?.()} onGanCuoi={taiThem} contentStyle={compactLead ? { gap: 12 } : undefined} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         {/* The destination is a control, not a caption: the city in ink, the
             way to change it in the invitation's coral (owner's mockup). */}
@@ -327,12 +486,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query.trim() === "" ? (
-        <View style={styles.buuThiep}>
-          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 80 : 150} />
-          <View pointerEvents="none" style={[styles.nhanMinhHoa, { backgroundColor: colors.card }]}>
-            <Text style={[typography.caption, { color: colors.ink }]}>Minh hoạ hành trình</Text>
-          </View>
-        </View>
+        <SanThanhPho anh={biaDiemDen?.id === diemDen.id ? biaDiemDen.anh : null} id={diemDen.id} ten={diemDen.name} rong={Math.max(120, Math.min(480, screenWidth - 32))} cao={compactLead ? 80 : 150} />
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -416,14 +570,14 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
               {/* The destination and count come from the response; neither
                   the heading nor the artwork implies a distance ranking. */}
               <Text style={[typography.h2, styles.tenKhu, { color: colors.ink }]}>
-                {dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
+                {dangLoc ? `${Math.max(tongHienTai ?? 0, danhSach.length).toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
               </Text>
               {dangLoc || query !== "" ? (
                 <Pressable accessibilityRole="button" onPress={boTim} style={({ pressed }) => [styles.xoaLoc, pressed && styles.bam]}>
                   <Text style={[typography.label, { color: colors.accent }]}>Xóa lọc</Text>
                 </Pressable>
               ) : (
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>{`${Math.max(trang.total ?? 0, trang.places.length).toLocaleString("vi-VN")} nơi`}</Text>
               )}
             </View>
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
@@ -489,7 +643,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                   nativeMetrics
                   compact={compactLead}
                   daLuu={daLuu.includes(dan.id)}
-                  dd={hienThiDiaDiem(dan)}
+                  dd={hienThiDiaDiem(dan, canhCho.get(dan.id))}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}
                   onSave={() => void doiLuu(dan)}
                   saving={dangLuu.includes(dan.id)}
@@ -500,7 +654,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                   nativeMetrics
                   largeText={largeText}
                   daLuu={(id) => daLuu.includes(id)}
-                  items={[hienThiDiaDiem(soSanh[0]), hienThiDiaDiem(soSanh[1])]}
+                  items={[hienThiDiaDiem(soSanh[0], canhCho.get(soSanh[0].id)), hienThiDiaDiem(soSanh[1], canhCho.get(soSanh[1].id))]}
                   onOpen={(id) => router.push(`/places/${id}` as never)}
                   onSave={(id) => {
                     const place = soSanh.find((p) => p.id === id);
@@ -512,12 +666,12 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
               ) : null}
               {conLai.length > 0 ? (
                 <ResponsiveRow gap={0} minItemWidth={300}>
-                  {conLai.slice(0, soHang).map((place) => (
+                  {conLai.map((place) => (
                     <PlaceRow
                       nativeMetrics
                       largeText={largeText}
                       daLuu={daLuu.includes(place.id)}
-                      dd={hienThiDiaDiem(place)}
+                      dd={hienThiDiaDiem(place, canhCho.get(place.id))}
                       key={place.id}
                       onOpen={() => router.push(`/places/${place.id}` as never)}
                       onSave={() => void doiLuu(place)}
@@ -526,10 +680,11 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                   ))}
                 </ResponsiveRow>
               ) : null}
-              {conLai.length > soHang ? (
+              {tiepHienTai !== null ? (
                 <RudiButton
-                  label={cauXemThem(conLai.length - soHang)}
-                  onPress={() => setSoHang((n) => n + HANG_MOI_LUOT)}
+                  label={dangTaiThem ? "Đang tải thêm…" : cauXemThem(Math.max(1, (tongHienTai ?? danhSach.length + 1) - danhSach.length))}
+                  loading={dangTaiThem}
+                  onPress={taiThem}
                   variant="outline"
                 />
               ) : null}
@@ -550,7 +705,7 @@ const styles = StyleSheet.create({
   // Above the city stage, whose sky rises under this line (SanThanhPho).
   dau: { gap: 6, zIndex: 1 },
   buuThiep: { alignItems: "center", alignSelf: "center", marginTop: -12, overflow: "hidden", borderRadius: 8 },
-  nhanMinhHoa: { position: "absolute", left: 10, bottom: 8, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  sanPhac: { alignItems: "center", justifyContent: "center" },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, maxWidth: "100%", alignSelf: "flex-start" },
   tenViTri: { flexShrink: 1, minWidth: 0 },
   timRow: { flexDirection: "row", alignItems: "stretch", gap: 8 },

@@ -2,7 +2,7 @@
  *  under a person's name, and that person's id is not a constant we are
  *  allowed to write down.
  *
- * `scripts/seed_demo_data.py` mints every demo person as
+ * The end-to-end harness mints every test person as
  * `uuid5(da1ada1a-…, "person:<slug>")`. `nhom-demo.ts` already carries the
  * resulting ids, copied by hand. Copied values in two files drift, and the
  * drift is silent -- the screen asks about a person the database has never
@@ -23,7 +23,7 @@
  * demo group can log in would be the wrong kind of clever.
  */
 
-/** The namespace `scripts/seed_demo_data.py` uses for every demo id. */
+/** The namespace of every test-person id. */
 export const KHONG_GIAN_DEMO = "da1ada1a-da1a-da1a-da1a-da1ada1ada1a";
 
 /** RFC 4122 Appendix C, name-based UUID using SHA-1 (version 5). */

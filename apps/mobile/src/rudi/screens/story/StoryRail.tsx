@@ -26,7 +26,7 @@ const CO = 56;
 
 export function StoryRail({ personId, nativeMetrics = false }: { personId: string; nativeMetrics?: boolean }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, space } = useRudiTheme();
   // Shared callers keep RN scaling; the Inbox opts into its existing owner.
   const Text = nativeMetrics ? NativeMetricText : RNText;
   const labelMetrics = useNativeStandaloneTextMetrics(typography.caption);
@@ -36,6 +36,9 @@ export function StoryRail({ personId, nativeMetrics = false }: { personId: strin
   const live = useRef(true);
   const [loiDoc, setLoiDoc] = useState<string | null>(null);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  // Nobody has posted: the lone «Đăng story» tile sits on the page's own axis
+  // instead of orphaned at the left edge of an empty rail.
+  const chiMotO = trang.pha === "xong" && trang.nhom.length === 0;
 
   const nap = useCallback(async () => {
     try {
@@ -61,7 +64,7 @@ export function StoryRail({ personId, nativeMetrics = false }: { personId: strin
 
   return (
     <View accessibilityLabel="Dải story" style={styles.khung} testID="story-rail">
-      <ScrollView contentContainerStyle={styles.hang} horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.hang, { gap: space.sm, paddingVertical: space.xs }, chiMotO && styles.hangMotO]} horizontal showsHorizontalScrollIndicator={false}>
         <Pressable
           // Not the same words as the caption under it: a driver (and a screen
           // reader) must find exactly one node for this tile.
@@ -125,8 +128,9 @@ export function StoryRail({ personId, nativeMetrics = false }: { personId: strin
 }
 
 const styles = StyleSheet.create({
-  khung: { gap: 4 },
-  hang: { flexDirection: "row", gap: 12, paddingVertical: 4 },
+  khung: { gap: 6 },
+  hang: { flexDirection: "row" },
+  hangMotO: { flexGrow: 1, justifyContent: "center" },
   o: { alignItems: "center", gap: 4, width: CO + 16 },
   oLarge: { width: 112 },
   label: { alignSelf: "stretch", minWidth: 0, textAlign: "center" },

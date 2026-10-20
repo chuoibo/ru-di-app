@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import { Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextStyle } from "react-native";
 
@@ -113,6 +114,10 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
     </View>
   );
 
+  const lyDoVe = buc.dangCho ? "Nếp đang vẽ. Chờ lượt này xong trước." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined;
+  const lyDoGui = phien.dangHoi ? "Nếp đang trả lời. Chờ một chút nhé." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined;
+  const lyDoChung = (!nhap.trim() || !duocHoi) ? lyDoGui : (buc.dangCho ? lyDoVe : phien.dangHoi ? lyDoGui : undefined);
+
   const soan = (
     <View style={[styles.soan, { borderColor: dangNhap ? colors.ai : colors.line }]}>
         {phien.loi ? (
@@ -158,11 +163,12 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
             tiền y như chữ (ADR-0036 §2.9): `duocHoi` gác cả hai nút, và máy
             chủ gác lại bằng `man`. */}
         <RudiButton
+          anLyDo
           compact
           disabled={!nhap.trim() || buc.dangCho || !duocHoi}
           full={false}
           label="Vẽ"
-          lyDo={buc.dangCho ? "Nếp đang vẽ. Chờ lượt này xong trước." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
+          lyDo={lyDoVe}
           loading={buc.dangCho}
           onPress={() => {
             const moTa = nhap.trim();
@@ -174,16 +180,23 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           variant="outline"
         />
         <RudiButton
+          anLyDo
           compact
           disabled={!nhap.trim() || phien.dangHoi || !duocHoi}
           full={false}
           label="Gửi"
-          lyDo={phien.dangHoi ? "Nếp đang trả lời. Chờ một chút nhé." : !duocHoi ? "Nếp không đọc hay vẽ từ màn tiền." : !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
+          lyDo={lyDoGui}
           loading={phien.dangHoi}
           onPress={() => void guiCau()}
           tone="ai"
         />
         </View>
+        {lyDoChung ? (
+          <View importantForAccessibility="no-hide-descendants" style={styles.lyDoChung}>
+            <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />
+            <Text style={[typography.caption, styles.lyDoChu, { color: colors.inkSoft }]}>{lyDoChung}</Text>
+          </View>
+        ) : null}
       </View>
   );
 
@@ -320,6 +333,8 @@ const styles = StyleSheet.create({
   soan: { gap: 8, marginTop: 16, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   o: { minHeight: 72, maxHeight: 144, paddingVertical: 10 },
   hanhDong: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 12 },
+  lyDoChung: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 6, paddingHorizontal: 4 },
+  lyDoChu: { flexShrink: 1 },
   chanVe: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 12, paddingTop: 12, gap: 12 },
   xacNhan: { gap: 16, paddingVertical: 8 },
   dauVe: { flexDirection: "row", alignItems: "center", gap: 16 },

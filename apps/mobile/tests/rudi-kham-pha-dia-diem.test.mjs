@@ -18,6 +18,11 @@ import {
   CAU_ANH_NHOM,
   CAU_NGUON_ANH,
   HANG_MOI_LUOT,
+  TRANG_DIA_DIEM,
+  TRANG_CHO_BO_CHON,
+  docDanhMucCoLui,
+  docLyDo,
+  voiLyDo,
   cauNguonAnh,
   cauXemThem,
   TIEN_TO_ANH,
@@ -101,10 +106,59 @@ test("docDanhMuc đọc /places như người lạ, không mang context_id bịa
   assert.equal(dm.places[0].name, "Tiệm Nướng Xóm Lào");
   assert.equal(dm.places[0].priceMinVnd, 200000);
   assert.deepEqual(dm.categories, [{ id: "cafe", label: "Cafe" }]);
-  assert.match(goi[0].url, /\/places\?category=cafe&q=n/);
+  assert.match(goi[0].url, /\/places\?limit=30&category=cafe&q=n/);
   assert.doesNotMatch(goi[0].url, /context_id/);
   assert.equal((goi[0].init.method ?? "GET").toUpperCase(), "GET");
   assert.equal(goi[0].init.headers?.Authorization, undefined, "danh mục là công khai");
+});
+
+test("docDanhMuc luôn xin một trang 30, đọc total và next_offset; offset đi theo trang kế", async () => {
+  const goi = gia(() => ({
+    status: 200,
+    body: { places: [CHO], categories: [], group: {}, destination: { id: "d-tinh-79", name: "TP.HCM" }, total: 95, next_offset: 30 },
+  }));
+  const dm = await docDanhMuc({ destination: "d-tinh-79" });
+  assert.equal(TRANG_DIA_DIEM, 30);
+  assert.match(goi[0].url, /\/places\?limit=30&destination=d-tinh-79$/);
+  assert.equal(dm.total, 95);
+  assert.equal(dm.nextOffset, 30);
+  await docDanhMuc({ destination: "d-tinh-79", offset: 30 });
+  assert.match(goi[1].url, /limit=30&offset=30&destination=d-tinh-79$/);
+  // Trang cuối: next_offset null là hết, không phải lỗi.
+  gia(() => ({ status: 200, body: { places: [], categories: [], destination: { id: "d", name: "D" }, total: 95, next_offset: null } }));
+  assert.equal((await docDanhMuc({ offset: 90 })).nextOffset, null);
+});
+
+test("docDanhMucCoLui: mặc định một trang; bộ chọn quán đi theo next_offset tới TRANG_CHO_BO_CHON trang", async () => {
+  const goi = gia((url) => {
+    const off = Number(new URL(url).searchParams.get("offset") ?? 0);
+    return { status: 200, body: { places: [{ ...CHO, id: `p-${off}` }], categories: [], destination: { id: "d-tinh-79", name: "TP.HCM" }, total: 9514, next_offset: off + 30 } };
+  });
+  assert.equal((await docDanhMucCoLui("d-tinh-79")).places.length, 1, "Khám phá: một trang rồi cuộn");
+  assert.equal(goi.length, 1);
+  const dm = await docDanhMucCoLui("d-tinh-79", undefined, TRANG_CHO_BO_CHON);
+  assert.equal(goi.length, 1 + TRANG_CHO_BO_CHON, "dừng ở trần, không tải cả 9.514 quán");
+  assert.deepEqual(dm.places.map((p) => p.id), ["p-0", "p-30", "p-60", "p-90"]);
+  assert.equal(dm.nextOffset, 120);
+});
+
+test("docLyDo: chỉ nhận câu của mô hình có verdict hợp lệ, lỗi thì trả rỗng; voiLyDo chỉ thay câu, giữ điểm", async () => {
+  const goi = gia(() => ({
+    status: 200,
+    body: { reasons: { a: { reason: "Hợp gu cả nhóm", verdict: "hop", source: "ai" }, b: { reason: "x", verdict: "lạ", source: "ai" }, c: { reason: "máy chủ", verdict: "hop", source: "none" } } },
+  }));
+  const ly = await docLyDo(["a", "b", "c"]);
+  assert.match(goi[0].url, /\/places\?reasons_for=a,b,c$/);
+  assert.deepEqual(Object.keys(ly), ["a"]);
+  assert.deepEqual(await docLyDo([]), {});
+  gia(() => ({ status: 500, body: { code: "x" } }));
+  assert.deepEqual(await docLyDo(["a"]), {}, "lỗi bị bỏ qua im lặng");
+  const cho = { ...CHO, match: { score: 71, reason: "câu máy chủ", source: "none", verdict: null, factors: [] } };
+  const moi = voiLyDo(cho, ly.a);
+  assert.equal(moi.match.reason, "Hợp gu cả nhóm");
+  assert.equal(moi.match.source, "ai");
+  assert.equal(moi.match.score, 71);
+  assert.equal(voiLyDo(cho, undefined), cho);
 });
 
 test("docDanhMuc từ chối đồng lẻ như App B từng làm", async () => {
@@ -127,8 +181,42 @@ test("docChiTiet mã hoá id và đọc chi tiết; 404 thành câu của danh m
   );
   const ct = await docChiTiet("p-1");
   assert.equal(ct.description, "Ngon");
-  assert.match(goi[0].url, /\/places\/p-1$/);
+  assert.match(goi[0].url, /\/places\/p-1\?include=highlights$/);
   await assert.rejects(docChiTiet("p-la"), /không còn trong danh mục/);
+});
+
+test("highlights: chỉ giữ phần hợp lệ, phần hỏng bị bỏ chứ không làm hỏng trang; vắng thì null", async () => {
+  gia(() => ({
+    status: 200,
+    body: {
+      ...CHO,
+      description: "Ngon",
+      reviews: [],
+      photos_available: false,
+      highlights: {
+        khong_khi: "Tối, tĩnh lặng",
+        luu_y: ["Đông cuối tuần", "", 7],
+        mon_phai_thu: [{ ten: "Sashimi", mo_ta: "Tươi" }, { mo_ta: "thiếu tên" }],
+        gia: { min_vnd: 200000, max_vnd: 400000, uoc: true },
+        gio_mo_cua: [{ thu: "mon", nhan: "Thứ Hai", mo: "17:00", dong: "22:00", qua_dem: false }, { thu: "tue" }],
+        can_dat_truoc: { ma: "nen", nhan: "Nên đặt trước" },
+        danh_muc: [{ id: "quan_an", nhan: "Quán ăn" }, { id: "x" }],
+      },
+    },
+  }));
+  const ct = await docChiTiet("p-1");
+  const h = ct.highlights;
+  assert.equal(h.khongKhi, "Tối, tĩnh lặng");
+  assert.deepEqual(h.luuY, ["Đông cuối tuần"]);
+  assert.equal(h.monPhaiThu.length, 1);
+  assert.equal(h.monPhaiThu[0].moTa, "Tươi");
+  assert.deepEqual(h.gia, { minVnd: 200000, maxVnd: 400000, uoc: true });
+  assert.equal(h.gioMoCua.length, 1);
+  assert.equal(h.canDatTruoc.nhan, "Nên đặt trước");
+  assert.deepEqual(h.danhMuc, [{ id: "quan_an", nhan: "Quán ăn" }]);
+  assert.equal(h.taiSaoDangDen, null);
+  gia(() => ({ status: 200, body: { ...CHO, reviews: [], photos_available: false } }));
+  assert.equal((await docChiTiet("p-1")).highlights, null);
 });
 
 test("lưu / bỏ lưu đi với bearer; danh sách đã lưu chỉ lấy place_id chuỗi", async () => {
@@ -543,7 +631,9 @@ test("OutingLive: chip chỉ vẽ từ choDeChon, danh mục đọc theo điểm
   const { readFile } = await import("node:fs/promises");
   const src = await readFile(new URL("../src/rudi/screens/keo/OutingLive.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(src, /danhMuc\.map\(\(p\) => \(\s*<Chip/, "render cả danh mục thành chip là lỗi lowmemorykiller lặp lại");
-  assert.match(src, /docDanhMucCoLui\(await docDiemDenDaChon\(\)\)/);
+  assert.match(src, /docDanhMucCoLui\(await docDiemDenDaChon\(\), undefined, TRANG_CHO_BO_CHON\)/, "bộ chọn quán cần nhiều trang, không chỉ 30 quán đầu");
+  const kham = await readFile(new URL("../src/rudi/screens/explore/ExploreLive.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(kham, /TRANG_CHO_BO_CHON/, "Khám phá chỉ đọc một trang rồi cuộn tiếp");
   assert.doesNotMatch(src, /\bdocDanhMuc\(\)/, "đọc danh mục mặc định thì không gắn được địa điểm thật");
 });
 

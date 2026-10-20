@@ -5,17 +5,14 @@ import { readFileSync } from "node:fs";
  * No screen imports this file, so it is not in the app bundle; the RuDi app
  * has no demo story (2026-10-03: production launch, every screen reads the
  * signed-in person's own data or shows the sign-in door). `tests/e2e/*` use
- * it to reach the group `scripts/seed_demo_data.py` builds on a throwaway
- * stack, and `scripts/e2e_demo_people.py` reads it there.
+ * it to build a group on a throwaway stack. The stack that serves real users
+ * carries none of these people.
  *
- * `personId` is the row in the seeded database. Copied values in two files
- * drift, so they are not trusted to match by care:
- * `tests/test_demo_identity_matches_seed.py` re-derives every one of them from
- * `scripts/seed_demo_data.py` and fails if a single character moves. These
- * derive from `uuid5` and carry no long digit run the repo guard would block.
+ * `personId` is `uuid5(KHONG_GIAN_DEMO, "person:<slug>")` (`uuid5.ts`), so it
+ * carries no long digit run the repo guard would block.
  */
 import { khoiDongNhom } from "../../dist-test/screens/chat/nhom.js";
-export let DEMO_GROUP_NAME = "Team Đà Lạt";
+export let DEMO_GROUP_NAME = "Nhóm thử";
 export const DEMO_PEOPLE = [
     { id: "minh", personId: "46b55e67-932b-5415-a5ee-08fb2641a4ff", name: "Minh", initials: "M" },
     { id: "trang", personId: "49871dab-3bf9-5140-acf3-6c9736b31e8f", name: "Trang", initials: "Tr" },

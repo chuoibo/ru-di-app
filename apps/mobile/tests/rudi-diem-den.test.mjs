@@ -54,7 +54,7 @@ test("không gửi toạ độ thì đường dẫn không mang toạ độ", as
   } finally {
     globalThis.fetch = goc;
   }
-  assert.match(traLoi.daGoi[0].url, /\/destinations$/);
+  assert.match(traLoi.daGoi[0].url, /\/destinations\?include=cover$/);
   assert.ok(!/lat=|lng=/.test(traLoi.daGoi[0].url));
 });
 
@@ -69,7 +69,7 @@ test("toạ độ đi trong ĐÚNG một lời gọi, và chỉ ở đó", async
     globalThis.fetch = goc;
   }
   assert.equal(traLoi.daGoi.length, 1, "một lời gọi, không hơn");
-  assert.match(traLoi.daGoi[0].url, /lat=11\.9&lng=108\.4/);
+  assert.match(traLoi.daGoi[0].url, /include=cover&lat=11\.9&lng=108\.4/);
   // Không có body nào mang toạ độ đi tiếp, và không lời gọi thứ hai nào.
   assert.equal(traLoi.daGoi[0].init.body, undefined);
 });
@@ -174,4 +174,33 @@ test("nenLocTheoTen: ô tìm chỉ lọc theo tên khi nó chứa một cái tê
   assert.equal(nenLocTheoTen("quán nướng cho 6 người", "chua-tim", true), false, "câu mẫu chờ gửi");
   assert.equal(nenLocTheoTen("quán nướng cho 6 người", "khong-tra-loi", false), false, "đã hỏi, AI không trả lời");
   assert.equal(nenLocTheoTen("quán nướng cho 6 người", "dang-tim", false), false);
+});
+
+test("ảnh bìa tỉnh: chỉ nhận khi đủ địa chỉ, tác giả và giấy phép; thiếu thì null (tranh vẽ, không nhãn)", async () => {
+  const goc = globalThis.fetch;
+  traLoi.daGoi = [];
+  const base = process.env.EXPO_PUBLIC_API_URL ?? "";
+  globalThis.fetch = traLoi({
+    destinations: [
+      { ...DA_LAT, cover_photo_url: "/places/p-1/photos/ph-1", cover_photo_author: "Kien Tran", cover_photo_license: "CC BY 4.0" },
+      { ...DA_LAT, id: "d-2", cover_photo_url: "/places/p-2/photos/ph-2", cover_photo_author: null, cover_photo_license: null },
+      { ...DA_LAT, id: "d-3", cover_photo_url: null, cover_photo_author: null, cover_photo_license: null },
+      { ...DA_LAT, id: "d-4", cover_photo_url: "https://nguoi-la.example/x.jpg", cover_photo_author: "A", cover_photo_license: "B" },
+    ],
+    nearest: null,
+  });
+  try {
+    const ra = await docDiemDen();
+    const [co, thieuGhiCong, khong, laHost] = ra.diemDen.map((d) => d.anhBia);
+    assert.notEqual(co, null);
+    const ve = co.ve();
+    assert.match(ve.source.uri, /\/places\/p-1\/photos\/ph-1$/);
+    assert.equal(ve.ghiCong, "Ảnh quanh đây: Kien Tran · CC BY 4.0", "địa chỉ và câu ghi công đi cùng nhau");
+    assert.equal(thieuGhiCong, null, "ảnh không nói được của ai thì không được hiện");
+    assert.equal(khong, null);
+    assert.equal(laHost, null, "địa chỉ ngoài API không bao giờ được tải");
+  } finally {
+    globalThis.fetch = goc;
+  }
+  void base;
 });

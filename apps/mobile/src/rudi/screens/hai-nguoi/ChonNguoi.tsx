@@ -115,7 +115,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
                 haptic="select"
                 key={ban.person_id}
                 onPress={() => void ruNguoi(ban)}
-                style={[styles.the, { borderTopColor: colors.line, borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth, opacity: dangMo !== null && dangMo !== ban.person_id ? 0.55 : 1 }]}
+                style={[styles.the, { borderTopColor: colors.line, borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth, borderBottomColor: colors.line, borderBottomWidth: index === trang.ban.length - 1 ? StyleSheet.hairlineWidth : 0, opacity: dangMo !== null && dangMo !== ban.person_id ? 0.55 : 1 }]}
               >
                 <HinhNhan name={ban.display_name} personId={ban.person_id} size={46} />
                 <View style={styles.nguoi}>

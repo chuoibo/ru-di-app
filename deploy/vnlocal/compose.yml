@@ -181,16 +181,45 @@ services:
       retries: 12
     restart: unless-stopped
 
-  # Milvus standalone on the GPU (ADR-0049 §2.6): embedded etcd, MinIO
+  # Milvus's metadata store, a container of its own (19/10). The embedded etcd
+  # raced Milvus at every start: Milvus read the key space ~5 ms after etcd
+  # began, the single node elected itself ~350 ms later, and the read failed
+  # with "etcdserver: leader changed" (panic, 160 restarts). It reads the
+  # data directory the embedded one used, so the metadata carries over.
+  # No published port: only milvus talks to it.
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.25@sha256:52f17f7e56e4f7239f0320dbfcbcc24721163d7d78ae710b466af3254ccf6366
+    command:
+      - etcd
+      - --name=milvus
+      - --data-dir=/var/lib/milvus/etcd
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://milvus-etcd:2379
+      - --auto-compaction-mode=revision
+      - --auto-compaction-retention=1000
+    volumes:
+      - rudi-milvus-data:/var/lib/milvus
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # Milvus standalone on the GPU (ADR-0049 §2.6): etcd in milvus-etcd, MinIO
   # storage, woodpecker, auth on; config and root password from
   # deploy/vnlocal/milvus-khoi-tao.sh. Loopback only.
   milvus:
     image: milvusdb/milvus:v3.0.2-gpu
     command: ["milvus", "run", "standalone"]
     environment:
-      ETCD_USE_EMBED: "true"
-      ETCD_DATA_DIR: /var/lib/milvus/etcd
-      ETCD_CONFIG_PATH: /milvus/configs/embedEtcd.yaml
+      ETCD_USE_EMBED: "false"
+      ETCD_ENDPOINTS: milvus-etcd:2379
       COMMON_STORAGETYPE: remote
       DEPLOY_MODE: STANDALONE
       # At info, the WAL auditor logs two lines per segment every 10 s: with
@@ -203,7 +232,6 @@ services:
         max-file: "3"
     volumes:
       - ${HOME}/.config/rudi/milvus/user.yaml:/milvus/configs/user.yaml:ro
-      - ${HOME}/.config/rudi/milvus/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml:ro
       - rudi-milvus-data:/var/lib/milvus
     ports:
       - "127.0.0.1:${RUDI_MILVUS_PORT:-19530}:19530"
@@ -223,6 +251,8 @@ services:
       retries: 30
     depends_on:
       milvus-minio:
+        condition: service_healthy
+      milvus-etcd:
         condition: service_healthy
     restart: unless-stopped
 

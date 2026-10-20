@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
@@ -39,15 +40,18 @@ export function DiaryScreen({ person, id }: { person: string; id: string }) {
   </Sheet>}>
     {!book && error ? <ErrorState title="Sổ chưa mở được" body={error} onRetry={() => void load()} /> : null}
     {!book && !error ? <SkeletonLines lines={5}/> : null}
-    {book ? <View style={{ gap: 24 }}>
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>{book.audience === "private" ? "Chỉ mình tôi" : "Công khai"}{book.document.ai_generated ? " · Có Nếp giúp viết" : ""}</Text>
+    {book ? <View style={{ gap: 18 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.card }}>
+        <Ionicons color={colors.inkSoft} name={book.audience === "private" ? "lock-closed-outline" : "globe-outline"} size={14} />
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{book.audience === "private" ? "Chỉ mình tôi" : "Công khai"}{book.document.ai_generated ? " · Có Nếp giúp viết" : ""}</Text>
+      </View>
       <BookView paged kind={book.kind} document={book.document} photo={(photo) => diaryImage(person, publishedPhoto(id, photo))} />
       {!deleting ? <CauTaiCho cau={error}/> : null}
-      {book.owner_id === person ? <View style={{ gap: 12, paddingTop: 8 }}>
-        <RudiButton label="Quản lý sổ" icon="ellipsis-horizontal" compact variant="ghost" expanded={management} onPress={() => setManagement(!management)} />
-        {management ? <>
+      {book.owner_id === person ? <View style={{ gap: 12, paddingTop: 4 }}>
+        <RudiButton label="Quản lý sổ" icon="ellipsis-horizontal" compact variant="outline" expanded={management} onPress={() => setManagement(!management)} />
+        {management ? <View style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.card }}>
         {book.audience === "public" ? <><Text style={[typography.body, { color: colors.inkSoft }]}>Gửi phiên bản này gồm lời viết và ảnh lên cộng đồng để duyệt. Người trong cộng đồng sẽ đọc được khi bài được duyệt.</Text><RudiButton label="Gửi sổ lên cộng đồng để duyệt" variant="outline" loading={busy} onPress={() => void share()} /><RudiButton label="Cất về riêng tư" variant="outline" disabled={busy} onPress={() => void change(false)} /></> : null}
-        <RudiButton label="Xóa cuốn sổ" disabled={busy} tone="warn" variant="ghost" onPress={() => setDeleting(true)} /></> : null}
+        <RudiButton label="Xóa cuốn sổ" disabled={busy} tone="warn" variant="ghost" onPress={() => setDeleting(true)} /></View> : null}
       </View> : null}
     </View> : null}
   </RudiScreen>;
