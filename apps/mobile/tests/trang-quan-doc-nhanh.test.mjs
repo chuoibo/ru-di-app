@@ -114,3 +114,12 @@ test("cảnh riêng của điểm đến chỉ khi vẽ đúng vùng đó", () =
   assert.equal(canhDiemDen("d-tinh-56"), "scene-coast");
   for (const id of ["d-tinh-1", "d-ha-noi", "d-tinh-46", "d-tinh-79", "d-tinh-15", "synthetic-city-1"]) assert.equal(canhDiemDen(id), null, id);
 });
+
+test("thẻ trang đã giữ không ảnh bìa chỉ có chữ; ô vẽ đồ vật nằm trên giấy sẫm, không trắng trơn", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const diary = await readFile(new URL("../src/rudi/screens/profile/DiaryLead.tsx", import.meta.url), "utf8");
+  const saved = diary.slice(diary.indexOf("function SavedDiary"), diary.indexOf("const styles"));
+  assert.doesNotMatch(saved, /<VeLop/, "icon thay ảnh bìa từng đè lên tiêu đề (review 1fd5d576)");
+  const hang = await readFile(new URL("../src/rudi/screens/explore/HangDiaDiem.tsx", import.meta.url), "utf8");
+  assert.match(hang, /scene === null \? colors\.paperShade : colors\.paper/);
+});

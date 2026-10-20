@@ -144,7 +144,8 @@ export function PlaceArtwork({ loai, canh, width, height = 180, fillFrame = fals
           setMeasured((current) => Object.is(current.width, nextWidth) ? current : { ...current, width: nextWidth });
         }
       }}
-      style={fillFrame ? [StyleSheet.absoluteFill, { backgroundColor: colors.paper, overflow: "hidden" }] : { width: width ?? "100%", height, backgroundColor: colors.paper, overflow: "hidden" }}
+      // The object-only fallback sits on the shaded sheet: bare white next to painted cards reads as a missing image.
+      style={fillFrame ? [StyleSheet.absoluteFill, { backgroundColor: scene === null ? colors.paperShade : colors.paper, overflow: "hidden" }] : { width: width ?? "100%", height, backgroundColor: scene === null ? colors.paperShade : colors.paper, overflow: "hidden" }}
     >
       {scene === null ? (
         // The category's object in ink on the paper: a drawing of the kind of place, of nowhere in particular.

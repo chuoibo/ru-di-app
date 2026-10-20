@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { tokenPhienHienTai } from "../../../api";
 import { KHUNG_CANH, hinhCanh } from "../../art/canh";
-import { KHUNG_DAU_CHAN, hinhDauChan } from "../../art/dau-chan";
 import { diaryImage, publishedPhoto, type Diary } from "../../diary/api";
 import type { DiaryCollection } from "../../diary/useDiaryCollection";
 import { typography, useRudiTheme } from "../../theme";
@@ -136,13 +135,10 @@ function SavedDiary({ person, diary }: { person: string; diary: Diary }) {
           {diary.document.subtitle ? <Text style={[typography.body, { color: colors.inkSoft }]}>{diary.document.subtitle}</Text> : null}
           {excerpt ? <Text numberOfLines={3} style={[typography.body, { color: colors.inkSoft }]}>{excerpt}</Text> : null}
         </View>
+        {/* No cover means a words-only preview: the 13/10 contract allows a real cover or text, never a stand-in icon. */}
         {source && !imageFailed ? (
           <Image accessibilityLabel={`Ảnh bìa ${diary.document.title}`} source={source} contentFit="cover" cachePolicy="none" onError={imageError} style={[styles.cover, stack && styles.coverStack, { borderRadius: radius.control }]} />
-        ) : (
-          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.savedStamp}>
-            <VeLop height={40} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("memories")} width={40} />
-          </View>
-        )}
+        ) : null}
       </View>
       {imageFailed ? <Text style={[typography.note, { color: colors.inkSoft }]}>Ảnh chưa mở được. Nội dung vẫn còn đây.</Text> : null}
       <View style={[styles.footer, { borderTopColor: colors.line }]}>
@@ -169,7 +165,6 @@ const styles = StyleSheet.create({
   wordsStack: { flex: 0, width: "100%" },
   cover: { width: "30%", aspectRatio: 3 / 4 },
   coverStack: { width: "100%", aspectRatio: 16 / 9 },
-  savedStamp: { paddingTop: 2 },
   footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   metadata: { flexShrink: 1 },
   emptyRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
