@@ -304,6 +304,10 @@
     // Khám phá trên danh mục thật (M4): compile để test chứng minh danh mục được
     // đọc như người lạ KHÔNG mang context_id bịa và việc lưu đi với bearer.
     "src/rudi/kham-pha/dia-diem.ts",
+    // Trang quán đọc trong mười giây (21/10): giá nói một lần, chip không lặp;
+    // tranh vẽ thay ảnh không mang cảnh của tỉnh khác.
+    "src/rudi/kham-pha/chi-tiet-gon.ts",
+    "src/rudi/kham-pha/canh-ve.ts",
     // Kèo trên máy chủ (M4): compile để test chứng minh PUT timeline mang place_id
     // và thêm/gắn chặng không đụng chặng khác.
     "src/rudi/keo/keo.ts",

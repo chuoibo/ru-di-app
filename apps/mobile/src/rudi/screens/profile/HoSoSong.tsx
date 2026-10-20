@@ -24,7 +24,7 @@ import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field } from "../../ui";
 import { chuLon } from "../../adaptive";
-import { Text, useNativeFontMetricsOwner, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
+import { Text, useNativeStandaloneTextMetrics } from "../../ui/NativeFontMetrics";
 import { RudiIcon } from "../../ui/RudiIcon";
 import { PressScale } from "../../ui/PressScale";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -47,7 +47,6 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
   const { datPhien } = useRudiSession();
   const { colors, radius, space } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
-  const metricsOwned = useNativeFontMetricsOwner();
   const bodyMetrics = useNativeStandaloneTextMetrics(typography.body);
   const router = useRouter();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
@@ -187,11 +186,15 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
     );
   }
 
+  // At large text the avatar shrinks rather than stacking over the name: the
+  // name, the join year and the edit action keep one row (finish review 21/10).
   const largeText = bodyMetrics !== null
     ? (bodyMetrics.fontSize ?? typography.body.fontSize) >= typography.body.fontSize * 1.25
-    : metricsOwned || chuLon(fontScale);
+    : chuLon(fontScale);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
   return <View style={[styles.passport, { gap: space.md }]}>
+    {/* One frame: the card's own border. The coral band and the dashed inner
+        rule made three frames around one name. */}
     <View
       testID="profile-identity"
       style={[
@@ -205,27 +208,13 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
         },
       ]}
     >
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[styles.passportTopBand, { backgroundColor: colors.accent }]}
-      />
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[styles.passportInnerRule, { borderColor: colors.line, borderRadius: Math.max(4, radius.base - 4) }]}
-      />
       <View style={styles.identityRow}>
-        <View style={[styles.identityMain, largeText && styles.identityMainStack]}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
-            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={60} ring />
-          </Pressable>
-          <View style={[styles.identityCopy, largeText && styles.identityCopyStack]}>
-            <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>{hoSo.display_name}</Text>
-            <Text style={[typography.note, { color: colors.inkSoft }]}>{[hoSo.city, `Tham gia ${new Date(hoSo.created_at).getFullYear()}`].filter(Boolean).join(" · ")}</Text>
-          </View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
+          <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={largeText ? 48 : 56} ring />
+        </Pressable>
+        <View style={styles.identityCopy}>
+          <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>{hoSo.display_name}</Text>
+          <Text style={[typography.note, { color: colors.inkSoft }]}>{[hoSo.city, `Tham gia ${new Date(hoSo.created_at).getFullYear()}`].filter(Boolean).join(" · ")}</Text>
         </View>
         <PressScale
           accessibilityRole="button"
@@ -254,15 +243,10 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
 
 const styles = StyleSheet.create({
   passport: { gap: 16 },
-  identityBlock: { position: "relative", overflow: "hidden", borderWidth: 1 },
-  passportTopBand: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
-  passportInnerRule: { position: "absolute", top: 6, left: 6, right: 6, bottom: 6, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed" },
-  identityRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  identityMain: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 14 },
-  identityMainStack: { flexDirection: "column", alignItems: "flex-start" },
-  identityCopy: { flex: 1, minWidth: 0, gap: 4 },
-  identityCopyStack: { flex: 0, alignSelf: "stretch" },
-  avatarTarget: { minWidth: 60, minHeight: 60, alignItems: "center", justifyContent: "center" },
+  identityBlock: { borderWidth: 1 },
+  identityRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  identityCopy: { flex: 1, minWidth: 0, gap: 2 },
+  avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   editAction: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center", borderWidth: 1 },
   bioCopy: { paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   form: { gap: 20 },

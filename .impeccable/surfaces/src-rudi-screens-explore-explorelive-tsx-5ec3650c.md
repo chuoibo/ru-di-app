@@ -57,10 +57,10 @@ THESIS: Khám phá hiện ngay: trang đầu 30 quán, cuộn thêm khi gần cu
 
 OWN-WORLD: Giữ thế giới hiện hữu; ảnh tỉnh là ảnh quán thật có ghi công qua MediaSlot; thiếu ảnh là tranh cảnh vẽ không nhãn chữ. Chữ «Minh hoạ» không bao giờ xuất hiện.
 
-STORY: Chọn tỉnh (lưới ảnh thật) → danh sách hiện trong một nhịp → lý do gợi ý của AI tới sau, thay câu tại chỗ không xô bố cục.
+STORY: Chọn tỉnh (danh sách một cột: 33 tỉnh dò theo tên nhanh hơn lưới; thẻ đầu là tỉnh đang xem với ảnh thật, các hàng cùng một lối vẽ và cao bằng nhau) → danh sách hiện trong một nhịp → lý do gợi ý của AI tới sau, thay câu tại chỗ không xô bố cục.
 
 FIRST VIEWPORT: Thanh tìm + chip loại + quán đầu; skeleton chỉ khi tỉnh chưa đọc bao giờ.
 
-FORM: limit/offset, SWR theo người + điểm đến, reasons_for không chặn, nút «Xem thêm» dự phòng.
+FORM: limit/offset, SWR theo người + điểm đến, reasons_for không chặn, nút «Xem thêm» dự phòng; tranh cảnh dự phòng chọn theo loại quán, không bao giờ cảnh mốc của vùng khác. Seed: none — mở rộng thế giới đã có (Sân Khấu Giấy v3, ADR-0037); concept-seed chỉ dành cho thế giới mới hoặc thay thế, nên không roll.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

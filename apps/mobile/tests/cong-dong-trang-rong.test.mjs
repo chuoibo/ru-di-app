@@ -152,4 +152,10 @@ test("EmptyState layout=page: một trục giữa, chữ ≤ 420, nút theo ch�
   assert.doesNotMatch(nhat, /paddingLeft: 32/, "gáy sổ không đẩy nội dung lệch phải");
   const ho = readFileSync(new URL("../src/rudi/screens/profile/HoSoSong.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(ho, /passportSealMark/, "không còn dấu toạ độ cứng đè lên thẻ hồ sơ");
+  // 21/10/2026: the empty sheet pads its right by the binding rail, so its axis is the card's; no lone «kèo.».
+  assert.match(nhat, /giua && \{ paddingRight: space\.md \+ RAY_GAY \}/);
+  assert.match(nhat, /<JournalSheet giua testID="profile-diary-empty"/);
+  assert.match(nhat, /trang của\\u00a0kèo\./);
+  // One frame on the identity card: no coral band, no dashed inner rule, no stacked avatar.
+  assert.doesNotMatch(ho, /passportTopBand|passportInnerRule|identityMainStack/);
 });

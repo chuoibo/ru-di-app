@@ -102,6 +102,26 @@ export async function docDiemDen(viTri?: { lat: number; lng: number }): Promise<
   };
 }
 
+/**
+ * The covers of every destination, read once per app run and shared: Khám
+ * phá's city stage shows the real photograph the picker already has rather
+ * than a drawing (finish review 21/10). A failed read is forgotten, so the
+ * next visit asks again; the stage keeps its drawing meanwhile.
+ */
+let biaDaDoc: Promise<ReadonlyMap<string, AnhCoGhiCong | null>> | null = null;
+
+/** One destination's cover with its credit, or null when it has none. */
+export async function docBiaDiemDen(id: string): Promise<AnhCoGhiCong | null> {
+  if (biaDaDoc === null) {
+    const dang = docDiemDen().then((ds) => new Map(ds.diemDen.map((d) => [d.id, d.anhBia] as const)));
+    biaDaDoc = dang;
+    dang.catch(() => {
+      if (biaDaDoc === dang) biaDaDoc = null;
+    });
+  }
+  return (await biaDaDoc).get(id) ?? null;
+}
+
 const KHOA = "rudi.diem-den.v1";
 
 /** Remember the choice on this phone. Failure is not worth a screen. */

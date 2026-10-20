@@ -15,10 +15,10 @@ THESIS: Đọc một quán trong mười giây: vì sao đáng đến, món nên
 
 OWN-WORLD: Giấy, mực, coral; Card/SectionHeader/Chip sẵn có; ảnh thật qua MediaSlot với đúng một dòng ghi công; tranh cảnh vẽ dự phòng không nhãn chữ.
 
-STORY: Ảnh bìa → tên và chỉ số → Tại sao đáng đến (3 dòng + Đọc thêm) → chip nhanh → Món nên thử → Không khí → Hợp với ai → Giá («Ước khoảng» khi ước) → Giờ theo thứ + giờ đẹp nhất → Trải nghiệm → Lưu ý.
+STORY: Một ảnh bìa (lật trang tại chỗ) → tên, điểm, trạng thái mở → Tại sao đáng đến → khối dữ kiện (giá «Ước khoảng» khi ước, giờ hôm nay + giờ đẹp nhất, thời lượng, đặt trước) → chip không khí → Món nên thử → Không khí → Hợp với ai → Giờ theo thứ → Trải nghiệm → Lưu ý.
 
-FIRST VIEWPORT: 390×844: ảnh, tên, một câu «tại sao đáng đến», hàng chip.
+FIRST VIEWPORT: 390×844: ảnh bìa ≤ 45% màn, tên, điểm/trạng thái, một câu «tại sao đáng đến», hàng chip.
 
-FORM: Dữ liệu từ `highlights` máy chủ; mục rỗng ẩn hẳn, không «Chưa có…»; giá nói một lần; không bao giờ hiện bằng chứng hay khẳng định an toàn dị ứng.
+FORM: Seed: none — mở rộng thế giới đã có (Sân Khấu Giấy v3, ADR-0037); concept-seed chỉ dành cho thế giới mới hoặc thay thế, nên không roll. Dữ liệu từ `highlights` máy chủ; mục rỗng ẩn hẳn, không «Chưa có…»; giá nói một lần; không bao giờ hiện bằng chứng hay khẳng định an toàn dị ứng.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

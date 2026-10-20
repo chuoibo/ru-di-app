@@ -136,10 +136,10 @@ THESIS: Một trục giữa cho mọi trạng thái rỗng và một lưới đ�
 
 OWN-WORLD: Giữ Sân Khấu Giấy v3: giấy, mực, coral, Bricolage; không thêm màu, font, radius hay tranh mới.
 
-STORY: Cá nhân: thẻ hồ sơ đệm đối xứng → lưới dấu chân 2 cột đều → tab gạch chân rộng đủ ô → sổ nhật ký rỗng căn giữa. Tin nhắn rỗng: một EmptyState căn giữa, lối «Thêm bạn» nằm cùng trục.
+STORY: Cá nhân giữ hướng 13/10 (trang thật đã giữ dẫn màn) khi có trang; chưa có trang thì thẻ hồ sơ một khung → dấu chân (số trên, danh từ dưới, ô cao bằng nhau) → tab → sổ rỗng gọn, căn đúng trục thẻ. Tin nhắn rỗng: một EmptyState căn giữa, lối «Thêm bạn» nằm cùng trục.
 
-FIRST VIEWPORT: 390×844: tên + dấu chân + hai tab; ô lẻ cuối của lưới không lệch; tiêu đề h1 như Tin nhắn.
+FIRST VIEWPORT: 390×844 khi chưa có trang: tên, dấu chân và hai tab nằm trên nếp gấp; tiêu đề h1 như Tin nhắn.
 
-FORM: EmptyState layout="page"; ProfileFacts lưới đều; bỏ dấu ấn toạ độ cứng; ListRow cho Sở thích.
+FORM: EmptyState layout="page"; ProfileFacts một tầng chứa, số 0 mực nhạt; thẻ hồ sơ một khung, avatar–tên–sửa cùng hàng; ListRow cho Sở thích. Seed: none — mở rộng thế giới đã có (Sân Khấu Giấy v3, ADR-0037); concept-seed chỉ dành cho thế giới mới hoặc thay thế, nên không roll.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

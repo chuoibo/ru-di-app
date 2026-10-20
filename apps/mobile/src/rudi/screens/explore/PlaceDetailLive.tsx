@@ -29,6 +29,7 @@ import { matchLabel } from "../../../screens/kham-pha/places";
 import {
   anhBiaThe,
   boLuuDiaDiem,
+  CAU_ANH_BAI_DANG,
   CAU_ANH_NHOM,
   cauDuongDi,
   cauHoatDong,
@@ -49,12 +50,14 @@ import {
   type AnhDiaDiem,
   type AnhNhom,
 } from "../../kham-pha/dia-diem";
+import { canhChoDiaDiem, vungCua } from "../../kham-pha/canh-ve";
+import { cauGio, dongChinh, nhanKhiChat } from "../../kham-pha/chi-tiet-gon";
 import { nguonAnh } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Chip, Divider, IconButton, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { MediaSlot } from "../../ui/MediaSlot";
-import { anhDanhMuc, khoaNguon, veKhung, type NguonKhung } from "../../ui/ghi-cong";
+import { anhDanhMuc, khoaNguon, veKhung, type AnhCoGhiCong, type NguonKhung } from "../../ui/ghi-cong";
 import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceArtwork } from "./HangDiaDiem";
@@ -256,48 +259,45 @@ function ThanChiTiet({
   const { colors, space, radius } = useRudiTheme();
   const [moAnh, setMoAnh] = useState<number | null>(null);
   const hl = place.highlights;
-  const coGia = hl !== null && (hl.gia !== null || hl.mucGia !== null);
   const hop = matchLabel(place.match);
   const coMatch = place.match !== null && place.match.source === "ai";
-  // The price has its own section (with «ước» when it is an estimate) once the index has it: said once.
-  const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline" && !(coGia && muc.icon === "wallet-outline"));
-  // The cover is drawn only with its credit (ADR-0017 §2.5); the gallery
-  // strip carries the other licensed photographs, each with its own line.
+  // The price is said once, in the key facts below the reason (finish review
+  // 21/10); this row keeps the rating and the distance.
+  const facts = chiTietNgan(place).filter((muc) => muc.icon === "star" || muc.icon === "navigate-outline");
+  // One cover that pages through every picture (finish review 21/10): the
+  // cover first, then the gallery, each page carrying exactly its own credit
+  // under it (ADR-0017 §2.5). A second full-width strip under the cover put
+  // the name below the fold.
   const bia = anhBiaThe(place);
-  const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== place.photoUrl);
+  const trangAnh = useMemo<ViewerPhoto[]>(() => {
+    const ra: ViewerPhoto[] = bia ? [{ id: "cover", alt: place.name, nguon: { loai: "danh-muc", anh: bia } }] : [];
+    for (const a of anh) {
+      if (bia !== null && nguonAnhDiaDiem(a).uri === place.photoUrl) continue;
+      ra.push({ id: a.id, alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"), nguon: { loai: "danh-muc", anh: anhGallery(a) } });
+    }
+    return ra;
+  }, [anh, bia, place.name, place.photoUrl]);
   const cauAnh = cauNguonAnh(anh);
   const viec = cauHoatDong(place.activities);
-  const anhBiaViewer: ViewerPhoto[] = bia ? [{ id: "cover", alt: place.name, nguon: { loai: "danh-muc", anh: bia } }] : [];
+  const chinh = dongChinh(place, hl, new Date());
+  const motaRieng = hl?.taiSaoDangDen != null && place.description !== null && place.description !== hl.taiSaoDangDen ? place.description : null;
+  // The drawn stand-in may only paint this place's own region (canh-ve.ts).
+  const canh = canhChoDiaDiem({ id: place.id, loai: place.category, vung: vungCua({ diaChi: place.address }) });
+  const dau = hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null;
   return (
     <>
-      {/* A place without an honest picture gets no 16:10 frame of nothing (review
-          08/09 F01; re-audit 10/09: «một icon bát nhỏ và khoảng trống»): the
-          category's paper slot and the seal stand on one row, and the name
-          follows at once. With a picture, the frame and the seal on it as before. */}
-      {bia === null ? (
-        <View style={styles.dauGon}>
-          {/* The sketch of the kind of place (category only: live carries no
-              tags), then the seal on its own row (review 11/09 A1). */}
-          {/* The same sketch, lifted into its three depths as a pop-up stage
-              that stands up once (ADR-0037 D1, plan S4). */}
-          <View style={styles.sanCho}><PlaceArtwork loai={place.category} height={210} /></View>
-          {hop !== null && hop.real ? <Stamp label={hop.text} style={styles.dauGonDau} tone="ai" /> : null}
+      {trangAnh.length === 0 ? (
+        // A place without an honest picture gets the drawing of its kind, in
+        // the same frame a photograph would take, so the name stays put.
+        <View style={[styles.khungBia, { borderRadius: radius.base }]} testID="place-cover">
+          <PlaceArtwork canh={canh} fillFrame loai={place.category} />
+          {dau}
         </View>
       ) : (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Xem ảnh ${place.name} toàn màn hình`} onPress={() => setMoAnh(0)}>
-          <MediaSlot alt={place.name} fallback={<PlaceArtwork loai={place.category} height={180} />} nguon={{ loai: "danh-muc", anh: bia }} overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null} ratio={16 / 10} />
-        </Pressable>
+        <BiaTrang anh={trangAnh} dau={dau} fallback={<PlaceArtwork canh={canh} fillFrame loai={place.category} />} onMo={setMoAnh} />
       )}
-      <PhotoViewer photos={anhBiaViewer} index={moAnh} onIndex={setMoAnh} onClose={() => setMoAnh(null)} />
+      <PhotoViewer photos={trangAnh} index={moAnh} onIndex={setMoAnh} onClose={() => setMoAnh(null)} />
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
-      {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
-      {/* The credit is said once. With a cover, the line under the cover (and
-          under each strip photograph) is the credit; this sentence stands only
-          when the pictures have no cover to carry it: where they came from and
-          that the place did not supply them (ADR-0017 §2.5). */}
-      {cauAnh !== null && bia === null && conLai.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauAnh}</Text>
-      ) : null}
       <View style={styles.dau}>
         <Text style={[typography.h1, { color: colors.ink }]}>{place.name}</Text>
         {dongPhu(place) ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dongPhu(place)}</Text> : null}
@@ -316,19 +316,33 @@ function ThanChiTiet({
           )}
         </Inline>
       </View>
-      {/* The way there: the address is the row, directions the action beside it. */}
-      <View style={[styles.duongDi, { backgroundColor: colors.card, borderColor: colors.line }]}>
+      <LoiMo hl={hl} mota={place.description} />
+      {chinh.length > 0 ? (
+        // The ten-second read: the facts that decide, one label and one value a line.
+        <View style={[styles.dongChinh, { gap: space.xs }]} testID="place-key-facts">
+          {chinh.map((d) => (
+            <View key={d.id} style={styles.hangChinh}>
+              <Text style={[typography.label, styles.nhanChinh, { color: colors.inkSoft }]}>{d.nhan}</Text>
+              <View style={styles.flex}>
+                <Text style={[typography.body, { color: colors.ink }]}>{d.gia}</Text>
+                {d.phu ? <Text style={[typography.note, { color: colors.inkSoft }]}>{d.phu}</Text> : null}
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      <Chips place={place} hl={hl} />
+      {/* The way there: the address takes the whole width, directions follow under it. */}
+      <View style={[styles.duongDi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
         <Pressable accessibilityLabel="Mở địa chỉ trên bản đồ" accessibilityRole="button" onPress={onChiDuong} style={({ pressed }) => [styles.diaChi, pressed && styles.bam]}>
-          <Ionicons color={colors.accent} name="location-outline" size={20} />
+          <Ionicons color={colors.accent} name="location-outline" size={20} style={styles.ghimDiaChi} />
           <View style={styles.flex}>
             <Text style={[typography.label, { color: colors.ink }]}>{place.address ?? "Chưa có địa chỉ"}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauDuongDi(place)}</Text>
           </View>
         </Pressable>
-        <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} variant="outline" />
+        <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} style={styles.nutChiDuong} variant="outline" />
       </View>
-      <LoiMo hl={hl} mota={place.description} />
-      <Chips place={place} hl={hl} />
       {/* From a place to an invitation in one step: the sheet of the two of
           them opens with this place as the main stop (QA 23/09: a place page
           had no way to become an evening for a couple). */}
@@ -341,9 +355,21 @@ function ThanChiTiet({
           <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="ghost" />
         )
       ))}
+      {/* The longer description, when the reason above is a different sentence: its own section, never hidden behind a «Đọc thêm» that reveals another text. */}
+      {motaRieng === null ? null : (
+        <View style={styles.khoi}>
+          <SectionHeader title="Giới thiệu" />
+          <Text style={[typography.body, { color: colors.ink }]}>{motaRieng}</Text>
+        </View>
+      )}
       <ChiMuc hl={hl ?? KHONG_CO_CHI_MUC} openHours={place.openHours} space={space} colors={colors} radius={radius} />
       {cauNguonDuLieu(place) === null ? null : (
         <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauNguonDuLieu(place)}</Text>
+      )}
+      {/* Where the pictures came from, said once for the whole gallery and away
+          from the cover: each page above already carries its own credit line. */}
+      {cauAnh === null || trangAnh.length === 0 ? null : (
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauAnh}</Text>
       )}
       {/* «Nên làm gì ở đây» (M12b): sentences written when the place was
           imported, out of its own tags; nothing a model wrote on open. */}
@@ -376,7 +402,7 @@ function ThanChiTiet({
               {i > 0 ? <Divider /> : null}
               <View style={styles.nhanXet}>
                 <Text style={[typography.label, { color: colors.ink }]}>
-                  {r.author} · {r.rating}/5
+                  {r.author} · {r.rating.toFixed(1)}/5
                 </Text>
                 <Text style={[typography.body, { color: colors.inkSoft }]}>{r.body}</Text>
               </View>
@@ -403,53 +429,94 @@ const KHONG_CO_CHI_MUC: Highlights = {
   gia: null, gioMoCua: [], canDatTruoc: null, trongNgoai: null, thoiLuong: null, danhMuc: [], khiChat: [],
 };
 
-/** The price band of the index, saying «ước» when the server calls it an estimate. */
-function cauKhoangGia(g: NonNullable<Highlights["gia"]>): string {
-  const k = (v: number) => `${Math.round(v / 1000)}`;
-  const dai = g.maxVnd === null || g.maxVnd === g.minVnd ? `${k(g.minVnd)}k` : `${k(g.minVnd)}–${k(g.maxVnd)}k`;
-  return `${g.uoc ? "Ước khoảng" : "Khoảng"} ${dai}/người`;
+/** A gallery photograph with the credit it may be shown under: author and licence, or where the post came from. */
+function anhGallery(a: AnhDiaDiem): AnhCoGhiCong {
+  if (a.author === null && a.license === null) return anhDanhMuc(nguonAnhDiaDiem(a), { author: null, license: null, source: CAU_ANH_BAI_DANG });
+  return anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH });
 }
 
-function cauThoiLuong(t: NonNullable<Highlights["thoiLuong"]>): string {
-  if (t.min !== null && t.max !== null && t.min !== t.max) return `Khoảng ${t.min}–${t.max} phút`;
-  return `Khoảng ${t.min ?? t.max} phút`;
+/** The cover's frame: 16:9 keeps the picture under half of an 844 viewport with its credit. */
+const TI_LE_BIA = 16 / 9;
+
+/**
+ * One cover that pages: each page is a full-width MediaSlot with its own one
+ * credit line under it, so the visible photograph and its credit move
+ * together and only one credit is ever on screen. A small «2/5» on the
+ * picture says there are more.
+ */
+function BiaTrang({ anh, dau, fallback, onMo }: { anh: ViewerPhoto[]; dau: ReactNode; fallback: ReactNode; onMo: (index: number) => void }) {
+  const { colors, radius } = useRudiTheme();
+  const [rong, setRong] = useState(0);
+  return (
+    <View onLayout={(e) => setRong(Math.round(e.nativeEvent.layout.width))} testID="place-cover">
+      <ScrollView horizontal pagingEnabled scrollEnabled={anh.length > 1} showsHorizontalScrollIndicator={false} testID="place-photos">
+        {anh.map((a, i) => (
+          <Pressable accessibilityLabel={`Xem ${a.alt} toàn màn hình`} accessibilityRole="button" key={a.id} onPress={() => onMo(i)} style={{ width: rong }}>
+            <MediaSlot
+              alt={a.alt}
+              fallback={fallback}
+              nguon={a.nguon}
+              overlay={
+                <>
+                  {i === 0 ? dau : null}
+                  {anh.length > 1 ? (
+                    <View style={[styles.demAnh, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
+                      <Text accessibilityLabel={`Ảnh ${i + 1} trên ${anh.length}`} style={[typography.caption, { color: colors.ink }]}>{`${i + 1}/${anh.length}`}</Text>
+                    </View>
+                  ) : null}
+                </>
+              }
+              radius={radius.base}
+              ratio={TI_LE_BIA}
+            />
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
 }
 
-/** «Tại sao đáng đến»: the reason first, the longer description behind «Đọc thêm». */
+/** «Tại sao đáng đến»: the reason in three lines; «Đọc thêm» only when those three lines actually cut it. */
 function LoiMo({ hl, mota }: { hl: Highlights | null; mota: string | null }) {
   const { colors, space } = useRudiTheme();
   const [mo, setMo] = useState(false);
+  // The full paragraph is laid out once, invisibly, beside the clamped one; a
+  // taller full text is the only proof the clamp hid something. A length
+  // guess printed «Đọc thêm» under a complete three-line paragraph.
+  const [cao, setCao] = useState<{ du: number; gon: number }>({ du: 0, gon: 0 });
   const dau = hl?.taiSaoDangDen ?? mota;
   if (dau === null || dau === undefined) return null;
-  const them = hl?.taiSaoDangDen != null && mota !== null && mota !== dau ? mota : null;
-  const dai = them !== null || dau.length > 150;
+  const cat = cao.du > cao.gon + 1;
   return (
     <View style={{ gap: space.xs }}>
       {hl?.taiSaoDangDen != null ? <SectionHeader title="Tại sao đáng đến" /> : null}
-      <Text numberOfLines={mo ? undefined : 3} style={[typography.body, { color: colors.ink }]}>{dau}</Text>
-      {mo && them !== null ? <Text style={[typography.body, { color: colors.inkSoft }]}>{them}</Text> : null}
-      {dai ? (
+      <View>
+        <Text numberOfLines={mo ? undefined : 3} onLayout={(e) => { const h = e.nativeEvent.layout.height; setCao((c) => (c.gon === h ? c : { ...c, gon: h })); }} style={[typography.body, { color: colors.ink }]}>{dau}</Text>
+        <Text
+          accessibilityElementsHidden
+          aria-hidden
+          importantForAccessibility="no-hide-descendants"
+          onLayout={(e) => { const h = e.nativeEvent.layout.height; setCao((c) => (c.du === h ? c : { ...c, du: h })); }}
+          pointerEvents="none"
+          style={[typography.body, styles.doDai, { color: colors.ink }]}
+        >
+          {dau}
+        </Text>
+      </View>
+      {cat || mo ? (
         <RudiButton compact full={false} label={mo ? "Thu gọn" : "Đọc thêm"} onPress={() => setMo((v) => !v)} variant="ghost" />
       ) : null}
     </View>
   );
 }
 
-/** One quick row of what kind of place this is: category, mood, indoors, booking, time. Each only when sent. */
+/** One quick row of what kind of place this is: category, mood, indoors or out, traits. Each once, each only when sent. */
 function Chips({ place, hl }: { place: PlaceDetail; hl: Highlights | null }) {
-  const nhan = [
-    ...(hl?.danhMuc.map((d) => d.nhan) ?? []),
-    ...(hl?.khiChat.map((d) => d.nhan) ?? []),
-    ...(hl?.trongNgoai ? [hl.trongNgoai.nhan] : []),
-    ...(hl?.canDatTruoc ? [hl.canDatTruoc.nhan] : []),
-    ...(hl?.thoiLuong ? [cauThoiLuong(hl.thoiLuong)] : []),
-    ...place.traits,
-  ];
-  const duy = [...new Set(nhan)].slice(0, 10);
-  if (duy.length === 0) return null;
+  const nhan = nhanKhiChat(place, hl);
+  if (nhan.length === 0) return null;
   return (
     <Inline gap={8} wrap>
-      {duy.map((t) => (
+      {nhan.map((t) => (
         <Chip key={t} label={t} />
       ))}
     </Inline>
@@ -486,26 +553,19 @@ function ChiMuc({ hl, openHours, space, colors, radius }: { hl: Highlights; open
   if (hl.khongKhi !== null) ra.push(muc("Không khí", <Text style={[typography.body, { color: colors.ink }]}>{hl.khongKhi}</Text>));
   const hop = [...hl.phuHopVoi, ...hl.khauViPhuHop];
   if (hop.length > 0) ra.push(muc("Hợp với ai", <View style={{ gap: space.xs }}>{hop.map(dong)}</View>));
-  if (hl.gia !== null || hl.mucGia !== null) {
-    ra.push(muc("Giá", (
-      <>
-        {hl.gia !== null ? <Text style={[typography.body, { color: colors.ink }]}>{cauKhoangGia(hl.gia)}</Text> : null}
-        {hl.mucGia !== null ? <Text style={[typography.note, { color: colors.inkSoft }]}>{hl.mucGia}</Text> : null}
-      </>
-    )));
-  }
-  if (hl.gioMoCua.length > 0 || hl.khungGioDep !== null || hl.gioGhiChu !== null || openHours !== null) {
+  // The price is a key fact under the name (dongChinh), never a second section here.
+  // The week stays here; today and the best hour are key facts under the name.
+  if (hl.gioMoCua.length > 0 || hl.gioGhiChu !== null || openHours !== null) {
     ra.push(muc("Giờ", (
       <>
         {hl.gioMoCua.length > 0
           ? hl.gioMoCua.map((g) => (
               <View key={g.thu} style={styles.hangGio}>
                 <Text style={[typography.label, styles.nhanGio, { color: colors.inkSoft }]}>{g.nhan}</Text>
-                <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{`${g.mo} – ${g.dong}${g.quaDem ? " (qua đêm)" : ""}`}</Text>
+                <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cauGio(g)}</Text>
               </View>
             ))
           : openHours !== null ? <Text style={[typography.body, { color: colors.ink }]}>{`Giờ mở cửa: ${openHours}`}</Text> : null}
-        {hl.khungGioDep !== null ? <Text style={[typography.body, { color: colors.ink }]}>{`Giờ đẹp nhất: ${hl.khungGioDep}`}</Text> : null}
         {hl.gioGhiChu !== null ? <Text style={[typography.note, { color: colors.inkSoft }]}>{hl.gioGhiChu}</Text> : null}
       </>
     )));
@@ -516,11 +576,10 @@ function ChiMuc({ hl, openHours, space, colors, radius }: { hl: Highlights; open
 }
 
 /**
- * The other licensed photographs, side by side, each carrying its own credit.
- *
- * One strip and not a grid: a licensed photograph is only allowed on this
- * screen while its author and licence are legible next to it, and a caption
- * under a wide frame stays legible where a caption under a thumbnail does not.
+ * One picture of the cover's pages or the viewer: a licensed photograph is
+ * only allowed on this screen while its author and licence are legible next
+ * to it, so each page is a full-width frame with its credit under it, never a
+ * thumbnail whose caption would not fit.
  */
 type ViewerPhoto = { id: string; alt: string; nguon: Exclude<NguonKhung, null> };
 
@@ -549,15 +608,6 @@ function PhotoViewer({ photos, index, onIndex, onClose }: { photos: ViewerPhoto[
   </Modal>;
 }
 
-function DaiAnh({ anh }: { anh: AnhDiaDiem[] }) {
-  const { radius } = useRudiTheme();
-  const [index, setIndex] = useState<number | null>(null);
-  const co = useMemo<ViewerPhoto[]>(() => anh.map((a) => ({ id: a.id, alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"), nguon: { loai: "danh-muc", anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }) } })), [anh]);
-  return <><ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-photos">
-    {co.map((a, i) => <Pressable accessibilityRole="button" accessibilityLabel={`Xem ${a.alt} toàn màn hình`} key={a.id} onPress={() => setIndex(i)} style={styles.oAnh}><MediaSlot alt={a.alt} nguon={a.nguon} radius={radius.base} width="100%" /></Pressable>)}
-  </ScrollView><PhotoViewer photos={co} index={index} onIndex={setIndex} onClose={() => setIndex(null)} /></>;
-}
-
 /** Photographs a group of the reader's took here (M12 §2.4): private, so no credit line, and only members see them. */
 function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
   const { colors, radius } = useRudiTheme();
@@ -579,19 +629,24 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
 }
 
 const styles = StyleSheet.create({
-  sanCho: { alignSelf: "stretch", alignItems: "center" },
+  khungBia: { width: "100%", aspectRatio: TI_LE_BIA, overflow: "hidden" },
+  demAnh: { position: "absolute", right: 10, top: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: StyleSheet.hairlineWidth },
+  doDai: { position: "absolute", left: 0, right: 0, top: 0, opacity: 0 },
+  dongChinh: {},
+  hangChinh: { flexDirection: "row", alignItems: "baseline", gap: 12 },
+  nhanChinh: { width: 96 },
   dai: { gap: 12, paddingRight: 8 },
   oAnh: { width: 280, gap: 6 },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   nutLuu: { flexGrow: 1, flexShrink: 0, maxWidth: "100%" },
   nutChinh: { flexGrow: 2, flexShrink: 0, maxWidth: "100%" },
   khung: { gap: 16 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   dau: { gap: 8 },
-  dauGon: { gap: 12 },
-  dauGonDau: { alignSelf: "flex-start" },
-  duongDi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
-  diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
+  duongDi: { gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1 },
+  diaChi: { flexDirection: "row", alignItems: "flex-start", gap: 10, minHeight: 48 },
+  ghimDiaChi: { marginTop: 1 },
+  nutChiDuong: { alignSelf: "flex-start", marginLeft: 30 },
   bam: { opacity: 0.7 },
   khoi: { gap: 8 },
   hangBullet: { flexDirection: "row", alignItems: "flex-start", gap: 10 },

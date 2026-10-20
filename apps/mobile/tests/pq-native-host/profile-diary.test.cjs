@@ -47,6 +47,10 @@ function saved(h, book) {
   assert.equal(title.props.adjustsFontSizeToFit, undefined);
   assert.equal(h.text(`${book.kind === 'trip' ? 'Sổ chuyến đi' : 'Khoảnh khắc'} · ${book.audience === 'private' ? 'Chỉ mình tôi' : 'Công khai'}`).length, 1);
 }
+/** Document order of the profile tab's two blocks (findAll walks the tree depth-first, in render order). */
+function order(h) {
+  return h.root.root.findAll(node => node.type === 'RNView' && ['profile-counts', 'profile-diary-lead'].includes(node.props.testID)).map(node => node.props.testID);
+}
 function transport(h) { return { calls: h.calls.length, profiles: h.profileReads.length, writes: h.profileWrites.length, sessions: h.sessionWrites.length, storage: h.storageCalls.length, native: h.nativeHostCalls.length, picks: h.picks.length, uploads: h.uploads.length, sockets: h.sockets.length }; }
 function button(h, label) {
   const controls = h.hosts('RNPressable').filter(node => node.findAllByType('RNText').some(text => text.props.children === label));
@@ -63,6 +67,7 @@ test('PD01 preview and full shelf share the exact actor-scoped server page throu
     assert.equal(h.diaryReads[0].route, '/people/synthetic-A/diaries?before=');
     assert.equal(h.diaryReads[0].options.actorId, 'synthetic-A');
     saved(h, first);
+    assert.deepEqual(order(h), ['profile-diary-lead', 'profile-counts'], 'a real kept page leads the Hồ sơ tab (journal-first)');
     assert.equal(h.text(older.document.title).length, 0, 'preview chooses the first server-ordered page only');
     assert.equal(h.text('Những ngày muốn giữ').length, 0, 'profile lead does not add a static wrapper before the real title');
     assert.equal(h.hosts('RNExpoImage', props => props.accessibilityLabel === `Ảnh bìa ${first.document.title}`).length, 0, 'no cover means no substitute art');
@@ -101,6 +106,9 @@ test('PD02 loading failure retry and empty stay distinct without fabricated cont
     assert.equal(h.hosts('RNView', props => props.testID === 'profile-diary-error').length, 0);
     assert.equal(h.hosts('RNView', props => props.testID === 'profile-diary-empty').length, 1);
     assert.equal(h.text('Chưa có trang đã giữ').length, 1);
+    // 21/10/2026: no kept page, so the facts lead and the empty diary follows them, compact.
+    assert.deepEqual(order(h), ['profile-counts', 'profile-diary-lead'], 'facts before the empty diary');
+    assert.equal(h.owner('DiaryLead').props.compact, true, 'the empty diary under the facts is the compact one');
     assert.equal(h.hosts('RNExpoImage', props => /^Ảnh bìa /.test(props.accessibilityLabel ?? '')).length, 0);
     await h.pressText('Xem kèo của nhóm'); assert.equal(h.routes.at(-1), '/(tabs)/plan');
     actual(h);

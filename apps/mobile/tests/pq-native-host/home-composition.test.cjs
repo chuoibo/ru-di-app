@@ -125,7 +125,7 @@ function callShape(h, call, method, route) {
 async function press(node) { await act(async () => { node.props.onPress(); }); }
 function allNativeText(owner) { return owner.findAllByType('RNText').map(node => semantic(node.props.children)).join('\n'); }
 function noUnplanned(h) {
-  assert.equal(h.calls.filter(call => !['exploreCatalogueRead', 'exploreSavedRead', 'exploreSavedWrite', 'exploreReasonRead'].includes(call.kind)).length, 0);
+  assert.equal(h.calls.filter(call => !['exploreCatalogueRead', 'exploreSavedRead', 'exploreSavedWrite', 'exploreReasonRead', 'exploreDestinationsRead'].includes(call.kind)).length, 0);
   assert.equal(h.calls.some(call => call.options.method === 'POST'), false, 'composition, local filter and bookmark actions cannot infer or post');
   assert.equal(h.uploads.length, 0); assert.equal(h.nepRequests.length, 0); assert.equal(h.keepWrites.length, 0);
 }
@@ -262,8 +262,13 @@ test('HC07 compact empty facts leave no metadata slot while actual city search c
     assert.equal(parts.views.length, 2, 'empty card has only complete identity and media; no empty metadata frame');
     for (const absent of ['Chưa có giá', 'Chưa có giờ mở cửa', 'AI MATCH', 'Lý do tổng hợp', '4.6 (156)', '180.000đ']) assert.equal(copy.includes(absent), false, `no fabricated card fact: ${absent}`);
     const AssetIllustration = h.load('apps/mobile/src/rudi/asset-pack/react-native/AssetIllustration').AssetIllustration;
-    const cityStage = () => h.root.root.findAllByType(AssetIllustration).filter(node => node.props.name === 'scene-hills');
-    assert.equal(cityStage().length, 1); assert.equal(cityStage()[0].props.height, 80, 'compact artwork prop only; no pixel/fold claim');
+    const VeLop = h.load('apps/mobile/src/rudi/ui/art/VeLop').VeLop;
+    const cityStage = () => h.root.root.findAll(node => node.type === 'RNView' && node.props.testID === 'explore-city-stage');
+    assert.equal(cityStage().length, 1);
+    // 21/10/2026: a city no painted scene depicts gets its own line sketch, never Đà Lạt's lake.
+    assert.equal(cityStage()[0].findAllByType(AssetIllustration).length, 0, 'no landmark scene of another region for an unknown city');
+    assert.equal(cityStage()[0].findAllByType(VeLop)[0].props.height, 80, 'compact artwork prop only; no pixel/fold claim');
+    assert.equal(h.exploreDestinationReads.length, 1, 'the city stage reads the destination covers once');
     const location = h.one('RNPressable', props => props.accessibilityLabel === 'Đổi điểm đến');
     assert.equal(location.findAllByType('RNText').some(node => semantic(node.props.children) === `${cityName} · đổi nơi khác`), true, 'full response destination remains present');
     assert.equal(h.input().props.value, ''); h.one('RNPressable', props => props.accessibilityLabel === 'Hỏi Rủ Đi AI');
@@ -275,6 +280,20 @@ test('HC07 compact empty facts leave no metadata slot while actual city search c
     assert.equal(h.exploreCatalogueReads.length, 1, 'local filters do not reload the catalogue');
     await h.pressAccessibility('Đổi điểm đến'); await h.pressText(guUnknown);
     assert.deepEqual(h.routes, ['/destinations', '/personalization']); noUnplanned(h); actual(h);
+  });
+});
+
+test('HC07b the city stage shows the real destination cover with its credit through MediaSlot', async () => {
+  const destinations = { destinations: [{ id: cityId, name: cityName, province: null, blurb: null, lat: 11.9, lng: 108.4, distance_km: null, cover_photo_url: '/places/synthetic-place-1/photos/synthetic-cover', cover_photo_author: 'Synthetic Author', cover_photo_license: 'CC BY 4.0' }], nearest: null };
+  await withHome({ exploreIO: { placeIds: [placeId], destinationIds: [cityId], saved: [], destinations } }, async h => {
+    await loaded(h);
+    const MediaSlot = h.load('apps/mobile/src/rudi/ui/MediaSlot').MediaSlot;
+    const stage = exactly(h.root.root.findAll(node => node.type === 'RNView' && node.props.testID === 'explore-city-stage'), 'one city stage');
+    const media = exactly(stage.findAllByType(MediaSlot), 'the real cover goes through MediaSlot');
+    const image = exactly(media.findAllByType('RNExpoImage'), 'one cover image');
+    assert.equal(image.props.source.uri, 'https://synthetic.invalid/places/synthetic-place-1/photos/synthetic-cover');
+    textWithin(media, 'Ảnh quanh đây: Synthetic Author · CC BY 4.0');
+    assert.equal(h.exploreDestinationReads.length, 1); noUnplanned(h);
   });
 });
 

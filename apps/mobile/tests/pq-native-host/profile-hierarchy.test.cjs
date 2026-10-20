@@ -189,16 +189,27 @@ test('PH04 actual profile hierarchy keeps server facts routes null-zero semantic
       assert.equal(friend.props.accessibilityLabel, `${h.state.profile.counts.friends} bạn bè`);
       assert.equal(friend.props.accessibilityRole, 'button');
       assert.equal(flatten(friend.props.style).minHeight >= 48, true);
+      const zeroInk = new Set(), countInk = new Set();
       for (let index = 0; index < fields.length; index += 1) {
         const [id, field, noun] = fields[index];
         const host = id === 'friends' ? friend.findAllByType('RNText')[0] : h.one('RNText', props => props.testID === `profile-fact-${id}`);
-        assert.ok(host === hosts[index], 'same count-and-noun reading host through metrics changes');
-        assert.equal(host.props.children, `${h.state.profile.counts[field]} ${noun}`, 'full noun stays paired with the exact distinct server field');
+        assert.ok(host === hosts[index], 'same count reading host through metrics changes');
+        // 21/10/2026: the number sits above its noun in every cell; the cell is read as one «N noun».
+        const value = h.state.profile.counts[field];
+        assert.equal(host.props.children, `${value}`, 'the number is the exact distinct server field');
+        const cellHost = id === 'friends' ? friend : nearest(host, 'RNView', () => true);
+        const words = cellHost.findAllByType('RNText').map(node => node.props.children);
+        assert.equal(words[0], `${value}`); assert.equal(words[1], noun, 'full noun under its number, never wrapped beside it');
+        assert.equal(cellHost.props.accessibilityLabel, `${value} ${noun}`, 'one reading per fact');
+        (value === 0 ? zeroInk : countInk).add(flatten(host.props.style).color);
         assert.equal(host.props.allowFontScaling, manual ? false : undefined);
         for (const prop of ['numberOfLines', 'adjustsFontSizeToFit', 'maxFontSizeMultiplier', 'onPress']) assert.equal(host.props[prop], undefined);
         const style = flatten(host.props.style);
         assert.equal(style.height, undefined); assert.equal(style.maxHeight, undefined);
       }
+      // A zero is said in the quiet ink, one ink for every zero and another for every count.
+      assert.equal(zeroInk.size <= 1 && countInk.size <= 1, true);
+      if (zeroInk.size === 1 && countInk.size === 1) assert.notEqual([...zeroInk][0], [...countInk][0], 'zero numbers are de-weighted');
       assert.equal(h.owner('HoSoSong') === original, true); assert.equal(h.owner('ProfileContent') === content, true);
       assert.equal(h.state.window.width, 320); assert.equal(h.state.window.fontScale, 1);
       assert.deepEqual(io(h), before, 'font changes issue no product transport, writes, storage or nonfont native I/O');

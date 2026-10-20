@@ -179,8 +179,18 @@ function ProfileContent({ phien }: { phien: Phien }) {
         {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, page === value && { backgroundColor: colors.paper }]}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
       </View>
       {page === "kept" ? <DiaryWall person={personId} owner={personId} collection={diaries} empty={<ProfileDiaryEmpty />} failure={diaries.error ? <ProfileDiaryFailure message={diaries.error} retry={diaries.retry} /> : undefined} /> : <>
-      <DiaryLead person={personId} collection={diaries} />
-      {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
+      {/* Journal-first (13/10) holds when there is a page to lead with: a real
+          kept page comes first. With none, «Hồ sơ» opens on the facts and the
+          empty diary follows, compact, so the tab and what is under it agree
+          (finish review 21/10). Keyed, so reordering moves the same owners. */}
+      {(() => {
+        const leadFirst = diaries.books.length > 0;
+        const lead = <DiaryLead compact={!leadFirst} key="lead" person={personId} collection={diaries} />;
+        const facts = profile
+          ? <ProfileFacts key="facts" profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />
+          : <RudiButton key="facts" full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />;
+        return leadFirst ? [lead, facts] : [facts, lead];
+      })()}
       <View style={[styles.preferences, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base, marginTop: space.md, paddingHorizontal: space.md, paddingVertical: space.xs }]}>
         <ListRow icon="heart-outline" onPress={() => router.push("/personalization")} subtitle={tomTat(soThich)} title="Sở thích" />
       </View>
@@ -249,12 +259,28 @@ function ProfileContent({ phien }: { phien: Phien }) {
   );
 }
 
-/** Server facts are profile context, separate from the saved page's metadata. */
+/**
+ * Server facts are profile context, separate from the saved page's metadata.
+ *
+ * One container, one level (finish review 21/10: five tinted tiles inside a
+ * bordered card were cards in a card, and «0 điểm check-in» wrapped into a
+ * taller second row). Three equal columns, the number above its noun in every
+ * cell, so no noun shares a line with its number and every cell of a row is
+ * one height. A zero is said in the quiet ink: an all-zero card is a fact,
+ * not a headline. Friends stays the one door, with its pending badge.
+ */
 function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pending: number; onFriends: () => void }) {
   const { colors, radius, space } = useRudiTheme();
-  const cell = [styles.factCell, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control, gap: space.sm, paddingHorizontal: space.sm }];
-  const hang = [styles.factRow, { gap: space.sm }];
-  // Two equal columns; the odd last fact takes the whole row instead of a stub.
+  const so = (value: number) => [typography.h2, styles.factNumber, { color: value === 0 ? colors.inkSoft : colors.ink }];
+  const ten = [typography.note, { color: colors.inkSoft }];
+  const cell = [styles.factCell, { gap: 2, paddingHorizontal: space.xs }];
+  const f = profile.counts;
+  const tinh = (id: string, value: number, noun: string) => (
+    <View accessible accessibilityLabel={`${value} ${noun}`} key={id} style={cell}>
+      <Text accessible={false} testID={`profile-fact-${id}`} style={so(value)}>{`${value}`}</Text>
+      <Text accessible={false} style={ten}>{noun}</Text>
+    </View>
+  );
   return (
     <View
       testID="profile-counts"
@@ -266,50 +292,37 @@ function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pendi
           borderRadius: radius.base,
           gap: space.sm,
           marginTop: space.md,
-          padding: space.md,
+          paddingHorizontal: space.sm,
+          paddingVertical: space.sm,
         },
       ]}
     >
-      <View style={hang}>
+      <View style={styles.factRow}>
         <Pressable
           testID="profile-fact-friends"
           accessibilityRole="button"
-          accessibilityLabel={`${profile.counts.friends} bạn bè`}
+          accessibilityLabel={`${f.friends} bạn bè`}
           accessibilityHint={pending > 0 ? `${pending} lời mời đang chờ` : "Mở danh sách bạn bè"}
           onPress={onFriends}
           style={cell}
         >
-          <VeLop height={28} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("friends")} width={28} />
-          <View style={styles.factWords}>
-            <Text accessible={false} style={[typography.body, { color: colors.ink }]}>{`${profile.counts.friends} bạn bè`}</Text>
-            {pending > 0 ? (
-              <View style={[styles.factBadge, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
-                <Text accessible={false} style={[typography.caption, { color: colors.accent }]}>{`${pending} lời mời đang chờ`}</Text>
-              </View>
-            ) : null}
-          </View>
+          <Text accessible={false} style={so(f.friends)}>{`${f.friends}`}</Text>
+          <Text accessible={false} style={[typography.note, { color: colors.accent }]}>bạn bè</Text>
+          {pending > 0 ? (
+            <View style={[styles.factBadge, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
+              <Text accessible={false} style={[typography.caption, { color: colors.accent }]}>{`${pending} lời mời đang chờ`}</Text>
+            </View>
+          ) : null}
         </Pressable>
-        <View style={cell}>
-          <VeLop height={26} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("contexts")} width={26} />
-          <Text testID="profile-fact-contexts" style={[typography.body, styles.factWords, { color: colors.ink }]}>{`${profile.counts.contexts} nhóm`}</Text>
-        </View>
+        {tinh("contexts", f.contexts, "nhóm")}
+        {tinh("outings", f.outings, "kèo")}
       </View>
-      <View style={hang}>
-        {([
-          ["outings", profile.counts.outings, "kèo"],
-          ["places", profile.counts.places_checked_in, "điểm check-in"],
-        ] as const).map(([id, value, noun]) => (
-          <View key={id} style={cell}>
-            <VeLop height={24} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan(id)} width={24} />
-            <Text testID={`profile-fact-${id}`} style={[typography.body, styles.factWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={hang}>
-        <View style={cell}>
-          <VeLop height={24} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("memories")} width={24} />
-          <Text testID="profile-fact-memories" style={[typography.body, styles.factWords, { color: colors.inkSoft }]}>{`${profile.counts.memories} khoảnh khắc`}</Text>
-        </View>
+      <View style={[styles.factRule, { backgroundColor: colors.line }]} />
+      <View style={styles.factRow}>
+        {tinh("places", f.places_checked_in, "điểm check-in")}
+        {tinh("memories", f.memories, "khoảnh khắc")}
+        {/* The third column stays empty so the five facts keep one grid. */}
+        <View style={cell} />
       </View>
     </View>
   );
@@ -484,9 +497,10 @@ const styles = StyleSheet.create({
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
   profileContext: { borderWidth: 1 },
   factRow: { flexDirection: "row", alignItems: "stretch" },
-  factCell: { flex: 1, flexBasis: 0, minWidth: 0, minHeight: 48, flexDirection: "row", alignItems: "center", paddingVertical: 8, borderWidth: 1 },
-  factWords: { minWidth: 0, flexShrink: 1, gap: 2, alignItems: "flex-start" },
-  factBadge: { paddingHorizontal: 6, paddingVertical: 2 },
+  factCell: { flex: 1, flexBasis: 0, minWidth: 0, minHeight: 56, justifyContent: "flex-start", alignItems: "flex-start", paddingVertical: 4 },
+  factNumber: { fontVariant: ["tabular-nums"] },
+  factRule: { height: StyleSheet.hairlineWidth },
+  factBadge: { marginTop: 2, paddingHorizontal: 6, paddingVertical: 2 },
   preferences: { borderWidth: 1 },
   menuGroups: {},
   menuGroup: { gap: 0, borderWidth: 1, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },

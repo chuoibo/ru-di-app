@@ -751,7 +751,8 @@ export function chiTietNgan(
   const ra: { icon: IconName; chu: string }[] = [];
   if (place.rating !== null) {
     const dem = place.ratingCount === null ? "" : ` (${place.ratingCount})`;
-    ra.push({ icon: "star", chu: `${place.rating}${dem}` });
+    // One decimal always: «4.0» beside «4.8», never a bare «4» (finish review 21/10).
+    ra.push({ icon: "star", chu: `${place.rating.toFixed(1)}${dem}` });
   }
   if (place.distanceKm !== null) {
     ra.push({ icon: "navigate-outline", chu: `${place.distanceKm} km` });

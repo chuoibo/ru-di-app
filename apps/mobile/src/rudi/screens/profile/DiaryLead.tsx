@@ -30,27 +30,32 @@ function JournalBinding() {
   );
 }
 
+/** The binding rail's width: holes and margin rule live in this left gutter. */
+const RAY_GAY = 24;
+
 /**
- * One ledger sheet: the binding rail is a flow sibling, so the content column
- * has the same inset on both sides instead of being pushed by an overlay's width.
+ * One ledger sheet: the binding rail is a flow sibling, so nothing overlaps
+ * the content. A centred sheet (`giua`) also pads its right by the rail's
+ * width, so its axis is the card's axis: the rail alone pushed the empty
+ * state's centre about 11 css px right of the card's (finish review 21/10).
  */
-function JournalSheet({ testID, children, style }: { testID: string; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+function JournalSheet({ testID, children, style, giua = false }: { testID: string; children: ReactNode; style?: StyleProp<ViewStyle>; giua?: boolean }) {
   const { colors, radius, space } = useRudiTheme();
   return (
     <View testID={testID} style={[styles.journalSheet, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
       <JournalBinding />
-      <View style={[styles.sheetBody, { padding: space.md }, style]}>{children}</View>
+      <View style={[styles.sheetBody, { padding: space.md }, giua && { paddingRight: space.md + RAY_GAY }, style]}>{children}</View>
     </View>
   );
 }
 
 /** Saved content leads; collection state never invents a journey or an excerpt. */
-export function DiaryLead({ person, collection }: { person: string; collection: DiaryCollection }) {
+export function DiaryLead({ person, collection, compact = false }: { person: string; collection: DiaryCollection; compact?: boolean }) {
   const { colors, space } = useRudiTheme();
   const first = collection.books[0];
   return <View testID="profile-diary-lead" style={[styles.lead, { paddingTop: space.md }]}>
     {collection.error ? <ProfileDiaryFailure message={collection.error} retry={collection.retry} /> : null}
-    {first ? <SavedDiary person={person} diary={first} /> : collection.loading ? <View accessibilityLabel="Đang đọc trang đã giữ"><SkeletonLines lines={3} /></View> : !collection.error ? <ProfileDiaryEmpty /> : null}
+    {first ? <SavedDiary person={person} diary={first} /> : collection.loading ? <View accessibilityLabel="Đang đọc trang đã giữ"><SkeletonLines lines={3} /></View> : !collection.error ? <ProfileDiaryEmpty compact={compact} /> : null}
     {first && collection.loading ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đang cập nhật trang đã giữ…</Text> : null}
   </View>;
 }
@@ -71,18 +76,24 @@ export function ProfileDiaryFailure({ message, retry }: { message: string; retry
   );
 }
 
-export function ProfileDiaryEmpty() {
+/**
+ * No kept page yet. On the shelf («Trang đã giữ») it is the whole answer; on
+ * «Hồ sơ» it follows the facts (`compact`): a smaller drawing and a quieter
+ * heading, because an empty diary must not lead a profile tab.
+ */
+export function ProfileDiaryEmpty({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   return (
-    <JournalSheet testID="profile-diary-empty">
-      {/* One centred axis: the drawing, the words and the door share it, so the
-          empty sheet balances between the binding and the right edge. */}
-      <View style={[styles.emptyColumn, { gap: space.sm }]}>
-        <VeLop height={74} khungH={KHUNG_CANH.h} khungW={KHUNG_CANH.w} lop={hinhCanh("chua-co-ky-niem")} width={96} />
-        <Text accessibilityRole="header" style={[typography.h2, styles.centred, { color: colors.ink }]}>Chưa có trang đã giữ</Text>
-        <Text style={[typography.body, styles.centred, { color: colors.inkSoft }]}>Bạn có thể giữ lại cuộc đi từ trang của kèo.</Text>
-        <RudiButton full={false} label="Xem kèo của nhóm" variant="ghost" onPress={() => router.push("/(tabs)/plan" as never)} />
+    <JournalSheet giua testID="profile-diary-empty" style={compact ? { paddingVertical: space.sm } : undefined}>
+      {/* One centred axis: the drawing, the words and the door share it, and
+          the sheet's padding puts that axis on the card's centre. */}
+      <View style={[styles.emptyColumn, { gap: compact ? space.xs : space.sm }]}>
+        <VeLop height={compact ? 48 : 74} khungH={KHUNG_CANH.h} khungW={KHUNG_CANH.w} lop={hinhCanh("chua-co-ky-niem")} width={compact ? 62 : 96} />
+        <Text accessibilityRole="header" style={[compact ? typography.title : typography.h2, styles.centred, { color: colors.ink }]}>Chưa có trang đã giữ</Text>
+        {/* The last two words are held together, so the line never ends on «kèo.» alone. */}
+        <Text style={[compact ? typography.note : typography.body, styles.centred, { color: colors.inkSoft }]}>{"Bạn có thể giữ lại cuộc đi từ trang của\u00a0kèo."}</Text>
+        <RudiButton compact={compact} full={false} label="Xem kèo của nhóm" variant="ghost" onPress={() => router.push("/(tabs)/plan" as never)} />
       </View>
     </JournalSheet>
   );

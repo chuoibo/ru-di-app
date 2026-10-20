@@ -62,7 +62,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const commentsReadQueue = [], friendsReadQueue = [];
   const keyboardListeners = new Map(), frames = new Map(), measurements = [], frameCalls = [], hostNodes = new WeakMap();
   const calls = [], drafts = [], refs = [], routes = [], sockets = [], timings = [], picks = [], uploads = [], writes = [], gets = [], reads = [], friendReads = [], deletes = [], nativeHostCalls = [], nepRequests = [], keepWrites = [], keepReads = [], keepDeletes = [];
-  const exploreReasonReads = [], exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [];
+  const exploreReasonReads = [], exploreCatalogueReads = [], exploreSavedReads = [], exploreSavedWrites = [], exploreStorage = [], exploreDestinationReads = [];
   // The app always asks for a page of 30 (server contract 20/10/2026).
   const exploreCatalogueRoutes = new Set(['/places?limit=30', ...(exploreIO?.destinationIds ?? []).map(id => '/places?' + new URLSearchParams({ limit: '30', destination: id }).toString())]);
 
@@ -264,6 +264,11 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
     },
   };
   if (surface === 'explore') api.translatedAnonymous = async (_errors, route, options = {}) => {
+    // 21/10/2026: the city stage reads the destination covers once (the picker's own public read).
+    if (route === '/destinations?include=cover' && (options.method ?? 'GET') === 'GET') {
+      const call = { route, options, kind: 'exploreDestinationsRead' }; calls.push(call); exploreDestinationReads.push(call);
+      return exploreIO.destinations ?? { destinations: [], nearest: null };
+    }
     const call = { route, options, kind: 'unexpectedExploreAnonymousRead' }; calls.push(call);
     throw new Error(`Unexpected anonymous transport in authenticated Explore fixture ${options.method ?? 'GET'} ${route}`);
   };
@@ -433,7 +438,7 @@ function createHost({ surface = 'comments', initialSnapshot = snapshot(), explic
   const h = {
     state, consumed, consumedHashes, calls, drafts, refs, routes, sockets, picks, uploads, writes, gets, reads, friendReads, deletes, nepRequests, keepWrites, keepReads, keepDeletes, nativeHostCalls, callbacks, retiredCallbacks, timings, load, metrics, React, Native, PostCard, Sheet,
     inbox, community,
-    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage, exploreReasonReads,
+    exploreCatalogueReads, exploreSavedReads, exploreSavedWrites, exploreStorage, exploreReasonReads, exploreDestinationReads,
     exploreStorageBoundary: surface === 'explore' ? externals['@react-native-async-storage/async-storage'].default : null,
     exploreFetchBoundary: surface === 'explore' ? globals.fetch : null,
     get root() { return root; },

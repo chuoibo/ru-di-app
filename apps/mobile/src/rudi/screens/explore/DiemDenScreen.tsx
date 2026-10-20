@@ -10,10 +10,12 @@
  * own explanation screen (ADR-0018). What is here is the honest half -- pick a
  * city by name -- and it works with no permission at all.
  *
- * A large catalogue preview and medium illustrated rows; only the persisted
- * city carries the selected state. A destination shows its real cover photo
- * (with the credit that came with it) through MediaSlot, or its drawn scene
- * with no label.
+ * A large catalogue preview and equal list rows; only the persisted city
+ * carries the selected state. The featured card shows the destination's real
+ * cover photo (with the credit that came with it) through MediaSlot, or its
+ * drawn scene with no label. Every list row draws the same line sketch in the
+ * same frame, with its subtitle on one line, so 33 rows scan at one height
+ * (finish review 21/10).
  */
 import { Canh } from "../../ui/art/Canh";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +31,8 @@ import {
   luuDiemDen,
   type DiemDen,
 } from "../../kham-pha/diem-den";
-import { AssetIllustration, type IllustrationName } from "../../asset-pack/react-native/AssetIllustration";
+import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
+import { canhDiemDen } from "../../kham-pha/canh-ve";
 import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
 import { VeLop } from "../../ui/art/VeLop";
 import { MediaSlot } from "../../ui/MediaSlot";
@@ -51,25 +54,6 @@ type Trang =
 function khongDau(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase();
 }
-
-/** These scenes illustrate the catalogue theme; they are not venue photos. */
-const CANH_DIEM_DEN: Readonly<Record<string, IllustrationName>> = {
-  "d-da-lat": "scene-hills",
-  "d-ha-noi": "scene-street",
-  "d-hoi-an": "scene-lanterns",
-  "d-da-nang": "scene-coast",
-  "d-nha-trang": "scene-coast",
-  "d-phu-quoc": "scene-coast",
-  "d-vung-tau": "scene-coast",
-  "d-quy-nhon": "scene-coast",
-  "d-mui-ne": "scene-coast",
-  "d-tinh-1": "scene-street",
-  "d-tinh-46": "scene-lanterns",
-  "d-tinh-48": "scene-coast",
-  "d-tinh-56": "scene-coast",
-  "d-tinh-68": "scene-hills",
-  "d-tinh-79": "scene-cafe",
-};
 
 /** Regional subtitle when the catalogue sends a province with `province === name` and `blurb === null`. */
 const MO_TA_VUNG: Readonly<Record<string, string>> = {
@@ -108,13 +92,23 @@ const MO_TA_VUNG: Readonly<Record<string, string>> = {
   "d-tinh-96": "Đồng bằng sông Cửu Long · Đất Mũi & rừng ngập mặn",
 };
 
-/** The destination's drawn scene: the unlabelled stand-in where there is no photograph. */
-function tranhCanh(d: DiemDen, canh: IllustrationName | undefined, rongCanh: number) {
+/**
+ * The featured card's drawing where there is no photograph: the destination's
+ * own painted scene when one paints that region (`canhDiemDen`), else its line
+ * sketch. Never another city's landmark (Hội An's lanterns stood for Hà Nội).
+ */
+function tranhCanh(d: DiemDen, rongCanh: number) {
+  const canh = canhDiemDen(d.id);
   return canh ? (
     <AssetIllustration name={canh} width={rongCanh} height={rongCanh * 2 / 3} fit="contain" />
   ) : (
-    <VeLop height={Math.round(rongCanh * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongCanh} />
+    <ThanhPhoNet id={d.id} width={rongCanh} />
   );
+}
+
+/** One drawn register for every list thumbnail: the destination's line sketch, in the same frame. */
+function ThanhPhoNet({ id, width }: { id: string; width: number }) {
+  return <VeLop height={Math.round(width * KHUNG_THANH_PHO.h / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(id)} width={width} />;
 }
 
 export function DiemDenScreen() {
@@ -217,9 +211,8 @@ export function DiemDenScreen() {
           {[...loc].sort((a, b) => Number(b.id === dangChon) - Number(a.id === dangChon)).map((d) => {
             const chonRoi = dangChon === d.id;
             const noiBat = noiNoiBat?.id === d.id;
-            const canh = CANH_DIEM_DEN[d.id];
             const dongPhu = dongPhuDiemDen(d) || MO_TA_VUNG[d.id] || "";
-            const rongCanh = noiBat ? rongAnh : 96;
+            const rongCanh = noiBat ? rongAnh : RONG_THU;
             return (
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}
@@ -237,29 +230,34 @@ export function DiemDenScreen() {
                   pressed && styles.bam,
                 ]}
               >
-                <View style={noiBat ? styles.canhDan : styles.canhHang}>
-                  {d.anhBia !== null ? (
-                    <View style={{ width: rongCanh }}>
-                      <MediaSlot
-                        alt={`Ảnh ${d.name}`}
-                        fallback={tranhCanh(d, canh, rongCanh)}
-                        nguon={{ loai: "danh-muc", anh: d.anhBia }}
-                        ratio={3 / 2}
-                      />
-                    </View>
-                  ) : (
-                    <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>
-                      {tranhCanh(d, canh, rongCanh)}
-                    </View>
-                  )}
-                </View>
+                {noiBat ? (
+                  // The featured card is the one place a photograph is shown, with its credit under it.
+                  <View style={styles.canhDan}>
+                    {d.anhBia !== null ? (
+                      <View style={{ width: rongCanh }}>
+                        <MediaSlot alt={`Ảnh ${d.name}`} fallback={tranhCanh(d, rongCanh)} nguon={{ loai: "danh-muc", anh: d.anhBia }} ratio={3 / 2} />
+                      </View>
+                    ) : (
+                      <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>{tranhCanh(d, rongCanh)}</View>
+                    )}
+                  </View>
+                ) : (
+                  // Every list row draws the same register in the same frame, photo or not:
+                  // a thumbnail cannot carry a credit whole, so the photograph waits for the
+                  // featured card, where it is shown with its credit (ADR-0017 §2.5).
+                  <View style={[styles.canhFrame, styles.thuHang, { backgroundColor: colors.paper, borderColor: colors.line }]}>
+                    <ThanhPhoNet id={d.id} width={RONG_THU} />
+                  </View>
+                )}
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
-                  <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
+                  <Text numberOfLines={noiBat ? undefined : 1} style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
                   {dongPhu === "" ? null : (
-                    <Text style={[typography.caption, { color: colors.inkSoft }]}>{dongPhu}</Text>
+                    // One line in a row, so every row is the same height and no word sits alone.
+                    <Text numberOfLines={noiBat ? undefined : 1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhu}</Text>
                   )}
-                  {d.blurb === null ? null : (
-                    <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>
+                  {/* A row has room for one quiet line: the subtitle, or the blurb when there is none. */}
+                  {d.blurb === null || (!noiBat && dongPhu !== "") ? null : (
+                    <Text numberOfLines={noiBat ? 2 : 1} style={[typography.note, { color: colors.inkSoft }]}>
                       {d.blurb}
                     </Text>
                   )}
@@ -284,6 +282,8 @@ export function DiemDenScreen() {
 }
 
 const KHE = 10;
+/** The list thumbnail: one size for every row (the city sketch's 288:120 frame at 96 wide). */
+const RONG_THU = 96;
 
 const styles = StyleSheet.create({
   content: { maxWidth: 560, gap: 14 },
@@ -291,10 +291,10 @@ const styles = StyleSheet.create({
   luoi: { gap: KHE },
   hang: { flexDirection: "row", alignItems: "center" },
   canhDan: { alignItems: "center", gap: 2 },
-  canhHang: { alignItems: "center", width: 96, gap: 2 },
+  thuHang: { width: RONG_THU, height: 64 },
   canhFrame: { borderRadius: 4, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden", minHeight: 64, justifyContent: "center" },
   chuHang: { flex: 1, minWidth: 0, gap: 3 },
-  the: { borderRadius: 8, padding: 10, gap: 12, minHeight: 96, minWidth: 48 },
+  the: { borderRadius: 8, padding: 10, gap: 12, minHeight: 84, minWidth: 48 },
   theChu: { gap: 3, paddingHorizontal: 2, paddingBottom: 2 },
   dauBuuDien: { alignSelf: "flex-start", marginTop: 8 },
   bam: { opacity: 0.7 },

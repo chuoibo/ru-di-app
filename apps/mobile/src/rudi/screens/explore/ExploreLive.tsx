@@ -33,7 +33,12 @@ import type { Phien } from "../../../phien";
 import { matchLabel, type Category, type Place } from "../../../screens/kham-pha/places";
 import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-pha/tim-kiem";
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
-import { docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { docBiaDiemDen, docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { canhDiemDen, phanCanhDanhSach, vungCua, type TenCanh } from "../../kham-pha/canh-ve";
+import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
+import { VeLop } from "../../ui/art/VeLop";
+import { MediaSlot } from "../../ui/MediaSlot";
+import type { AnhCoGhiCong } from "../../ui/ghi-cong";
 import {
   canDocLaiDanhMuc,
   anhBiaThe,
@@ -72,6 +77,28 @@ import { useMotion } from "../../ui/useMotion";
 import { CauTaiCho } from "../../ui/CauTaiCho";
 import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./HangDiaDiem";
 
+/**
+ * The city stage under the destination line: the destination's real cover
+ * with its credit when the catalogue has one (finish review 21/10: the drawn
+ * lake stood in front of a real photograph), else its own painted scene where
+ * one paints that region, else its line sketch. Never Đà Lạt's lake for Hà Nội.
+ */
+function SanThanhPho({ anh, id, ten, rong, cao }: { anh: AnhCoGhiCong | null; id: string; ten: string; rong: number; cao: number }) {
+  const canh = canhDiemDen(id);
+  const ve = canh !== null ? (
+    <AssetIllustration name={canh} width={rong} height={cao} />
+  ) : (
+    <View style={[styles.sanPhac, { width: rong, height: cao }]}>
+      <VeLop height={cao} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(id)} width={Math.min(rong, Math.round((cao * KHUNG_THANH_PHO.w) / KHUNG_THANH_PHO.h))} />
+    </View>
+  );
+  return (
+    <View style={[styles.buuThiep, { width: rong }]} testID="explore-city-stage">
+      {anh === null ? ve : <MediaSlot alt={`Ảnh ${ten}`} fallback={ve} height={cao} nguon={{ loai: "danh-muc", anh }} radius={8} width={rong} />}
+    </View>
+  );
+}
+
 type Trang =
   | { pha: "dang-doc" }
   | { pha: "xong"; places: Place[]; categories: Category[]; tiep: number | null; total: number | null }
@@ -107,7 +134,7 @@ function loaiSauBam(dangChon: boolean, id: string): string | null {
 }
 
 /** The server's place, in the vocabulary the row and the lead draw. */
-export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
+export function hienThiDiaDiem(place: Place, canh?: TenCanh | null): DiaDiemHienThi {
   const hop = matchLabel(place.match);
   const bia = anhBiaThe(place);
   return {
@@ -132,6 +159,8 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     // One grounded reason under the lead: the model's own sentence when the
     // match is real, nothing otherwise. Never the tagline dressed as a reason.
     lyDo: hop !== null && hop.real && place.match?.reason ? place.match.reason : undefined,
+    // The list picks the painted stand-in (region-true, neighbours varied); alone, the card's own default.
+    ...(canh === undefined ? {} : { canh }),
   };
 }
 
@@ -165,6 +194,17 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   // which, so this starts as null and is filled from the answer -- the screen
   // never guesses a city name it has not been told.
   const [diemDen, setDiemDen] = useState<{ id: string; name: string } | null>(null);
+  // The destination's real cover (the picker's own read), keyed by the city it is of.
+  const [biaDiemDen, setBiaDiemDen] = useState<{ id: string; anh: AnhCoGhiCong | null } | null>(null);
+  const idDiemDen = diemDen?.id ?? null;
+  useEffect(() => {
+    if (idDiemDen === null) return;
+    let con = true;
+    docBiaDiemDen(idDiemDen)
+      .then((anh) => { if (con) setBiaDiemDen({ id: idDiemDen, anh }); })
+      .catch(() => { if (con) setBiaDiemDen({ id: idDiemDen, anh: null }); });
+    return () => { con = false; };
+  }, [idDiemDen]);
   // The destination the list on screen was read for, readable inside `nap`
   // without making the read depend on it (it would re-run on its own answer).
   const dangHien = useRef<string | null>(null);
@@ -312,6 +352,12 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
     () => (timKiem.kind === "co-ket-qua" ? danhSachGoc : danhSachGoc.map((p) => voiLyDo(p, lyDo[p.id]))),
     [danhSachGoc, lyDo, timKiem.kind],
   );
+  // Painted stand-ins for the cards without a photograph: by category, only
+  // scenes of this destination's own region, and no two neighbours alike.
+  const canhCho = useMemo(
+    () => phanCanhDanhSach(danhSach.map((p) => ({ id: p.id, loai: p.category, coAnh: anhBiaThe(p) !== null })), vungCua({ diemDen: diemDen?.id })),
+    [danhSach, diemDen?.id],
+  );
   const tiepHienTai = trang.pha !== "xong" || timKiem.kind === "co-ket-qua" ? null : locDangDung ? (locSan?.tiep ?? null) : trang.tiep;
   const tongHienTai = trang.pha !== "xong" ? null : locDangDung ? (locSan?.total ?? null) : trang.total;
   const khoaTrang = useRef("");
@@ -440,9 +486,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query.trim() === "" ? (
-        <View style={styles.buuThiep}>
-          <AssetIllustration name="scene-hills" width={Math.max(120, Math.min(480, screenWidth - 32))} height={compactLead ? 80 : 150} />
-        </View>
+        <SanThanhPho anh={biaDiemDen?.id === diemDen.id ? biaDiemDen.anh : null} id={diemDen.id} ten={diemDen.name} rong={Math.max(120, Math.min(480, screenWidth - 32))} cao={compactLead ? 80 : 150} />
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -599,7 +643,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                   nativeMetrics
                   compact={compactLead}
                   daLuu={daLuu.includes(dan.id)}
-                  dd={hienThiDiaDiem(dan)}
+                  dd={hienThiDiaDiem(dan, canhCho.get(dan.id))}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}
                   onSave={() => void doiLuu(dan)}
                   saving={dangLuu.includes(dan.id)}
@@ -610,7 +654,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                   nativeMetrics
                   largeText={largeText}
                   daLuu={(id) => daLuu.includes(id)}
-                  items={[hienThiDiaDiem(soSanh[0]), hienThiDiaDiem(soSanh[1])]}
+                  items={[hienThiDiaDiem(soSanh[0], canhCho.get(soSanh[0].id)), hienThiDiaDiem(soSanh[1], canhCho.get(soSanh[1].id))]}
                   onOpen={(id) => router.push(`/places/${id}` as never)}
                   onSave={(id) => {
                     const place = soSanh.find((p) => p.id === id);
@@ -627,7 +671,7 @@ function ExploreLiveContent({ phien, dau }: { phien: Phien; dau?: DungDau }) {
                       nativeMetrics
                       largeText={largeText}
                       daLuu={daLuu.includes(place.id)}
-                      dd={hienThiDiaDiem(place)}
+                      dd={hienThiDiaDiem(place, canhCho.get(place.id))}
                       key={place.id}
                       onOpen={() => router.push(`/places/${place.id}` as never)}
                       onSave={() => void doiLuu(place)}
@@ -661,6 +705,7 @@ const styles = StyleSheet.create({
   // Above the city stage, whose sky rises under this line (SanThanhPho).
   dau: { gap: 6, zIndex: 1 },
   buuThiep: { alignItems: "center", alignSelf: "center", marginTop: -12, overflow: "hidden", borderRadius: 8 },
+  sanPhac: { alignItems: "center", justifyContent: "center" },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, maxWidth: "100%", alignSelf: "flex-start" },
   tenViTri: { flexShrink: 1, minWidth: 0 },
   timRow: { flexDirection: "row", alignItems: "stretch", gap: 8 },
