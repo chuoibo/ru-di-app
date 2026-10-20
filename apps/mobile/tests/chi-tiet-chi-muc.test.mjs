@@ -70,7 +70,7 @@ test("điểm đến: ảnh thật đi qua MediaSlot/AnhCoGhiCong, thiếu ảnh
   const images = diemDen.match(/<Image\b[\s\S]*?\/>/g) ?? [];
   assert.equal(images.length, 1, "một Image duy nhất, ở ThuVaChu");
   assert.match(images[0], /source=\{ve\.source\}/, "Image chỉ nhận địa chỉ từ veKhung");
-  assert.match(diemDen, /ve\.ghiCong !== null \? \(\s*<Text/, "ảnh hàng đi cùng dòng ghi công");
+  assert.match(diemDen, /thu && ve\.source !== null && ve\.ghiCong !== null \? \(\s*<Text/, "ảnh hàng đi cùng dòng ghi công, ảnh hỏng thì không ghi công cho nét vẽ");
 });
 
 test("điểm đến (21/10): một nét vẽ cho mọi hàng, phụ đề không bị cắt, chỗ cho hai dòng nên hàng cao bằng nhau; hàng có ảnh thật thì hiện ảnh nhỏ + ghi công", () => {

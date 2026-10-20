@@ -306,7 +306,8 @@ function ThuVaChu({ anh, id, ten, thu, chu }: { anh: AnhCoGhiCong | null; id: st
         </View>
       ) : null}
       {chu(
-        thu && ve.ghiCong !== null ? (
+        // The credit belongs to the photograph on screen: once it failed the row shows the sketch, which is nobody's photo.
+        thu && ve.source !== null && ve.ghiCong !== null ? (
           <Text style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text>
         ) : null,
       )}
