@@ -316,9 +316,9 @@ function ThanChiTiet({
         </Inline>
       </View>
       {/* The way there: the address is the row, directions the action beside it. */}
-      <View style={[styles.duongDi, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+      <View style={[styles.duongDi, { backgroundColor: colors.card, borderColor: colors.line }]}>
         <Pressable accessibilityLabel="Mở địa chỉ trên bản đồ" accessibilityRole="button" onPress={onChiDuong} style={({ pressed }) => [styles.diaChi, pressed && styles.bam]}>
-          <Ionicons color={colors.inkFaint} name="location-outline" size={20} />
+          <Ionicons color={colors.accent} name="location-outline" size={20} />
           <View style={styles.flex}>
             <Text style={[typography.label, { color: colors.ink }]}>{place.address ?? "Chưa có địa chỉ"}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauDuongDi(place)}</Text>
@@ -395,9 +395,12 @@ function ThanChiTiet({
             ))}
           </>
         ) : (
-          <Text style={[typography.body, { color: colors.inkSoft }]}>
-            Chưa có điểm theo gu nhóm cho nơi này. Ở Khám phá, hỏi Rủ Đi AI một câu để nó chấm.
-          </Text>
+          <View style={[styles.hopNhomGoiY, { backgroundColor: colors.paper, borderColor: colors.line }]}>
+            <Ionicons color={colors.ai} name="sparkles-outline" size={16} />
+            <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>
+              Chưa có điểm theo gu nhóm cho nơi này. Ở Khám phá, hỏi Rủ Đi AI một câu để nó chấm.
+            </Text>
+          </View>
         )}
       </View>
       {place.reviews.length > 0 ? (
@@ -503,11 +506,12 @@ const styles = StyleSheet.create({
   dau: { gap: 8 },
   dauGon: { gap: 12 },
   dauGonDau: { alignSelf: "flex-start" },
-  duongDi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  duongDi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
   diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
   bam: { opacity: 0.7 },
   suKien: { gap: 10 },
   hangSuKien: { flexDirection: "row", alignItems: "center", gap: 10 },
   khoi: { gap: 8 },
+  hopNhomGoiY: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 10, borderWidth: StyleSheet.hairlineWidth },
   nhanXet: { gap: 2, paddingVertical: 8 },
 });

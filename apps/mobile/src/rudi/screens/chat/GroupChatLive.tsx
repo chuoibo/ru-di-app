@@ -1195,18 +1195,20 @@ function GroupChatContent({ contextId }: { contextId: string }) {
             an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
         {nhanRieng && phien !== null && !khongNhanTin && !gonDau ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
-          <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
-          {lan.lan === "v2" ? <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text> : null}
-          {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối</Text> : null}
-          {lan.lan === "dang-xet" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm tra mã hoá</Text> : null}
-          {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
-          {lan.lan === "khong-ro" ? (
-            <Pressable accessibilityRole="button" onPress={lan.thuLai} hitSlop={12}>
-              <Text style={[typography.caption, { color: colors.warn }]}>· Chưa kiểm tra được mã hoá. Thử lại</Text>
-            </Pressable>
-          ) : null}
-          {lan.lan === "legacy" && lan.lyDo !== null ? <Text numberOfLines={1} style={[typography.caption, styles.flexShrink, { color: colors.inkSoft }]}>· {lan.lyDo}</Text> : null}
-          {changes.connection === "recovering" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>· Đang nối lại</Text> : null}
+          <View style={styles.baoMatDau}>
+            <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
+            {lan.lan === "v2" ? <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text> : null}
+            {lan.lan === "legacy" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Kho chat cũ · Chỉ đọc · Chưa mã hoá đầu cuối</Text> : null}
+            {lan.lan === "dang-xet" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm tra mã hoá</Text> : null}
+            {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
+            {lan.lan === "khong-ro" ? (
+              <Pressable accessibilityRole="button" onPress={lan.thuLai} hitSlop={12}>
+                <Text style={[typography.caption, { color: colors.warn }]}>· Chưa kiểm tra được mã hoá. Thử lại</Text>
+              </Pressable>
+            ) : null}
+            {changes.connection === "recovering" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>· Đang nối lại</Text> : null}
+          </View>
+          {lan.lan === "legacy" && lan.lyDo !== null ? <Text numberOfLines={2} style={[typography.caption, styles.baoMatLyDo, { color: colors.inkSoft }]}>{lan.lyDo}</Text> : null}
         </View>
         {/* ADR-0057 §1.3: the server vouches for whose device is whose, so a
             device that joins the room is said here, where the members read. */}
@@ -1719,7 +1721,9 @@ const styles = StyleSheet.create({
   bongAnh: { paddingHorizontal: 6, paddingVertical: 6 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
-  baoMat: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" },
+  baoMat: { alignItems: "center", justifyContent: "center", gap: 2 },
+  baoMatDau: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" },
+  baoMatLyDo: { textAlign: "center" },
   dau: { paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   rong: { flex: 1 },
   rongNoi: { flexGrow: 1, justifyContent: "center", paddingVertical: 16 },

@@ -42,11 +42,11 @@ import {
   xoaStory,
   type NhomStoryWire,
 } from "../../story/story";
-import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
-import { RudiButton, RudiScreen } from "../../ui";
+import { RudiScreen } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
 import { useScreenActive } from "../../ui/useScreenActive";
 import { useNhuongChoNep } from "../../nep/NepProvider";
@@ -294,13 +294,30 @@ export function XemStoryScreen() {
             <Pressable accessibilityLabel="Story tiếp theo" accessibilityRole="button" accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} disabled={hoiXoa || chiSo + 1 >= nhom.stories.length} onPress={() => tiep(true)} style={[styles.vungCham, styles.vungPhai]} />
           </View>
           {imageError ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.coverInk, padding: 16 }]}>Chưa tải được ảnh này. Bạn có thể xem story khác hoặc đóng để thử lại.</Text> : null}
-          <View accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} pointerEvents={hoiXoa ? "none" : "auto"} style={[styles.hangNut, { paddingHorizontal: 16, flexWrap: "wrap", opacity: hoiXoa ? 0 : 1 }]}>
-            {chiSo > 0 ? <RudiButton label="Story trước" variant="outline" full={false} onPress={lui} /> : null}
-            {!reduced ? <RudiButton label={paused ? "Tiếp tục xem" : "Tạm dừng"} variant="outline" full={false} onPress={() => setPaused((value) => !value)} /> : null}
-            {chiSo + 1 < nhom.stories.length ? <RudiButton label="Story tiếp theo" variant="outline" full={false} onPress={() => tiep(true)} /> : null}
+          <View accessibilityElementsHidden={hoiXoa} importantForAccessibility={hoiXoa ? "no-hide-descendants" : "auto"} pointerEvents={hoiXoa ? "none" : "auto"} style={[styles.hangNutBia, { paddingHorizontal: 16, flexWrap: "wrap", opacity: hoiXoa ? 0 : 1 }]}>
+            {chiSo > 0 ? (
+              <Pressable accessibilityLabel="Story trước" accessibilityRole="button" onPress={lui} style={[styles.nutBia, { borderColor: colors.coverLine, backgroundColor: phuMau(colors.coverInk, 0.12) }]}>
+                <Ionicons color={colors.coverInk} name="chevron-back" size={16} />
+                <Text style={[typography.label, { color: colors.coverInk }]}>Story trước</Text>
+              </Pressable>
+            ) : null}
+            {!reduced ? (
+              <Pressable accessibilityLabel={paused ? "Tiếp tục xem" : "Tạm dừng"} accessibilityRole="button" onPress={() => setPaused((value) => !value)} style={[styles.nutBia, { borderColor: colors.coverLine, backgroundColor: phuMau(colors.coverInk, 0.12) }]}>
+                <Ionicons color={colors.coverInk} name={paused ? "play-outline" : "pause-outline"} size={16} />
+                <Text style={[typography.label, { color: colors.coverInk }]}>{paused ? "Tiếp tục xem" : "Tạm dừng"}</Text>
+              </Pressable>
+            ) : null}
+            {chiSo + 1 < nhom.stories.length ? (
+              <Pressable accessibilityLabel="Story tiếp theo" accessibilityRole="button" onPress={() => tiep(true)} style={[styles.nutBia, { borderColor: colors.coverLine, backgroundColor: phuMau(colors.coverInk, 0.12) }]}>
+                <Text style={[typography.label, { color: colors.coverInk }]}>Story tiếp theo</Text>
+                <Ionicons color={colors.coverInk} name="chevron-forward" size={16} />
+              </Pressable>
+            ) : null}
           </View>
           {story.caption ? (
-            <ScrollView style={{ maxHeight: 180, flexGrow: 0 }}><Text style={[typography.body, styles.chuThich, { color: colors.coverInk }]}>{story.caption}</Text></ScrollView>
+            <ScrollView style={{ maxHeight: 180, flexGrow: 0 }} contentContainerStyle={styles.khungChuThich}>
+              <Text style={[typography.body, styles.chuThich, { color: colors.coverInk }]}>{story.caption}</Text>
+            </ScrollView>
           ) : null}
           <Modal transparent visible={hoiXoa} animationType="none" onRequestClose={() => { if (!dangXoa) setHoiXoa(false); }} onShow={() => {
             if (Platform.OS === "web") {
@@ -349,7 +366,10 @@ const styles = StyleSheet.create({
   vungCham: { position: "absolute", top: 0, bottom: 0 },
   vungTrai: { left: 0, width: "35%" },
   vungPhai: { right: 0, width: "65%" },
-  chuThich: { paddingHorizontal: 20, paddingTop: 12, textAlign: "center" },
+  hangNutBia: { flexDirection: "row", justifyContent: "center", gap: 10, paddingTop: 8 },
+  nutBia: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderRadius: 999 },
+  khungChuThich: { paddingHorizontal: 20, paddingTop: 10 },
+  chuThich: { textAlign: "center" },
   // Confirmation lies over the photograph instead of shrinking its frame.
   lopHoiXoa: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 16, paddingBottom: 24 },
   hopXoa: { padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },

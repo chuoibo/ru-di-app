@@ -237,13 +237,28 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId, initia
           )}
         </View>
       }
-      footerInset={Math.max(insets.bottom, 12) + 4}
+      footerInset={Math.max(insets.bottom, 16) + 8}
       testID="create-outing-screen"
     >
-      <View style={styles.dauForm}><View style={styles.flex}><Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} /></View><View>
-        <PaperObject name="ticket" width={72} palette={{ ...palette, shade: colors.lineStrong }} />
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", paddingLeft: 16 }]}><RudiIcon color={colors.inkSoft} name="calendar-outline" size={20} /></View>
-      </View></View>
+      <View style={styles.dauForm}>
+        <View style={styles.flex}>
+          <Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} />
+        </View>
+        <View pointerEvents="none" style={[styles.toLichDau, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
+          <View style={[styles.toLichGay, { backgroundColor: colors.accent }]}>
+            <View style={[styles.loLich, { backgroundColor: colors.card }]} />
+            <Text style={[typography.stamp, { color: colors.accentInk }]}>
+              {/^(\d{4})-(\d{2})-(\d{2})$/.test(ngayDi) ? `TH ${Number(ngayDi.slice(5, 7))}` : "LỊCH"}
+            </Text>
+            <View style={[styles.loLich, { backgroundColor: colors.card }]} />
+          </View>
+          <View style={styles.toLichThan}>
+            <Text style={[typography.title, { color: colors.ink }]}>
+              {/^(\d{4})-(\d{2})-(\d{2})$/.test(ngayDi) ? ngayDi.slice(8, 10) : "••"}
+            </Text>
+          </View>
+        </View>
+      </View>
       {/* The invitation said out loud, with its blanks: what, when, how many,
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>
@@ -351,6 +366,10 @@ const styles = StyleSheet.create({
   screen: { maxWidth: 560 },
   flex: { flex: 1 },
   dauForm: { flexDirection: "row", alignItems: "center", gap: 12 },
+  toLichDau: { width: 62, borderRadius: 10, borderWidth: 1, overflow: "hidden", transform: [{ rotate: "3deg" }] },
+  toLichGay: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 6, paddingVertical: 4 },
+  loLich: { width: 5, height: 5, borderRadius: 2.5 },
+  toLichThan: { alignItems: "center", justifyContent: "center", paddingVertical: 8 },
   motCot: { flexBasis: "100%", maxWidth: "100%" },
   dauChon: { position: "absolute", right: 6, top: 6 },
   khoi: { gap: 8 },

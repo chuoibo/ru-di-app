@@ -307,7 +307,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID, saving, nativeMetr
           ) : null}
         </View>
         </View>
-        {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card }]}>{cuoiFact}</CopyText> : null}
+        {cuoiFact ? <CopyText style={[typography.label, styles.rowPrice, { color: colors.inkSoft, backgroundColor: colors.card, borderColor: colors.line }]}>{cuoiFact}</CopyText> : null}
         {dd.lyDo ? <LyDo nativeMetrics={nativeMetrics} largeText={largeText} text={dd.lyDo} /> : null}
       </Pressable>
       <View style={chuLonHon ? styles.rowHeartLarge : styles.rowHeart}>
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   rowMainLarge: { flexDirection: "column" },
   rowHeart: { position: "absolute", top: 20, left: 36 },
   rowHeartLarge: { position: "absolute", right: 10, top: 24 },
-  rowPrice: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  rowPrice: { alignSelf: "flex-start", borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 10, paddingVertical: 6 },
   rowPress: { gap: 10, minHeight: 88 },
   thumb: { width: 88, height: 88, overflow: "hidden", flexShrink: 0 },
   thumbLarge: { width: "100%", height: 132 },

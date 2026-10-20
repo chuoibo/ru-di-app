@@ -280,7 +280,12 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
       )}
 
       <SectionHeader title="Chỗ đã tới" />
-      {a.places.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa check-in ở đâu trong kèo này.</Text> : null}
+      {a.places.length === 0 ? (
+        <View style={[styles.choRong, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+          <RudiIcon color={colors.inkSoft} name="location-outline" size={18} />
+          <Text style={[typography.caption, styles.flex1, { color: colors.inkSoft }]}>Chưa check-in ở đâu trong kèo này.</Text>
+        </View>
+      ) : null}
       {a.places.map((p) => (
         <ListRow icon="location-outline" key={p.place_id} title={tenDiaDiem(p)} />
       ))}
@@ -337,4 +342,6 @@ const styles = StyleSheet.create({
   ngay: { gap: 6 },
   chuThich: { marginTop: 6 },
   canh: { gap: 8, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  choRong: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderStyle: "dashed" },
+  flex1: { flex: 1 },
 });

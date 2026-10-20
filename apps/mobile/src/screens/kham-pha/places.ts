@@ -344,15 +344,17 @@ export function parsePlace(raw: unknown, field: string): Place {
     throw new Error(`${field}.flag phải là new|hot|null, nhận được ${JSON.stringify(flag)}`);
   }
   const fit = p.group_fit as Record<string, unknown> | null | undefined;
-  const priceMin = intOrNull(p.price_min_vnd, `${field}.price_min_vnd`);
-  const priceMax = intOrNull(p.price_max_vnd, `${field}.price_max_vnd`);
-  if (priceMin !== null && priceMax !== null && priceMax < priceMin) {
-    throw new Error(`${field}: khoảng giá ngược, ${priceMin} > ${priceMax}`);
-  }
+  const priceMinRaw = intOrNull(p.price_min_vnd, `${field}.price_min_vnd`);
+  const priceMaxRaw = intOrNull(p.price_max_vnd, `${field}.price_max_vnd`);
   // Half a band is not a band: one end without the other cannot be drawn and
   // cannot be compared, so it is a server defect rather than a display case.
-  if ((priceMin === null) !== (priceMax === null)) {
-    throw new Error(`${field}: khoảng giá thiếu một đầu`);
+  // In the live vnlocal catalogue, single-price venues report one bound; use
+  // that exact integer bound for both ends so `formatPriceBand(p, p)` renders
+  // the single price without inventing or rounding a number.
+  const priceMin = priceMinRaw ?? priceMaxRaw;
+  const priceMax = priceMaxRaw ?? priceMinRaw;
+  if (priceMin !== null && priceMax !== null && priceMax < priceMin) {
+    throw new Error(`${field}: khoảng giá ngược, ${priceMin} > ${priceMax}`);
   }
   const source = p.source ?? "seed";
   if (source !== "seed" && source !== "osm" && source !== "curated" && source !== "vnlocal") {
@@ -515,9 +517,200 @@ export function formatRating(rating: number, count: number): string {
   return `${rating.toFixed(1)} (${count})`;
 }
 
+const NHAN_LOAI_VNLOCAL: Readonly<Record<string, string>> = {
+  "an dem": "Ăn đêm",
+  "an sang": "Ăn sáng",
+  "an vat": "Ăn vặt",
+  "an vat pho co": "Ăn vặt phố cổ",
+  "banh da ca": "Bánh đa cá",
+  "banh mi": "Bánh mì",
+  "banh xep": "Bánh xếp",
+  "bar": "Bar",
+  "beer garden": "Beer garden",
+  "bistro": "Bistro",
+  "bo tai lan": "Bò tái lăn",
+  "boardgame": "Boardgame",
+  "brunch": "Brunch",
+  "buffet nuong": "Buffet nướng",
+  "bun": "Bún",
+  "bun bo": "Bún bò",
+  "bun ca": "Bún cá",
+  "bun ca ro dong": "Bún cá rô đồng",
+  "bun cha": "Bún chả",
+  "bun cha kep tre": "Bún chả kẹp tre",
+  "bun dau": "Bún đậu",
+  "bun dau mam tom": "Bún đậu mắm tôm",
+  "bun met": "Bún mẹt",
+  "bun moc": "Bún mọc",
+  "bun ngan": "Bún ngan",
+  "bun oc": "Bún ốc",
+  "bun oc nguoi": "Bún ốc nguội",
+  "bun thai": "Bún Thái",
+  "ca phe": "Cà phê",
+  "ca phe 24h": "Cà phê 24h",
+  "ca phe chieu phim": "Cà phê chiếu phim",
+  "ca phe dem": "Cà phê đêm",
+  "ca phe hoc bai": "Cà phê học bài",
+  "ca phe hoc tap": "Cà phê học tập",
+  "ca phe ngoai o": "Cà phê ngoại ô",
+  "ca phe phong rieng": "Cà phê phòng riêng",
+  "ca phe vuon": "Cà phê vườn",
+  "cafe 24h": "Cafe 24h",
+  "cafe chill": "Cafe chill",
+  "cafe dining": "Cafe dining",
+  "cafe film": "Cafe film",
+  "cafe ngam canh": "Cafe ngắm cảnh",
+  "cafe rooftop": "Cafe rooftop",
+  "cam trai": "Cắm trại",
+  "camping": "Camping",
+  "cha ngan": "Chả ngan",
+  "cha phen": "Chả phên",
+  "chan ga": "Chân gà",
+  "chao bach tuoc": "Cháo bạch tuộc",
+  "chao long": "Cháo lòng",
+  "chay deadline": "Chạy deadline",
+  "che": "Chè",
+  "check in": "Check-in",
+  "chua": "Chùa",
+  "chup anh": "Chụp ảnh",
+  "chup anh polaroid": "Chụp ảnh Polaroid",
+  "city tour": "City tour",
+  "com rang ga": "Cơm rang gà",
+  "com tam": "Cơm tấm",
+  "cong vien": "Công viên",
+  "da ngoai": "Dã ngoại",
+  "dai quan sat": "Đài quan sát",
+  "date night": "Date night",
+  "diem hen ho": "Điểm hẹn hò",
+  "diem tam linh": "Điểm tâm linh",
+  "diem tham quan": "Điểm tham quan",
+  "diem vui choi": "Điểm vui chơi",
+  "do nuong": "Đồ nướng",
+  "do uong via he": "Đồ uống vỉa hè",
+  "escape room": "Escape room",
+  "food tour": "Food tour",
+  "game console": "Game console",
+  "giai tri": "Giải trí",
+  "giai tri dem": "Giải trí đêm",
+  "hai san": "Hải sản",
+  "halal": "Halal",
+  "hen ho": "Hẹn hò",
+  "hieu sach": "Hiệu sách",
+  "hoc bai": "Học bài",
+  "homestay": "Homestay",
+  "kem": "Kem",
+  "kem trang tien": "Kem Tràng Tiền",
+  "kem truyen thong": "Kem truyền thống",
+  "khong gian xanh": "Không gian xanh",
+  "khu am thuc": "Khu ẩm thực",
+  "khu vui choi": "Khu vui chơi",
+  "lam banh": "Làm bánh",
+  "lam gom": "Làm gốm",
+  "lam nuoc hoa": "Làm nước hoa",
+  "lau": "Lẩu",
+  "lau bo": "Lẩu bò",
+  "lau oc": "Lẩu ốc",
+  "lich su": "Lịch sử",
+  "luu tru": "Lưu trú",
+  "mien ngan": "Miến ngan",
+  "mon chay": "Món chay",
+  "mon ha noi": "Món Hà Nội",
+  "mon nuoc": "Món nước",
+  "my van than": "Mỳ vằn thắn",
+  "nam nuong": "Nầm nướng",
+  "nem chua nuong": "Nem chua nướng",
+  "nem chua ran": "Nem chua rán",
+  "nem cua bien": "Nem cua bể",
+  "nem nuong": "Nem nướng",
+  "nem ran": "Nem rán",
+  "ngam canh": "Ngắm cảnh",
+  "ngam hoang hon": "Ngắm hoàng hôn",
+  "ngan chay toi": "Ngan cháy tỏi",
+  "ngan nuong": "Ngan nướng",
+  "nghe nhac": "Nghe nhạc",
+  "nha hang": "Nhà hàng",
+  "nhac song": "Nhạc sống",
+  "nom sua": "Nộm sứa",
+  "nuoc ep": "Nước ép",
+  "nuong chao gang": "Nướng chảo gang",
+  "nuong ngoi": "Nướng ngói",
+  "oc": "Ốc",
+  "pho": "Phở",
+  "pho bo": "Phở bò",
+  "pho bo tai lan": "Phở bò tái lăn",
+  "pho cham": "Phở chấm",
+  "pho chien": "Phở chiên",
+  "pho chien phong": "Phở chiên phồng",
+  "pho co": "Phố cổ",
+  "pho cuon": "Phở cuốn",
+  "pho ga": "Phở gà",
+  "pho sot vang": "Phở sốt vang",
+  "pho tai lan": "Phở tái lăn",
+  "pho xao": "Phở xào",
+  "pho xua": "Phố xưa",
+  "phong game": "Phòng game",
+  "phong hop": "Phòng họp",
+  "photobooth": "Photobooth",
+  "pub": "Pub",
+  "quan an": "Quán ăn",
+  "quan an binh dan": "Quán ăn bình dân",
+  "quan an gia truyen": "Quán ăn gia truyền",
+  "quan an ha noi": "Quán ăn Hà Nội",
+  "quan binh dan": "Quán bình dân",
+  "quan ca phe": "Quán cà phê",
+  "quan ngo": "Quán ngõ",
+  "quan nhau": "Quán nhậu",
+  "quan ven ho": "Quán ven hồ",
+  "quan via he": "Quán vỉa hè",
+  "quay chup": "Quay chụp",
+  "ram bap": "Ram bắp",
+  "restobar": "Restobar",
+  "self booth": "Self-booth",
+  "selfbooth": "Self-booth",
+  "show thuc canh": "Show thực cảnh",
+  "sky lounge": "Sky lounge",
+  "su kien trung thu": "Sự kiện Trung thu",
+  "sui cao": "Sủi cảo",
+  "thac nuoc": "Thác nước",
+  "tham quan di tich": "Tham quan di tích",
+  "thang canh": "Thắng cảnh",
+  "thit ngan": "Thịt ngan",
+  "thit nuong": "Thịt nướng",
+  "thuy cung": "Thủy cung",
+  "tiec rieng": "Tiệc riêng",
+  "to hop giai tri": "Tổ hợp giải trí",
+  "tour dem": "Tour đêm",
+  "tra chanh": "Trà chanh",
+  "tra sua": "Trà sữa",
+  "tra sua hong kong": "Trà sữa Hồng Kông",
+  "trai nghiem dem": "Trải nghiệm đêm",
+  "trien lam": "Triển lãm",
+  "tro choi dien tu": "Trò chơi điện tử",
+  "trung tam thuong mai": "Trung tâm thương mại",
+  "van dong": "Vận động",
+  "via he": "Vỉa hè",
+  "view ho tay": "View Hồ Tây",
+  "vui choi 24h": "Vui chơi 24h",
+  "vuon thu": "Vườn thú",
+  "vuon thuc vat": "Vườn thực vật",
+  "workshop": "Workshop",
+  "workshop gom": "Workshop gốm",
+  "workshop lam banh": "Workshop làm bánh",
+  "xe buyt 2 tang": "Xe buýt 2 tầng",
+  "yakiniku": "Yakiniku",
+};
+
+function chuanHoaLoai(raw: string): string {
+  const key = raw.trim();
+  if (NHAN_LOAI_VNLOCAL[key]) return NHAN_LOAI_VNLOCAL[key];
+  // Leave strings that already carry diacritics or uppercase letters untouched.
+  if (!/^[a-z0-9 -]+$/.test(key) || key === "") return raw;
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
 /** "BBQ · Lào · Local", and just "BBQ" when that is all there is. */
 export function formatKinds(kinds: string[]): string {
-  return kinds.join(" · ");
+  return kinds.map(chuanHoaLoai).join(" · ");
 }
 
 /**

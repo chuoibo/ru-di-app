@@ -32,6 +32,7 @@ import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { SoDoChuyen } from "../ui/SoDoChuyen";
 import { HoaDonGiay } from "../ui/HoaDonGiay";
+import { TrangSo } from "../ui/TrangSo";
 
 /** Transfers by the person paid, in the order they first appear. */
 function gomTheoNguoiNhan<T extends { toId: string }>(ds: readonly T[]): [string, T[]][] {
@@ -259,26 +260,30 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
       {/* One section per person paid, said once over it: nineteen rows each
           ending «→ Chat Test 01» in display-size teal all shouted and none led
           (B4 finish review). The amounts are figures on the page, teal. */}
-      {gomTheoNguoiNhan(du.chuyenTien).map(([nguoiNhan, ds]) => (
-        <View key={nguoiNhan}>
-          <View accessibilityRole="header" style={[styles.dauNhomChuyen, { borderBottomColor: colors.lineStrong }]}>
-            <Avatar name={tenCua(du.nguoi, nguoiNhan)} personId={nguoiNhan} size={28} />
-            <View style={styles.flex}>
-              <Text style={[typography.title, { color: mucNguoi(nguoiNhan, dark) }]}>{`Chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`}</Text>
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} khoản`}</Text>
-            </View>
-          </View>
-          {ds.map((row) => (
-            <View accessibilityLabel={`${tenCua(du.nguoi, row.fromId)} chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`} key={`${row.fromId}-${row.toId}`} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
-              <View style={styles.dinhDanh}>
-                <Avatar name={tenCua(du.nguoi, row.fromId)} personId={row.fromId} size={32} />
-                <Text style={[typography.label, styles.flex, { color: mucNguoi(row.fromId, dark) }]}>{tenCua(du.nguoi, row.fromId)}</Text>
+      {du.chuyenTien.length > 0 ? (
+        <TrangSo ke={false} testID="trang-chuyen-tien">
+          {gomTheoNguoiNhan(du.chuyenTien).map(([nguoiNhan, ds]) => (
+            <View key={nguoiNhan}>
+              <View accessibilityRole="header" style={[styles.dauNhomChuyen, { borderBottomColor: colors.lineStrong }]}>
+                <Avatar name={tenCua(du.nguoi, nguoiNhan)} personId={nguoiNhan} size={28} />
+                <View style={styles.flex}>
+                  <Text style={[typography.title, { color: mucNguoi(nguoiNhan, dark) }]}>{`Chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`}</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${ds.length} khoản`}</Text>
+                </View>
               </View>
-              <Money numberOfLines={0} size="label" style={styles.soDayDu} tone="split" vnd={row.amountVnd} />
+              {ds.map((row) => (
+                <View accessibilityLabel={`${tenCua(du.nguoi, row.fromId)} chuyển cho ${tenCua(du.nguoi, nguoiNhan)}`} key={`${row.fromId}-${row.toId}`} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
+                  <View style={styles.dinhDanh}>
+                    <Avatar name={tenCua(du.nguoi, row.fromId)} personId={row.fromId} size={32} />
+                    <Text style={[typography.label, styles.tenNguoiChuyen, { color: mucNguoi(row.fromId, dark) }]}>{tenCua(du.nguoi, row.fromId)}</Text>
+                  </View>
+                  <Money numberOfLines={0} size="label" style={styles.soDayDu} tone="split" vnd={row.amountVnd} />
+                </View>
+              ))}
             </View>
           ))}
-        </View>
-      ))}
+        </TrangSo>
+      ) : null}
       <View style={styles.ghiChu}>
         <Ionicons color={colors.split} name="shield-checkmark-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
@@ -295,7 +300,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
             label={moSoDo ? "Gấp sơ đồ chuyển" : "Xem sơ đồ chuyển"}
             onPress={() => setMoSoDo((mo) => !mo)}
             tone="split"
-            variant="ghost"
+            variant="outline"
           />
           {moSoDo ? (
             <SoDoChuyen
@@ -347,8 +352,9 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   khung: { gap: 14 },
-  dinhDanh: { flexDirection: "row", alignItems: "flex-start", gap: 12, minWidth: 0 },
-  soDayDu: { width: "100%", minWidth: 0 },
+  dinhDanh: { flexDirection: "row", alignItems: "center", gap: 12, flexShrink: 1, minWidth: 0 },
+  tenNguoiChuyen: { flexShrink: 1, minWidth: 0 },
+  soDayDu: { maxWidth: "100%", minWidth: 0, marginStart: "auto" },
   tomTatQuyetToan: { gap: 6 },
   dongTomTat: { alignItems: "stretch", gap: 4, minWidth: 0 },
   giaTriTomTat: { width: "100%", minWidth: 0, fontVariant: ["tabular-nums"] },
@@ -378,7 +384,7 @@ const styles = StyleSheet.create({
   tomTat: { paddingVertical: 2 },
   nguoiThu: { gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   nguoiThuDau: { flexDirection: "row", alignItems: "center", gap: 12 },
-  hangChuyen: { alignItems: "stretch", gap: 6, minWidth: 0, minHeight: 52, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangChuyen: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, minWidth: 0, minHeight: 52, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   dauNhomChuyen: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingTop: 10, paddingBottom: 8, borderBottomWidth: 1 },
   hangDauSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
   cotNguoiThu: { gap: 4, alignItems: "flex-start" },

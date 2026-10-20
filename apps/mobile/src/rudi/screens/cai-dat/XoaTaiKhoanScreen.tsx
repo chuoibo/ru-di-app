@@ -20,7 +20,7 @@ import {
 } from "../../cai-dat/xoa-tai-khoan";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Field, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { luiVeVe } from "../../lui-ve";
 import { useLuiLop } from "../../ui/useLuiLop";
 
@@ -62,11 +62,13 @@ export function XoaTaiKhoanScreen() {
         <>
           <View style={styles.khoi}>
             <Text style={[typography.title, { color: colors.ink }]}>Xoá tài khoản là vĩnh viễn.</Text>
-            {DIEU_SE_XAY_RA.map((cau) => (
-              <View key={cau} style={styles.dong}>
-                <Text style={[typography.body, { color: colors.inkSoft }]}>{cau}</Text>
-              </View>
-            ))}
+            <NhomHang>
+              {DIEU_SE_XAY_RA.map((cau) => (
+                <View key={cau} style={styles.dong}>
+                  <Text style={[typography.body, { color: colors.inkSoft }]}>{cau}</Text>
+                </View>
+              ))}
+            </NhomHang>
           </View>
           <Text style={[typography.caption, { color: colors.inkFaint }]}>
             Đăng ký lại bằng cùng email hoặc Google sẽ tạo một tài khoản mới: không nhóm cũ, không tin cũ.

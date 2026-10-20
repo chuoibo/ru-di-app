@@ -231,7 +231,7 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
   const bang = [...trang.nghiaVu].sort((a, b) => Number(daVeRoi(a.trangThai)) - Number(daVeRoi(b.trangThai)));
 
   return (
-    <RudiScreen avoidKeyboard cot="form" material="quiet" tone="split" testID="collection-batch-screen">
+    <RudiScreen avoidKeyboard bottomInset={48} cot="form" material="quiet" tone="split" testID="collection-batch-screen">
       <TopBar subtitle={trang.trangThai === null ? undefined : cauTrangThaiDot(trang.trangThai)} title="Đợt thu" />
       {/* Progress describes published obligations; an unissued round leads
           with its board, not a zero-progress hero. */}
@@ -285,6 +285,11 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
                   <View style={styles.dong}>
                     <Avatar name={tenCua(roster, n.senderId)} personId={n.senderId} size={32} />
                     <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{tenCua(roster, n.senderId)}</Text>
+                    {dau === null && !n.tranhCai ? (
+                      <View style={[styles.nhanChuaVe, { borderColor: colors.lineStrong, backgroundColor: colors.paperShade, borderRadius: radius.pill }]}>
+                        <Text style={[typography.caption, { color: colors.inkSoft }]}>chưa về</Text>
+                      </View>
+                    ) : null}
                   </View>
                   {/* The measured seal uses this status column; native pixels
                       still decide whether exact label width prevents clipping. */}
@@ -298,9 +303,7 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
                         <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
                       ) : null}
                     </View>
-                  ) : (
-                    <Text style={[typography.caption, { color: colors.inkSoft }]}>chưa về</Text>
-                  )}
+                  ) : null}
                   <View style={styles.dongTien}>
                     <Money numberOfLines={0} size="label" style={styles.soDayDu} tone={ve ? "split" : "ink"} vnd={n.amountVnd} />
                     {daPhatRoi && toiNhan.has(n.id) && !ve ? (
@@ -414,7 +417,7 @@ function DotThuPage({ phien, batchId }: { phien: Phien; batchId: string }) {
       ) : null}
 
       <CauTaiCho cau={loiO("lam-moi")} />
-      <RudiButton disabled={ban} icon="refresh-outline" label="Làm mới" onPress={docLai} tone="split" variant="ghost" />
+      <RudiButton disabled={ban} icon="refresh-outline" label="Làm mới" onPress={docLai} tone="split" variant="outline" />
     </RudiScreen>
   );
 }
@@ -423,8 +426,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   khung: { gap: 14 },
   dau: { gap: 8 },
-  hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  dong: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
+  hang: { gap: 8, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  dong: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 40 },
+  nhanChuaVe: { paddingHorizontal: 10, paddingVertical: 3, borderWidth: StyleSheet.hairlineWidth },
   dauHang: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   dongTien: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, minWidth: 0 },
   quyetDinh: { gap: 12 },

@@ -640,6 +640,8 @@ type ButtonProps = {
    * hint. A disabled button without a reason should usually not be shown.
    */
   lyDo?: string;
+  /** Keep `lyDo` for accessibilityHint/audit while a parent row prints the shared reason once. */
+  anLyDo?: boolean;
 };
 
 declare const __DEV__: boolean | undefined;
@@ -668,6 +670,7 @@ export function RudiButton({
   accessibilityLabel,
   expanded,
   lyDo,
+  anLyDo = false,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
   // A disabled button with no reason under it is what ADR-0038 §2.2 rules out
@@ -701,7 +704,7 @@ export function RudiButton({
     <>
       {loading ? <ActivityIndicator color={foreground} size="small" /> : null}
       {!loading && icon ? <RudiIcon color={foreground} name={icon} size={compact ? 18 : 20} /> : null}
-      <Text style={[typography.label, styles.buttonLabel, full && styles.buttonLabelFull, { color: foreground, textAlign: labelAlign }]}>
+      <Text style={[typography.label, styles.buttonLabel, full && (labelAlign === "left" || (!icon && !loading)) && styles.buttonLabelFull, { color: foreground, textAlign: labelAlign }]}>
         {label}
       </Text>
     </>
@@ -737,7 +740,7 @@ export function RudiButton({
       {body}
     </PressScale>
   );
-  if (!tat || !lyDo) return nut;
+  if (!tat || !lyDo || anLyDo) return nut;
   return (
     <View style={[styles.nutCoLyDo, full ? styles.nutCoLyDoFull : null]}>
       {nut}
@@ -1351,8 +1354,8 @@ const styles = StyleSheet.create({
   buttonLabel: { zIndex: 1, flexShrink: 1, minWidth: 0, textAlign: "center" },
   buttonLabelFull: { flexGrow: 1 },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
-  nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
-  nutCoLyDoFull: { alignSelf: "stretch" },
+  nutCoLyDo: { gap: 6, alignSelf: "flex-start", alignItems: "flex-start" },
+  nutCoLyDoFull: { alignSelf: "stretch", alignItems: "stretch" },
   lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 4 },
   lyDoChu: { flexShrink: 1 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },

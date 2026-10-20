@@ -14,6 +14,7 @@
  * city carries the selected state. Local artwork is always labelled.
  */
 import { Canh } from "../../ui/art/Canh";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -59,6 +60,49 @@ const CANH_DIEM_DEN: Readonly<Record<string, IllustrationName>> = {
   "d-vung-tau": "scene-coast",
   "d-quy-nhon": "scene-coast",
   "d-mui-ne": "scene-coast",
+  "d-tinh-1": "scene-street",
+  "d-tinh-46": "scene-lanterns",
+  "d-tinh-48": "scene-coast",
+  "d-tinh-56": "scene-coast",
+  "d-tinh-68": "scene-hills",
+  "d-tinh-79": "scene-cafe",
+};
+
+/** Regional subtitle when the catalogue sends a province with `province === name` and `blurb === null`. */
+const MO_TA_VUNG: Readonly<Record<string, string>> = {
+  "d-tinh-1": "Đồng bằng sông Hồng · Phố cổ & hồ",
+  "d-tinh-4": "Đông Bắc · Núi đá & thác bản",
+  "d-tinh-8": "Đông Bắc · Sông núi & hồ sinh thái",
+  "d-tinh-11": "Tây Bắc · Thung lũng & đèo cao",
+  "d-tinh-12": "Tây Bắc · Đỉnh mây & bản làng",
+  "d-tinh-14": "Tây Bắc · Cao nguyên & đồi chè",
+  "d-tinh-15": "Tây Bắc · Sa Pa & ruộng bậc thang",
+  "d-tinh-19": "Trung du Bắc Bộ · Đồi chè & hồ núi",
+  "d-tinh-20": "Đông Bắc · Cửa khẩu & núi đá vôi",
+  "d-tinh-22": "Đông Bắc · Vịnh Hạ Long & đảo biển",
+  "d-tinh-25": "Trung du Bắc Bộ · Đền Hùng & đồi cọ",
+  "d-tinh-31": "Duyên hải Bắc Bộ · Phố cảng & đảo Cát Bà",
+  "d-tinh-33": "Đồng bằng sông Hồng · Phố Hiến & làng cổ",
+  "d-tinh-37": "Đồng bằng sông Hồng · Tràng An & non nước",
+  "d-tinh-38": "Bắc Trung Bộ · Biển Sầm Sơn & Pù Luông",
+  "d-tinh-40": "Bắc Trung Bộ · Biển Cửa Lò & miền Tây xứ Nghệ",
+  "d-tinh-42": "Bắc Trung Bộ · Biển Thiên Cầm & núi Hồng",
+  "d-tinh-44": "Bắc Trung Bộ · Di tích & biển Cửa Việt",
+  "d-tinh-46": "Miền Trung · Cố đô & sông Hương",
+  "d-tinh-48": "Miền Trung · Cầu sông Hàn & bán đảo Sơn Trà",
+  "d-tinh-51": "Duyên hải Nam Trung Bộ · Đảo Lý Sơn & biển xanh",
+  "d-tinh-52": "Tây Nguyên & duyên hải · Biển hồ & ghềnh đá",
+  "d-tinh-56": "Nam Trung Bộ · Vịnh Nha Trang & đảo biển",
+  "d-tinh-66": "Tây Nguyên · Buôn Ma Thuột & thủ phủ cà phê",
+  "d-tinh-68": "Tây Nguyên · Đà Lạt, đồi thông & sương mù",
+  "d-tinh-75": "Đông Nam Bộ · Rừng Nam Cát Tiên & hồ Trị An",
+  "d-tinh-79": "Đông Nam Bộ · Nhịp sống đô thị & ẩm thực",
+  "d-tinh-80": "Đông Nam Bộ · Núi Bà Đen & hồ Dầu Tiếng",
+  "d-tinh-82": "Đồng bằng sông Cửu Long · Mùa sen & làng hoa",
+  "d-tinh-86": "Đồng bằng sông Cửu Long · Cù lao & miệt vườn",
+  "d-tinh-91": "Đồng bằng sông Cửu Long · Thất Sơn & đảo Phú Quốc",
+  "d-tinh-92": "Đồng bằng sông Cửu Long · Bến Ninh Kiều & chợ nổi",
+  "d-tinh-96": "Đồng bằng sông Cửu Long · Đất Mũi & rừng ngập mặn",
 };
 
 export function DiemDenScreen() {
@@ -162,6 +206,7 @@ export function DiemDenScreen() {
             const chonRoi = dangChon === d.id;
             const noiBat = noiNoiBat?.id === d.id;
             const canh = CANH_DIEM_DEN[d.id];
+            const dongPhu = dongPhuDiemDen(d) || MO_TA_VUNG[d.id] || "";
             const rongCanh = noiBat ? rongAnh : 96;
             return (
               <Pressable
@@ -181,7 +226,7 @@ export function DiemDenScreen() {
                 ]}
               >
                 <View style={noiBat ? styles.canhDan : styles.canhHang}>
-                  <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper }]}>
+                  <View style={[styles.canhFrame, { width: rongCanh, backgroundColor: colors.paper, borderColor: colors.line }]}>
                     {canh ? (
                       <AssetIllustration name={canh} width={rongCanh} height={rongCanh * 2 / 3} fit="contain" />
                     ) : (
@@ -192,8 +237,8 @@ export function DiemDenScreen() {
                 </View>
                 <View style={[styles.theChu, !noiBat && styles.chuHang]}>
                   <Text style={[noiBat ? typography.h2 : typography.title, { color: colors.ink }]}>{d.name}</Text>
-                  {dongPhuDiemDen(d) === "" ? null : (
-                    <Text style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
+                  {dongPhu === "" ? null : (
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>{dongPhu}</Text>
                   )}
                   {d.blurb === null ? null : (
                     <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>
@@ -203,6 +248,14 @@ export function DiemDenScreen() {
                   {chonRoi ? <DauLon co="nho" nhan="Đang xem" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
                   {dangLuu === d.id ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang lưu…</Text> : null}
                 </View>
+                {!noiBat ? (
+                  <Ionicons
+                    color={chonRoi ? colors.accent : colors.inkFaint}
+                    importantForAccessibility="no"
+                    name={chonRoi ? "checkmark-circle" : "chevron-forward"}
+                    size={18}
+                  />
+                ) : null}
               </Pressable>
             );
           })}
@@ -221,10 +274,10 @@ const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center" },
   canhDan: { alignItems: "center", gap: 2 },
   canhHang: { alignItems: "center", width: 96, gap: 2 },
-  canhFrame: { borderRadius: 3, overflow: "hidden", minHeight: 64, justifyContent: "center" },
-  chuHang: { flex: 1, minWidth: 0 },
-  the: { borderRadius: 6, padding: 8, gap: 10, minHeight: 96, minWidth: 48 },
-  theChu: { gap: 2, paddingHorizontal: 2, paddingBottom: 2 },
+  canhFrame: { borderRadius: 4, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden", minHeight: 64, justifyContent: "center" },
+  chuHang: { flex: 1, minWidth: 0, gap: 3 },
+  the: { borderRadius: 8, padding: 10, gap: 12, minHeight: 96, minWidth: 48 },
+  theChu: { gap: 3, paddingHorizontal: 2, paddingBottom: 2 },
   dauBuuDien: { alignSelf: "flex-start", marginTop: 8 },
   bam: { opacity: 0.7 },
 });

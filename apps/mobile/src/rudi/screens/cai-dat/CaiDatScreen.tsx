@@ -121,15 +121,15 @@ function CaiDatContent() {
       {loi !== null && hoSo === null ? <CauTaiCho cau={loi} hanhDong={{ label: "Thử lại", onPress: () => { setLoi(null); void nap(); } }} /> : null}
       <View style={styles.nhomGiaoDien}>
         <SectionHeader title="Giao diện" />
-        <View accessibilityRole="radiogroup" style={[styles.luaChonGiaoDien, { borderColor: colors.line }]}>
+        <View accessibilityRole="radiogroup" style={[styles.luaChonGiaoDien, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
           {NHAN_GIAO_DIEN.map((muc, index) => <Pressable
             key={muc.ma}
             {...toggleState("radio", cheDo === muc.ma, () => datCheDo(muc.ma))}
             accessibilityLabel={muc.nhan}
             onPress={() => datCheDo(muc.ma)}
-            style={({ pressed }) => [styles.hangGiaoDien, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }, pressed && { backgroundColor: colors.ground }]}
+            style={({ pressed }) => [styles.hangGiaoDien, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }, cheDo === muc.ma && { backgroundColor: colors.paper }, pressed && { backgroundColor: colors.ground }]}
           >
-            <RudiIcon name={muc.ma === "sang" ? "sunny-outline" : muc.ma === "toi" ? "moon-outline" : "desktop-outline"} size={22} color={colors.ink} />
+            <RudiIcon name={muc.ma === "sang" ? "sunny-outline" : muc.ma === "toi" ? "moon-outline" : "desktop-outline"} size={22} color={cheDo === muc.ma ? colors.split : colors.ink} />
             <Text style={[typography.body, styles.hangChu, { color: colors.ink }]}>{muc.nhan}</Text>
             <View pointerEvents="none" style={[styles.dauChon, { borderColor: cheDo === muc.ma ? colors.split : colors.lineStrong, backgroundColor: cheDo === muc.ma ? colors.split : "transparent" }]}>
               {cheDo === muc.ma ? <View style={[styles.chamChon, { backgroundColor: colors.card }]} /> : null}
@@ -154,12 +154,14 @@ function CaiDatContent() {
       <NhomHang>
         <ListRow
           icon="shield-checkmark-outline"
+          iconTreatment="plain"
           onPress={() => router.push("/settings/account" as never)}
           subtitle="Username, email, mật khẩu và Google"
           title="Tài khoản & bảo mật"
         />
         <ListRow
           icon="phone-portrait-outline"
+          iconTreatment="plain"
           onPress={() => router.push("/settings/phien" as never)}
           subtitle="Xem nơi tài khoản đang đăng nhập, đăng xuất từ xa"
           title="Phiên đăng nhập"
@@ -169,6 +171,7 @@ function CaiDatContent() {
           onPress={() => router.push("/settings/thiet-bi" as never)}
           subtitle="Máy nào mở được tin mã hoá đầu cuối của bạn"
           title="Thiết bị nhắn tin mã hoá"
+          tone="split"
         />
       </NhomHang>
       <SectionHeader title="Quyền riêng tư" />
@@ -188,6 +191,7 @@ function CaiDatContent() {
         </View>
         <ListRow
           icon="hand-left-outline"
+          iconTreatment="plain"
           onPress={() => router.push("/settings/da-chan" as never)}
           subtitle="Xem và gỡ chặn những người bạn đã chặn"
           title="Người đã chặn"
@@ -199,7 +203,7 @@ function CaiDatContent() {
           <Inline gap={12}>
             {/* A 404 before the first upload is ordinary; the frame draws
                 initials for it rather than an empty ring (board 2026-09-07). */}
-            <AvatarNguoi name={tenToi} personId={phien?.person_id} size={64} />
+            <AvatarNguoi name={tenToi} personId={phien?.person_id} size={64} ring />
             <View style={styles.hangChu}>
               <Text style={[typography.label, { color: colors.ink }]}>{tenToi}</Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -221,6 +225,7 @@ function CaiDatContent() {
       <NhomHang>
         <ListRow
           icon="document-text-outline"
+          iconTreatment="plain"
           onPress={() => router.push("/settings/ve-rudi" as never)}
           subtitle="Điều khoản, dữ liệu Rủ Đi giữ, và điều gì xảy ra khi bạn xoá tài khoản"
           title="Điều khoản và dữ liệu"
@@ -233,6 +238,7 @@ function CaiDatContent() {
           onPress={() => router.push("/settings/xoa-tai-khoan" as never)}
           subtitle="Xoá vĩnh viễn hồ sơ và nội dung của bạn"
           title="Xoá tài khoản"
+          tone="accent"
         />
       </NhomHang>
       {/* QA UI-111: the name is changed in «Chỉnh hồ sơ», not in «Tài khoản». */}

@@ -20,6 +20,7 @@ import { Keyboard, Pressable, StyleSheet, View, useWindowDimensions } from "reac
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
+import { KHUNG_DAU_CHAN, hinhDauChan } from "../../art/dau-chan";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field } from "../../ui";
@@ -31,6 +32,7 @@ import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useLuiLop } from "../../ui/useLuiLop";
+import { VeLop } from "../../ui/art/VeLop";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -145,7 +147,7 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
   if (dangSua) {
     return (
       <View style={styles.form}>
-        <View style={styles.editIdentity}>
+        <View style={[styles.editIdentity, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.editAvatar}>
             <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={64} ring />
             <View style={[styles.editCamera, { backgroundColor: colors.card, borderColor: colors.line }]}><RudiIcon name="camera-outline" color={colors.ink} size={16} /></View>
@@ -192,40 +194,88 @@ export function HoSoSong({ phien, onEditorChange, renderContent }: { phien: Phie
     : metricsOwned || chuLon(fontScale);
   const editLabel = conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ";
   return <View style={styles.passport}>
-    <View testID="profile-identity" style={styles.identityBlock}>
+    <View
+      testID="profile-identity"
+      style={[
+        styles.identityBlock,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.lineStrong,
+          borderRadius: radius.base,
+        },
+      ]}
+    >
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[styles.passportTopBand, { backgroundColor: colors.accent }]}
+      />
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[styles.passportInnerRule, { borderColor: colors.line, borderRadius: Math.max(4, radius.base - 4) }]}
+      />
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={styles.passportSealMark}
+      >
+        <VeLop height={36} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("passport-seal")} width={36} />
+      </View>
       <View style={styles.identityRow}>
         <View style={[styles.identityMain, largeText && styles.identityMainStack]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện" onPress={() => router.push("/settings" as never)} style={styles.avatarTarget}>
-            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={56} ring />
+            <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} size={60} ring />
           </Pressable>
           <View style={[styles.identityCopy, largeText && styles.identityCopyStack]}>
             <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>{hoSo.display_name}</Text>
             <Text style={[typography.note, { color: colors.inkSoft }]}>{[hoSo.city, `Tham gia ${new Date(hoSo.created_at).getFullYear()}`].filter(Boolean).join(" · ")}</Text>
           </View>
         </View>
-        <PressScale accessibilityRole="button" accessibilityLabel={editLabel} accessibilityHint="Sửa tên, giới thiệu và thành phố" onPress={() => moSua(hoSo)} pressedScale={0.98} style={[styles.editAction, { borderRadius: radius.control }]}>
-          <RudiIcon color={colors.inkSoft} name="create-outline" size={20} />
+        <PressScale
+          accessibilityRole="button"
+          accessibilityLabel={editLabel}
+          accessibilityHint="Sửa tên, giới thiệu và thành phố"
+          onPress={() => moSua(hoSo)}
+          pressedScale={0.98}
+          style={[
+            styles.editAction,
+            {
+              backgroundColor: colors.ground,
+              borderColor: colors.line,
+              borderRadius: radius.control,
+            },
+          ]}
+        >
+          <RudiIcon color={colors.ink} name="create-outline" size={20} />
         </PressScale>
       </View>
-      {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
-      {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
+      {hoSo.bio ? <Text style={[typography.body, styles.bioCopy, { color: colors.inkSoft, borderTopColor: colors.line }]}>{hoSo.bio}</Text> : null}
+      {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.accent }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
     </View>
     {renderContent?.(hoSo)}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  passport: { gap: 20 },
-  identityBlock: { gap: 12 },
-  identityRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  passport: { gap: 16 },
+  identityBlock: { position: "relative", overflow: "hidden", borderWidth: 1, paddingHorizontal: 16, paddingTop: 18, paddingBottom: 16, gap: 12 },
+  passportTopBand: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
+  passportInnerRule: { position: "absolute", top: 6, left: 6, right: 6, bottom: 6, borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed" },
+  passportSealMark: { position: "absolute", right: 74, bottom: 12, opacity: 0.26 },
+  identityRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   identityMain: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 14 },
   identityMainStack: { flexDirection: "column", alignItems: "flex-start" },
   identityCopy: { flex: 1, minWidth: 0, gap: 4 },
   identityCopyStack: { flex: 0, alignSelf: "stretch" },
-  avatarTarget: { minWidth: 56, minHeight: 56, alignItems: "center", justifyContent: "center" },
-  editAction: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center" },
+  avatarTarget: { minWidth: 60, minHeight: 60, alignItems: "center", justifyContent: "center" },
+  editAction: { minWidth: 48, minHeight: 48, flexShrink: 0, alignItems: "center", justifyContent: "center", borderWidth: 1 },
+  bioCopy: { paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   form: { gap: 20 },
-  editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 4 },
+  editIdentity: { flexDirection: "row", alignItems: "center", gap: 16, padding: 14, borderWidth: 1 },
   editIdentityText: { flex: 1, minWidth: 0, gap: 4 },
   editAvatar: { width: 68, height: 76, justifyContent: "center" },
   editCamera: { position: "absolute", right: 0, bottom: 0, width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },

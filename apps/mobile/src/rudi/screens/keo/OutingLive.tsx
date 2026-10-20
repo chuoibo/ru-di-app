@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AssetIllustration } from "../../asset-pack/react-native/AssetIllustration";
 import { ConfirmedArrival } from "../../asset-pack/react-native/ConfirmedArrival";
@@ -129,6 +130,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const params = useLocalSearchParams<{ id?: string; vua?: string }>();
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const outingId = thamSoChuoi(params.id);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [thongBao, setThongBao] = useState<string | null>(null);
@@ -176,6 +178,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       setThongBao(loi);
     }
   }, [contextId, outingId, phien.person_id]);
+
+  useEffect(() => {
+    void nap();
+  }, [nap]);
 
   useFocusEffect(
     useCallback(() => {
@@ -369,7 +375,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
           avoidKeyboard
           showsVerticalScrollIndicator
           prioritizeFooter
-          footer={<View style={{ paddingTop: 12 }}><StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} /></View>}
+          footer={<View style={{ paddingTop: 12, paddingBottom: Math.max(insets.bottom, 8) }}><StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} /></View>}
           onClose={() => setMoThem(false)}
           open={moThem}
         >
@@ -435,7 +441,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             }
             title="Kèo"
           />
-          {trang.pha === "xong" ? (
+          {trang.pha === "xong" && hanhTrinh ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]} numberOfLines={1}>
               {trang.keo.title}
             </Text>
@@ -462,22 +468,21 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => luiVeVe(router as never, "/plan") }} title="Chưa mở được kèo" />
       ) : null}
-      {trang.pha === "xong" ? (
-        <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
+      {trang.pha === "xong" && hanhTrinh ? (
+        <View style={{ flex: 1 }}>
         <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} daToiIds={daToiIds} dangTimCho={idCanDoc.length > 0} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
         </View>
       ) : null}
       {trang.pha === "xong" && !hanhTrinh ? (
-        <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}>
+        <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: Math.max(insets.bottom, 24) + 36, gap: 20 }}>
           <View style={styles.dau}>
             {/* M5: the outing just made from «Kèo mới» (`?vua=tao`): Nếp sets
-                off beside its title, once. Opened any other way, it is not news. */}
-            {params.vua === "tao" ? (
-              <View style={styles.dauVuaTao}>
-                <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
-                <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} />
-              </View>
-            ) : null}
+                off beside its title, once. Opened any other way, the title
+                still anchors the page head. */}
+            <View style={styles.dauVuaTao}>
+              <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
+              {params.vua === "tao" ? <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} /> : null}
+            </View>
             <Text style={[typography.body, { color: colors.inkSoft }]}>
               {nhanKhoangNgay(trang.keo.starts_on, trang.keo.ends_on)} · {trang.keo.headcount} người
               {nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay())) ? ` · ${nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()))}` : ""}
@@ -491,15 +496,17 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 read as «this evening costs nothing» (QA 23/09). No budget is
                 said as such; the two sums appear only when there is one. */}
             {trang.keo.budget_per_person_vnd > 0 ? (
-              <View style={styles.tien}>
+              <View style={[styles.tien, { backgroundColor: colors.card, borderColor: colors.line }]}>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>Ngân sách dự kiến</Text>
-                <View style={styles.oTien}>
-                  <Money vnd={trang.keo.budget_per_person_vnd} />
-                  <Text style={[typography.caption, { color: colors.inkSoft, flexGrow: 1, minWidth: 80 * fontScale }]}>/ người</Text>
-                </View>
-                <View style={styles.oTien}>
-                  <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                  <Text style={[typography.caption, { color: colors.inkSoft, flexGrow: 1, minWidth: 80 * fontScale }]}>/ cả kèo</Text>
+                <View style={styles.hangTien}>
+                  <View style={styles.oTien}>
+                    <Money vnd={trang.keo.budget_per_person_vnd} />
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>/ người</Text>
+                  </View>
+                  <View style={styles.oTien}>
+                    <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>/ cả kèo</Text>
+                  </View>
                 </View>
               </View>
             ) : (
@@ -548,12 +555,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                           // just reached (B3 finish review; the demo already did).
                           <ConfirmedArrival eventId={vuaToi === stop.id ? `${stop.id}:arrived` : null}><Stamp label="Đã tới" tilt={-2} tone="split" /></ConfirmedArrival>
                         ) : (
-                          <RudiButton compact disabled={dangGhi} lyDo={dangGhi ? "Đang ghi" : undefined} full={false} label="Tôi đã tới" onPress={() => void daToiChang(trang.keo, stop)} variant="ghost" />
+                          <RudiButton compact disabled={dangGhi} lyDo={dangGhi ? "Đang ghi" : undefined} full={false} label="Tôi đã tới" onPress={() => void daToiChang(trang.keo, stop)} variant="soft" />
                         )
                       }
-                      // 14: a compact RudiButton's inner padding; the ghost
-                      // «Tôi đã tới» is only its words, the stamp is not.
-                      phaiLeChu={toiRoi ? 0 : 14}
+                      phaiLeChu={0}
                       phu={dong.chu}
                       phuTone={dong.tone}
                       tieuDe={stop.label}
@@ -583,7 +588,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                   onPress={() => void ghiLichTrinh({ ...trang.keo, timeline_revision: draft.revision }, draft.stops.map(changGuiTu)).then((ok) => { if (ok) setDraft(null); })} />
                 <RudiButton label="Bỏ thứ tự nháp" tone="warn" variant="ghost" disabled={dangGhi} lyDo={dangGhi ? "Đang ghi lịch trình." : undefined}
                   onPress={() => { setDraft(null); setConflict(false); setThongBao(null); }} />
-              </View> : <RudiButton label="Xếp theo giờ hẹn" variant="ghost" disabled={dangGhi} lyDo={dangGhi ? "Đang ghi lịch trình." : undefined}
+              </View> : <RudiButton compact full={false} icon="swap-vertical-outline" label="Xếp theo giờ hẹn" variant="outline" disabled={dangGhi} lyDo={dangGhi ? "Đang ghi lịch trình." : undefined}
                 onPress={() => setDraft({ stops: sapXepChang(trang.keo.stops), revision: trang.keo.timeline_revision })} />}
             </View>
           ) : (
@@ -600,7 +605,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
             style={styles.nutHoaDon}
           >
-            <HoaDonGiay>
+            <HoaDonGiay rangTren>
               <View style={styles.hoaDonChu}>
                 <Ionicons color={colors.split} name="receipt-outline" size={20} />
                 <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
@@ -614,7 +619,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
-  nutHoaDon: { alignSelf: "flex-start", transform: [{ rotate: "-1deg" }] },
+  nutHoaDon: { alignSelf: "flex-start" },
   hoaDonChu: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10 },
   hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
   moiKhoanhKhac: { gap: 6, alignItems: "flex-start" },
@@ -628,8 +633,9 @@ const styles = StyleSheet.create({
   dauMan: { gap: 8, paddingBottom: 8 },
   khung: { gap: 14 },
   dau: { gap: 8 },
-  tien: { gap: 4, marginTop: 4 },
-  oTien: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 10, rowGap: 2 },
+  tien: { gap: 6, marginTop: 4, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  hangTien: { flexDirection: "row", flexWrap: "wrap", columnGap: 20, rowGap: 6 },
+  oTien: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 6, rowGap: 2 },
   khay: { gap: 12, paddingBottom: 4 },
   form: { gap: 12 },
   danhSach: { paddingVertical: 4, gap: 10 },

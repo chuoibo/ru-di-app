@@ -162,8 +162,33 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, dangLam = false, 
     </View>
   );
 
+  const chan = (
+    <View style={[styles.chan, { borderTopColor: colors.line }]}>
+      {doi.length > 0 ? (
+        <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID="de-nghi-sua-khac-gi">
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Bản phác sẽ đổi:" : "Người ấy sẽ thấy:"}</Text>
+          {doi.map((d) => (
+            <Text key={d} style={[typography.label, { color: colors.ink }]}>· {d}</Text>
+          ))}
+        </View>
+      ) : (
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Chưa đổi gì." : "Chưa đổi gì. Sửa một dòng ở trên thì gửi được."}</Text>
+      )}
+      {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      <RudiButton
+        disabled={dangLam || !guiDuoc} loading={dangLam}
+        label={nhap ? "Lưu bản phác" : `Gửi phiên bản ${to.version + 1}`}
+        // With nothing changed the line above already says so; otherwise
+        // what is left to fix is named here (ADR-0038 §2.2).
+        lyDo={guiDuoc || doi.length === 0 ? undefined : "Mỗi chặng cần một việc, và chỗ đang báo ở trên cần sửa."}
+        onPress={() => { if (submitLock.current || dangLam) return; submitLock.current = true; void onGui(noiDung, lyDo.trim() || null).finally(() => { submitLock.current = false; }); }}
+      />
+      <RudiButton compact label="Thôi" onPress={onClose} variant="ghost" />
+    </View>
+  );
+
   return (
-    <Sheet accessibilityLabel={nhap ? "Sửa bản phác" : "Đề nghị sửa tờ giấy"} onClose={onClose} open={open} testID={testID ?? "de-nghi-sua"}>
+    <Sheet avoidKeyboard showsVerticalScrollIndicator footer={chan} accessibilityLabel={nhap ? "Sửa bản phác" : "Đề nghị sửa tờ giấy"} onClose={onClose} open={open} testID={testID ?? "de-nghi-sua"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading
           size="h2"
@@ -253,26 +278,6 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, dangLam = false, 
         <View style={[styles.le, { borderLeftColor: colors.lineStrong }]}>
           <ONhapMuc label="Vì sao đổi (tuỳ chọn)" multiline numberOfLines={2} onChangeText={setLyDo} placeholder="Tối thứ Bảy mưa." value={lyDo} />
         </View>
-        {doi.length > 0 ? (
-          <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID="de-nghi-sua-khac-gi">
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Bản phác sẽ đổi:" : "Người ấy sẽ thấy:"}</Text>
-            {doi.map((d) => (
-              <Text key={d} style={[typography.label, { color: colors.ink }]}>· {d}</Text>
-            ))}
-          </View>
-        ) : (
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Chưa đổi gì." : "Chưa đổi gì. Sửa một dòng ở trên thì gửi được."}</Text>
-        )}
-        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-        <RudiButton
-          disabled={dangLam || !guiDuoc} loading={dangLam}
-          label={nhap ? "Lưu bản phác" : `Gửi phiên bản ${to.version + 1}`}
-          // With nothing changed the line above already says so; otherwise
-          // what is left to fix is named here (ADR-0038 §2.2).
-          lyDo={guiDuoc || doi.length === 0 ? undefined : "Mỗi chặng cần một việc, và chỗ đang báo ở trên cần sửa."}
-          onPress={() => { if (submitLock.current || dangLam) return; submitLock.current = true; void onGui(noiDung, lyDo.trim() || null).finally(() => { submitLock.current = false; }); }}
-        />
-        <RudiButton label="Thôi" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>
   );
@@ -280,6 +285,7 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, dangLam = false, 
 
 const styles = StyleSheet.create({
   noiDung: { paddingBottom: 8 },
+  chan: { gap: 8, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth },
   khoi: { gap: 7 },
   hangChip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
   hangChinh: { flexDirection: "row", gap: 14, alignItems: "center" },

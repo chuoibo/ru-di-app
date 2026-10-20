@@ -1,6 +1,9 @@
 import { DiaryWall } from "../diary/Wall";
 import { useDiaryCollection } from "../diary/useDiaryCollection";
 import { DiaryLead, ProfileDiaryEmpty, ProfileDiaryFailure } from "./profile/DiaryLead";
+import { KHUNG_CANH, hinhCanh } from "../art/canh";
+import { KHUNG_DAU_CHAN, hinhDauChan } from "../art/dau-chan";
+import { VeLop } from "../ui/art/VeLop";
 /**
  * Cá nhân, Tài chính and Hành trình: the person's own pages.
  *
@@ -14,6 +17,7 @@ import { DiaryLead, ProfileDiaryEmpty, ProfileDiaryFailure } from "./profile/Dia
  * changing the reading layout never starts another request. Money pages
  * separate sums from ledger lines and draw no chart for decoration.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { HoaDonGiay } from "../ui/HoaDonGiay";
 import { Money } from "../ui/Money";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -62,7 +66,7 @@ function ObserveProfileMetrics({ phien }: { phien: Phien }) {
 
 function ProfileContent({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "saved">("home");
   const [page, setPage] = useState<"profile" | "kept">("profile");
@@ -111,24 +115,31 @@ function ProfileContent({ phien }: { phien: Phien }) {
     return (
       <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Tài khoản" />
-        <Text style={[typography.body, { color: colors.ink }]}>
-          Đang xem với tư cách {phien.profile?.display_name ?? "bạn"}.
-        </Text>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào.
-        </Text>
-        {DAU_VAN_CAY ? (
-          <Text accessibilityLabel="dau-van-cay" style={[typography.caption, { color: colors.inkFaint }]}>
-            Bản dựng {DAU_VAN_CAY}
-          </Text>
-        ) : null}
-        <RudiButton
-          label="Đăng xuất"
-          onPress={() => {
-            session.resetSession();
-            router.replace("/welcome");
-          }}
-        />
+        <View style={[styles.subPanelSheet, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+          <View style={styles.subPanelLead}>
+            <VeLop height={44} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("passport-seal")} width={44} />
+            <View style={styles.subPanelCopy}>
+              <Text style={[typography.body, { color: colors.ink }]}>
+                Đang xem với tư cách {phien.profile?.display_name ?? "bạn"}.
+              </Text>
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào.
+              </Text>
+            </View>
+          </View>
+          {DAU_VAN_CAY ? (
+            <Text accessibilityLabel="dau-van-cay" style={[typography.caption, { color: colors.inkFaint }]}>
+              Bản dựng {DAU_VAN_CAY}
+            </Text>
+          ) : null}
+          <RudiButton
+            label="Đăng xuất"
+            onPress={() => {
+              session.resetSession();
+              router.replace("/welcome");
+            }}
+          />
+        </View>
       </RudiScreen>
     );
   }
@@ -136,18 +147,21 @@ function ProfileContent({ phien }: { phien: Phien }) {
     return (
       <RudiScreen material="quiet" bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
-        <Heading
-          title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
-          subtitle="Danh sách lưu trong tài khoản của bạn. Mở Khám phá để thêm."
-        />
-        {idsDaLuu.length > 0 ? (
-          <NhomHang>
-            {idsDaLuu.map((id) => (
-              <ListRow icon="bookmark-outline" key={id} onPress={() => router.push(`/places/${id}` as never)} subtitle="Mở trang của chỗ này" title={tenDaLuu[id] ?? "Một chỗ đã lưu"} />
-            ))}
-          </NhomHang>
-        ) : null}
-        <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} variant={idsDaLuu.length > 0 ? "outline" : "solid"} />
+        <View style={[styles.subPanelSheet, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+          {idsDaLuu.length === 0 ? <VeLop height={78} khungH={KHUNG_CANH.h} khungW={KHUNG_CANH.w} lop={hinhCanh("chua-luu-bai")} width={100} /> : null}
+          <Heading
+            title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
+            subtitle="Danh sách lưu trong tài khoản của bạn. Mở Khám phá để thêm."
+          />
+          {idsDaLuu.length > 0 ? (
+            <NhomHang>
+              {idsDaLuu.map((id) => (
+                <ListRow icon="bookmark-outline" key={id} onPress={() => router.push(`/places/${id}` as never)} subtitle="Mở trang của chỗ này" title={tenDaLuu[id] ?? "Một chỗ đã lưu"} />
+              ))}
+            </NhomHang>
+          ) : null}
+          <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} variant={idsDaLuu.length > 0 ? "outline" : "solid"} />
+        </View>
       </RudiScreen>
     );
   }
@@ -161,32 +175,39 @@ function ProfileContent({ phien }: { phien: Phien }) {
         {!editingProfile ? <Text accessibilityRole="header" style={[typography.title, { color: colors.ink }]}>Cá nhân</Text> : null}
         {/* Settings keeps its single door in the management group below. */}
         <HoSoSong phien={phien} onEditorChange={setEditor} renderContent={(profile) => <View style={styles.profileBody}>
-      <View accessibilityRole="tablist" style={[styles.profileTabs, { borderBottomColor: colors.line }]}>
-        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={styles.profileTab}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
+      <View accessibilityRole="tablist" style={[styles.profileTabs, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+        {([['profile', 'Hồ sơ'], ['kept', 'Trang đã giữ']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: page === value }} onPress={() => setPage(value)} style={[styles.profileTab, page === value && { backgroundColor: colors.paper }]}><Text style={[typography.label, styles.profileTabLabel, { color: page === value ? colors.ink : colors.inkSoft }]}>{label}</Text>{page === value ? <View accessible={false} style={[styles.profileTabIndicator, { backgroundColor: colors.accent }]} /> : null}</Pressable>)}
       </View>
       {page === "kept" ? <DiaryWall person={personId} owner={personId} collection={diaries} empty={<ProfileDiaryEmpty />} failure={diaries.error ? <ProfileDiaryFailure message={diaries.error} retry={diaries.retry} /> : undefined} /> : <>
       <DiaryLead person={personId} collection={diaries} />
       {profile ? <ProfileFacts profile={profile} pending={loiMoiCho} onFriends={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} /> : <RudiButton full={false} label="Bạn bè" variant="ghost" onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)} />}
-      <View style={styles.preferences}>
-        <Text style={[typography.note, { alignSelf: "stretch", color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
-        <RudiButton full={false} label="Sở thích" labelAlign="left" variant="ghost" style={styles.profileTextAction} onPress={() => router.push("/personalization")} />
+      <View style={[styles.preferences, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+        <View style={styles.preferencesLead}>
+          <View style={[styles.preferencesIcon, { backgroundColor: colors.accentSoft, borderColor: colors.line }]}>
+            <VeLop height={34} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("taste")} width={34} />
+          </View>
+          <View style={styles.preferencesCopy}>
+            <Text style={[typography.note, { alignSelf: "stretch", color: colors.inkSoft }]}>{tomTat(soThich)}</Text>
+            <RudiButton full={false} label="Sở thích" labelAlign="left" variant="ghost" style={styles.profileTextAction} onPress={() => router.push("/personalization")} />
+          </View>
+        </View>
       </View>
       <View style={styles.menuGroups}>
-        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
+        <View style={[styles.menuGroup, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Sổ của bạn</Text>
-          <View style={styles.hangMenu}>
-            <ListRow iconTreatment="plain" icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" />
+          <View style={[styles.hangMenu, styles.hangMenuCoKe, { borderBottomColor: colors.line }]}>
+            <ListRow iconTreatment="tile" icon="newspaper-outline" onPress={() => router.push(duongTuongToi)} title="Tường của tôi" tone="accent" />
           </View>
-          <View style={styles.hangMenu}>
+          <View style={[styles.hangMenu, styles.hangMenuCoKe, { borderBottomColor: colors.line }]}>
             <ListRow
-              iconTreatment="plain"
+              iconTreatment="tile"
               icon="wallet-outline"
               onPress={() => router.push("/finance")}
               title="Tài chính của tôi"
               tone="split"
             />
           </View>
-          <View style={styles.hangMenu}>
+          <View style={[styles.hangMenu, styles.hangMenuCoKe, { borderBottomColor: colors.line }]}>
             <ListRow
               iconTreatment="plain"
               icon="ribbon-outline"
@@ -204,9 +225,9 @@ function ProfileContent({ phien }: { phien: Phien }) {
             />
           </View>
         </View>
-        <View style={[styles.menuGroup, { borderBottomColor: colors.line }]}>
+        <View style={[styles.menuGroup, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
           <Text accessibilityRole="header" style={[typography.label, styles.menuHeading, { color: colors.inkSoft }]}>Quản lý</Text>
-          <View style={styles.hangMenu}>
+          <View style={[styles.hangMenu, styles.hangMenuCoKe, { borderBottomColor: colors.line }]}>
             <ListRow
               iconTreatment="plain"
               icon="settings-outline"
@@ -220,10 +241,11 @@ function ProfileContent({ phien }: { phien: Phien }) {
               every other slice. */}
           <View style={styles.hangMenu}>
             <ListRow
-              iconTreatment="plain"
+              iconTreatment="tile"
               icon="shield-checkmark-outline"
               onPress={() => setPanel("account")}
               title="Tài khoản"
+              tone="split"
             />
           </View>
         </View>
@@ -237,24 +259,61 @@ function ProfileContent({ phien }: { phien: Phien }) {
 
 /** Server facts are profile context, separate from the saved page's metadata. */
 function ProfileFacts({ profile, pending, onFriends }: { profile: HoSoToi; pending: number; onFriends: () => void }) {
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const footprints = [
     ["outings", profile.counts.outings, "kèo"],
     ["places", profile.counts.places_checked_in, "điểm check-in"],
     ["memories", profile.counts.memories, "khoảnh khắc"],
   ] as const;
-  return <View testID="profile-counts" style={styles.profileContext}>
-    <View style={styles.relations}>
-      <Pressable testID="profile-fact-friends" accessibilityRole="button" accessibilityLabel={`${profile.counts.friends} bạn bè`} accessibilityHint={pending > 0 ? `${pending} lời mời đang chờ` : "Mở danh sách bạn bè"} onPress={onFriends} style={styles.friendsAction}>
-        <Text accessible={false} style={[typography.body, { color: colors.ink }]}>{`${profile.counts.friends} bạn bè`}</Text>
-        {pending > 0 ? <Text accessible={false} style={[typography.note, { color: colors.inkSoft }]}>{`${pending} lời mời đang chờ`}</Text> : null}
-      </Pressable>
-      <Text testID="profile-fact-contexts" style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${profile.counts.contexts} nhóm`}</Text>
+  return (
+    <View
+      testID="profile-counts"
+      style={[
+        styles.profileContext,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.lineStrong,
+          borderRadius: radius.base,
+        },
+      ]}
+    >
+      <View style={[styles.relations, { borderBottomColor: colors.line }]}>
+        <Pressable
+          testID="profile-fact-friends"
+          accessibilityRole="button"
+          accessibilityLabel={`${profile.counts.friends} bạn bè`}
+          accessibilityHint={pending > 0 ? `${pending} lời mời đang chờ` : "Mở danh sách bạn bè"}
+          onPress={onFriends}
+          style={[
+            styles.friendsAction,
+            {
+              backgroundColor: colors.accentSoft,
+              borderColor: colors.accent,
+              borderRadius: radius.control,
+            },
+          ]}
+        >
+          <VeLop height={28} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("friends")} width={28} />
+          <View style={styles.friendsWords}>
+            <Text accessible={false} style={[typography.body, { color: colors.ink }]}>{`${profile.counts.friends} bạn bè`}</Text>
+            {pending > 0 ? <Text accessible={false} style={[typography.note, { color: colors.accent }]}>{`${pending} lời mời đang chờ`}</Text> : null}
+          </View>
+        </Pressable>
+        <View style={[styles.stampPill, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control }]}>
+          <VeLop height={26} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan("contexts")} width={26} />
+          <Text testID="profile-fact-contexts" style={[typography.body, styles.contextWords, { color: colors.ink }]}>{`${profile.counts.contexts} nhóm`}</Text>
+        </View>
+      </View>
+      <View style={styles.footprints}>
+        {footprints.map(([id, value, noun]) => (
+          <View key={id} style={[styles.footprintCell, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control }]}>
+            <VeLop height={24} khungH={KHUNG_DAU_CHAN} khungW={KHUNG_DAU_CHAN} lop={hinhDauChan(id)} width={24} />
+            <Text testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>
+          </View>
+        ))}
+      </View>
     </View>
-    <View style={styles.footprints}>
-      {footprints.map(([id, value, noun]) => <Text key={id} testID={`profile-fact-${id}`} style={[typography.body, styles.contextWords, { color: colors.inkSoft }]}>{`${value} ${noun}`}</Text>)}
-    </View>
-  </View>;
+  );
 }
 
 /**
@@ -307,7 +366,7 @@ function DongSoTaiChinh({ label, phu, vnd, tone }: { label: string; phu?: string
  */
 function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string | null }) {
   const router = useRouter();
-  const { colors, dark } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [lan, setLan] = useState(0);
@@ -366,14 +425,17 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
           B4 finish review). */}
       <ChuThichLe icon="calculator-outline">Các số trên đọc từ sổ cái, không phải số dư ngân hàng.</ChuThichLe>
       {contextId !== null ? (
-        <RudiButton compact icon="wallet-outline" label="Xem quyết toán" onPress={() => router.push(("/settlements/" + contextId) as never)} tone="split" variant="ghost" />
+        <RudiButton compact icon="wallet-outline" label="Xem quyết toán" onPress={() => router.push(("/settlements/" + contextId) as never)} tone="split" variant="outline" />
       ) : null}
       {/* What has actually arrived, newest first: the movements the server
           always sent and the screen never showed. Each one a line on the
           timeline, dotted in the other person's ink. */}
       <SectionHeader title="Tiền đã về" />
       {du.movements.length === 0 ? (
-        <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có khoản chuyển nào được xác nhận là đã về.</Text>
+        <View style={[styles.tienDaVeRong, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.base }]}>
+          <Ionicons color={colors.inkSoft} name="checkmark-done-circle-outline" size={20} />
+          <Text style={[typography.body, styles.flex, { color: colors.inkSoft }]}>Chưa có khoản chuyển nào được xác nhận là đã về.</Text>
+        </View>
       ) : (
         <View testID="dong-thoi-gian">
           {du.movements.map((m, i) => (
@@ -402,6 +464,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
 const styles = StyleSheet.create({
   dongSoTaiChinh: { alignItems: "stretch", gap: 4, minWidth: 0, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   tienTaiChinhDayDu: { width: "100%", minWidth: 0 },
+  tienDaVeRong: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderWidth: 1, borderStyle: "dashed" },
   mocTien: { flexDirection: "row", gap: 12, minHeight: 64 },
   cotMoc: { width: 14, alignItems: "center", paddingTop: 6 },
   chamMoc: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
@@ -414,22 +477,31 @@ const styles = StyleSheet.create({
   form: { maxWidth: 560 },
   khung: { gap: 14 },
   profileContent: { gap: 0 },
-  profileHero: { gap: 8 },
+  profileHero: { gap: 10 },
   profileBody: { gap: 0 },
-  profileTabs: { flexDirection: "row", gap: 16, marginTop: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  profileTabs: { flexDirection: "row", marginTop: 4, borderWidth: 1, overflow: "hidden" },
   profileTab: { flex: 1, minHeight: 48, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
-  profileTabIndicator: { position: "absolute", bottom: 0, width: 32, height: 2, borderRadius: 1 },
+  profileTabIndicator: { position: "absolute", bottom: 0, width: 36, height: 2.5, borderRadius: 1.5 },
   profileTabLabel: { width: "100%", minWidth: 0, textAlign: "center" },
-  profileContext: { gap: 4, marginTop: 28 },
-  relations: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 20, rowGap: 4 },
-  friendsAction: { minWidth: 48, minHeight: 48, maxWidth: "100%", justifyContent: "center", gap: 3 },
+  profileContext: { gap: 12, marginTop: 18, padding: 14, borderWidth: 1 },
+  relations: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 10, rowGap: 8, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  friendsAction: { flexGrow: 1, flexBasis: 132, minWidth: 48, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
+  friendsWords: { minWidth: 0, flexShrink: 1, gap: 2 },
+  stampPill: { flexGrow: 1, flexBasis: 132, minHeight: 48, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
   contextWords: { minWidth: 0, flexShrink: 1 },
-  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 8 },
-  preferences: { alignItems: "flex-start", gap: 4, marginTop: 20 },
+  footprints: { flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 10 },
+  footprintCell: { flexGrow: 1, minWidth: 96, maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1 },
+  preferences: { marginTop: 16, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1 },
+  preferencesLead: { flexDirection: "row", alignItems: "center", gap: 12 },
+  preferencesIcon: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  preferencesCopy: { flex: 1, minWidth: 0, alignItems: "flex-start", gap: 2 },
   profileTextAction: { paddingHorizontal: 0, borderWidth: 0, justifyContent: "flex-start", minWidth: 48, minHeight: 48 },
-  menuGroups: { paddingTop: 28, gap: 20 },
-  menuGroup: { gap: 0, borderBottomWidth: StyleSheet.hairlineWidth },
+  menuGroups: { paddingTop: 20, gap: 16 },
+  menuGroup: { gap: 0, borderWidth: 1, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
   menuHeading: { marginBottom: 4 },
+  subPanelSheet: { padding: 16, borderWidth: 1, gap: 14 },
+  subPanelLead: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  subPanelCopy: { flex: 1, minWidth: 0, gap: 6 },
   hero: { gap: 10 },
   heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },
   upcoming: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, marginTop: 10 },
@@ -437,6 +509,7 @@ const styles = StyleSheet.create({
   ngay: { fontFamily: displayFace.extraBold, fontSize: 32, lineHeight: 36, letterSpacing: -1, fontVariant: ["tabular-nums"] },
   pressed: { opacity: 0.75 },
   hangMenu: { minWidth: 0 },
+  hangMenuCoKe: { borderBottomWidth: StyleSheet.hairlineWidth },
   hangSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   transactionIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
